@@ -5,4 +5,6 @@
 
 size_t strlen(char *str);
 
+void *memcpy(void *dest, void *src, size_t size);
+
 #endif

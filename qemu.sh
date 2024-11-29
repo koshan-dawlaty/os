@@ -3,4 +3,4 @@ set -e
 cd build
 . ./iso.sh
 
-qemu-system-$(./target-triplet-to-arch.sh $HOST) -cdrom os.iso
+qemu-system-$(./target-triplet-to-arch.sh $HOST) -cdrom os.iso 

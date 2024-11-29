@@ -14,7 +14,7 @@ INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
-CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude
+CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude -I$(DESTDIR)$(INCLUDEDIR)
 LIBK_CFLAGS:=$(CFLAGS)
 LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_libk
 
@@ -30,6 +30,11 @@ LIBK_CPPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 FREEOBJS=\
 $(ARCH_FREEOBJS) \
 string/strlen.o \
+stdlib/atoi.o \
+string/memcpy.o \
+stdio/putchar.o \
+stdio/printf.o \
+
 
 HOSTEDOBJS=\
 $(ARCH_HOSTEDOBJS) \
@@ -38,7 +43,11 @@ OBJS=\
 $(FREEOBJS) \
 $(HOSTEDOBJS) \
 
+OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
+
 LIBK_OBJS=$(FREEOBJS:.o=.libk.o)
+
+LIBK_OBJS_BIN = $(foreach obj,$(LIBK_OBJS),bin/$(obj))
 
 #BINARIES=libc.a libk.a # Not ready for libc yet.
 BINARIES=libk.a
@@ -52,11 +61,11 @@ BIN=bin
 
 all: $(BINARIES)
 
-libc.a: $(BIN)/$(OBJS)
-	$(AR) rcs $@ $(BIN)/$(OBJS)
+libc.a: $(OBJS_BIN)
+	$(AR) rcs $@ $(OBJS_BIN)
 
-libk.a: $(BIN)/$(LIBK_OBJS)
-	$(AR) rcs $@ $(BIN)/$(LIBK_OBJS)
+libk.a: $(LIBK_OBJS_BIN)
+	$(AR) rcs $@ $(LIBK_OBJS_BIN)
 
 $(BIN)/%.o: %.c
 	mkdir -p $(BIN)/$(dir $<)
@@ -75,7 +84,7 @@ $(BIN)/%.libk.o: %.S
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
 
 clean:
-	rm -r bin/*
+	$(RM) -r bin/*
 
 install: install-headers install-libs
 
@@ -87,5 +96,5 @@ install-libs: $(BINARIES)
 	mkdir -p $(DESTDIR)$(LIBDIR)
 	cp $(BINARIES) $(DESTDIR)$(LIBDIR)
 
--include $(OBJS:.o=.d)
--include $(LIBK_OBJS:.o=.d)
+-include $(BIN)/$(OBJS:.o=.d)
+-include $(BIN)/$(LIBK_OBJS:.o=.d)

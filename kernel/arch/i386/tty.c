@@ -1,4 +1,3 @@
-/* #include <kernel/tty.h> */
 #include "vga.h"
 #include <string.h>
 #ifndef _KERNEL_TTY_H
@@ -16,7 +15,6 @@ void terminal_writestring(const char *data);
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
-static uint16_t *const VGA_MEMORY = (uint16_t *)0xB8000;
 
 static size_t terminal_row;
 static size_t terminal_column;
@@ -38,6 +36,13 @@ void terminal_initialize() {
     }
 }
 void terminal_putchar(char c) {
+
+    if (c == '\n') {
+        terminal_row = 0;
+        terminal_column++;
+        return;
+    }
+
     if (terminal_row == VGA_WIDTH) {
         terminal_row = 0;
         terminal_column++;

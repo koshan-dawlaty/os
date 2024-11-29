@@ -1,7 +1,8 @@
 #ifndef ARCH_I386_VGA_H
 #define ARCH_I386_VGA_H
-
 #include <stdint.h>
+
+static uint16_t *VGA_MEMORY = (uint16_t *)0xC03FF000;
 
 enum vga_color {
     VGA_COLOR_BLACK = 0,

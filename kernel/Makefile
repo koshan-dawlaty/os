@@ -32,6 +32,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
+kernel/utils.o \
 
 OBJS=\
 $(ARCHDIR)/crti.o \
@@ -61,8 +62,6 @@ BIN=bin
 all: $(BIN)/os.kernel
 
 $(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/linker.ld
-	@echo cflags are: $(CFLAGS)
-	@echo link_list is: $(LINK_LIST_BIN)
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -lk -lgcc
 	grub2-file --is-x86-multiboot $(BIN)/os.kernel
 
@@ -79,7 +78,7 @@ $(BIN)/%.o: %.c
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 clean:
-	rm -r bin/*
+	$(RM) -r bin/*
 
 install: install-headers install-kernel
 
