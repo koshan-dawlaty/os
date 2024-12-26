@@ -18,13 +18,13 @@ INCLUDEDIR?=$(PREFIX)/include
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
-# LIBS:=$(LIBS) -nostdlib -lk -lgcc
+LIBS:=$(LIBS)  
 
 ARCHDIR=arch/$(HOSTARCH)
 
 include $(ARCHDIR)/make.config
 
-CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
+CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS) # -mgeneral-regs-only
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
@@ -62,19 +62,19 @@ BIN=bin
 all: $(BIN)/os.kernel
 
 $(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/linker.ld
-	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -lk -lgcc
-	grub2-file --is-x86-multiboot $(BIN)/os.kernel
+	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -lk -lgcc
+	grub-file --is-x86-multiboot $(BIN)/os.kernel
 
 $(BIN)/$(ARCHDIR)/crtbegin.o $(BIN)/$(ARCHDIR)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
 
 
 $(BIN)/%.o: %.S
-	mkdir -p $(BIN)/$(dir $<)
+	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
 $(BIN)/%.o: %.c
-	mkdir -p $(BIN)/$(dir $<)
+	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 clean:
@@ -83,11 +83,11 @@ clean:
 install: install-headers install-kernel
 
 install-headers:
-	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+	@mkdir -p $(DESTDIR)$(INCLUDEDIR)
 	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
 
 install-kernel: $(BIN)/os.kernel
-	mkdir -p $(DESTDIR)$(BOOTDIR)
+	@mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp $(BIN)/os.kernel $(DESTDIR)$(BOOTDIR)
 
 -include $(BIN)/$(OBJS:.o=.d)

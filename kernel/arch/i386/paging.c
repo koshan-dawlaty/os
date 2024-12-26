@@ -1,3 +1,5 @@
+#include "gdt.h"
+#include "interrupts/idt.h"
 #include "kernel/tty.h"
 #include "kernel/utils.h"
 #include "multiboot.h"
@@ -42,12 +44,15 @@ static uint8_t free_page_bitmap[free_page_bitmap_size] = {FREE};
 
 #define PHYS_PAGE_START 0x100000
 
-void *get_free_phys_page() {
+void *get_free_phys_page()
+{
 
     int i = 0;
 
-    while (i < NUM_PAGES) {
-        if (((free_page_bitmap[i / 8] >> (i % 8)) & 1) == FREE) {
+    while (i < NUM_PAGES)
+    {
+        if (((free_page_bitmap[i / 8] >> (i % 8)) & 1) == FREE)
+        {
             break;
         }
 
@@ -64,7 +69,8 @@ void *get_free_phys_page() {
     return (void *)(PHYS_PAGE_START + (i * PAGE_SIZE));
 }
 
-void *get_physaddr(void *virtualaddr) {
+void *get_physaddr(void *virtualaddr)
+{
 
     directory_entry pdindex = (directory_entry)virtualaddr >> 22;
     directory_entry ptindex = (directory_entry)virtualaddr >> 12 & 0x03FF;
@@ -83,7 +89,8 @@ void *get_physaddr(void *virtualaddr) {
 
     /* printf("index: %d\n", pdindex); */
 
-    if ((dir_entry & 0x1) == 0) {
+    if ((dir_entry & 0x1) == 0)
+    {
         /* printf("page fault (directory)\n\n"); */
         return (void *)0;
     }
@@ -102,7 +109,8 @@ void *get_physaddr(void *virtualaddr) {
 
     /* printf("%d\n", (table_entry & 0x1) == 0); */
 
-    if ((table_entry & (0x1)) == 0) {
+    if ((table_entry & (0x1)) == 0)
+    {
         printf("page fault (table)\n\n");
 
         return (void *)0;
@@ -112,13 +120,15 @@ void *get_physaddr(void *virtualaddr) {
                     ((directory_entry)virtualaddr & 0xfff));
 }
 
-void flush_tlb_full() {
+void flush_tlb_full()
+{
     unsigned long cr3;
     __asm__ volatile("mov %%cr3, %0" : "=r"(cr3));
     __asm__ volatile("mov %0, %%cr3" : : "r"(cr3));
 }
 
-void map_page(void *physaddr, void *virtualaddr, unsigned int flags) {
+void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
+{
 
     uint32_t virtual_addr = align_long((uint32_t)virtualaddr, PAGE_SIZE);
     uint32_t physical_addr = align_long((uint32_t)physaddr, PAGE_SIZE);
@@ -130,12 +140,13 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags) {
 
     directory_entry dir_entry = pd[pdindex];
 
-    if ((dir_entry & 0x1) == 0) {
+    if ((dir_entry & 0x1) == 0)
+    {
 
         table_entry *new_table = get_free_phys_page();
 
-        table_entry *virtual_table =
-            ((table_entry *)0xFFC00000) + (0x400 * pdindex);
+        /* table_entry *virtual_table = */
+        /*     ((table_entry *)0xFFC00000) + (0x400 * pdindex); */
 
         pd[pdindex] = ((directory_entry)(new_table)) | 0x03;
 
@@ -151,30 +162,37 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags) {
 
         /* paging_page_table_offset++; */
 
-        table_entry new_addr = (directory_entry)physical_addr;
+        /* table_entry new_addr = (directory_entry)physical_addr; */
 
         /* printf("table %p, table fake %p\n", new_table, virtual_table); */
 
-        virtual_table[ptindex] = new_addr | 0x003;
+        /* virtual_table[ptindex] = new_addr | (flags & 0xFFF) | 0x01; */
 
         /* printf("%p, %p\n", virtual_table, */
         /*        (virtual_table) + (ptindex * sizeof(table_entry))); */
 
         /* printf("help\n"); */
-        flush_tlb_full();
 
-        return;
+        /* return; */
     }
 
     table_entry *pt = ((table_entry *)0xFFC00000) + (0x400 * pdindex);
+
     // Here you need to check whether the PT entry is present.
     // When it is, then there is already a mapping present. What do you do now?
 
     table_entry table_entry = pt[ptindex];
 
-    if ((table_entry & 0x1) == 0) {
-        /* printf("page fault\n\n"); */
+    printf("mapping at dir index: %p, table index: %p\n", pdindex, ptindex);
+    printf("entry: %p\n", table_entry);
+
+    if ((table_entry & 0x1) != 0)
+    {
+        printf("mapping already present!\n");
+        return;
     }
+
+    printf("mapping worked\n");
 
     pt[ptindex] =
         ((directory_entry)physical_addr) | (flags & 0xFFF) | 0x01; // Present
@@ -186,11 +204,13 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags) {
     flush_tlb_full();
 }
 
-void paging_test() {
-    void *virtual = (void *)0x20000000;
+void paging_test()
+{
+    void *virtual = (void *)0xF0000000;
     void *physical = (void *)0x10000000;
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 1024; i++)
+    {
         /* printf("%d\n", i); */
 
         virtual += PAGE_SIZE;
@@ -198,12 +218,11 @@ void paging_test() {
 
         map_page(physical, virtual, 0);
 
-        /* printf("virtual: %p, physical: %p, result: %p\n", virtual, physical,
-         */
-        /*        get_physaddr(virtual)); */
-
-        if (get_physaddr(virtual) != physical) {
+        if (get_physaddr(virtual) != physical)
+        {
             printf("test failed\n");
+            printf("virtual: %p, physical: %p, result: %p\n", virtual, physical,
+                   get_physaddr(virtual));
             return;
         }
     }
@@ -211,16 +230,26 @@ void paging_test() {
     printf("test ok\n");
 }
 
-void init_paging(multiboot_info_t *mbd) {
+void test(uint32_t virtual, uint32_t physical)
+{
+    map_page((void *)physical, (void *)virtual, 0);
 
-    /* printf("%p\n", align_long(0x30000001, PAGE_SIZE)); */
+    printf("%p\n", get_physaddr((void *)virtual));
+}
 
-    /* printf("%p\n", _kernel_end); */
-    for (int i = 0; i < 1024; i++) {
-        paging_page_table[i] = 0x00;
-    }
+void init_paging()
+{
 
-    paging_test();
+    init_gdt();
+
+    init_idt();
+
+    /* paging_test(); */
+
+    /* test(0x20001000, 0x10001000); */
+    /* test(0x20000000, 0x10002000); */
+
+    /* test(0xF2400000, 0x30002000); */
 
     /* void *virtual = (void *)0x20001000; */
     /* void *physical = (void *)0x10001000; */
@@ -228,9 +257,15 @@ void init_paging(multiboot_info_t *mbd) {
 
     /* printf("%p\n", get_physaddr(virtual)); */
 
-    /* void *virtual2 = (void *)0x20002000; */
+    /* void *virtual2 = (void *)0x20000000; */
     /* void *physical2 = (void *)0x10002000; */
     /* map_page(physical2, virtual2, 0); */
 
     /* printf("%p\n", get_physaddr(virtual2)); */
+
+    /* void *virtual3 = (void *)0x20003000; */
+    /* void *physical3 = (void *)0x30001000; */
+    /* map_page(physical3, virtual3, 0); */
+
+    /* printf("%p\n", get_physaddr(virtual3)); */
 }

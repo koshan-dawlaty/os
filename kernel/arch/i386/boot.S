@@ -37,8 +37,16 @@ paging_page_table_addr:
 
 
 // very stupid
-.equ MULTIBOOT_INFO_ADDR, 0x00100000
+# .equ MULTIBOOT_INFO_ADDR, 0x00100000
 
+
+
+.section .text
+.global test_interrupt_handler2
+.type test_interrupt_handler2, @function
+test_interrupt_handler2:
+	cli
+    iret         
 
 # The kernel entry point.
 .section .multiboot.text, "a"
@@ -89,9 +97,6 @@ _start:
 3:
 
 	// map multiboot info struct
-	# movl %ebx, %edx
-	# orl $0x003, %edx	
-	# movl %edx, boot_page_table1 + ((MULTIBOOT_INFO_ADDR - 0xC0000000) * 4)
 
 
 	# Map VGA video memory to 0xC03FF000 as "present, writable".
@@ -114,10 +119,6 @@ _start:
 	movl $(boot_page_directory - 0xC0000000 + 0x003), boot_page_directory - 0xC0000000 + 1023 * 4
 
 	// map paging_page_table
-	# movl $123, paging_page_table_addr
-
-	movl $(paging_page_table_addr - 0xC0000000 + 0x003), boot_page_directory - 0xC0000000 + 800 * 4
-
 
 
 
@@ -155,13 +156,13 @@ _start:
 	# Set up the stack.
 	mov $stack_top, %esp
 	
-	# push %eax
-	# push $(MULTIBOOT_INFO_ADDR + 0xC0000000)
 
 	call main
 
 	# Infinite loop if the system has nothing more to do.
-	cli
-1:	hlt
-	jmp 1b
+1:	
+	hlt
+ 	jmp 1b
+	
+
 

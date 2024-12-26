@@ -1,4 +1,5 @@
 #include "vga.h"
+#include <stdio.h>
 #include <string.h>
 #ifndef _KERNEL_TTY_H
 #define _KERNEL_TTY_H
@@ -21,6 +22,14 @@ static size_t terminal_column;
 static uint8_t terminal_color;
 static uint16_t *terminal_buffer;
 
+void move_line(int dest_column, int source_column) {
+
+    uint16_t *source = (terminal_buffer + source_column * VGA_WIDTH);
+    uint16_t *dest = (terminal_buffer + dest_column * VGA_WIDTH);
+
+    memcpy(dest, source, VGA_WIDTH);
+}
+
 void terminal_initialize() {
     terminal_row = 0;
     terminal_column = 0;
@@ -35,6 +44,7 @@ void terminal_initialize() {
         }
     }
 }
+
 void terminal_putchar(char c) {
 
     if (c == '\n') {
@@ -46,6 +56,19 @@ void terminal_putchar(char c) {
     if (terminal_row == VGA_WIDTH) {
         terminal_row = 0;
         terminal_column++;
+    }
+    if (terminal_column == VGA_HEIGHT) {
+
+        /* terminal_column = 0; */
+        for (size_t i = 1; i < VGA_HEIGHT; i++) {
+            move_line(i - 1, i);
+        }
+        terminal_column--;
+
+        // this seems to fix weird issues where the character prints one
+        // character before where it should be
+        terminal_row++;
+
     } else {
         terminal_row++;
     }
@@ -62,5 +85,5 @@ void terminal_write(const char *data, size_t size) {
 }
 
 void terminal_writestring(const char *data) {
-    terminal_write(data, strlen(data));
+    terminal_write(data, strlen((char *)data));
 }

@@ -4,8 +4,9 @@
 #include "multiboot.h"
 #include <stdint.h>
 
-void init_paging(multiboot_info_t *mbd);
+void init_paging();
 
+void *get_physaddr(void *virtualaddr);
 void map_addr(uint32_t addr);
 
 #endif
