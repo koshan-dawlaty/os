@@ -5,13 +5,12 @@
 #include <stdint.h>
 #include <stdio.h>
 
-int main() {
+int main()
+{
 
     terminal_initialize();
 
     init_paging();
-
-    printf("abcdefg\n");
 
     return 0;
 }

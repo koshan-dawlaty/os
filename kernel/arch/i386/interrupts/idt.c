@@ -1,5 +1,7 @@
 #include "idt.h"
 #include "keyboard_map.h"
+#include "pic.h"
+
 // TODO: fix include path
 #include "../utils.h"
 
@@ -69,21 +71,18 @@ struct interrupt_frame
     uint32_t ss;
 };
 
-__attribute__((interrupt, target("general-regs-only"))) void
-gpf_handler(struct interrupt_frame *frame)
+ISR void gpf_handler(struct interrupt_frame *frame)
 {
     printf("gpf!!!\n");
 }
 
-__attribute__((interrupt, target("general-regs-only"))) void
-test_interrupt_handler(struct interrupt_frame *frame)
+ISR void test_interrupt_handler(struct interrupt_frame *frame)
 {
 
     printf("interrupt\n");
 }
 
-__attribute__((interrupt, target("general-regs-only"))) void
-keyboard_interrupt_handler(struct interrupt_frame *frame)
+ISR void keyboard_interrupt_handler(struct interrupt_frame *frame)
 {
     /* printf("keyboard isr\n"); */
 
@@ -99,15 +98,13 @@ keyboard_interrupt_handler(struct interrupt_frame *frame)
     PIC_sendEOI(1);
 }
 
-__attribute__((interrupt, target("general-regs-only"))) void
-default_interrupt_handler(struct interrupt_frame *frame)
+ISR void default_interrupt_handler(struct interrupt_frame *frame)
 {
     printf("default interrupt\n");
 }
 
-// this is necessary
-__attribute__((interrupt, target("general-regs-only"))) void
-pit_interrupt_handler(struct interrupt_frame *frame)
+// this is necessary for keyboard
+ISR void pit_interrupt_handler(struct interrupt_frame *frame)
 {
     /* printf("pit interrupt handler called\n"); */
 
