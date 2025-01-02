@@ -8,6 +8,8 @@ mkdir -p isodir/boot/grub
 
 cp sysroot/boot/os.kernel isodir/boot/os.kernel
 cat > isodir/boot/grub/grub.cfg << EOF
+set timeout=0
+
 menuentry "os" {
 	multiboot /boot/os.kernel
 }

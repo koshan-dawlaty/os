@@ -34,6 +34,7 @@ stdlib/atoi.o \
 string/memcpy.o \
 stdio/putchar.o \
 stdio/printf.o \
+stdio/getchar.o \
 
 
 HOSTEDOBJS=\

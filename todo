@@ -1,0 +1,11 @@
+real malloc
+
+make it more platform independent
+
+keyboard driver
+
+fault handlers
+
+file system
+
+modular kernel

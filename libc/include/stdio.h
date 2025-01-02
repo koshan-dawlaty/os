@@ -2,9 +2,9 @@
 #define STDIO_H
 
 int putchar(int ic);
-
-int printf(const char *format, ...);
-
 int puts(char *c);
+
+int printf(const char *format, ...) __attribute__((format(printf, 1, 2)));
+char getchar();
 
 #endif

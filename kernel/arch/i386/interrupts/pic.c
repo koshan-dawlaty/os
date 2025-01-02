@@ -1,7 +1,6 @@
 #include "pic.h"
+#include "utils.h"
 
-// TODO: fix include path
-#include "../utils.h"
 #include <stdint.h>
 
 #define PIC1 0x20
@@ -17,11 +16,11 @@
 #define ICW1_LEVEL 0x08     /* Level triggered (edge) mode */
 #define ICW1_INIT 0x10      /* Initialization - required! */
 
-#define ICW4_8086 0x01       /* 8086/88 (MCS-80/85) mode */
-#define ICW4_AUTO 0x02       /* Auto (normal) EOI */
-#define ICW4_BUF_SLAVE 0x08  /* Buffered mode/slave */
-#define ICW4_BUF_MASTER 0x0C /* Buffered mode/master */
-#define icw4_sfnm 0x10       /* special fully nested (not) */
+#define ICW4_8086 0x01 /* 8086/88 (MCS-80/85) mode */
+#define ICW4_AUTO 0x02 /* Auto (normal) EOI */
+#define ICW4_BUF_2 0x08
+#define ICW4_BUF_1 0x0C
+#define icw4_sfnm 0x10 /* special fully nested (not) */
 
 #define PIC_EOI 0x20 /* End-of-interrupt command code */
 

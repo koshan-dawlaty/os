@@ -164,5 +164,3 @@ _start:
 	hlt
  	jmp 1b
 	
-
-
