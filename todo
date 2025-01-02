@@ -2,10 +2,12 @@ real malloc
 
 make it more platform independent
 
-keyboard driver
+actually test keyboard driver led/keymatic functions
 
 fault handlers
 
 file system
 
 modular kernel
+
+tests

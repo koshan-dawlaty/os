@@ -22,8 +22,10 @@ int main()
     printf("%p\n", two);
     kfree(two);
 
-    /* keyboard_reset(); */
-    /* keyboard_set_default(); */
+    keyboard_reset();
+    keyboard_set_default();
+    keyboard_set_typematic(0, 0);
+    keyboard_set_led(KEYBOARD_LED_CAPS_LOCK);
 
     while (1)
     {

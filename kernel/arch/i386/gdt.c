@@ -31,7 +31,7 @@ uint64_t encode_gdt_entry(GDT_entry source)
     // Encode the limit
     target[0] = source.limit & 0xFF;
     target[1] = (source.limit >> 8) & 0xFF;
-    target[6] = (source.limit >> 16) & 0x0F;
+    target[6] = (source.limit >> 16) & 0xFF;
 
     // Encode the base
     target[2] = source.base & 0xFF;

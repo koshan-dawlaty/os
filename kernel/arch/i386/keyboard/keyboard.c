@@ -103,6 +103,19 @@ void keyboard_set_default()
     keyboard_send_command(0xF6);
 }
 
+void keyboard_set_typematic(uint8_t rate, uint8_t delay)
+{
+    uint8_t data_byte = (rate & 0xFF) | ((delay >> 4) & 0xFF);
+    keyboard_send_command(0xF3);
+    outb(KEYBOARD_PORT_DATA, data_byte);
+}
+
+void keyboard_set_led(uint8_t led)
+{
+    keyboard_send_command(0xED);
+    outb(KEYBOARD_PORT_DATA, led);
+}
+
 void keyboard_init()
 {
 }
