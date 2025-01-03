@@ -16,7 +16,7 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas
-CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
+CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
@@ -34,12 +34,17 @@ $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
 kernel/utils.o \
 
+TEST_OBJS=\
+		  tests/tests_main.o \
+		  tests/lib/test_debug_print.o \
+
 OBJS=\
 $(ARCHDIR)/crti.o \
 $(ARCHDIR)/crtbegin.o \
 $(KERNEL_OBJS) \
 $(ARCHDIR)/crtend.o \
 $(ARCHDIR)/crtn.o \
+$(TEST_OBJS) \
 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
@@ -51,6 +56,7 @@ $(KERNEL_OBJS) \
 $(LIBS) \
 $(ARCHDIR)/crtend.o \
 $(ARCHDIR)/crtn.o \
+$(TEST_OBJS)
 
 LINK_LIST_BIN = $(foreach obj,$(LINK_LIST),bin/$(obj))
 

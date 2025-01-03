@@ -36,6 +36,11 @@ ISR(page_fault_handler, {
     fault_handler_wait();
 });
 
+ISR(virtualization_fault_handler, {
+    printf("virtualization exception\n");
+    fault_handler_wait();
+});
+
 void init_faults()
 {
     for (uint8_t i = 0; i < 32; i++)
@@ -46,4 +51,6 @@ void init_faults()
     add_idt_entry((IDT_entry){(uint32_t)gpf_handler, 8, 0x8F}, 0x0D);
     add_idt_entry((IDT_entry){(uint32_t)double_fault_handler, 8, 0x8F}, 0x08);
     add_idt_entry((IDT_entry){(uint32_t)page_fault_handler, 8, 0x8F}, 0x0E);
+    add_idt_entry((IDT_entry){(uint32_t)virtualization_fault_handler, 8, 0x8F},
+                  0x20);
 }

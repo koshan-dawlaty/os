@@ -68,6 +68,16 @@ int printf(const char *format, ...)
     va_list parameters;
     va_start(parameters, format);
 
+    vprintf(format, parameters);
+
+    va_end(parameters);
+
+    return 1;
+}
+
+int vprintf(const char *format, va_list list)
+{
+
     int next_is_format = 0;
 
     while (*format != '\0')
@@ -81,7 +91,7 @@ int printf(const char *format, ...)
             // they will not work because the bootstrap has not initialized them
             if (*format == 's')
             {
-                char *str = va_arg(parameters, char *);
+                char *str = va_arg(list, char *);
 
                 if (!print(str, strlen(str)))
                 {
@@ -90,23 +100,23 @@ int printf(const char *format, ...)
             }
             else if (*format == 'c')
             {
-                char c = (char)va_arg(parameters, int);
+                char c = (char)va_arg(list, int);
 
                 putchar(c);
             }
             else if (*format == 'd')
             {
-                int i = va_arg(parameters, int);
+                int i = va_arg(list, int);
                 print_int(i, 10);
             }
             else if (*format == 'x')
             {
-                int x = va_arg(parameters, int);
+                int x = va_arg(list, int);
                 print_int(x, 16);
             }
             else if (*format == 'p')
             {
-                void *p = va_arg(parameters, void *);
+                void *p = va_arg(list, void *);
 
                 print_int((size_t)p, 16);
             }
@@ -123,9 +133,9 @@ int printf(const char *format, ...)
         format++;
     }
 
-    va_arg(parameters, const char *);
+    va_arg(list, const char *);
 
-    va_end(parameters);
+    va_end(list);
 
     return 1;
 }

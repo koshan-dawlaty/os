@@ -164,17 +164,6 @@ void unmap_page(void *virtual_address)
     flush_tlb_full();
 }
 
-void test(uint32_t virtual, uint32_t physical)
-{
-    printf("map page test\n");
-    map_page((void *)physical, (void *)virtual, PAGING_WRITEABLE);
-
-    *(char *)virtual = 'a';
-
-    printf("%p\n", get_physaddr((void *)virtual));
-    unmap_page((void *)virtual);
-}
-
 void get_free_pages_test()
 {
     printf("get free pages test\n");

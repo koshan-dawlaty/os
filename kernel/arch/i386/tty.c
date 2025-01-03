@@ -59,6 +59,7 @@ void terminal_putchar(char c)
     {
         terminal_row = 0;
         terminal_column++;
+        // this causes triple faults
         return;
     }
 
