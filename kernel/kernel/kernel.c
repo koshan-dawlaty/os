@@ -12,13 +12,13 @@ int main()
     init_paging();
 
 #ifndef NO_TESTS
-    run_all_arch_tests();
+    run_all_tests();
 #endif
 
-    keyboard_reset();
-    keyboard_set_default();
-    keyboard_set_typematic(0, 0);
-    keyboard_set_led(KEYBOARD_LED_CAPS_LOCK);
+    /* keyboard_reset(); */
+    /* keyboard_set_default(); */
+    /* keyboard_set_typematic(0, 0); */
+    /* keyboard_set_led(KEYBOARD_LED_CAPS_LOCK); */
 
     while (1)
     {
