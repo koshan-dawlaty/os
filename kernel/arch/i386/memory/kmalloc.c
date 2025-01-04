@@ -18,7 +18,7 @@ inline void *block_to_ptr(Block *block)
 
 inline Block *ptr_to_block(void *ptr)
 {
-    return ptr - sizeof(Block);
+    return (Block *)ptr - sizeof(Block);
 }
 
 void *current_page = NULL;
@@ -47,7 +47,7 @@ Block *get_block(size_t size)
         current_page = get_free_pages(1);
     }
 
-    Block *block = (Block *)current_page;
+    Block *block = (Block *)current_page + current_page_offset;
     block->size = size;
     block->next = NULL;
 
@@ -60,6 +60,7 @@ Block *get_block_from_bin_fast(Block **bin, int new_size)
 {
     if (*bin == NULL)
     {
+
         return get_block(new_size);
     }
 
@@ -151,6 +152,19 @@ void *kmalloc(size_t size)
 
 void kfree(void *ptr)
 {
+
     Block *block = ptr_to_block(ptr);
-    insert_bin(&small_bins[0], block);
+    int total_size = block->size + sizeof(Block);
+
+    /* printf("block size:%d\n", block->size); */
+    /* printf("total size:%d\n", total_size / ALIGN); */
+
+    if (total_size < SMALL_BIN_AMOUNT * ALIGN)
+    {
+        insert_bin(&(small_bins[total_size / ALIGN]), block);
+    }
+    else
+    {
+        insert_bin(&unsorted_bin, block);
+    }
 }
