@@ -1,5 +1,6 @@
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
+#include "keyboard/x86_keyboard.h"
 #include "tests/tests.h"
 #include <kernel/tty.h>
 #include <stddef.h>
@@ -10,15 +11,12 @@ int main()
 {
     terminal_initialize();
     init_paging();
+    // useless
+    keyboard_init();
 
 #ifndef NO_TESTS
     run_all_tests();
 #endif
-
-    /* keyboard_reset(); */
-    /* keyboard_set_default(); */
-    /* keyboard_set_typematic(0, 0); */
-    /* keyboard_set_led(KEYBOARD_LED_CAPS_LOCK); */
 
     while (1)
     {

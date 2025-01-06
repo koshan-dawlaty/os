@@ -30,6 +30,7 @@ void *get_free_pages(size_t amount)
     {
         if (((virtual_free_page_bitmap[i / 8] >> (i % 8)) & 1) == FREE)
         {
+            /* printf("i is:%d\n", i); */
             if (consecutive == 0)
             {
                 consecutive_start = i;
@@ -40,6 +41,7 @@ void *get_free_pages(size_t amount)
         else
         {
             consecutive_start = 0;
+            consecutive = 0;
         }
 
         if (consecutive >= amount)
@@ -48,6 +50,8 @@ void *get_free_pages(size_t amount)
         }
     }
 
+    /* printf("start:%d\n", consecutive_start); */
+
     void *addr = (void *)((i)*PAGE_SIZE);
 
     void *virtual_addr = addr + VIRTUAL_PAGES_START;
@@ -55,10 +59,11 @@ void *get_free_pages(size_t amount)
 
     for (size_t j = consecutive_start; j < amount + i; j++)
     {
+        /* printf("j is:%d\n", j); */
 
         /* printf("virtual:%p\nphysical:%p\n", virtual_addr, physical_addr); */
 
-        virtual_free_page_bitmap[j / 8] |= IN_USE >> (j % 8);
+        virtual_free_page_bitmap[j / 8] |= (1 << (j % 8));
         map_page(physical_addr, virtual_addr, PAGING_WRITEABLE);
 
         physical_addr += PAGE_SIZE * j;
