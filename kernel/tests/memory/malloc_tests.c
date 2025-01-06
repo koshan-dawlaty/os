@@ -57,6 +57,19 @@ void malloc_test_multiple()
     kfree(ptrs);
 }
 
+void malloc_test_diffrent_addrs()
+{
+    int *one = kmalloc(10);
+    int *two = kmalloc(10);
+    if (one == two)
+    {
+        printf("malloc test diffrent addrs failed!\nkmalloc returned the same "
+               "pointers!\n");
+    }
+    kfree(one);
+    kfree(two);
+}
+
 void malloc_test_big()
 {
     test_debug_print("malloc test big\n");
@@ -80,9 +93,38 @@ void malloc_test_big()
     kfree(three);
 }
 
+void malloc_test_big2()
+{
+    test_debug_print("malloc test big2\n");
+
+    int *one = kmalloc(4096);
+    *one = 1;
+    malloc_tests_assert(*one, 1);
+
+    kfree(one);
+    int *two = kmalloc(4096);
+
+    // this does not work
+    malloc_tests_assert((int)one, (int)two);
+    int *three = kmalloc(2049);
+
+    /* printf("1: %p, 2: %p, 3: %p\n", one, two, three); */
+
+    *two = 2;
+    *three = 3;
+
+    malloc_tests_assert(*two, 2);
+    malloc_tests_assert(*three, 3);
+
+    kfree(two);
+    kfree(three);
+}
+
 void run_malloc_tests()
 {
     malloc_test_basic();
     malloc_test_multiple();
+    malloc_test_diffrent_addrs();
     malloc_test_big();
+    malloc_test_big2();
 }

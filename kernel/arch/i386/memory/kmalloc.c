@@ -44,9 +44,9 @@ Block *get_block(size_t size)
     if (current_page == NULL ||
         current_page_offset + size + sizeof(Block) >= PAGE_SIZE)
     {
-        printf("old page %p\n", current_page);
+        /* printf("old page %p\n", current_page); */
         current_page = get_free_pages(1);
-        printf("new page %p\n \n", current_page);
+        /* printf("new page %p\n \n", current_page); */
 
         current_page_offset = 0;
     }

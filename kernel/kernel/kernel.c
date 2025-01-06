@@ -14,7 +14,7 @@ int main()
     // useless
     keyboard_init();
 
-#ifndef NO_TESTS
+#ifdef TESTS
     run_all_tests();
 #endif
 

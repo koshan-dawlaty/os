@@ -22,6 +22,7 @@ LIBS:=$(LIBS)
 
 ARCHDIR=arch/$(HOSTARCH)
 
+
 include $(ARCHDIR)/make.config
 
 CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS) # -mgeneral-regs-only
@@ -31,6 +32,8 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
+$(KERNEL_TEST_OBJS) \
+$(KERNEL_ARCH_TEST_OBJS) \
 kernel/kernel.o \
 kernel/utils.o \
 
