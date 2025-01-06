@@ -41,6 +41,11 @@ ISR(virtualization_fault_handler, {
     fault_handler_wait();
 });
 
+ISR(division_fault_handler, {
+    printf("divide by zero!\n");
+    fault_handler_wait();
+});
+
 void init_faults()
 {
     for (uint8_t i = 0; i < 32; i++)

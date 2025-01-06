@@ -1,13 +1,8 @@
-real malloc
-
+more malloc tests
 make it more platform independent
-
 actually test keyboard driver led/keymatic functions
-
 fault handlers
-
 file system
-
 modular kernel
-
 tests
+hal

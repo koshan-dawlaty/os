@@ -2,6 +2,7 @@
 #include "faults.h"
 #include "idt_internal.h"
 #include "pic.h"
+#include "pit/pit.h"
 
 #include "keyboard/x86_keyboard.h"
 #include "utils.h"
@@ -57,13 +58,6 @@ void load_idt()
 
 ISR(default_interrupt_handler, { printf("default interrupt\n"); })
 
-// this is necessary for keyboard
-ISR(pit_interrupt_handler, {
-    /* printf("pit interrupt handler called\n"); */
-
-    PIC_sendEOI(0);
-})
-
 void init_idt()
 {
     idtr.base = (uintptr_t)&idt[0];
@@ -85,8 +79,7 @@ void init_idt()
     add_idt_entry((IDT_entry){(uint32_t)keyboard_interrupt_handler, 0x8, 0x8E},
                   0x21);
 
-    add_idt_entry((IDT_entry){(uint32_t)pit_interrupt_handler, 0x8, 0x8E},
-                  0x20);
+    add_idt_entry((IDT_entry){(uint32_t)pit_handler, 0x8, 0x8E}, 0x20);
 
     load_idt();
 

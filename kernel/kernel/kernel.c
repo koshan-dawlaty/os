@@ -1,6 +1,7 @@
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "keyboard/x86_keyboard.h"
+#include "pit/pit.h"
 #include "tests/tests.h"
 #include <kernel/tty.h>
 #include <stddef.h>
@@ -13,6 +14,7 @@ int main()
     init_paging();
     // useless
     keyboard_init();
+    init_pit();
 
 #ifdef TESTS
     run_all_tests();
