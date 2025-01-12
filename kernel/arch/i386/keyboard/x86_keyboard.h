@@ -11,6 +11,4 @@
 
 ISR_ATTRIBUTE void keyboard_interrupt_handler(struct interrupt_frame *frame);
 
-void keyboard_init();
-
 #endif

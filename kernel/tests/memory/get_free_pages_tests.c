@@ -35,6 +35,26 @@ void get_free_pages_test_basic()
 
 void get_free_pages_test_multiple()
 {
+    int amount = 10;
+    int size = 1;
+    // bad
+    int **ptrs = kmalloc(amount * sizeof(void *));
+
+    for (int i = 0; i < amount; i++)
+    {
+        ptrs[i] = get_free_pages(size);
+        *(ptrs[i]) = i;
+    }
+
+    for (int i = 0; i < amount; i++)
+    {
+        paging_tests_assert(*ptrs[i], i);
+    }
+
+    for (int i = 0; i < amount; i++)
+    {
+        free_pages(ptrs[i], size);
+    }
 }
 
 void run_get_free_pages_tests()

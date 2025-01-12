@@ -32,6 +32,7 @@ $(ARCH_FREEOBJS) \
 string/strlen.o \
 stdlib/atoi.o \
 string/memcpy.o \
+string/memset.o \
 stdio/putchar.o \
 stdio/printf.o \
 stdio/getchar.o \

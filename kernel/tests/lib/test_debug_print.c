@@ -1,5 +1,6 @@
 #include "tests/tests.h"
 #include <stdarg.h>
+#include <stdio.h>
 
 void test_debug_print(char *format, ...)
 {

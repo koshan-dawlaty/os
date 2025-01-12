@@ -1,12 +1,13 @@
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
-#include "keyboard/x86_keyboard.h"
+#include "kernel/usermode.h"
+#include "memory/paging_flags.h"
 #include "pit/pit.h"
 #include "tests/tests.h"
 #include <kernel/tty.h>
 #include <stddef.h>
 #include <stdio.h>
-#define TEST_DEBUG
+#include <string.h>
 
 int main()
 {
@@ -14,11 +15,14 @@ int main()
     init_paging();
     // useless
     keyboard_init();
+
     init_pit();
 
 #ifdef TESTS
     run_all_tests();
 #endif
+
+    jump_usermode();
 
     while (1)
     {

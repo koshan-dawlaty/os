@@ -4,6 +4,7 @@
 #include "pic.h"
 #include "pit/pit.h"
 
+#include "kernel/keyboard.h"
 #include "keyboard/x86_keyboard.h"
 #include "utils.h"
 
@@ -90,7 +91,7 @@ void init_idt()
 
     /* *(char *)(0x1) = 'a'; */
 
-    printf("calling interrupt\n");
-    asm volatile("int $0x50");
-    printf("called interrupt\n");
+    /* printf("calling interrupt\n"); */
+    /* asm volatile("int $0x50"); */
+    /* printf("called interrupt\n"); */
 }

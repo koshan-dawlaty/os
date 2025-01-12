@@ -121,7 +121,6 @@ _start:
 	// map paging_page_table
 
 
-
 	# Set cr3 to the address of the boot_page_directory.
 	movl $(boot_page_directory - 0xC0000000), %ecx
 	movl %ecx, %cr3

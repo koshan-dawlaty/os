@@ -4,7 +4,6 @@
 
 void malloc_tests_assert(int one, int two)
 {
-
     if (one != two)
     {
         printf("malloc test failed\n%p != %p\n", (void *)one, (void *)two);
@@ -29,10 +28,9 @@ void malloc_test_basic()
     malloc_tests_assert((int)one, (int)two);
 }
 
-void malloc_test_multiple()
+void malloc_test_multiple(size_t size)
 {
-    test_debug_print("multiple malloc test\n");
-    int size = 10;
+    test_debug_print("multiple malloc test, with size of: %d\n", size);
     int amount = 10;
 
     char **ptrs = kmalloc(size * amount * sizeof(char));
@@ -95,7 +93,7 @@ void malloc_test_big()
 
 void malloc_test_big2()
 {
-    test_debug_print("malloc test big2\n");
+    test_debug_print("malloc test big 2\n");
 
     int *one = kmalloc(4096);
     *one = 1;
@@ -107,8 +105,6 @@ void malloc_test_big2()
     // this does not work
     malloc_tests_assert((int)one, (int)two);
     int *three = kmalloc(2049);
-
-    /* printf("1: %p, 2: %p, 3: %p\n", one, two, three); */
 
     *two = 2;
     *three = 3;
@@ -123,8 +119,10 @@ void malloc_test_big2()
 void run_malloc_tests()
 {
     malloc_test_basic();
-    malloc_test_multiple();
     malloc_test_diffrent_addrs();
+    malloc_test_multiple(10);
+
     malloc_test_big();
     malloc_test_big2();
+    malloc_test_multiple(4096);
 }

@@ -1,8 +1,9 @@
 more malloc tests
 make it more platform independent
 actually test keyboard driver led/keymatic functions
-fault handlers
 file system
 modular kernel
-tests
+better tests
 hal
+ring 3
+physical page allocation that uses grub memory map 

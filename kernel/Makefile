@@ -36,6 +36,7 @@ $(KERNEL_TEST_OBJS) \
 $(KERNEL_ARCH_TEST_OBJS) \
 kernel/kernel.o \
 kernel/utils.o \
+kernel/usermode.o \
 
 TEST_OBJS=\
 		  tests/tests_main.o \

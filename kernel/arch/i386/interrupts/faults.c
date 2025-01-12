@@ -3,7 +3,10 @@
 
 #include "interrupts/idt.h"
 
+#include <stdint.h>
 #include <stdio.h>
+
+extern int get_cr2();
 
 void fault_handler_wait()
 {
@@ -33,6 +36,9 @@ ISR(double_fault_handler, {
 
 ISR(page_fault_handler, {
     printf("page fault!\n");
+
+    printf("faulting address:%p\n", (void *)get_cr2());
+    printf("error code:%p\n", (void *)frame->flags);
     fault_handler_wait();
 });
 

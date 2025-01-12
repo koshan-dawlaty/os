@@ -111,7 +111,8 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 
         table_entry *new_table = get_free_phys_page();
 
-        pd[pdindex] = ((directory_entry)(new_table)) | 0x3;
+        pd[pdindex] =
+            ((directory_entry)(new_table)) | PAGING_PRESENT | (flags & 0xFFF);
     }
 
     table_entry *pt = ((table_entry *)0xFFC00000) + (0x400 * pdindex);
@@ -127,7 +128,7 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 
     if ((table_entry & 0x1) != 0)
     {
-        /* printf("mapping already present!\n"); */
+        printf("mapping already present!\n");
 
         /* return; */
     }

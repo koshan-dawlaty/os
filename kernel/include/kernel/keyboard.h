@@ -19,5 +19,6 @@ void keyboard_set_typematic(uint8_t rate, uint8_t delay);
 #define KEYBOARD_LED_CAPS_LOCK 2 << 1
 
 void keyboard_set_led(uint8_t led);
+void keyboard_init();
 
 #endif
