@@ -8,6 +8,8 @@
 #include "keyboard/x86_keyboard.h"
 #include "utils.h"
 
+extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -82,8 +84,10 @@ void init_idt()
 
     add_idt_entry((IDT_entry){(uint32_t)pit_handler, 0x8, 0x8E}, 0x20);
 
-    load_idt();
+    // can use syscall instruction instead in long mode
+    add_idt_entry((IDT_entry){(uint32_t)syscall_handler_asm, 0x8, 0xEE}, 0x80);
 
+    load_idt();
     keyboard_init();
     /* outb(0x60, 0xFF); */
     /* printf("%x\n", inb(0x60)); */

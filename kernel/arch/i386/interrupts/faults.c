@@ -18,6 +18,7 @@ void fault_handler_wait()
 
 ISR(gpf_handler, {
     printf("gpf!!!\n");
+    printf("error code:%p\n", (void *)frame->flags);
 
     fault_handler_wait();
 });

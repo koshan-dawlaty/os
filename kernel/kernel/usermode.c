@@ -9,8 +9,9 @@ extern void jump_usermode_asm();
 
 void usermode_main()
 {
-    /* printf("usermode!!\n"); */
-    while (1)
+
+    asm("int $(0x80)");
+    /* printf("usermode!!\n"); while (1) */
     {
     }
 }

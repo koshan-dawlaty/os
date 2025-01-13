@@ -2,6 +2,9 @@
 #define I386_UTILS_H
 #include <stdint.h>
 
+extern uint32_t stack_top;
+#define kernel_stack_top &stack_top
+
 static inline void outb(uint16_t port, uint8_t val)
 {
     __asm__ volatile("outb %b0, %w1" : : "a"(val), "nd"(port) : "memory");

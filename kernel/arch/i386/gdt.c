@@ -1,5 +1,7 @@
 #include "gdt.h"
+#include "utils.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 typedef struct
@@ -22,7 +24,7 @@ typedef uint16_t padding;
 typedef uint32_t ext_reg;
 typedef uint16_t reg;
 
-struct tss
+struct tss_t
 {
     uint16_t link;
     padding padding0;
@@ -64,7 +66,7 @@ struct tss
     reg iopb;
     ext_reg ssp;
 } __attribute__((packed));
-struct tss tss;
+struct tss_t tss;
 
 static uint64_t gdt[6] = {0};
 static struct GDT_register gdtr;
@@ -132,12 +134,14 @@ void init_gdt()
     add_gdt_entry((GDT_entry){0, 0, 0, 0}, 0);
 
     // kernel
+
     // code
     add_gdt_entry((GDT_entry){0xFFFFF, 0x9A, 0xC, 0x0}, 1);
     // data
     add_gdt_entry((GDT_entry){0xFFFFF, 0x92, 0xC, 0x0}, 2);
 
     // user
+
     // code
     add_gdt_entry((GDT_entry){0xFFFFF, 0xFA, 0xC, 0x0}, 3);
     // data
@@ -148,7 +152,9 @@ void init_gdt()
     register int esp asm("esp");
 
     tss.ss0 = 0x10;
-    tss.esp0 = esp;
+    tss.esp0 = (uint32_t)kernel_stack_top;
+
+    printf("%p\n", &stack_top);
 
     // tss
     add_gdt_entry((GDT_entry){sizeof(tss) - 1, 0x89, 0x0, (uint32_t)&tss}, 5);

@@ -1,3 +1,4 @@
+#include "gdt.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "kernel/usermode.h"
