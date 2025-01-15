@@ -128,7 +128,7 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 
     if ((table_entry & 0x1) != 0)
     {
-        printf("mapping already present!\n");
+        // printf("mapping already present!\n");
 
         /* return; */
     }

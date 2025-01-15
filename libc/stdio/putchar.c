@@ -11,6 +11,7 @@ int putchar(int ic)
     terminal_write(&c, sizeof(c));
 #else
     // io version goes here
+
 #endif
     return ic;
 }

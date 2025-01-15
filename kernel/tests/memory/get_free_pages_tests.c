@@ -35,6 +35,8 @@ void get_free_pages_test_basic()
 
 void get_free_pages_test_multiple()
 {
+    test_debug_print("multiple get free pages test\n");
+
     int amount = 10;
     int size = 1;
     // bad

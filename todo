@@ -5,5 +5,5 @@ file system
 modular kernel
 better tests
 hal
-ring 3
+userspace
 physical page allocation that uses grub memory map 

@@ -52,6 +52,7 @@ $(TEST_OBJS) \
 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
+
 LINK_LIST=\
 $(LDFLAGS) \
 $(ARCHDIR)/crti.o \
@@ -71,9 +72,12 @@ BIN=bin
 
 all: $(BIN)/os.kernel
 
+
+
 $(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/linker.ld
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -lk -lgcc
 	grub-file --is-x86-multiboot $(BIN)/os.kernel
+
 
 $(BIN)/$(ARCHDIR)/crtbegin.o $(BIN)/$(ARCHDIR)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@

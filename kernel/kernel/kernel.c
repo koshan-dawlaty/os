@@ -23,7 +23,7 @@ int main()
     run_all_tests();
 #endif
 
-    jump_usermode();
+    /* jump_usermode(); */
 
     while (1)
     {

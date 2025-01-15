@@ -5,15 +5,17 @@
 #include <stdio.h>
 #include <string.h>
 
+extern void syscall_wrapper_asm(uint32_t eax, uint32_t ebx, uint32_t ecx,
+                                uint32_t edx, uint32_t esi, uint32_t edi);
 extern void jump_usermode_asm();
 
 void usermode_main()
 {
-
     asm("int $(0x80)");
-    /* printf("usermode!!\n"); while (1) */
+    while (1)
     {
     }
+    /* printf("usermode\n"); */
 }
 
 void jump_usermode()
@@ -49,6 +51,7 @@ void jump_usermode()
                  PAGING_WRITEABLE | PAGING_USER);
     }
 
+    memcpy((void *)USER_CODE_START, usermode_main, USER_CODE_SIZE);
     memcpy((void *)USER_CODE_START, usermode_main, USER_CODE_SIZE);
 
     jump_usermode_asm();

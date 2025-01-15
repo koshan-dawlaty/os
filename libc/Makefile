@@ -51,8 +51,8 @@ LIBK_OBJS=$(FREEOBJS:.o=.libk.o)
 
 LIBK_OBJS_BIN = $(foreach obj,$(LIBK_OBJS),bin/$(obj))
 
-#BINARIES=libc.a libk.a # Not ready for libc yet.
-BINARIES=libk.a
+BINARIES=libc.a libk.a # Not ready for libc yet.
+# BINARIES=libk.a
 
 .PHONY: all clean install install-headers install-libs
 # .SUFFIXES: .o .libk.o .c .S
