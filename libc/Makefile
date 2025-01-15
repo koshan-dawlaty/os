@@ -36,6 +36,7 @@ string/memset.o \
 stdio/putchar.o \
 stdio/printf.o \
 stdio/getchar.o \
+stdio/vprintf.o \
 
 
 HOSTEDOBJS=\
