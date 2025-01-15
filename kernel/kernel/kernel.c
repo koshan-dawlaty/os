@@ -8,6 +8,7 @@
 #include <kernel/tty.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int main()
@@ -22,14 +23,17 @@ int main()
 #ifdef TESTS
     run_all_tests();
 #endif
+    void *a = malloc(100);
+
+    free(a);
 
     /* jump_usermode(); */
 
-    while (1)
-    {
-        char c = getchar();
-        printf("%c", c);
-    }
+    /* while (1) */
+    /* { */
+    /*     char c = getchar(); */
+    /*     printf("%c", c); */
+    /* } */
 
     return 0;
 }

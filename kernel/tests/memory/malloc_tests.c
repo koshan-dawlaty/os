@@ -1,6 +1,8 @@
+// TODO: this should be in libc
 #include "kernel/paging.h"
 #include "tests/tests.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 void malloc_tests_assert(int one, int two)
 {
@@ -14,16 +16,16 @@ void malloc_test_basic()
 {
     test_debug_print("basic malloc test\n");
 
-    int *one = kmalloc(12);
+    int *one = malloc(12);
     *one = 12345;
 
     malloc_tests_assert(*one, 12345);
-    kfree(one);
-    int *two = kmalloc(12);
+    free(one);
+    int *two = malloc(12);
 
     *two = 67890;
     malloc_tests_assert(*two, 67890);
-    kfree(two);
+    free(two);
 
     malloc_tests_assert((int)one, (int)two);
 }
@@ -33,11 +35,11 @@ void malloc_test_multiple(size_t size)
     test_debug_print("multiple malloc test, with size of: %d\n", size);
     int amount = 10;
 
-    char **ptrs = kmalloc(size * amount * sizeof(char));
+    char **ptrs = malloc(size * amount * sizeof(char));
 
     for (int i = 0; i < amount; i++)
     {
-        char *ptr = kmalloc(size);
+        char *ptr = malloc(size);
         *ptr = 'a';
         ptrs[i] = ptr;
     }
@@ -49,32 +51,32 @@ void malloc_test_multiple(size_t size)
 
     for (int i = 0; i < amount; i++)
     {
-        kfree(ptrs[i]);
+        free(ptrs[i]);
     }
 
-    kfree(ptrs);
+    free(ptrs);
 }
 
 void malloc_test_diffrent_addrs()
 {
-    int *one = kmalloc(10);
-    int *two = kmalloc(10);
+    int *one = malloc(10);
+    int *two = malloc(10);
     if (one == two)
     {
-        printf("malloc test diffrent addrs failed!\nkmalloc returned the same "
+        printf("malloc test diffrent addrs failed!\nmalloc returned the same "
                "pointers!\n");
     }
-    kfree(one);
-    kfree(two);
+    free(one);
+    free(two);
 }
 
 void malloc_test_big()
 {
     test_debug_print("malloc test big\n");
 
-    int *one = kmalloc(4096);
-    int *two = kmalloc(2048);
-    int *three = kmalloc(2049);
+    int *one = malloc(4096);
+    int *two = malloc(2048);
+    int *three = malloc(2049);
 
     /* printf("1: %p, 2: %p, 3: %p\n", one, two, three); */
 
@@ -86,25 +88,25 @@ void malloc_test_big()
     malloc_tests_assert(*two, 2);
     malloc_tests_assert(*three, 3);
 
-    kfree(one);
-    kfree(two);
-    kfree(three);
+    free(one);
+    free(two);
+    free(three);
 }
 
 void malloc_test_big2()
 {
     test_debug_print("malloc test big 2\n");
 
-    int *one = kmalloc(4096);
+    int *one = malloc(4096);
     *one = 1;
     malloc_tests_assert(*one, 1);
 
-    kfree(one);
-    int *two = kmalloc(4096);
+    free(one);
+    int *two = malloc(4096);
 
     // this does not work
     malloc_tests_assert((int)one, (int)two);
-    int *three = kmalloc(2049);
+    int *three = malloc(2049);
 
     *two = 2;
     *three = 3;
@@ -112,8 +114,8 @@ void malloc_test_big2()
     malloc_tests_assert(*two, 2);
     malloc_tests_assert(*three, 3);
 
-    kfree(two);
-    kfree(three);
+    free(two);
+    free(three);
 }
 
 void run_malloc_tests()

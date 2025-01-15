@@ -1,6 +1,21 @@
-#include "kernel/paging.h"
-#include "kernel/utils.h"
-#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#ifdef __is_libk
+#include <kernel/paging.h>
+#endif
+
+// TODO: this is duplicated in kernel
+long align_long2(long in, long align)
+{
+
+    if (in % align == 0)
+    {
+        return in;
+    }
+
+    return (in + align) - (in % align);
+}
 
 // would be 8 on 64 bit
 #define ALIGN 4
@@ -40,11 +55,14 @@ void insert_bin(Block **bin, Block *block)
 
 Block *get_block(size_t size)
 {
+
+#ifdef __is_libk
     // bad
     if (current_page == NULL ||
         current_page_offset + size + sizeof(Block) >= PAGE_SIZE)
     {
         /* printf("old page %p\n", current_page); */
+
         current_page = get_free_pages(1);
         /* printf("new page %p\n \n", current_page); */
 
@@ -58,6 +76,7 @@ Block *get_block(size_t size)
     current_page_offset += size + sizeof(Block);
 
     return block;
+#endif
 }
 
 Block *get_block_from_bin_fast(Block **bin, int new_size)
@@ -112,7 +131,7 @@ Block *get_block_from_bin(Block **bin, size_t new_size)
         }
 
         // may break
-        if ((current_block)->size == (size_t)align_long(new_size, ALIGN))
+        if ((current_block)->size == (size_t)align_long2(new_size, ALIGN))
         {
 
             /* printf("matching block found\n"); */
@@ -137,10 +156,10 @@ Block *get_block_from_bin(Block **bin, size_t new_size)
     return get_block(new_size);
 }
 
-void *kmalloc(size_t size)
+void *malloc(size_t size)
 {
 
-    int total_size = align_long(size + sizeof(Block), ALIGN);
+    int total_size = align_long2(size + sizeof(Block), ALIGN);
     /* printf("total size:%d\n", total_size / ALIGN); */
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
@@ -154,7 +173,7 @@ void *kmalloc(size_t size)
     }
 }
 
-void kfree(void *ptr)
+void free(void *ptr)
 {
 
     Block *block = ptr_to_block(ptr);

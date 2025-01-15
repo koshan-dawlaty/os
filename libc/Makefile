@@ -31,6 +31,7 @@ FREEOBJS=\
 $(ARCH_FREEOBJS) \
 string/strlen.o \
 stdlib/atoi.o \
+stdlib/malloc.o \
 string/memcpy.o \
 string/memset.o \
 stdio/putchar.o \

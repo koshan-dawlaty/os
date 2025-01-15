@@ -1,6 +1,7 @@
 #include "kernel/paging.h"
 #include "tests/tests.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 void paging_tests_assert(int one, int two)
 {
@@ -40,7 +41,7 @@ void get_free_pages_test_multiple()
     int amount = 10;
     int size = 1;
     // bad
-    int **ptrs = kmalloc(amount * sizeof(void *));
+    int **ptrs = malloc(amount * sizeof(void *));
 
     for (int i = 0; i < amount; i++)
     {
