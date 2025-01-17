@@ -154,8 +154,6 @@ void init_gdt()
     tss.ss0 = 0x10;
     tss.esp0 = (uint32_t)kernel_stack_top;
 
-    printf("%p\n", &stack_top);
-
     // tss
     add_gdt_entry((GDT_entry){sizeof(tss) - 1, 0x89, 0x0, (uint32_t)&tss}, 5);
 

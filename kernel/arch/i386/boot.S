@@ -157,7 +157,8 @@ _start:
 	# Set up the stack.
 	mov $stack_top, %esp
 	
-
+	call kernel_init
+	call _init
 	call main
 
 	# Infinite loop if the system has nothing more to do.

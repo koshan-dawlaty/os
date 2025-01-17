@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef uint32_t directory_entry;
 typedef uint32_t table_entry;
@@ -118,11 +119,13 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
     table_entry *pt = ((table_entry *)0xFFC00000) + (0x400 * pdindex);
 
     // Here you need to check whether the PT entry is present.
-    // When it is, then there is already a mapping present. What do you do now?
+    // When it is, then there is already a mapping present. What do you do
+    // now?
 
     table_entry table_entry = pt[ptindex];
 
-    /* printf("mapping at dir index: %p, table index: %p\n", pdindex, ptindex);
+    /* printf("mapping at dir index: %p, table index: %p\n", pdindex,
+     * ptindex);
      */
     /* printf("entry: %p\n", table_entry); */
 

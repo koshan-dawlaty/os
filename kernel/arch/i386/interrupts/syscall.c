@@ -17,5 +17,5 @@ void syscall_handler(struct syscall_regs *registers)
 
     printf("%d\n", registers->eax);
 
-    printf("test\n");
+    /* printf("test\n"); */
 }

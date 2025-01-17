@@ -13,7 +13,6 @@ void paging_tests_assert(int one, int two)
 
 void get_free_pages_test_basic()
 {
-    test_debug_print("basic get free pages test\n");
 
     int *one = get_free_pages(1);
     int *two = get_free_pages(1);
@@ -36,7 +35,6 @@ void get_free_pages_test_basic()
 
 void get_free_pages_test_multiple()
 {
-    test_debug_print("multiple get free pages test\n");
 
     int amount = 10;
     int size = 1;

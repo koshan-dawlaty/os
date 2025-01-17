@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef __is_libk
 #include <kernel/paging.h>
@@ -190,4 +191,14 @@ void free(void *ptr)
     {
         insert_bin(&unsorted_bin, block);
     }
+}
+
+// TODO: VERY BAD!!!!
+void *realloc(void *ptr, size_t new_size)
+{
+    Block *block = ptr_to_block(ptr);
+    void *new_ptr = malloc(new_size);
+    memcpy(new_ptr, ptr, block->size);
+
+    return new_ptr;
 }

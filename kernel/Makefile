@@ -30,6 +30,10 @@ CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
+TEST_OBJS=\
+		  tests/tests_main.o \
+		  tests/lib/tests_lib.o \
+
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 $(KERNEL_TEST_OBJS) \
@@ -38,17 +42,14 @@ kernel/kernel.o \
 kernel/utils.o \
 kernel/usermode.o \
 
-TEST_OBJS=\
-		  tests/tests_main.o \
-		  tests/lib/test_debug_print.o \
 
 OBJS=\
 $(ARCHDIR)/crti.o \
 $(ARCHDIR)/crtbegin.o \
 $(KERNEL_OBJS) \
+$(TEST_OBJS) \
 $(ARCHDIR)/crtend.o \
 $(ARCHDIR)/crtn.o \
-$(TEST_OBJS) \
 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
@@ -58,10 +59,10 @@ $(LDFLAGS) \
 $(ARCHDIR)/crti.o \
 $(ARCHDIR)/crtbegin.o \
 $(KERNEL_OBJS) \
+$(TEST_OBJS) \
 $(LIBS) \
 $(ARCHDIR)/crtend.o \
 $(ARCHDIR)/crtn.o \
-$(TEST_OBJS)
 
 LINK_LIST_BIN = $(foreach obj,$(LINK_LIST),bin/$(obj))
 

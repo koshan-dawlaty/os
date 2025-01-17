@@ -30,6 +30,12 @@ SECTIONS
 	{
 		*(.data)
 	}
+	.ctors ALIGN (4) : AT (ADDR(.ctors) - 0xC0000000) {
+        __CTOR_LIST__ = .;
+        KEEP(*(.ctors))
+        KEEP(*(.init_array))
+        __CTOR_END__ = .;
+    }
 	.bss ALIGN (4K) : AT (ADDR (.bss) - 0xC0000000)
 	{
 		*(COMMON)
