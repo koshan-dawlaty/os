@@ -34,6 +34,15 @@ void test_assert_ne(int a, int b)
     }
 }
 
+void test_assert_true(int condition)
+{
+    if (!condition)
+    {
+        fail_test();
+        printf("condition was false\n");
+    }
+}
+
 Test *new_test(char *name, callback func)
 {
     /* printf("calling malloc!!\n"); */

@@ -3,17 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void paging_tests_assert(int one, int two)
-{
-    if (one != two)
-    {
-        printf("paging test failed\n%p != %p\n", (void *)one, (void *)two);
-    }
-}
-
-void get_free_pages_test_basic()
-{
-
+TEST(get_free_pages_test_basic, {
     int *one = get_free_pages(1);
     int *two = get_free_pages(1);
     int *three = get_free_pages(1);
@@ -24,18 +14,16 @@ void get_free_pages_test_basic()
     *two = 2;
     *three = 3;
 
-    paging_tests_assert(*one, 1);
-    paging_tests_assert(*two, 2);
-    paging_tests_assert(*three, 3);
+    ASSERT_EQ(*one, 1);
+    ASSERT_EQ(*two, 2);
+    ASSERT_EQ(*three, 3);
 
     free_pages(one, 1);
     free_pages(two, 1);
     free_pages(three, 1);
-}
+})
 
-void get_free_pages_test_multiple()
-{
-
+TEST(get_free_pages_test_multiple, {
     int amount = 10;
     int size = 1;
     // bad
@@ -49,18 +37,11 @@ void get_free_pages_test_multiple()
 
     for (int i = 0; i < amount; i++)
     {
-        paging_tests_assert(*ptrs[i], i);
+        ASSERT_EQ(*ptrs[i], i);
     }
 
     for (int i = 0; i < amount; i++)
     {
         free_pages(ptrs[i], size);
     }
-}
-
-void run_get_free_pages_tests()
-{
-    printf("tjkesltj\n");
-    get_free_pages_test_basic();
-    get_free_pages_test_multiple();
-}
+})

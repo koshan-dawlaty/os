@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-TEST(abc, {})
-
 void kernel_init()
 {
     terminal_initialize();

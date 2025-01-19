@@ -2,7 +2,6 @@
 #define TESTS_H
 
 void run_all_tests();
-void run_all_arch_tests();
 
 typedef void (*callback)();
 
@@ -19,10 +18,12 @@ void fail_test();
 
 void test_assert_eq(int a, int b);
 void test_assert_ne(int a, int b);
+void test_assert_true(int condition);
 
+// TODO: make these macros type independent
 #define ASSERT_EQ(a, b) test_assert_eq(a, b)
 #define ASSERT_NE(a, b) test_assert_ne(a, b)
-#define ASSERT_TRUE(a) fail_test(!a)
+#define ASSERT_TRUE(a) test_assert_true(a)
 
 #ifdef TESTS
 #define TEST_CONSTRUCTOR(name)                                                 \
