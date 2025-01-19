@@ -1,6 +1,7 @@
 // TODO: this file should be in libc
 #include "kernel/paging.h"
 #include "tests/tests.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -20,17 +21,8 @@ TEST(malloc_test_basic, {
     ASSERT_EQ((int)one, (int)two);
 })
 
-void malloc_tests_assert(int one, int two)
+void malloc_test_multiple(size_t size, int amount)
 {
-    if (one != two)
-    {
-        printf("malloc test failed\n%p != %p\n", (void *)one, (void *)two);
-    }
-}
-
-void malloc_test_multiple(size_t size)
-{
-    int amount = 10;
 
     char **ptrs = malloc(size * amount * sizeof(char));
 
@@ -43,7 +35,7 @@ void malloc_test_multiple(size_t size)
 
     for (int i = 0; i < amount; i++)
     {
-        malloc_tests_assert(*(ptrs[i]), 'a');
+        ASSERT_EQ(*(ptrs[i]), 'a');
     }
 
     for (int i = 0; i < amount; i++)
@@ -54,22 +46,17 @@ void malloc_test_multiple(size_t size)
     free(ptrs);
 }
 
-void malloc_test_diffrent_addrs()
-{
+TEST(malloc_test_diffrent_addrs, {
     int *one = malloc(10);
     int *two = malloc(10);
-    if (one == two)
-    {
-        printf("malloc test diffrent addrs failed!\nmalloc returned the same "
-               "pointers!\n");
-    }
+
+    ASSERT_NE((uint32_t)one, (uint32_t)two);
+
     free(one);
     free(two);
-}
+})
 
-void malloc_test_big()
-{
-
+TEST(malloc_test_big, {
     int *one = malloc(4096);
     int *two = malloc(2048);
     int *three = malloc(2049);
@@ -80,45 +67,37 @@ void malloc_test_big()
     *two = 2;
     *three = 3;
 
-    malloc_tests_assert(*one, 1);
-    malloc_tests_assert(*two, 2);
-    malloc_tests_assert(*three, 3);
+    ASSERT_EQ(*one, 1);
+    ASSERT_EQ(*two, 2);
+    ASSERT_EQ(*three, 3);
 
     free(one);
     free(two);
     free(three);
-}
+})
 
-void malloc_test_big2()
-{
-
+TEST(malloc_test_big2, {
     int *one = malloc(4096);
     *one = 1;
-    malloc_tests_assert(*one, 1);
+    ASSERT_EQ(*one, 1);
 
     free(one);
     int *two = malloc(4096);
 
     // this does not work
-    malloc_tests_assert((int)one, (int)two);
+    ASSERT_EQ((int)one, (int)two);
     int *three = malloc(2049);
 
     *two = 2;
     *three = 3;
 
-    malloc_tests_assert(*two, 2);
-    malloc_tests_assert(*three, 3);
+    ASSERT_EQ(*two, 2);
+    ASSERT_EQ(*three, 3);
 
     free(two);
     free(three);
-}
+})
 
-void run_malloc_tests()
-{
-    malloc_test_diffrent_addrs();
-    malloc_test_multiple(10);
-
-    malloc_test_big();
-    malloc_test_big2();
-    malloc_test_multiple(4096);
-}
+// bad
+TEST(malloc_test_multiple_small, { malloc_test_multiple(10, 10); })
+TEST(malloc_test_multiple_large, { malloc_test_multiple(4096, 3); })

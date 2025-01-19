@@ -60,6 +60,7 @@ void get_free_pages_test_multiple()
 
 void run_get_free_pages_tests()
 {
+    printf("tjkesltj\n");
     get_free_pages_test_basic();
     get_free_pages_test_multiple();
 }

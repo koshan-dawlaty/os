@@ -1,4 +1,5 @@
 #include "tests/tests.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,11 +25,22 @@ void test_assert_eq(int a, int b)
     }
 }
 
+void test_assert_ne(int a, int b)
+{
+    if (a == b)
+    {
+        fail_test();
+        printf("%d == %d\n", a, b);
+    }
+}
+
 Test *new_test(char *name, callback func)
 {
+    /* printf("calling malloc!!\n"); */
     Test *out = malloc(sizeof(Test));
-
-    out->name = name;
+    /* printf("pointer is:%p, size is:%p, name is:%s\n", out, out + 1, name); */
+    /* out->name = strdup("abcdefg"); */
+    out->name = strdup(name);
     out->func = func;
 
     return out;
@@ -36,6 +48,8 @@ Test *new_test(char *name, callback func)
 
 void add_test(Test *test)
 {
+    /* printf("tests points to:%p\n", tests); */
+    /* printf("%d\n", tests_size); */
     /* printf("add_test called for %s\n", test->name); */
     tests_size++;
     tests = realloc(tests, tests_size * sizeof(Test));
@@ -56,12 +70,18 @@ int run_test(Test *test)
 
 void run_all_tests()
 {
-
+    /* printf("running tests\n"); */
     int *failed_indexes = malloc(sizeof(int) * tests_size);
+    /* printf("this is:%p\n", failed_indexes); */
     size_t failed_indexes_index = 0;
 
     for (size_t i = 0; i < tests_size; i++)
     {
+        /* if ((uint32_t)tests[i] < 100) */
+        /* { */
+        /*     printf("addr: %p\n", tests[i]); */
+        /* } */
+
         printf("running: %s\n", tests[i]->name);
         if (run_test(tests[i]))
         {

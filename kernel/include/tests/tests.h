@@ -18,8 +18,10 @@ void add_test(Test *);
 void fail_test();
 
 void test_assert_eq(int a, int b);
+void test_assert_ne(int a, int b);
 
 #define ASSERT_EQ(a, b) test_assert_eq(a, b)
+#define ASSERT_NE(a, b) test_assert_ne(a, b)
 #define ASSERT_TRUE(a) fail_test(!a)
 
 #ifdef TESTS

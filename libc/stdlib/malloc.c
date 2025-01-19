@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,14 +28,28 @@ typedef struct Block
     struct Block *next;
 } Block;
 
+void print_bin(Block **bin)
+{
+    Block *current = *bin;
+    while (current != NULL)
+    {
+
+        printf("size: %d ", current->size);
+
+        bin++;
+        current = *bin;
+    }
+    printf("null\n");
+}
+
 inline void *block_to_ptr(Block *block)
 {
-    return block + sizeof(Block);
+    return block + 1;
 }
 
 inline Block *ptr_to_block(void *ptr)
 {
-    return (Block *)ptr - sizeof(Block);
+    return ((Block *)ptr) - 1;
 }
 
 void *current_page = NULL;
@@ -54,6 +69,8 @@ void insert_bin(Block **bin, Block *block)
     (*bin)->next = old;
 }
 
+static int heap_debug = 0;
+
 Block *get_block(size_t size)
 {
 
@@ -62,21 +79,31 @@ Block *get_block(size_t size)
     if (current_page == NULL ||
         current_page_offset + size + sizeof(Block) >= PAGE_SIZE)
     {
-        /* printf("old page %p\n", current_page); */
 
         current_page = get_free_pages(1);
-        /* printf("new page %p\n \n", current_page); */
-
         current_page_offset = 0;
     }
 
-    Block *block = (Block *)current_page + current_page_offset;
+    if (heap_debug)
+    {
+        /* printf("page is: %p, offset is: %d, total: %p\n", current_page, */
+        /*        current_page_offset, current_page + current_page_offset); */
+        *(size_t *)(current_page + current_page_offset) = 'a';
+        /* printf("this runs after!!\n"); */
+    }
+
+    // it is something to do with parenthesis here
+    Block *block = (Block *)(current_page + current_page_offset);
+
+    /* printf("block addr: %p\n", block); */
+
     block->size = size;
     block->next = NULL;
 
     current_page_offset += size + sizeof(Block);
 
     return block;
+
 #endif
 }
 
@@ -85,7 +112,19 @@ Block *get_block_from_bin_fast(Block **bin, int new_size)
     if (*bin == NULL)
     {
 
-        return get_block(new_size);
+        Block *b = get_block(new_size);
+
+        if (heap_debug)
+        {
+            /* printf("this is running!!\n"); */
+
+            while (1)
+            {
+                asm("hlt");
+            }
+        }
+
+        return b;
     }
 
     Block *output = *bin;
@@ -119,8 +158,6 @@ Block *get_block_from_bin(Block **bin, size_t new_size)
                 new_size)
         {
 
-            /* printf("condition true\n"); */
-
             // remove next two blocks
             *prev_block = current_block->next->next;
 
@@ -152,19 +189,18 @@ Block *get_block_from_bin(Block **bin, size_t new_size)
         *prev_block = current_block;
         current_block = current_block->next;
     }
-    /* printf("no matching block\n"); */
 
     return get_block(new_size);
 }
 
 void *malloc(size_t size)
 {
-
     int total_size = align_long2(size + sizeof(Block), ALIGN);
     /* printf("total size:%d\n", total_size / ALIGN); */
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
+
         return block_to_ptr(
             get_block_from_bin_fast(&(small_bins[total_size / ALIGN]), size));
     }
@@ -178,6 +214,7 @@ void free(void *ptr)
 {
 
     Block *block = ptr_to_block(ptr);
+    /* printf("free size is:%d\n", block->size); */
     int total_size = block->size + sizeof(Block);
 
     /* printf("block size:%d\n", block->size); */
@@ -196,9 +233,20 @@ void free(void *ptr)
 // TODO: VERY BAD!!!!
 void *realloc(void *ptr, size_t new_size)
 {
+
+    if (ptr == NULL)
+    {
+        return malloc(new_size);
+    }
+
     Block *block = ptr_to_block(ptr);
+    /* printf("realloc size is:%d\n", block->size); */
+    /* printf("normal %p, no %p\n", block, block - 1); */
+    /* printf("realloc ptr is:%p\n", ptr); */
     void *new_ptr = malloc(new_size);
     memcpy(new_ptr, ptr, block->size);
+
+    /* free(ptr); */
 
     return new_ptr;
 }

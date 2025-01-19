@@ -1,10 +1,14 @@
 #include <string.h>
 
-void *memcpy(void *dstptr, void *srcptr, size_t size) {
-    char *dst = (char *)dstptr;
-    char *src = (char *)srcptr;
+typedef unsigned char memcpy_t;
 
-    for (size_t i = 0; i < size; i++) {
+void *memcpy(void *dstptr, void *srcptr, size_t size)
+{
+    memcpy_t *dst = (memcpy_t *)dstptr;
+    memcpy_t *src = (memcpy_t *)srcptr;
+
+    for (size_t i = 0; i < size; i++)
+    {
         dst[i] = src[i];
     }
 
