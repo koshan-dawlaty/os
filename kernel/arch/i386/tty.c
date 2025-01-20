@@ -59,7 +59,8 @@ void terminal_putchar(char c)
     {
         terminal_row = 0;
         terminal_column++;
-        // this causes triple faults
+
+        // TODO: this causes triple faults
         return;
     }
 
@@ -123,5 +124,7 @@ void terminal_scroll_up()
     {
         move_line(i, i + 1);
     }
+
     terminal_row = 0;
+    terminal_column--;
 }
