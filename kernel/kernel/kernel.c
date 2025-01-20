@@ -30,6 +30,12 @@ int main()
     while (1)
     {
         char c = getchar();
+
+        if (c == 'k')
+        {
+            terminal_scroll_up();
+            continue;
+        }
         printf("%c", c);
     }
 
