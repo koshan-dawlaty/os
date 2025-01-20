@@ -1,3 +1,4 @@
+#include "kernel/tty.h"
 #include "vga.h"
 #include <stdio.h>
 #include <string.h>
@@ -14,7 +15,7 @@ void terminal_writestring(const char *data);
 
 #endif
 
-#define TERMINAL_EMPTY_CHAR ' '
+#define TERMINAL_EMPTY_CHAR '_'
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
@@ -26,7 +27,6 @@ static uint16_t *terminal_buffer;
 
 void move_line(int dest_column, int source_column)
 {
-
     uint16_t *source = (terminal_buffer + source_column * VGA_WIDTH);
     uint16_t *dest = (terminal_buffer + dest_column * VGA_WIDTH);
 
@@ -87,17 +87,7 @@ void terminal_putchar(char c)
     }
     if (terminal_column == VGA_HEIGHT)
     {
-
-        /* terminal_column = 0; */
-        for (size_t i = 1; i < VGA_HEIGHT; i++)
-        {
-            move_line(i - 1, i);
-        }
-        terminal_column--;
-
-        // this seems to fix weird issues where the character prints one
-        // character before where it should be
-        terminal_row++;
+        terminal_scroll_up();
     }
     else
     {
@@ -120,4 +110,18 @@ void terminal_write(const char *data, size_t size)
 void terminal_writestring(const char *data)
 {
     terminal_write(data, strlen((char *)data));
+}
+
+void terminal_scroll_up()
+{
+    /* for (size_t i = VGA_HEIGHT - 2; i > 2; i--) */
+    /* { */
+    /*     move_line(i, i - 1); */
+    /* } */
+
+    for (size_t i = 0; i < VGA_HEIGHT; i++)
+    {
+        move_line(i, i + 1);
+    }
+    terminal_row = 0;
 }

@@ -23,11 +23,28 @@ int main()
     run_all_tests();
 #endif
 
+    for (size_t i = 0; i < 10; i++)
+    {
+        /* printf( */
+        /*     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaline
+         * %d\n", */
+        /*     i); */
+        printf("aaaaaaaaaaaaaaaaaaaaaaaaa\n");
+    }
+
+    terminal_scroll_up();
+
     /* jump_usermode(); */
 
     while (1)
     {
         char c = getchar();
+
+        if (c == 'k')
+        {
+            terminal_scroll_up();
+            continue;
+        }
         printf("%c", c);
     }
 
