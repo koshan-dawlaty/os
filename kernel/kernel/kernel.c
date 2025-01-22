@@ -23,12 +23,6 @@ int main()
     run_all_tests();
 #endif
 
-    printf("%p\n", 0x1234);
-    printf("%x\n", -0x1234);
-    printf("%x\n", 0x1234);
-    printf("%p\n", malloc(123));
-    printf("%d\n", -10);
-
     /* jump_usermode(); */
 
     while (1)
