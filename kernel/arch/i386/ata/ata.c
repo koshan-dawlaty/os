@@ -1,45 +1,82 @@
 #include "ata.h"
+#include "interrupts/idt.h"
+#include "interrupts/pic.h"
 #include "utils.h"
 #include <stdint.h>
 #include <stdio.h>
 
-void init_ata()
+/*
+ * reads status register 15 times to correctly select a drive
+ *
+ * very slow
+ */
+void ata_drive_select(uint16_t io_offset, uint16_t control_offset,
+                      uint8_t drive)
+{
+    outb(io_offset + ATA_DRIVE_HEAD, drive);
+
+    for (int i = 0; i < 14; i++)
+    {
+        inb(control_offset + ATA_ALT_STATUS);
+    }
+    uint8_t result = inb(control_offset + ATA_ALT_STATUS);
+
+    if (result & (1 << 7))
+    {
+        // drive still has status busy
+    }
+}
+
+// TODO: may hang if drive is not present
+
+/*
+ * returns 0 if succeeded
+ *
+ * returns 1 if drive is not ata
+ */
+int send_identify(uint16_t io_offset, uint16_t control_offset)
 {
 
-    /* for (int i = PRIMARY_BUS_OFFSET; i < 10 + PRIMARY_BUS_OFFSET; i++) */
-    /* { */
-    /*     printf("%p\n", inb(i)); */
-    /* } */
+    ata_drive_select(io_offset, control_offset, 0xA0);
+    outb(io_offset + ATA_SECTOR_COUNT, 0);
+    outb(io_offset + ATA_LBA_LO, 0);
+    outb(io_offset + ATA_LBA_MID, 0);
+    outb(io_offset + ATA_LBA_HI, 0);
+    // IDENTIFY command
+    outb(io_offset + ATA_COMMAND, 0xEC);
 
-    /* uint8_t tmp = inb(PRIMARY_BUS_OFFSET + 6); */
-    /* outb(PRIMARY_BUS_OFFSET + 6, tmp | (~(1 << 4))); */
-
-    uint8_t value = inb(ATA_PRIMARY_STATUS);
-
-    // wait for bit 7 to clear
-    while (value & (1 << 7))
+    // should be alternate status
+    uint8_t val = inb(control_offset + ATA_ALT_STATUS);
+    // TODO: DELAY HERE
+    /* printf("%p\n", val); */
+    while (val & (1 << 7))
     {
-        printf("value:%p\n", value);
-        value = inb(ATA_PRIMARY_STATUS);
+        if (inb(io_offset + ATA_LBA_MID) != 0 ||
+            inb(io_offset + ATA_LBA_HI) != 0)
+        {
+            return 1;
+        }
+
+        val = inb(control_offset + ATA_ALT_STATUS);
     }
-    printf("test\n");
 
-    outb(PRIMARY_BUS_OFFSET + 6, 0xA0);
-    outb(PRIMARY_BUS_OFFSET + 2, 0);
-    outb(PRIMARY_BUS_OFFSET + 3, 0);
-    outb(PRIMARY_BUS_OFFSET + 4, 0);
-    outb(PRIMARY_BUS_OFFSET + 5, 0);
-    // IDENTIFY COMMAND
-    outb(PRIMARY_BUS_OFFSET + 7, 0xEC);
+    return 0;
+}
 
-    /* uint8_t inital_val = inb(PRIMARY_BUS_OFFSET + 7); */
-    /* printf("%p\n", inital_val); */
+ISR(ata_isr, {
+    printf("ata isr\n");
+    PIC_sendEOI(14);
+})
 
-    /* int is_floating = inital_val == 0xFF; */
-    /* if (is_floating) */
-    /* { */
-    /*     // TODO: this should be a panic */
-    /*     printf("could not find drive!\n"); */
-    /*     return; */
-    /* } */
+void init_ata()
+{
+    if (!send_identify(ATA_PRIMARY))
+    {
+        printf("identify succeeded!\n");
+    }
+    else
+    {
+        printf("identify failed\n");
+        return;
+    }
 }

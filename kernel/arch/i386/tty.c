@@ -15,7 +15,7 @@ void terminal_writestring(const char *data);
 
 #endif
 
-#define TERMINAL_EMPTY_CHAR '_'
+#define TERMINAL_EMPTY_CHAR ' '
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
