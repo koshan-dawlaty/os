@@ -5,6 +5,7 @@ cd build
 
 
 QEMU_FLAGS=" -cdrom os.iso
+-machine pc
 -d int,cpu_reset
 -D log.txt
 -boot d 

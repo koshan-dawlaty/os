@@ -57,6 +57,7 @@ void load_idt()
     remap_pic(0x20, 0x28);
     IRQ_clear_mask(0);
     IRQ_clear_mask(1);
+    IRQ_clear_mask(2);
 
     asm volatile("sti");
 }
@@ -84,6 +85,7 @@ void init_idt()
     add_idt_entry((IDT_entry){(uint32_t)keyboard_interrupt_handler, 0x8, 0x8E},
                   0x21);
     add_idt_entry((IDT_entry){(uint32_t)ata_isr, 0x8, 0x8E}, 14 + 0x20);
+    add_idt_entry((IDT_entry){(uint32_t)ata_isr, 0x8, 0x8E}, 15 + 0x20);
 
     add_idt_entry((IDT_entry){(uint32_t)pit_handler, 0x8, 0x8E}, 0x20);
 
