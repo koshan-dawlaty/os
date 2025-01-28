@@ -36,7 +36,7 @@ int print(const char *str)
 }
 
 // TODO: kinda slow
-char *int_to_string(intmax_t in, int base)
+char *int_to_string2(intmax_t in, int base)
 {
 
     int negative = 0;
@@ -97,65 +97,15 @@ char *int_to_string(intmax_t in, int base)
 
 int vprintf(const char *format, va_list list)
 {
+    // TODO: THIS WILL BREAK!!!!
+    char *buffer = malloc(100);
+    vsprintf(buffer, format, list);
 
-    int next_is_format = 0;
-
-    while (*format != '\0')
+    while (*buffer != '\0')
     {
-
-        if (next_is_format)
-        {
-            next_is_format = 0;
-
-            // may be able to use a switch statement, but there is a chance
-            // that they will not work because the bootstrap has not
-            // initialized them
-            if (*format == 's')
-            {
-                char *str = va_arg(list, char *);
-
-                if (!print_len(str, strlen(str)))
-                {
-                    return -1;
-                }
-            }
-            else if (*format == 'c')
-            {
-                char c = (char)va_arg(list, int);
-
-                putchar(c);
-            }
-            else if (*format == 'd')
-            {
-                int i = va_arg(list, int);
-                print(int_to_string(i, 10));
-            }
-            else if (*format == 'x')
-            {
-                int x = va_arg(list, int);
-                print(int_to_string(x, 16));
-            }
-            else if (*format == 'p')
-            {
-                void *p = va_arg(list, void *);
-                print(int_to_string((uint32_t)p, 16));
-            }
-        }
-        else if (*format == '%')
-        {
-            next_is_format = 1;
-        }
-        else
-        {
-            putchar(*format);
-        }
-
-        format++;
+        putchar(*buffer);
+        buffer++;
     }
 
-    va_arg(list, const char *);
-
-    va_end(list);
-
-    return 1;
+    free(buffer);
 }
