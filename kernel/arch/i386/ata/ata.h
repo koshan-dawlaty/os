@@ -32,6 +32,7 @@
 
 void init_ata();
 
-ISR_ATTRIBUTE void ata_isr(struct interrupt_frame *);
+ISR_ATTRIBUTE void ata_isr_1(struct interrupt_frame *);
+ISR_ATTRIBUTE void ata_isr_2(struct interrupt_frame *);
 
 #endif

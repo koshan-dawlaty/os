@@ -84,8 +84,8 @@ void init_idt()
 
     add_idt_entry((IDT_entry){(uint32_t)keyboard_interrupt_handler, 0x8, 0x8E},
                   0x21);
-    add_idt_entry((IDT_entry){(uint32_t)ata_isr, 0x8, 0x8E}, 14 + 0x20);
-    add_idt_entry((IDT_entry){(uint32_t)ata_isr, 0x8, 0x8E}, 15 + 0x20);
+    add_idt_entry((IDT_entry){(uint32_t)ata_isr_1, 0x8, 0x8E}, 14 + 0x20);
+    add_idt_entry((IDT_entry){(uint32_t)ata_isr_2, 0x8, 0x8E}, 15 + 0x20);
 
     add_idt_entry((IDT_entry){(uint32_t)pit_handler, 0x8, 0x8E}, 0x20);
 
