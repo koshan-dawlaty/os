@@ -2,6 +2,7 @@
 #define ATA_H
 
 #include "interrupts/idt.h"
+#include <stddef.h>
 
 #define ATA_PRIMARY_IO 0x1F0
 #define ATA_PRIMARY_CONTROL 0x3F6
@@ -35,4 +36,9 @@ void init_ata();
 ISR_ATTRIBUTE void ata_isr_1(struct interrupt_frame *);
 ISR_ATTRIBUTE void ata_isr_2(struct interrupt_frame *);
 
+void read_ata_pio(uint16_t *buffer, uint16_t io_offset, uint16_t control_offset,
+                  uint32_t sectors, uint32_t lba);
+
+void write_ata_pio(uint16_t io_offset, uint16_t control_offset, uint32_t lba,
+                   uint16_t *buffer, size_t buffer_size);
 #endif

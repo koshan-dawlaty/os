@@ -3,3 +3,4 @@ isodir/
 sysroot/
 log.txt
 test.img
+qemu.img

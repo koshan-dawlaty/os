@@ -21,6 +21,36 @@ void print_all_regs(uint16_t offset)
 }
 
 /*
+ * waits for bit to be set if set is true, otherwise waits for it to clear
+ *
+ * bit is from 0-7
+ */
+void wait_for_bit(uint16_t io_offset, uint16_t control_offset, uint8_t bit,
+                  uint8_t set)
+{
+    uint8_t status;
+    while (1)
+    {
+        status = inb(io_offset + ATA_STATUS);
+
+        if (set)
+        {
+            if (status & (1 << bit))
+            {
+                break;
+            }
+        }
+        else
+        {
+            if (!(status & (1 << bit)))
+            {
+                break;
+            }
+        }
+    }
+}
+
+/*
  * reads status register 15 times to correctly select a drive
  *
  * very slow
@@ -69,7 +99,7 @@ int send_identify(uint16_t io_offset, uint16_t control_offset,
         io_wait();
     }
 
-    printf("%p\n", inb(io_offset + ATA_STATUS));
+    /* printf("%p\n", inb(io_offset + ATA_STATUS)); */
 
     ata_drive_select(io_offset, control_offset, 0xA0);
 
@@ -127,78 +157,24 @@ int send_identify(uint16_t io_offset, uint16_t control_offset,
 }
 
 ISR(ata_isr_1, {
-    printf("ata isr 1\n");
+    /* printf("ata isr 1\n"); */
 
     PIC_sendEOI(14);
 })
 
 ISR(ata_isr_2, {
-    printf("ata isr 2\n");
+    /* printf("ata isr 2\n"); */
     PIC_sendEOI(15);
 })
 
-void wait_for_data(uint16_t io_offset, uint16_t control_offset)
-{
-    uint8_t status;
-    while (1)
-    {
-        status = inb(io_offset + ATA_STATUS);
-        /* printf("%p\n", status); */
-        io_wait();
-        io_wait();
-        io_wait();
-        io_wait();
-        io_wait();
-
-        if (status & (1 << 7))
-        {
-            continue;
-        }
-
-        if (status & (1 << 0) || status & (1 << 5))
-        {
-            printf("error\n");
-
-            return;
-        }
-
-        if (status & (1 << 3))
-        {
-            break;
-        }
-    }
-}
-
 /*
- * buffer should hold 256 * sectors 16 bit values (512 * sectors bytes)
+ * buffer should hold (256 * sectors) 16 bit values ((512 * sectors) bytes)
  */
-void read_ata(uint16_t *buffer, uint16_t io_offset, uint16_t control_offset,
-              uint32_t sectors, uint32_t lba)
+void read_ata_pio(uint16_t *buffer, uint16_t io_offset, uint16_t control_offset,
+                  uint32_t sectors, uint32_t lba)
 {
-    /* print_all_regs(ATA_PRIMARY_IO); */
-    /* printf("%p\n", inb(io_offset + ATA_STATUS) & (1 << 7)); */
 
-    uint8_t status;
-    for (;;)
-    {
-        status = inb(io_offset + ATA_STATUS);
-        if (!(status & (1 << 7)))
-        { // BSY cleared
-            break;
-        }
-
-        io_wait();
-        io_wait();
-        io_wait();
-        io_wait();
-        io_wait();
-
-        /* printf("%p\n", status); */
-    }
-
-    /* outb(io_offset + ATA_DRIVE_HEAD, */
-    /*      0xE0 | ((lba >> 24) & 0x0F)); // Select drive, set high bits of LBA
-     */
+    wait_for_bit(io_offset, control_offset, 7, 0);
 
     ata_drive_select(io_offset, control_offset,
                      0xE0 | (0 << 4) | ((lba >> 24) & 0x0F));
@@ -209,27 +185,69 @@ void read_ata(uint16_t *buffer, uint16_t io_offset, uint16_t control_offset,
     outb(io_offset + ATA_LBA_MID, (unsigned char)lba >> 8);
     outb(io_offset + ATA_LBA_HI, (unsigned char)lba >> 16);
 
-    /* print_all_regs(io_offset); */
-    do
-    {
-        status = inb(io_offset + ATA_STATUS);
-    } while ((status & (1 << 7)) || !(status & (1 << 6)));
+    wait_for_bit(io_offset, control_offset, 7, 0);
+    wait_for_bit(io_offset, control_offset, 6, 1);
 
     // READ SECTORS
     outb(io_offset + ATA_COMMAND, 0x20);
 
-    /* print_all_regs(ATA_PRIMARY_IO); */
-
-    wait_for_data(io_offset, control_offset);
+    wait_for_bit(io_offset, control_offset, 7, 0);
+    wait_for_bit(io_offset, control_offset, 3, 1);
 
     for (size_t i = 0; i < 256 * sectors; i++)
     {
+        wait_for_bit(io_offset, control_offset, 7, 0);
+        wait_for_bit(io_offset, control_offset, 3, 1);
+
         uint16_t data = inw(io_offset + ATA_DATA);
 
         buffer[i] = data;
     }
+}
 
-    /* printf("test\n"); */
+/*
+ * buffer_size is in bytes
+ */
+void write_ata_pio(uint16_t io_offset, uint16_t control_offset, uint32_t lba,
+                   uint16_t *buffer, size_t buffer_size)
+{
+
+    uint32_t sectors = buffer_size / 512;
+
+    wait_for_bit(io_offset, control_offset, 7, 0);
+
+    ata_drive_select(io_offset, control_offset,
+                     0xE0 | (0 << 4) | ((lba >> 24) & 0x0F));
+
+    outb(io_offset + ATA_ERROR, 0);
+    outb(io_offset + ATA_SECTOR_COUNT, (unsigned char)sectors);
+    outb(io_offset + ATA_LBA_LO, (unsigned char)lba);
+    outb(io_offset + ATA_LBA_MID, (unsigned char)lba >> 8);
+    outb(io_offset + ATA_LBA_HI, (unsigned char)lba >> 16);
+
+    wait_for_bit(io_offset, control_offset, 7, 0);
+    wait_for_bit(io_offset, control_offset, 6, 1);
+
+    outb(io_offset + ATA_COMMAND, 0x30);
+
+    io_wait();
+
+    wait_for_bit(io_offset, control_offset, 7, 0);
+    wait_for_bit(io_offset, control_offset, 3, 1);
+
+    for (size_t i = 0; i < sectors; i++)
+    {
+        for (size_t i = 0; i < 256 * sectors; i++)
+        {
+
+            outw(io_offset + ATA_DATA, buffer[i]);
+            io_wait();
+        }
+
+        buffer += 256;
+        outb(io_offset + ATA_COMMAND, 0xE7);
+        wait_for_bit(io_offset, control_offset, 7, 0);
+    }
 }
 
 void init_ata()
@@ -240,25 +258,11 @@ void init_ata()
 
     if (!send_identify(ATA_PRIMARY, NULL))
     {
-        printf("identify succeeded!\n");
+        /* printf("identify succeeded!\n"); */
     }
     else
     {
-        printf("identify failed\n");
+        printf("ata identify failed\n");
         return;
-    }
-
-    uint16_t *buffer1 = malloc(1 * 256 * sizeof(uint16_t));
-    read_ata(buffer1, ATA_PRIMARY, 1, 0);
-
-    uint16_t *buffer2 = malloc(1 * 256 * sizeof(uint16_t));
-    read_ata(buffer2, ATA_PRIMARY, 1, 0);
-
-    for (int i = 0; i < 256; i++)
-    {
-        if (buffer1[i] != buffer2[i])
-        {
-            printf("test failed\n");
-        }
     }
 }

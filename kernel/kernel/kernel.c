@@ -5,6 +5,7 @@
 #include "tests/tests.h"
 #include <kernel/tty.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -18,6 +19,7 @@ int main()
 {
     // useless
     keyboard_init();
+
     init_pit();
     init_ata();
 
@@ -25,7 +27,7 @@ int main()
     run_all_tests();
 #endif
 
-    /* jump_usermode(); */
+    // jump_usermode();
 
     while (1)
     {
