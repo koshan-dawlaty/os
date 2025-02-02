@@ -3,6 +3,7 @@
 
 #include "interrupts/idt.h"
 #include <stddef.h>
+#include <stdint.h>
 
 #define ATA_PRIMARY_IO 0x1F0
 #define ATA_PRIMARY_CONTROL 0x3F6
@@ -36,9 +37,59 @@ void init_ata();
 ISR_ATTRIBUTE void ata_isr_1(struct interrupt_frame *);
 ISR_ATTRIBUTE void ata_isr_2(struct interrupt_frame *);
 
-void read_ata_pio(uint16_t *buffer, uint16_t io_offset, uint16_t control_offset,
-                  uint32_t sectors, uint32_t lba);
+// TODO: move to other header file
 
+/*
+ * buffer should be 512 * sectors bytes long
+ */
+void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
+                  uint32_t sectors, uint32_t lba);
+/*
+ * buffer_size is in bytes
+ */
 void write_ata_pio(uint16_t io_offset, uint16_t control_offset, uint32_t lba,
-                   uint16_t *buffer, size_t buffer_size);
+                   uint8_t *buffer, size_t buffer_size);
+
+// TODO: kinda bad
+extern uint16_t ata_bus_master_register;
+
+typedef struct
+{
+    struct
+    {
+        uint8_t is_dma : 1;
+        uint8_t is_primary : 1;
+        uint8_t is_drive1 : 1;
+        uint8_t is_lba48 : 1;
+    };
+
+    uint16_t io_offset;
+    uint16_t control_offset;
+
+} ata_drive;
+
+/*
+ * drive num is 0-3
+ *
+ *
+ * drive num of 0 is primary bus drive 1
+ *
+ * drive num of 1 is primary bus drive 2
+ *
+ * drive num of 2 is secondary bus drive 1
+ *
+ * drive num of 3 is secondary bus drive 2
+ *
+ *
+ *
+ * can return NULL
+ */
+ata_drive *get_ata_drive(uint8_t drive_num);
+
+void write_drive(ata_drive *drive, uint8_t *buffer, uint32_t buffer_size,
+                 uint64_t lba);
+
+void read_drive(ata_drive *drive, uint8_t *buffer, uint32_t amount,
+                uint64_t lba);
+
 #endif

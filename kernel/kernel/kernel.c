@@ -1,6 +1,7 @@
 #include "ata/ata.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
+#include "pci/pci.h"
 #include "pit/pit.h"
 #include "tests/tests.h"
 #include <kernel/tty.h>
@@ -21,6 +22,8 @@ int main()
     keyboard_init();
 
     init_pit();
+    init_pci();
+
     init_ata();
 
 #ifdef TESTS
