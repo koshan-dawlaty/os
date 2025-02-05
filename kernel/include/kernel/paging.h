@@ -17,4 +17,11 @@ void unmap_page(void *virtualaddr);
 void *get_free_pages(size_t amount);
 void free_pages(void *addr, size_t amount);
 
+/*
+ * this will not map the pages (gets called by map_page)
+ */
+void *get_free_phys_pages(size_t amount);
+
+void free_phys_pages(void *addr, size_t amount);
+
 #endif

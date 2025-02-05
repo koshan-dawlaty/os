@@ -21,16 +21,6 @@ void print_all_regs(uint16_t offset)
     printf("status: %p\n", inb(offset + ATA_STATUS));
 }
 
-ISR(ata_isr_1, {
-    /* printf("ata isr 1\n"); */
-
-    PIC_sendEOI(14);
-})
-
-ISR(ata_isr_2, {
-    /* printf("ata isr 2\n"); */
-    PIC_sendEOI(15);
-})
 void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
                   uint32_t sectors, uint32_t lba)
 {

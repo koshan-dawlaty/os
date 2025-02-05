@@ -27,33 +27,6 @@ extern long paging_page_table_addr;
 #define FREE 0
 #define IN_USE 1
 
-#define free_page_bitmap_size NUM_PAGES / 8
-static uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
-
-#define PHYS_PAGE_START 0x100000
-
-void *get_free_phys_page()
-{
-
-    int i = 0;
-
-    while (i < NUM_PAGES)
-    {
-        if (((phys_free_page_bitmap[i / 8] >> (i % 8)) & 1) == FREE)
-        {
-            break;
-        }
-
-        i++;
-    }
-
-    phys_free_page_bitmap[i / 8] |= IN_USE << (i % 8);
-
-    paging_page_table[i] = (PHYS_PAGE_START + (i * PAGE_SIZE)) | 0x03;
-
-    return (void *)(PHYS_PAGE_START + (i * PAGE_SIZE));
-}
-
 void *get_physaddr(void *virtualaddr)
 {
 
@@ -95,9 +68,11 @@ void flush_tlb_full()
 
 void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 {
+    /* printf("map_page called %p %p\n", physaddr , virtualaddr); */
 
     uint32_t virtual_addr = align_long((uint32_t)virtualaddr, PAGE_SIZE);
     uint32_t physical_addr = align_long((uint32_t)physaddr, PAGE_SIZE);
+    /* printf("map_page called %p %p\n", physical_addr, virtual_addr); */
 
     directory_entry pdindex = (directory_entry)virtual_addr >> 22;
     directory_entry ptindex = (directory_entry)virtual_addr >> 12 & 0x03FF;
@@ -110,7 +85,7 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
     {
         /* printf("this was called!!!\n"); */
 
-        table_entry *new_table = get_free_phys_page();
+        table_entry *new_table = get_free_phys_pages(1);
 
         pd[pdindex] =
             ((directory_entry)(new_table)) | PAGING_PRESENT | (flags & 0xFFF);
@@ -150,6 +125,9 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 
 void unmap_page(void *virtual_address)
 {
+
+    /* printf("unmap_page called %p\n", virtual_address); */
+
     uint32_t virtual_addr = align_long((uint32_t)virtual_address, PAGE_SIZE);
 
     directory_entry pdindex = (directory_entry)virtual_addr >> 22;

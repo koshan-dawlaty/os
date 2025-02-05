@@ -1,6 +1,7 @@
 #include "ata/ata.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
+#include "memory/paging_flags.h"
 #include "pci/pci.h"
 #include "pit/pit.h"
 #include "tests/tests.h"
@@ -29,6 +30,8 @@ int main()
 #ifdef TESTS
     run_all_tests();
 #endif
+
+    /* printf("test\n"); */
 
     // jump_usermode();
 

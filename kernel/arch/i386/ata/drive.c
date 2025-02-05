@@ -1,4 +1,5 @@
 #include "ata/ata.h"
+#include "ata/ata_utils.h"
 #include "utils.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -161,6 +162,11 @@ void read_drive(ata_drive *drive, uint8_t *buffer, uint32_t amount,
     if (!drive->is_dma)
     {
         read_ata_pio(buffer, drive->io_offset, drive->control_offset,
+                     amount / 512, lba);
+    }
+    else
+    {
+        read_ata_dma(buffer, drive->io_offset, drive->control_offset,
                      amount / 512, lba);
     }
 }
