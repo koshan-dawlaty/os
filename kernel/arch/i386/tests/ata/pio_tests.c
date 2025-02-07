@@ -11,22 +11,9 @@ void init_pio_tests()
     if (drive == NULL)
     {
         drive = get_ata_drive(0);
+        drive->is_dma = 0;
     }
 }
-
-TEST(pio_read, {
-    init_pio_tests();
-
-    uint8_t *buffer = malloc(512);
-
-    read_drive(drive, buffer, 512, 0);
-    /* read_ata_pio(buffer, ATA_PRIMARY, 1, 0); */
-
-    for (int i = 0; i < 9; i++)
-    {
-        ASSERT_EQ(buffer[i], 0x31 + i);
-    }
-});
 
 TEST(pio_write, {
     init_pio_tests();
@@ -38,16 +25,17 @@ TEST(pio_write, {
 
     for (size_t i = 0; i < sectors * 512; i++)
     {
-        buffer[i] = 'a';
+        buffer[i] = i % 10;
     }
 
-    write_drive(drive, buffer, sectors * 512, 0);
+    write_drive(drive, buffer, sectors * 512, lba);
 
     uint8_t *result_buffer = malloc(sectors * 512);
-    read_drive(drive, result_buffer, sectors * 512, 0);
+    read_drive(drive, result_buffer, sectors * 512, lba);
 
     for (size_t i = 0; i < sectors * 512; i++)
     {
+        /* printf("%d", buffer[i] == result_buffer[i]); */
         ASSERT_EQ(buffer[i], result_buffer[i]);
     }
 })

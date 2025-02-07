@@ -158,20 +158,20 @@ void read_drive(ata_drive *drive, uint8_t *buffer, uint32_t amount,
                 uint64_t lba)
 {
 
-    if (!drive->is_dma)
-    {
-        read_ata_pio(buffer, drive->io_offset, drive->control_offset,
-                     amount / 512, lba);
-    }
+    /* if (!drive->is_dma) */
+    /* { */
+    read_ata_pio(buffer, drive->io_offset, drive->control_offset, amount / 512,
+                 lba);
+    /* } */
 }
 
 void write_drive(ata_drive *drive, uint8_t *buffer, uint32_t buffer_size,
                  uint64_t lba)
 {
 
-    if (!drive->is_dma)
-    {
-        write_ata_pio(drive->io_offset, drive->control_offset, lba, buffer,
-                      buffer_size);
-    }
+    /* if (!drive->is_dma) */
+    /* { */
+    write_ata_pio(drive->io_offset, drive->control_offset, lba, buffer,
+                  buffer_size);
+    /* } */
 }

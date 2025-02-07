@@ -72,7 +72,7 @@ void write_ata_pio(uint16_t io_offset, uint16_t control_offset, uint32_t lba,
 
     for (size_t i = 0; i < sectors; i++)
     {
-        for (size_t i = 0; i < 512 * sectors; i += 2)
+        for (size_t i = 0; i < 512; i += 2)
         {
 
             uint16_t word = (buffer[i + 1] << 8) | (buffer[i]);
@@ -81,7 +81,7 @@ void write_ata_pio(uint16_t io_offset, uint16_t control_offset, uint32_t lba,
             io_wait();
         }
 
-        buffer += 256;
+        buffer += 512;
         outb(io_offset + ATA_COMMAND, 0xE7);
         wait_for_bit(io_offset, control_offset, 7, 0);
     }
