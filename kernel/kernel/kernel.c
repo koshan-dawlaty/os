@@ -1,9 +1,12 @@
+#include "ata/ata.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
+#include "pci/pci.h"
 #include "pit/pit.h"
 #include "tests/tests.h"
 #include <kernel/tty.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,13 +20,17 @@ int main()
 {
     // useless
     keyboard_init();
+
     init_pit();
+    init_pci();
+
+    init_ata();
 
 #ifdef TESTS
     run_all_tests();
 #endif
 
-    /* jump_usermode(); */
+    // jump_usermode();
 
     while (1)
     {

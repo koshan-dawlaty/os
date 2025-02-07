@@ -50,17 +50,12 @@ test_interrupt_handler2:
 	cli
     iret         
 
+
 # The kernel entry point.
 .section .multiboot.text, "a"
 .global _start
 .type _start, @function
 _start:
-	/*
-	To set up a stack, we set the esp register to point to the top of the
-	stack (as it grows downwards on x86 systems). This is necessarily done
-	in assembly as languages such as C cannot function without a stack.
-	*/
-
 
 
 
