@@ -44,6 +44,7 @@ int send_identify(uint16_t io_offset, uint16_t control_offset,
 
     // IDENTIFY command
     outb(io_offset + ATA_COMMAND, 0xEC);
+    wait_ata1_isr();
 
     uint8_t status;
     do
@@ -54,7 +55,7 @@ int send_identify(uint16_t io_offset, uint16_t control_offset,
         if (inb(io_offset + ATA_LBA_MID) != 0 ||
             inb(io_offset + ATA_LBA_HI) != 0)
         {
-            printf("not ata!!\n");
+            printf("not ata\n");
             return 1;
         }
     } while (status & (1 << 7) && !(status & (1 << 3)));

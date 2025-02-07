@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-// could maybe be in utils
+
 void ata_drive_select(uint16_t io_offset, uint16_t control_offset,
                       uint8_t drive)
 {

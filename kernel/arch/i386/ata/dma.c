@@ -45,7 +45,6 @@ void read_ata_dma(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
                   uint32_t sectors, uint32_t lba)
 {
 
-    printf("%p\n", inb(ata_bus_master_register + 2));
     // TODO: change size
     struct PRD_entry *prdt_phys = get_free_phys_pages(1);
 
@@ -74,14 +73,27 @@ void read_ata_dma(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
         prdt_index++;
     }
 
+    /* printf("%p\n", prdt_phys); */
+    /* printf("%p\n", prdt[0]); */
+
+    outl(ata_bus_master_register + 4, (uint32_t)prdt_phys);
+    outw(ata_bus_master_register, 0);
+    outw(ata_bus_master_register, 1 | (1 << 2));
+
+    outb(ata_bus_master_register + 2, 4);
+    printf("%p\n", inb(ata_bus_master_register + 2));
+
     ata_drive_select(io_offset, control_offset,
                      0xE0 | (0 << 4) | ((lba >> 24) & 0x0F));
     ata_send_command_24(io_offset, control_offset, sectors, lba, 0xC8);
-    outw(ata_bus_master_register + 4, (uint32_t)prdt_phys & 0xFF);
-    outw(ata_bus_master_register + 6, ((uint32_t)(prdt_phys) >> 8) & 0xFF);
-    outw(ata_bus_master_register, 1 | (1 << 2));
-    printf("%p\n", inb(ata_bus_master_register + 2));
+
+    /* outw(ata_bus_master_register + 4, (uint32_t)prdt_phys & 0xFF); */
+    /* outw(ata_bus_master_register + 6, ((uint32_t)(prdt_phys) >> 8) & 0xFF);
+     */
+
+    /* printf("%p\n", inb(ata_bus_master_register + 2)); */
     wait_ata1_isr();
+    /* wait_ata1_isr(); */
 
     /* printf("%p\n", ((uint16_t *)(virtual_addrs[0]))[0]); */
 
