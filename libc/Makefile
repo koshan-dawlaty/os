@@ -39,8 +39,6 @@ stdio/putchar.o \
 stdio/printf.o \
 stdio/getchar.o \
 stdio/vprintf.o \
-stdio/vsprintf.o \
-stdio/sprintf.o \
 
 
 HOSTEDOBJS=\

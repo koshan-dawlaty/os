@@ -23,12 +23,6 @@ int main()
     run_all_tests();
 #endif
 
-    char *buffer = malloc(100);
-
-    sprintf(buffer, "%xabc%sdef%s%d\n", 0x1234, "12345", "askjdfjasdf", 10);
-
-    printf("%s\n", buffer);
-
     /* jump_usermode(); */
 
     while (1)
