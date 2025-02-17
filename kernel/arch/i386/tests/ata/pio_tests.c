@@ -25,7 +25,7 @@ TEST(pio_write, {
 
     for (size_t i = 0; i < sectors * 512; i++)
     {
-        buffer[i] = i % 10;
+        buffer[i] = (i % 10) + 0x30;
     }
 
     write_drive(drive, buffer, sectors * 512, lba);
@@ -35,7 +35,6 @@ TEST(pio_write, {
 
     for (size_t i = 0; i < sectors * 512; i++)
     {
-        /* printf("%d", buffer[i] == result_buffer[i]); */
         ASSERT_EQ(buffer[i], result_buffer[i]);
     }
 })

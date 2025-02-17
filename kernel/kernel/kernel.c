@@ -1,4 +1,5 @@
 #include "ata/ata.h"
+#include "fs/ext2.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "pci/pci.h"
@@ -31,6 +32,8 @@ int main()
 #endif
 
     // jump_usermode();
+
+    init_ext2();
 
     while (1)
     {

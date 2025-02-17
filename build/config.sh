@@ -14,6 +14,9 @@ export BOOTDIR=/boot
 export LIBDIR=$EXEC_PREFIX/lib
 export INCLUDEDIR=$PREFIX/include
 
+ISO="os.iso"
+export ISO
+
 
 CFLAGS="${CFLAGS} -O2 -g"
 export CFLAGS

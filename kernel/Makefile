@@ -41,6 +41,7 @@ $(KERNEL_ARCH_TEST_OBJS) \
 kernel/kernel.o \
 kernel/utils.o \
 kernel/usermode.o \
+fs/ext2/misc.o \
 
 
 OBJS=\

@@ -38,6 +38,15 @@ int print(const char *str)
 // TODO: kinda slow
 char *int_to_string(intmax_t in, int base)
 {
+    if (in == 0)
+    {
+
+        char *buf = malloc(2);
+        buf[0] = '0';
+        buf[1] = '\0';
+
+        return buf;
+    }
 
     int negative = 0;
     if (in < 0)

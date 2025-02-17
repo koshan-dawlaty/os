@@ -1,4 +1,4 @@
-#include "ata.h"
+#include "ata/ata.h"
 #include "ata/ata_utils.h"
 #include "interrupts/idt.h"
 #include "interrupts/pic.h"
@@ -42,6 +42,8 @@ void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
 
     ata_send_command_24(io_offset, control_offset, sectors, lba, 0x20);
 
+    wait_for_bit(io_offset, control_offset, 7, 0);
+    wait_for_bit(io_offset, control_offset, 3, 1);
     for (size_t i = 0; i < sectors * 512; i += 2)
     {
         wait_for_bit(io_offset, control_offset, 7, 0);

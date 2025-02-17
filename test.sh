@@ -9,13 +9,17 @@ if [[  $# -ge 1  ]] && [[ $1 == "debug"  ]] ; then
 fi
 
 CFLAGS="${CFLAGS} -DTESTS"
+ISO="test.iso"
 
 export CFLAGS
+export ISO
 # bad 
 . ./iso.sh
 
+echo 
 
-QEMU_FLAGS=" -cdrom os.iso
+
+QEMU_FLAGS=" -cdrom ${ISO}
 -machine pc
 -d int,cpu_reset
 -D log.txt
