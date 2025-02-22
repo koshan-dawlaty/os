@@ -42,17 +42,16 @@ void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
 
     ata_send_command_24(io_offset, control_offset, sectors, lba, 0x20);
 
-    wait_for_bit(io_offset, control_offset, 7, 0);
-    wait_for_bit(io_offset, control_offset, 3, 1);
     for (size_t i = 0; i < sectors * 512; i += 2)
     {
         wait_for_bit(io_offset, control_offset, 7, 0);
         wait_for_bit(io_offset, control_offset, 3, 1);
 
         uint16_t data = inw(io_offset + ATA_DATA);
+        // printf("%p", data);
 
         buffer[i] = (uint8_t)(data) & 0xFF;
-        buffer[i + 1] = (uint8_t)(data >> 8) & 0xFF;
+        buffer[i + 1] = (uint8_t)(data >> 8);
     }
 }
 

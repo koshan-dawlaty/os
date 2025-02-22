@@ -41,6 +41,19 @@ typedef struct __attribute__((packed))
     uint8_t os_specific2[12];
 } inode_t;
 
+typedef size_t inode_addr_t;
+
+typedef struct
+{
+    inode_addr_t inode;
+    uint16_t size;
+    uint8_t name_len;
+    // may change depending on feature flags
+    uint8_t type_indicator;
+
+    char *name;
+} dentry_t;
+
 ata_drive *ext2_drive = NULL;
 
 uint32_t total_inodes = 0;
@@ -63,7 +76,7 @@ uint8_t *read_block(block_index_t index)
     uint8_t *buffer = malloc(block_size);
 
     uint64_t lba = (index * (block_size / 512));
-    printf("block addr: %d, lba: %d\n", index, lba);
+    // printf("block addr: %d, lba: %d\n", index, lba);
     fs_read(buffer, block_size, lba);
 
     return buffer;
@@ -83,16 +96,17 @@ inline uint32_t get_datablock_field(uint8_t *superblock, size_t index)
                                     superblock[index + 3]);
 }
 
-typedef size_t inode_addr_t;
-
-inode_t get_inode(inode_addr_t inode)
+/*
+ * returns NULL if node is not found
+ */
+inode_t *get_inode(inode_addr_t inode)
 {
     uint32_t group_index = (inode - 1) / inodes_per_group;
 
     /* block_group_descriptor_t group = */
     /*     block_group_descriptor_table[(inode - 1) / inodes_per_group]; */
 
-    printf("%d\n", inode);
+    // printf("%d\n", inode);
     block_group_descriptor_t group = block_group_descriptor_table[group_index];
 
     uint8_t *inode_usage = read_block(group.inode_usage);
@@ -110,7 +124,7 @@ inode_t get_inode(inode_addr_t inode)
     {
         printf("node not found\n");
 
-        return (inode_t){};
+        return NULL;
     }
 
     /* for (size_t i = 0; i < 512; i++) */
@@ -129,34 +143,27 @@ inode_t get_inode(inode_addr_t inode)
     /* uint8_t *node_ptr = read_block((group.inode_table) + */
     /*                                ((node_index * inode_size) / block_size));
      */
-    uint32_t table = group.inode_table;
+    uint32_t table_index = group.inode_table;
 
-    printf("table:%p\n", table);
-    uint8_t *node_ptr =
-        read_block(((table) + ((node_index * inode_size) / block_size)));
-    printf("reading: %d\n",
-           ((table) + ((node_index * inode_size) / block_size)));
+    uint8_t *table_ptr =
+        read_block(((table_index) + ((node_index * inode_size) / block_size)));
+    // printf("reading: %d\n",
+    //        ((table_index) + ((node_index * inode_size) / block_size)));
 
     for (size_t i = 0; i < block_size; i++)
     {
-        // printf("%p", node_ptr[i]);
+        // printf("%p", table_ptr[i]);
     }
-
-    printf("index: %p\n", node_index);
 
     inode_t *node =
-        (inode_t *)(node_ptr + ((node_index * inode_size) % block_size));
-    /* uint8_t *node = &node_ptr[node_index * inode_size]; */
-    printf("%p\n", node->type);
+        (inode_t *)(table_ptr + ((node_index * inode_size) % block_size));
 
-    printf("group: %d, local: %d\n", group_index, node_index);
+    inode_t *node_out = malloc(sizeof(inode_t));
+    memcpy(node_out, node, sizeof(inode_t));
 
-    for (int i = 0; i < inode_size; i++)
-    {
-        printf("%p", ((uint8_t *)(node))[i]);
-    }
+    free(table_ptr);
 
-    return *node;
+    return node_out;
 }
 
 void parse_superblock()
@@ -170,8 +177,6 @@ void parse_superblock()
     fs_version = (superblock[62]) | (superblock[63] << 8);
     fs_version |= (get_datablock_field(superblock, 76) << 16);
 
-    printf("test: %d\n", get_datablock_field(superblock, 20));
-
     if (fs_version >= 0x1000)
     {
         inode_size = get_datablock_field(superblock, 88);
@@ -179,6 +184,22 @@ void parse_superblock()
     else
     {
         inode_size = 128;
+    }
+}
+
+// this is useless
+void parse_rootdir()
+{
+    inode_t *rootdir = get_inode(2);
+    if (rootdir == NULL)
+    {
+        return;
+    }
+
+    // MAY BREAK
+    if ((rootdir->type >> 12) != 4)
+    {
+        return;
     }
 }
 
@@ -192,6 +213,5 @@ void init_ext2()
     block_group_descriptor_table =
         (block_group_descriptor_t *)read_block((block_size / 512));
 
-    inode_t node = get_inode(2);
-    printf("\n%p\n", node.type);
+    parse_rootdir();
 }

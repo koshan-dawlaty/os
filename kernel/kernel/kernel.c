@@ -33,6 +33,19 @@ int main()
 
     // jump_usermode();
 
+    // ata_drive *d = get_ata_drive(0);
+
+    // uint8_t *buffer = malloc(1024);
+    // int index = 0x105;
+    // int lba = ((index) * 1024) / 512;
+    // // printf("index:%p, lba:%p, byte:%p\n", index, lba, index * 1024);
+    // read_drive(d, buffer, 1024, lba);
+
+    // for (int i = 0; i < 512; i++)
+    // {
+    //     printf("%p ", buffer[i]);
+    // }
+
     init_ext2();
 
     while (1)

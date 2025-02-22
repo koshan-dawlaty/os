@@ -53,9 +53,10 @@ void ata_send_command_24(uint16_t io_offset, uint16_t control_offset,
 
     outb(io_offset + ATA_ERROR, 0);
     outb(io_offset + ATA_SECTOR_COUNT, (unsigned char)sectors);
-    outb(io_offset + ATA_LBA_LO, (unsigned char)lba);
-    outb(io_offset + ATA_LBA_MID, (unsigned char)lba >> 8);
-    outb(io_offset + ATA_LBA_HI, (unsigned char)lba >> 16);
+
+    outb(io_offset + ATA_LBA_LO, (lba) & 0xFF);
+    outb(io_offset + ATA_LBA_MID, (lba >> 8) & 0xFF);
+    outb(io_offset + ATA_LBA_HI, (lba >> 16) & 0xFF);
 
     wait_for_bit(io_offset, control_offset, 7, 0);
     wait_for_bit(io_offset, control_offset, 6, 1);
