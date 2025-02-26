@@ -1,4 +1,5 @@
 #include "ata/ata.h"
+#include "bits/pthreadtypes.h"
 #include "fs/ext2.h"
 #include "sys/types.h"
 #include <stdint.h>
@@ -125,10 +126,14 @@ inode_t *get_inode(inode_addr_t inode)
         // printf("%p ", inode_usage[i]);
     }
 
+    // printf("\n");
+
     // this may be inode - 1 but it seems to work without it
     uint8_t node_exists =
-        ((inode_usage[(inode) / 8]) & (1 << (inode) % 8)) != 0;
+        ((inode_usage[(inode - 1) / 8]) & (1 << (inode - 1) % 8)) != 0;
 
+    // printf("%p\n", ((inode_usage[(inode) / 8])));
+    // printf("%p\n", ((inode_usage[(inode) / 8]) & (1 << (inode - 1 % 8))));
     if (!node_exists)
     {
         printf("node not found\n");
@@ -200,6 +205,7 @@ void parse_superblock()
 void read_inode(inode_t *node, uint8_t *buf, size_t buf_len,
                 inode_index_t index)
 {
+
     uint8_t *block;
     size_t buf_offset = 0;
     if (index < block_size * 12)
@@ -321,7 +327,31 @@ void parse_rootdir()
 
     while (*entries != NULL)
     {
-        printf("%s\n", (*entries)->name);
+        printf("%s:\n", (*entries)->name);
+        // if ((*entries)->inode == 11)
+        // {
+        //     entries++;
+        //     continue;
+        // }
+
+        printf("inode:%d\n", (*entries)->inode);
+
+        // FIXME: the lost and found directory (inode 11) has a size that is too
+        // large, and it breaks malloc
+        if ((*entries)->inode != 11)
+        {
+            inode_t *node = get_inode((*entries)->inode);
+            if (node != NULL)
+            {
+
+                printf("size:%d\n", get_inode_size(node));
+                char *buf = malloc(get_inode_size(node) + 1);
+                buf[get_inode_size(node)] = '\0';
+                read_inode(node, buf, get_inode_size(node), 0);
+                printf("%s\n", buf);
+            }
+        }
+
         entries++;
     }
 }
@@ -336,4 +366,6 @@ void init_ext2()
         (block_group_descriptor_t *)read_block((block_size / 512));
 
     parse_rootdir();
+    // inode_t *node = get_inode(11);
+    // printf("%p\n", node->type);
 }
