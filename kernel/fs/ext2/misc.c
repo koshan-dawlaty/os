@@ -107,10 +107,16 @@ inline uint32_t get_datablock_field(uint8_t *superblock, size_t index)
 }
 
 /*
+ * returns a heap pointer
  * returns NULL if node is not found
  */
 inode_t *get_inode(inode_addr_t inode)
 {
+    if (inode == 0)
+    {
+        return NULL;
+    }
+
     uint32_t group_index = (inode - 1) / inodes_per_group;
 
     /* block_group_descriptor_t group = */
@@ -237,6 +243,19 @@ void read_inode(inode_t *node, uint8_t *buf, size_t buf_len,
     }
 }
 
+void free_dentries(dentry_t **entries)
+{
+    while (*entries != NULL)
+    {
+
+        free(*entries);
+
+        entries++;
+    }
+
+    // free(entries);
+}
+
 /*
  * this returns a heap pointer to heap pointers
  */
@@ -314,6 +333,83 @@ dentry_t **parse_directory(inode_t *node)
     return out;
 }
 
+// TODO: only works for absolute paths and may not work correctly with
+// directories
+inode_addr_t find_inode(char *path)
+{
+
+    // this is slow, and get_inode shouldn't return a heap pointer
+    inode_t *rootdir = get_inode(2);
+    dentry_t **entries = parse_directory(rootdir);
+    free(rootdir);
+
+    uint current_dir_start = 0;
+    uint i = 0;
+    while (path[i] != '\0')
+    {
+        if (path[i] == '/')
+        {
+
+            // TODO: modifying path could be avoided if memcmp was used
+            // path[i] = '\0';
+
+            uint j = 0;
+            while (entries[j] != NULL)
+            {
+                if (entries[j]->inode == 11)
+                {
+                    printf("11\n");
+                    j++;
+                }
+                printf("j: %d\n", j);
+
+                // may go out of bounds
+                printf("path:%s\n", path + current_dir_start + 1);
+                printf("name:%s\n", entries[j]->name);
+                printf("result:%p\n", strcmp(path + i + 1, entries[j]->name));
+
+                if (!strcmp(path + current_dir_start + 1, entries[j]->name))
+                {
+                    // bad
+                    int k = 0;
+                    while (path[current_dir_start + 1 + k] != '/' &&
+                           path[current_dir_start + 1 + k] != '\0')
+                    {
+                        k++;
+                    }
+
+                    // may go out of bounds
+                    if (path[k + i + 1] == '\0')
+                    {
+                        printf("exit\n");
+                        inode_addr_t temp = entries[j]->inode;
+                        free_dentries(entries);
+                        return temp;
+                    }
+
+                    // may break
+                    printf("%p\n", entries);
+                    inode_t *node = get_inode(entries[j]->inode);
+                    free_dentries(entries);
+                    entries = parse_directory(node);
+                    free(node);
+                    goto end;
+                }
+
+                j++;
+            }
+
+        end:
+            path[i] = '/';
+            current_dir_start = i;
+        }
+
+        i++;
+    }
+
+    return 0;
+}
+
 // this is useless
 void parse_rootdir()
 {
@@ -337,7 +433,7 @@ void parse_rootdir()
         printf("inode:%d\n", (*entries)->inode);
 
         // FIXME: the lost and found directory (inode 11) has a size that is too
-        // large, and it breaks malloc
+        // large, and it breaks malloc (i think)
         if ((*entries)->inode != 11)
         {
             inode_t *node = get_inode((*entries)->inode);
@@ -347,7 +443,7 @@ void parse_rootdir()
                 printf("size:%d\n", get_inode_size(node));
                 char *buf = malloc(get_inode_size(node) + 1);
                 buf[get_inode_size(node)] = '\0';
-                read_inode(node, buf, get_inode_size(node), 0);
+                read_inode(node, (uint8_t *)buf, get_inode_size(node), 0);
                 printf("%s\n", buf);
             }
         }
@@ -365,7 +461,11 @@ void init_ext2()
     block_group_descriptor_table =
         (block_group_descriptor_t *)read_block((block_size / 512));
 
-    parse_rootdir();
+    // parse_rootdir();
     // inode_t *node = get_inode(11);
     // printf("%p\n", node->type);
+
+    inode_t *node = get_inode(find_inode("/test"));
+
+    printf("%p\n", node->direct_blocks[0]);
 }

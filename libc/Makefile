@@ -30,6 +30,7 @@ LIBK_CPPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 FREEOBJS=\
 $(ARCH_FREEOBJS) \
 string/strlen.o \
+string/strcmp.o \
 stdlib/atoi.o \
 stdlib/malloc.o \
 string/memcpy.o \
