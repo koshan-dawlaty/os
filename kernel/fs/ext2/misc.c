@@ -465,7 +465,10 @@ void init_ext2()
     // inode_t *node = get_inode(11);
     // printf("%p\n", node->type);
 
-    inode_t *node = get_inode(find_inode("/test"));
+    inode_addr_t i = find_inode("/test.txt");
+    printf("node:%d\n", i);
+
+    inode_t *node = get_inode(i);
 
     printf("%p\n", node->direct_blocks[0]);
 }

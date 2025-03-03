@@ -5,6 +5,7 @@
 #include "pci/pci.h"
 #include "pit/pit.h"
 #include "tests/tests.h"
+#include "utils.h"
 #include <kernel/tty.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -19,7 +20,7 @@ void kernel_init()
 
 int main()
 {
-    // useless
+    // // useless
     keyboard_init();
 
     init_pit();
@@ -32,6 +33,7 @@ int main()
 #endif
 
     // jump_usermode();
+    init_ext2();
 
     // ata_drive *d = get_ata_drive(0);
 
@@ -45,8 +47,6 @@ int main()
     // {
     //     printf("%p ", buffer[i]);
     // }
-
-    init_ext2();
 
     while (1)
     {

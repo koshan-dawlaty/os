@@ -11,12 +11,13 @@ fi
 CFLAGS="${CFLAGS} -DTESTS"
 ISO="test.iso"
 
+IMAGE_FILE="test.img"
+
 export CFLAGS
 export ISO
 # bad 
 . ./iso.sh
-
-echo 
+./get-ext2-image.sh "$IMAGE_FILE" fs-root
 
 
 QEMU_FLAGS=" -cdrom ${ISO}
@@ -24,7 +25,7 @@ QEMU_FLAGS=" -cdrom ${ISO}
 -d int,cpu_reset
 -D log.txt
 -boot d 
--drive file=test.img,format=raw,if=ide,index=0"
+-drive file=${IMAGE_FILE},format=raw,if=ide,index=0"
 
 # qemu-system-$(./target-triplet-to-arch.sh $HOST) -cdrom os.iso -nographic console=ttyS0
 

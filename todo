@@ -11,3 +11,5 @@ physical page allocation that uses grub memory map
 malloc seems to break when the size is too large (it may be if the size is greater than 2 times the page size)
 
 make malloc return physically and virtually contiguous memory
+
+ext2 seems to hang when the disk image is not an ext2 filesystem
