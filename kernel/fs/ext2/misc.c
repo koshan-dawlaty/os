@@ -7,63 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct __attribute__((packed))
-{
-
-    uint32_t block_usage;
-    uint32_t inode_usage;
-    uint32_t inode_table;
-    uint16_t unallocated_blocks;
-    uint16_t unallocated_inodes;
-    uint16_t directories;
-    uint8_t unused[14];
-} block_group_descriptor_t;
-
-typedef struct __attribute__((packed))
-{
-    uint16_t type;
-    uint16_t user_id;
-    uint32_t size_low;
-    uint32_t last_access_time;
-    uint32_t creation_time;
-    uint32_t modification_time;
-    uint32_t deletion_time;
-    uint16_t group_id;
-    uint16_t hard_links; // how many directories point to this
-    uint32_t sectors;    // how many sectors are being used
-    uint32_t flags;
-    uint32_t os_specific1;
-    uint32_t direct_blocks[12];
-    uint32_t singly_indirect_block_pointer;
-    uint32_t doubly_indirect_block_pointer;
-    uint32_t triply_indirect_block_pointer;
-    uint32_t generation_number;
-    uint32_t extendend_attribute_block;
-    uint32_t size_high;
-    uint32_t block_addr;
-    uint8_t os_specific2[12];
-} inode_t;
-
-// TODO: make this always inline
-inline uint64_t get_inode_size(inode_t *node)
-{
-    // MAY BREAK
-    return node->size_low;
-}
-
-typedef size_t inode_addr_t;
-// index of inode content in bytes
-typedef uint64_t inode_index_t;
-
-// this does not represent the actual dentry structure
-typedef struct
-{
-    inode_addr_t inode;
-    char *name;
-} dentry_t;
-
 ata_drive *ext2_drive = NULL;
 
+// TODO: this should be in a superblock struct
 uint32_t total_inodes = 0;
 uint16_t inode_size = 0;
 uint32_t block_size = 0;
@@ -118,6 +64,7 @@ inode_t *get_inode(inode_addr_t inode)
     }
 
     uint32_t group_index = (inode - 1) / inodes_per_group;
+    // printf("test\n");
 
     /* block_group_descriptor_t group = */
     /*     block_group_descriptor_table[(inode - 1) / inodes_per_group]; */
@@ -142,6 +89,7 @@ inode_t *get_inode(inode_addr_t inode)
     // printf("%p\n", ((inode_usage[(inode) / 8]) & (1 << (inode - 1 % 8))));
     if (!node_exists)
     {
+        // shouldn't print
         printf("node not found\n");
 
         return NULL;
@@ -358,16 +306,17 @@ inode_addr_t find_inode(char *path)
             {
                 if (entries[j]->inode == 11)
                 {
-                    printf("11\n");
+                    // printf("11\n");
                     j++;
                 }
-                printf("j: %d\n", j);
+                // printf("j: %d\n", j);
+
+                // printf("path:%s\n", path + current_dir_start + 1);
+                // printf("name:%s\n", entries[j]->name);
+                // printf("result:%p\n", strcmp(path + i + 1,
+                // entries[j]->name));
 
                 // may go out of bounds
-                printf("path:%s\n", path + current_dir_start + 1);
-                printf("name:%s\n", entries[j]->name);
-                printf("result:%p\n", strcmp(path + i + 1, entries[j]->name));
-
                 if (!strcmp(path + current_dir_start + 1, entries[j]->name))
                 {
                     // bad
@@ -381,14 +330,14 @@ inode_addr_t find_inode(char *path)
                     // may go out of bounds
                     if (path[k + i + 1] == '\0')
                     {
-                        printf("exit\n");
+                        // printf("exit\n");
                         inode_addr_t temp = entries[j]->inode;
                         free_dentries(entries);
                         return temp;
                     }
 
+                    // printf("%p\n", entries);
                     // may break
-                    printf("%p\n", entries);
                     inode_t *node = get_inode(entries[j]->inode);
                     free_dentries(entries);
                     entries = parse_directory(node);
@@ -423,14 +372,14 @@ void parse_rootdir()
 
     while (*entries != NULL)
     {
-        printf("%s:\n", (*entries)->name);
+        // printf("%s:\n", (*entries)->name);
         // if ((*entries)->inode == 11)
         // {
         //     entries++;
         //     continue;
         // }
 
-        printf("inode:%d\n", (*entries)->inode);
+        // printf("inode:%d\n", (*entries)->inode);
 
         // FIXME: the lost and found directory (inode 11) has a size that is too
         // large, and it breaks malloc (i think)
@@ -465,10 +414,10 @@ void init_ext2()
     // inode_t *node = get_inode(11);
     // printf("%p\n", node->type);
 
-    inode_addr_t i = find_inode("/test.txt");
-    printf("node:%d\n", i);
+    // inode_addr_t i = find_inode("/test.txt");
+    // printf("node:%d\n", i);
 
-    inode_t *node = get_inode(i);
+    // inode_t *node = get_inode(i);
 
-    printf("%p\n", node->direct_blocks[0]);
+    // printf("%p\n", node->direct_blocks[0]);
 }

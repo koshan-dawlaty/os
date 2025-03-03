@@ -7,7 +7,7 @@ cd build
 
 QEMU_FLAGS=" -cdrom os.iso
 -machine pc
--d int,cpu_reset
+-d cpu_reset
 -D log.txt
 -boot d 
 -drive file=qemu.img,format=raw,if=ide,index=0"

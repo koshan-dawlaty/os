@@ -21,6 +21,10 @@ TEST(pio_write, {
     size_t sectors = 2;
     size_t lba = 4;
 
+    uint8_t *inital_content = malloc(sectors * 512);
+
+    read_drive(drive, inital_content, sectors * 512, lba);
+
     uint8_t *buffer = malloc(sectors * 512);
 
     for (size_t i = 0; i < sectors * 512; i++)
@@ -37,4 +41,10 @@ TEST(pio_write, {
     {
         ASSERT_EQ(buffer[i], result_buffer[i]);
     }
+
+    write_drive(drive, inital_content, sectors * 512, lba);
+
+    free(buffer);
+    free(result_buffer);
+    free(inital_content);
 })

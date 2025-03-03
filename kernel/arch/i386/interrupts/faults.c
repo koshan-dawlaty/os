@@ -65,4 +65,5 @@ void init_faults()
     add_idt_entry((IDT_entry){(uint32_t)page_fault_handler, 8, 0x8F}, 0x0E);
     add_idt_entry((IDT_entry){(uint32_t)virtualization_fault_handler, 8, 0x8F},
                   0x20);
+    add_idt_entry((IDT_entry){(uint32_t)division_fault_handler, 8, 0x8F}, 0);
 }
