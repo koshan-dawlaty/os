@@ -20,3 +20,20 @@ TEST(ext2_read_from_root, {
         ASSERT_EQ(expected[i], buf[i]);
     }
 })
+
+TEST(ext2_read_from_root_dir, {
+    const uint8_t *expected = (uint8_t *)"abcdefg\n";
+    inode_addr_t node_addr = find_inode("/dir/123456.txt");
+    inode_t *node = get_inode(node_addr);
+
+    size_t node_size = get_inode_size(node);
+
+    uint8_t *buf = malloc(node_size);
+
+    read_inode(node, buf, node_size, 0);
+
+    for (size_t i = 0; i < node_size; i++)
+    {
+        ASSERT_EQ(expected[i], buf[i]);
+    }
+})

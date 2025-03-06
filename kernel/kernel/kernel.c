@@ -33,6 +33,13 @@ int main()
     run_all_tests();
 #endif
 
+    // read_inode(node, buf, node_size, 0);
+
+    // for (size_t i = 0; i < node_size; i++)
+    // {
+    //     printf("%d, %d\n", expected[i], buf[i]);
+    // }
+
     // jump_usermode();
 
     while (1)

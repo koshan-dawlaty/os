@@ -2,6 +2,7 @@
 #include "bits/pthreadtypes.h"
 #include "fs/ext2.h"
 #include "sys/types.h"
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -164,11 +165,10 @@ void read_inode(inode_t *node, uint8_t *buf, size_t buf_len,
     size_t buf_offset = 0;
     if (index < block_size * 12)
     {
-
         uint block_index = index / block_size;
         block = read_block(node->direct_blocks[block_index]);
         int read_size = block_size - (index % block_size);
-        if (buf_len < index % block_size)
+        if (buf_len < block_size)
         {
             memcpy(buf + buf_offset, block + index % block_size, buf_len);
             return;
@@ -293,13 +293,26 @@ inode_addr_t find_inode(char *path)
 
     uint current_dir_start = 0;
     uint i = 0;
+
     while (path[i] != '\0')
     {
         if (path[i] == '/')
         {
 
+            uint until_next_slash = i + 1;
+            while (path[until_next_slash] != '\0' &&
+                   path[until_next_slash] != '/')
+            {
+                until_next_slash++;
+            }
+
+            uint8_t last_thing_in_path = path[until_next_slash] == '\0';
+
+            // printf("until_next_slash: %d\n", until_next_slash);
+
             // TODO: modifying path could be avoided if memcmp was used
-            // path[i] = '\0';
+            path[until_next_slash] = '\0';
+            // printf("path now:%s\n", path);
 
             uint j = 0;
             while (entries[j] != NULL)
@@ -308,35 +321,32 @@ inode_addr_t find_inode(char *path)
                 {
                     // printf("11\n");
                     j++;
+                    continue;
                 }
                 // printf("j: %d\n", j);
 
-                // printf("path:%s\n", path + current_dir_start + 1);
+                // printf("path:%s\n", path + i + 1);
                 // printf("name:%s\n", entries[j]->name);
                 // printf("result:%p\n", strcmp(path + i + 1,
                 // entries[j]->name));
 
                 // may go out of bounds
-                if (!strcmp(path + current_dir_start + 1, entries[j]->name))
+                if (!strcmp(path + i + 1, entries[j]->name))
                 {
-                    // bad
-                    int k = 0;
-                    while (path[current_dir_start + 1 + k] != '/' &&
-                           path[current_dir_start + 1 + k] != '\0')
-                    {
-                        k++;
-                    }
-
+                    // printf("path is:%s\n", path);
+                    // printf("checking: %s\n", path + until_next_slash);
+                    // printf("got: %d\n", *(path + until_next_slash) == '\0');
                     // may go out of bounds
-                    if (path[k + i + 1] == '\0')
+                    if (last_thing_in_path)
                     {
                         // printf("exit\n");
+                        // printf("name:%s\n", entries[j]->name);
+
                         inode_addr_t temp = entries[j]->inode;
                         free_dentries(entries);
                         return temp;
                     }
 
-                    // printf("%p\n", entries);
                     // may break
                     inode_t *node = get_inode(entries[j]->inode);
                     free_dentries(entries);
@@ -349,13 +359,14 @@ inode_addr_t find_inode(char *path)
             }
 
         end:
-            path[i] = '/';
+            path[until_next_slash] = '/';
             current_dir_start = i;
         }
 
         i++;
     }
 
+    printf("not found\n");
     return 0;
 }
 
@@ -409,15 +420,4 @@ void init_ext2()
 
     block_group_descriptor_table =
         (block_group_descriptor_t *)read_block((block_size / 512));
-
-    // parse_rootdir();
-    // inode_t *node = get_inode(11);
-    // printf("%p\n", node->type);
-
-    // inode_addr_t i = find_inode("/test.txt");
-    // printf("node:%d\n", i);
-
-    // inode_t *node = get_inode(i);
-
-    // printf("%p\n", node->direct_blocks[0]);
 }
