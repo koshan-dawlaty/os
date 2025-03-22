@@ -34,15 +34,20 @@ TEST_OBJS=\
 		  tests/tests_main.o \
 		  tests/lib/tests_lib.o \
 
-KERNEL_OBJS=\
+KERNEL_OBJS= \
 $(KERNEL_ARCH_OBJS) \
 $(KERNEL_TEST_OBJS) \
 $(KERNEL_ARCH_TEST_OBJS) \
 kernel/kernel.o \
 kernel/utils.o \
 kernel/usermode.o \
+fs/ext2/dentry.o \
+fs/ext2/file.o \
+fs/ext2/init.o \
+fs/ext2/inode.o \
 fs/ext2/misc.o \
-
+fs/vfs/file.o \
+fs/vfs/vfs.o 
 
 OBJS=\
 $(ARCHDIR)/crti.o \

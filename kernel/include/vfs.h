@@ -1,17 +1,83 @@
 #ifndef VFS_H
 #define VFS_H
+#include "sys/types.h"
+#include <stdint.h>
+
+struct fs_type;
 
 typedef struct
 {
-
-} inode_operations;
+    size_t blocksize;
+    void *fs_private;
+    struct fs_type *type;
+} superblock;
 
 typedef struct
+{
+    // TODO: this should have some way of determining what superblock is parsed
+    superblock *(*parse_superblock)();
+} superblock_functions;
+
+superblock *new_superblock(size_t blocksize, void *fs_private,
+                           const struct fs_type *type);
+
+typedef struct
+{
+    ino_t number;
+    void *fs_private;
+} inode;
+
+inode *new_inode(ino_t number, void *fs_private);
+
+typedef struct
+{
+    inode *(*get_inode)(ino_t number, superblock *sb);
+    void (*read_inode)(inode *, uint8_t *buf, size_t n, size_t offset,
+                       superblock *sb);
+
+} inode_functions;
+
+typedef struct
+{
+    char *name;
+    inode *inode;
+} dentry;
+
+dentry *new_dentry(char *name, inode *inode);
+
+typedef struct
+{
+    dentry *(*find_dentry)(char *path, superblock *sb);
+    dentry **(*get_dentries)(inode *inode, superblock *sb);
+} dentry_functions;
+
+typedef uint32_t fd_t;
+
+typedef struct
+{
+    fd_t descriptor;
+} file;
+
+file *new_file(fd_t descriptor);
+
+file *open_file(char *path);
+
+typedef struct
+{
+} file_functions;
+
+struct fs_type
 {
     const char *name;
 
-    inode_operations *inode;
+    dentry *(*mount)();
 
-} fs_type;
+    // bad names
+    dentry_functions dentry_functions;
+    inode_functions inode_functions;
+    superblock_functions superblock_functions;
+};
+
+void register_filesystem(struct fs_type *);
 
 #endif
