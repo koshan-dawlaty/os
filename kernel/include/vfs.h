@@ -21,13 +21,17 @@ typedef struct
 superblock *new_superblock(size_t blocksize, void *fs_private,
                            const struct fs_type *type);
 
+typedef size_t inode_size;
+
 typedef struct
 {
     ino_t number;
+    inode_size size;
+
     void *fs_private;
 } inode;
 
-inode *new_inode(ino_t number, void *fs_private);
+inode *new_inode(ino_t number, inode_size size, void *fs_private);
 
 typedef struct
 {

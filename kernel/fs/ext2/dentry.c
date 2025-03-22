@@ -34,7 +34,7 @@ ext2_dentry **ext2_parse_directory(ext2_inode *node, superblock *sb)
         return NULL;
     }
 
-    uint64_t size = get_inode_size(node);
+    uint64_t size = ext2_get_inode_size(node);
 
     uint8_t *content = malloc(size);
     // size may be wrong

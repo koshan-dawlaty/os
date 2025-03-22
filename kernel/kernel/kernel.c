@@ -56,14 +56,12 @@ int main()
     uint8_t *buf = malloc(100);
 
     printf("\n");
-    printf("%p\n", entry->inode);
+    printf("size:%p\n", entry->inode->size);
 
-    ext2_sb->type->inode_functions.read_inode(entry->inode, buf, 4, 0, ext2_sb);
+    ext2_sb->type->inode_functions.read_inode(entry->inode, buf,
+                                              entry->inode->size, 0, ext2_sb);
 
-    for (int i = 0; i < 4; i++)
-    {
-        printf("%c", buf[i]);
-    }
+    printf("%s\n", buf);
 
 #ifdef TESTS
     run_all_tests();

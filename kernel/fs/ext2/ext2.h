@@ -92,7 +92,7 @@ ext2_inode_addr find_inode(char *path);
 
 ext2_inode *ext2_get_inode(ext2_inode_addr inode, superblock *sb);
 
-inline uint64_t get_inode_size(ext2_inode *node)
+inline uint64_t ext2_get_inode_size(ext2_inode *node)
 {
     // MAY BREAK
     return node->size_low;

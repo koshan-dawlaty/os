@@ -31,11 +31,13 @@ file *new_file(fd_t descriptor)
     return out;
 }
 
-inode *new_inode(ino_t number, void *fs_private)
+inode *new_inode(ino_t number, inode_size size, void *fs_private)
 {
     inode *out = malloc(sizeof(inode));
 
     out->number = number;
+    out->size = size;
+
     out->fs_private = fs_private;
 
     return out;

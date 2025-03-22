@@ -94,17 +94,19 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
                      ext2_inode_index index, superblock *sb)
 {
 
+    printf("buf_len:%d\n", buf_len);
     uint8_t *block;
     size_t buf_offset = 0;
     if (index < EXT2_BLOCK_SIZE(sb) * 12)
     {
         uint block_index = index / EXT2_BLOCK_SIZE(sb);
-        printf("%p\n", node->direct_blocks);
-        printf("%d\n", node->direct_blocks[block_index]);
+        // printf("%p\n", node->direct_blocks);
+        // printf("%d\n", node->direct_blocks[block_index]);
         block = ext2_read_block(node->direct_blocks[block_index], sb);
         int read_size = EXT2_BLOCK_SIZE(sb) - (index % EXT2_BLOCK_SIZE(sb));
         if (buf_len < EXT2_BLOCK_SIZE(sb))
         {
+            printf("%d\n", index % EXT2_BLOCK_SIZE(sb));
             memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb),
                    buf_len);
             return;

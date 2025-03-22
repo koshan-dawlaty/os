@@ -28,7 +28,7 @@ inode *ext2_iget(ino_t number, superblock *sb)
 {
 
     ext2_inode *ext2 = ext2_get_inode(number, sb);
-    inode *out = new_inode(number, ext2);
+    inode *out = new_inode(number, ext2_get_inode_size(ext2), ext2);
 
     printf("iget:%p\n", out->fs_private);
 
