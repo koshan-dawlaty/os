@@ -2,7 +2,11 @@
 #define VFS_INTERNAL_H
 
 #include "vfs.h"
+#include <stddef.h>
 
-static superblock *current_superblock;
+extern superblock *current_superblock;
+
+extern file **open_files;
+extern size_t open_files_len;
 
 #endif

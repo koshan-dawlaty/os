@@ -60,11 +60,19 @@ typedef uint32_t fd_t;
 typedef struct
 {
     fd_t descriptor;
+    // this could be inode, as the filename would probably be known. This could
+    // also store the name in the file struct itself
+    dentry *entry;
 } file;
 
-file *new_file(fd_t descriptor);
-
+/*
+ * initializes descriptor as 0
+ */
+file *new_file(dentry *entry);
+// maybe should return a descriptor
 file *open_file(char *path);
+int read_file(file *file, char *buf, size_t n, size_t off);
+file *lookup_descriptor(int fd);
 
 typedef struct
 {
@@ -83,5 +91,7 @@ struct fs_type
 };
 
 void register_filesystem(struct fs_type *);
+
+void init_vfs();
 
 #endif

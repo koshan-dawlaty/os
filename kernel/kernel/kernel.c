@@ -3,6 +3,7 @@
 #include "kernel/paging.h"
 #include "pci/pci.h"
 #include "pit/pit.h"
+#include <file.h>
 #include <kernel/tty.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -39,29 +40,50 @@ int main()
 
     init_ata();
 
-    superblock *ext2_sb = init_ext2();
+    init_vfs();
 
-    printf("ext2_sb:%p\n", ext2_sb);
+    int f = open("/test.txt", 0);
 
-    printf("type:%p\n", ext2_sb->type);
-    printf("function:%p\n", ext2_sb->type->dentry_functions.find_dentry);
+    char *buf = malloc(100);
 
-    printf("calling find\n");
-    dentry *entry =
-        ext2_sb->type->dentry_functions.find_dentry("/test.txt", ext2_sb);
-    // printf("size:%p\n", entry);
-
-    printf("%s\n", entry->name);
-
-    uint8_t *buf = malloc(100);
-
-    printf("\n");
-    printf("size:%p\n", entry->inode->size);
-
-    ext2_sb->type->inode_functions.read_inode(entry->inode, buf,
-                                              entry->inode->size, 0, ext2_sb);
-
+    printf("read %d bytes\n", read(f, buf, 100));
     printf("%s\n", buf);
+
+    // file *f = open_file("/test.txt");
+
+    // char *buf = malloc(100);
+
+    // printf("read %d bytes\n", read_file(f, buf, 100, 7));
+
+    // printf("%s\n", buf);
+
+    // superblock *ext2_sb = init_ext2();
+
+    // printf("ext2_sb:%p\n", ext2_sb);
+
+    // printf("type:%p\n", ext2_sb->type);
+    // printf("function:%p\n", ext2_sb->type->dentry_functions.find_dentry);
+
+    // printf("calling find\n");
+    // dentry *entry =
+    //     ext2_sb->type->dentry_functions.find_dentry("/test.txt",
+    //     ext2_sb);
+    // // printf("size:%p\n", entry);
+
+    // printf("%s\n", entry->name);
+
+    // uint8_t *buf = malloc(100);
+
+    // printf("\n");
+    // printf("size:%p\n", entry->inode->size);
+
+    // ext2_sb->type->inode_functions.read_inode(entry->inode, buf,
+    //                                           entry->inode->size, 0,
+    //                                           ext2_sb);
+
+    // printf("%s\n", buf);
+
+    // file *f = open_file("/test.txt");
 
 #ifdef TESTS
     run_all_tests();

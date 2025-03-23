@@ -68,10 +68,10 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
                                           EXT2_BLOCK_SIZE(sb))),
                         sb);
 
-    printf("%d\n", table_index);
-    printf("reading: %d\n",
-           ((table_index) +
-            ((node_index * EXT2_INODE_SIZE(sb)) / EXT2_BLOCK_SIZE(sb))));
+    // printf("%d\n", table_index);
+    // printf("reading: %d\n",
+    //        ((table_index) +
+    //         ((node_index * EXT2_INODE_SIZE(sb)) / EXT2_BLOCK_SIZE(sb))));
 
     for (size_t i = 0; i < EXT2_BLOCK_SIZE(sb); i++)
     {
@@ -94,7 +94,6 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
                      ext2_inode_index index, superblock *sb)
 {
 
-    printf("buf_len:%d\n", buf_len);
     uint8_t *block;
     size_t buf_offset = 0;
     if (index < EXT2_BLOCK_SIZE(sb) * 12)
@@ -106,7 +105,6 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
         int read_size = EXT2_BLOCK_SIZE(sb) - (index % EXT2_BLOCK_SIZE(sb));
         if (buf_len < EXT2_BLOCK_SIZE(sb))
         {
-            printf("%d\n", index % EXT2_BLOCK_SIZE(sb));
             memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb),
                    buf_len);
             return;

@@ -40,6 +40,8 @@ stdio/putchar.o \
 stdio/printf.o \
 stdio/getchar.o \
 stdio/vprintf.o \
+file/open.o \
+file/read.o \
 
 
 HOSTEDOBJS=\

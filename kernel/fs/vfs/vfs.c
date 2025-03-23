@@ -1,5 +1,24 @@
+#include "vfs_internal.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <vfs.h>
+// TODO: bad
+#include "../ext2/ext2.h"
+
+superblock *current_superblock = NULL;
+
+file **open_files = NULL;
+size_t open_files_len = 0;
+
+void init_vfs()
+{
+    open_files = malloc(0);
+
+    // TODO: change this
+    ext2_fs_type.mount();
+    current_superblock = ext2_fs_type.superblock_functions.parse_superblock();
+    // printf("superblock:%p\n", current_superblock);
+}
 
 superblock *new_superblock(size_t blocksize, void *fs_private,
                            const struct fs_type *type)
@@ -23,10 +42,11 @@ dentry *new_dentry(char *name, inode *inode)
     return out;
 }
 
-file *new_file(fd_t descriptor)
+file *new_file(dentry *entry)
 {
     file *out = malloc(sizeof(file));
-    out->descriptor = descriptor;
+    out->entry = entry;
+    out->descriptor = 0;
 
     return out;
 }
