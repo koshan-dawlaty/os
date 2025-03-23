@@ -3,6 +3,8 @@
 #include "kernel/paging.h"
 #include "pci/pci.h"
 #include "pit/pit.h"
+// TODO: clangd uses the host os headers, instead of the sysroot ones, it seems
+// to not do it for some of the kernel headers when used in libc
 #include <file.h>
 #include <kernel/tty.h>
 #include <stddef.h>
@@ -46,7 +48,9 @@ int main()
 
     char *buf = malloc(100);
 
-    printf("read %d bytes\n", read(f, buf, 100));
+    printf("read %d bytes\n", read(f, buf, 10));
+    printf("read %d bytes\n", read(f, buf + 10, 3));
+    printf("read %d bytes\n", read(f, buf + 13, 5));
     printf("%s\n", buf);
 
     // file *f = open_file("/test.txt");

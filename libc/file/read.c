@@ -9,8 +9,7 @@ int read(int fd, char *buf, size_t n)
 {
 #if defined(__is_libk)
     file *f = lookup_descriptor(fd);
-    // TODO: offset should not be 0
-    return read_file(lookup_descriptor(fd), buf, n, 0);
+    return read_file(f, buf, n, f->offset);
 #else
 #endif
 }

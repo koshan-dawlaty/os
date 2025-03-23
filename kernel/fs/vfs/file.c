@@ -42,6 +42,8 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     current_superblock->type->inode_functions.read_inode(
         node, (uint8_t *)buf, read_size, off, current_superblock);
 
+    add_file_offset(file, read_size);
+
     return read_size;
 }
 

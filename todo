@@ -1,7 +1,6 @@
 more malloc tests
 make it more platform independent
 actually test keyboard driver led/keymatic functions
-file system
 modular kernel
 better tests
 hal
@@ -12,4 +11,7 @@ malloc seems to break when the size is too large (it may be if the size is great
 
 make malloc return physically and virtually contiguous memory
 
-ext2 seems to hang when the disk image is not an ext2 filesystem
+file systems:
+	ext2 seems to hang when the disk image is not an ext2 filesystem
+	ext2 writing
+	ext2 has newlines at the end of files

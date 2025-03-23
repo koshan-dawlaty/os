@@ -47,6 +47,7 @@ file *new_file(dentry *entry)
     file *out = malloc(sizeof(file));
     out->entry = entry;
     out->descriptor = 0;
+    out->offset = 0;
 
     return out;
 }

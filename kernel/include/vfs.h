@@ -59,11 +59,20 @@ typedef uint32_t fd_t;
 
 typedef struct
 {
+    // where read() / write() will read / write from
+    size_t offset;
+
     fd_t descriptor;
     // this could be inode, as the filename would probably be known. This could
     // also store the name in the file struct itself
     dentry *entry;
 } file;
+
+inline void add_file_offset(file *f, size_t add)
+{
+    f->offset += add;
+    f->offset %= f->entry->inode->size - 1;
+}
 
 /*
  * initializes descriptor as 0
