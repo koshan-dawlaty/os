@@ -3,14 +3,16 @@ set -e
 cd build
 
 . ./iso.sh
-
+./get-ext2-image.sh "qemu.img" fs-root
 
 QEMU_FLAGS=" -cdrom os.iso
+-m 512M
 -machine pc
--d cpu_reset
+-d int
 -D log.txt
 -boot d 
 -drive file=qemu.img,format=raw,if=ide,index=0"
+
 
 # qemu-system-$(./target-triplet-to-arch.sh $HOST) -cdrom os.iso -nographic console=ttyS0
 

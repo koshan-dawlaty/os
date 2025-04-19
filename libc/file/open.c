@@ -1,4 +1,4 @@
-#include <file.h>
+#include <fcntl.h>
 
 #if defined(__is_libk)
 #include <vfs.h>

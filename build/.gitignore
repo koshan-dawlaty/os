@@ -4,3 +4,4 @@ sysroot/
 log.txt
 test.img
 qemu.img
+fs-root/usr/bin/elf_test

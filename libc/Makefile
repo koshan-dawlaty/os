@@ -42,6 +42,8 @@ stdio/getchar.o \
 stdio/vprintf.o \
 file/open.o \
 file/read.o \
+file/pread.o \
+utils/syscall_wrapper.o \
 
 
 HOSTEDOBJS=\

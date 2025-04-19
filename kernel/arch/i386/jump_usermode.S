@@ -15,9 +15,17 @@ jump_usermode_asm:
 	mov $(0x174), %ecx # MSR specifier: IA32_SYSENTER_CS
 	wrmsr
 
-	mov $(0x08048000), %edx  
+	# mov $(0x8048226), %edx  
+	mov 0x04(%esp), %edx  
+ 
+	# mov $(0xBFFF0000), %ecx    
+	# mov $(0x08048000), %edx  
 	# mov %esp, %ecx    
-	mov $(0xBFFF0000), %ecx    
+	mov $(0xBFFEF000), %ecx
+
+
+	# mov $(0x41), 0xC03FF002 
+
  	sysexit
  	
 

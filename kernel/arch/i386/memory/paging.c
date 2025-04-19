@@ -1,5 +1,4 @@
 #include "kernel/paging.h"
-#include "bits/types/__fpos64_t.h"
 #include "gdt.h"
 #include "interrupts/idt.h"
 #include "kernel/tty.h"
@@ -9,6 +8,7 @@
 #include "multiboot.h"
 #include "vga.h"
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -98,9 +98,11 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 
     uint32_t virtual_addr = align_long((uint32_t)virtualaddr, PAGE_SIZE);
     uint32_t physical_addr = align_long((uint32_t)physaddr, PAGE_SIZE);
+    /* printf("addr now:%p\n", virtual_addr); */
 
     directory_entry pdindex = (directory_entry)virtual_addr >> 22;
     directory_entry ptindex = (directory_entry)virtual_addr >> 12 & 0x03FF;
+    // printf("index:%d\n", ptindex);
 
     directory_entry *pd = (directory_entry *)DIRECTORY_ADDR;
 
@@ -108,19 +110,16 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 
     if ((dir_entry & 0x1) == 0)
     {
-        /* printf("this was called!!!\n"); */
 
         table_entry *new_table = get_free_phys_page();
 
-        pd[pdindex] =
-            ((directory_entry)(new_table)) | PAGING_PRESENT | (flags & 0xFFF);
+        pd[pdindex] = ((directory_entry)(new_table)) | PAGING_PRESENT |
+                      (flags & 0xFFF) | PAGING_WRITEABLE |
+                      /* TODO: insecure */
+                      PAGING_USER;
     }
 
     table_entry *pt = ((table_entry *)0xFFC00000) + (0x400 * pdindex);
-
-    // Here you need to check whether the PT entry is present.
-    // When it is, then there is already a mapping present. What do you do
-    // now?
 
     table_entry table_entry = pt[ptindex];
 
@@ -131,8 +130,7 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 
     if ((table_entry & 0x1) != 0)
     {
-        // printf("mapping already present!\n");
-
+        /* printf("mapping already present\n"); */
         /* return; */
     }
 

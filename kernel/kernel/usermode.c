@@ -7,20 +7,20 @@
 
 extern void syscall_wrapper_asm(uint32_t eax, uint32_t ebx, uint32_t ecx,
                                 uint32_t edx, uint32_t esi, uint32_t edi);
-extern void jump_usermode_asm();
 
 void usermode_main()
 {
-    asm("int $(0x80)");
+    /* asm("int $(0x80)"); */
+    ((void (*)())(0x80481d5))();
+
     while (1)
     {
     }
     /* printf("usermode\n"); */
 }
 
-void jump_usermode()
+void init_usermode()
 {
-
 #define USER_STACK_BASE 0xBFFF0000
 #define USER_STACK_SIZE 0x4000
 #define USER_STACK_PHYSICAL 0x1000000
@@ -35,6 +35,10 @@ void jump_usermode()
                      (i - (USER_STACK_BASE - USER_STACK_SIZE)),
                  (void *)i, PAGING_WRITEABLE | PAGING_USER);
     }
+}
+
+void jump_usermode()
+{
 
 // #define USER_CODE_START 0x08048000
 #define USER_CODE_START 0x08048000
@@ -51,7 +55,6 @@ void jump_usermode()
                  PAGING_WRITEABLE | PAGING_USER);
     }
 
-    memcpy((void *)USER_CODE_START, usermode_main, USER_CODE_SIZE);
     memcpy((void *)USER_CODE_START, usermode_main, USER_CODE_SIZE);
 
     jump_usermode_asm();

@@ -12,10 +12,22 @@ struct syscall_regs
     uint32_t ebp;
 } __attribute__((packed));
 
+/* int test; */
+
 void syscall_handler(struct syscall_regs *registers)
 {
 
-    printf("%d\n", registers->eax);
+    /* *(char *)(0xC03FF002 + test) = 'a'; */
+    /* test += 2; */
+    /* printf("eax: %d, ebx:%d, ecx:%d, edx:%d, esi:%d, edi:%d, ebp:%d\n", */
+    /*        registers->eax, registers->ebx, registers->ecx, registers->edx, */
+    /*        registers->esi, registers->edi, registers->ebp); */
+
+    if (registers->eax == 0)
+    {
+        /* printf("test\n"); */
+        putchar(registers->ebx);
+    }
 
     /* printf("test\n"); */
 }

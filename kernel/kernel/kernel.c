@@ -1,16 +1,18 @@
 #include "ata/ata.h"
+#include "elf.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
+#include "kernel/usermode.h"
 #include "pci/pci.h"
 #include "pit/pit.h"
-// TODO: clangd uses the host os headers, instead of the sysroot ones, it seems
-// to not do it for some of the kernel headers when used in libc
-#include <file.h>
+#include <fcntl.h>
 #include <kernel/tty.h>
+#include <memory/paging_flags.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <vfs.h>
 
 // TODO: bad
@@ -44,14 +46,46 @@ int main()
 
     init_vfs();
 
-    int f = open("/test.txt", 0);
+    printf("test\n");
+    /* uint32_t val = 0x8048000; */
 
-    char *buf = malloc(100);
+    /* map_page((void *)0xC424000, (void *)val, PAGING_WRITEABLE); */
 
-    printf("read %d bytes\n", read(f, buf, 10));
-    printf("read %d bytes\n", read(f, buf + 10, 3));
-    printf("read %d bytes\n", read(f, buf + 13, 5));
-    printf("%s\n", buf);
+    /* uint8_t *ptr = (uint8_t *)val; */
+    /* ptr[0] = 5; */
+    /* printf("%d\n", ptr[0]); */
+    /* printf("%d\n", ptr[0]); */
+
+    /* printf("before\n"); */
+    /* printf("%p\n", val); */
+    /* printf("%p\n", val); */
+    /* printf("%p\n", val); */
+
+    init_usermode();
+    /* /1* jump_usermode(); *1/ */
+
+    int f = open("/usr/bin/elf_test", 0);
+
+    elf_32 *elf = parse_elf32(f);
+
+    load_elf32(elf);
+    /* jump_usermode_asm(); */
+    /* printf("after\n"); */
+    /* printf("%p\n", val); */
+    /* *printf("%p\n", val); */
+    /* printf("%p\n", val); */
+    // printf("%d\n", elf->program_headers_len);
+
+    // char *buf = malloc(100);
+
+    // pread(f, buf, 4, 3);
+
+    // printf("%s\n", buf);
+
+    // printf("read %d bytes\n", read(f, buf, 10));
+    // printf("read %d bytes\n", read(f, buf + 10, 3));
+    // printf("read %d bytes\n", read(f, buf + 13, 5));
+    // printf("%s\n", buf);
 
     // file *f = open_file("/test.txt");
 
@@ -99,8 +133,6 @@ int main()
     // {
     //     printf("%d, %d\n", expected[i], buf[i]);
     // }
-
-    // jump_usermode();
 
     while (1)
     {

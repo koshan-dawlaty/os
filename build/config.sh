@@ -1,5 +1,5 @@
-SYSTEM_HEADER_PROJECTS="../libc ../kernel"
-PROJECTS="../libc ../kernel"
+SYSTEM_HEADER_PROJECTS="../libc ../kernel ../userspace"
+PROJECTS="../libc ../kernel ../userspace"
 
 export MAKE=${MAKE:-make}
 export HOST=${HOST:-$(./default-host.sh)}
@@ -13,6 +13,9 @@ export EXEC_PREFIX=$PREFIX
 export BOOTDIR=/boot
 export LIBDIR=$EXEC_PREFIX/lib
 export INCLUDEDIR=$PREFIX/include
+
+export FS_ROOT=fs-root/
+export BINARY_PREFIX=/usr/bin
 
 ISO="os.iso"
 export ISO

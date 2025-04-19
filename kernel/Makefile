@@ -41,6 +41,7 @@ $(KERNEL_ARCH_TEST_OBJS) \
 kernel/kernel.o \
 kernel/utils.o \
 kernel/usermode.o \
+kernel/elf/elf.o \
 fs/ext2/dentry.o \
 fs/ext2/file.o \
 fs/ext2/init.o \

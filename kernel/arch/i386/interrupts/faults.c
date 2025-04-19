@@ -49,7 +49,15 @@ ISR(virtualization_fault_handler, {
 });
 
 ISR(division_fault_handler, {
-    printf("divide by zero!\n");
+    printf("divide by zero\n");
+    fault_handler_wait();
+});
+ISR(tss_fault_handler, {
+    printf("invalid tss\n");
+    fault_handler_wait();
+});
+ISR(invalid_opcode, {
+    printf("invalid opcode\n");
     fault_handler_wait();
 });
 
@@ -61,7 +69,11 @@ void init_faults()
     }
 
     add_idt_entry((IDT_entry){(uint32_t)gpf_handler, 8, 0x8F}, 0x0D);
+
+    add_idt_entry((IDT_entry){(uint32_t)invalid_opcode, 8, 0x8F}, 0x06);
+
     add_idt_entry((IDT_entry){(uint32_t)double_fault_handler, 8, 0x8F}, 0x08);
+    add_idt_entry((IDT_entry){(uint32_t)tss_fault_handler, 8, 0x8F}, 0x0A);
     add_idt_entry((IDT_entry){(uint32_t)page_fault_handler, 8, 0x8F}, 0x0E);
     add_idt_entry((IDT_entry){(uint32_t)virtualization_fault_handler, 8, 0x8F},
                   0x20);
