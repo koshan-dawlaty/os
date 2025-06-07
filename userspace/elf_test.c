@@ -8,6 +8,8 @@ extern void syscall_wrapper_asm(uint32_t eax, uint32_t ebx, uint32_t ecx,
 
 /* int x[10000] = {}; */
 
+int global = 4;
+
 void test()
 {
     putchar('a');
@@ -20,6 +22,12 @@ void test2()
 
 int main()
 {
+    /* *(char *)(0x1234) = 'a'; */
+
+    putchar('a');
+    putchar('\n');
+
+    /* syscall_wrapper_asm(2, 0, 0, 0, 0, 0); */
 
     /*     asm("mov $(10), %eax;" */
     /*         "mov $(10), %ebx;" */
@@ -37,17 +45,26 @@ int main()
     /* syscall_wrapper_asm(0, 'a', 0, 0, 0, 0); */
 
     /* x[0] = 'a'; */
+    /* test2(); */
+    /* test2(); */
+    /* test2(); */
 
-    putchar('a');
-    putchar('b');
-    putchar('\n');
-    putchar('c');
-    putchar('d');
+    /* putchar('a'); */
+    /* putchar('b'); */
+    /* putchar('\n'); */
+    /* /1* putchar('c'); *1/ */
+    /* /1* putchar('d'); *1/ */
+    /* putchar(global + 0x30); */
+    /* putchar('\n'); */
+    /* global++; */
+    /* putchar(global + 0x30); */
+    /* /1* putchar(getchar()); *1/ */
 
-    /* printf("t"); */
+    /* /1* malloc(10); *1/ */
 
-    /* syscall_wrapper_asm(1, 2, 300, 4, 5, 6); */
-    test2();
+    /* /1* printf("string\n"); *1/ */
+
+    /* /1* syscall_wrapper_asm(1, 2, 300, 4, 5, 6); *1/ */
 
     while (1)
     {

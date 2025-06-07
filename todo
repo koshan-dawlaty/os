@@ -15,7 +15,12 @@ file systems:
 	ext2 seems to hang when the disk image is not an ext2 filesystem
 	ext2 writing
 	ext2 has newlines at the end of files
+	ext2 inodes can only use direct blocks
 	very bad error handling	
+	
 
 
 syscall wrapper might be duplicated somewhere
+
+elf does not support sections / string literals
+

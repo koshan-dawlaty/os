@@ -1,4 +1,5 @@
 #include "ext2.h"
+#include "kernel/utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,13 +8,14 @@
 ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
 {
 
+    /* printf("get inode\n"); */
+
     if (inode_number == 0)
     {
         return NULL;
     }
 
     uint32_t group_index = (inode_number - 1) / EXT2_INODES_PER_GROUP(sb);
-    // printf("test\n");
 
     /* block_group_descriptor_t group = */
     /*     block_group_descriptor_table[(inode - 1) / inodes_per_group]; */
@@ -96,22 +98,46 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
 
     uint8_t *block;
     size_t buf_offset = 0;
+
+    size_t blocks_offset = 0;
     if (index < EXT2_BLOCK_SIZE(sb) * 12)
     {
         uint block_index = index / EXT2_BLOCK_SIZE(sb);
         // printf("%p\n", node->direct_blocks);
         // printf("%d\n", node->direct_blocks[block_index]);
-        block = ext2_read_block(node->direct_blocks[block_index], sb);
+        block = ext2_read_block(
+            node->direct_blocks[block_index + blocks_offset], sb);
+        blocks_offset++;
+
         int read_size = EXT2_BLOCK_SIZE(sb) - (index % EXT2_BLOCK_SIZE(sb));
+        /* printf("read_size:%d\n", read_size); */
         if (buf_len < EXT2_BLOCK_SIZE(sb))
         {
             memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb),
                    buf_len);
+
             return;
         }
+
         memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb),
                read_size);
+
         buf_offset += read_size;
+
+        block = ext2_read_block(
+            node->direct_blocks[block_index + blocks_offset], sb);
+        blocks_offset++;
+
+        while (buf_offset <
+               ((buf_len / EXT2_BLOCK_SIZE(sb)) * EXT2_BLOCK_SIZE(sb)))
+        {
+            memcpy(buf + buf_offset, block, EXT2_BLOCK_SIZE(sb));
+            block = ext2_read_block(
+                node->direct_blocks[block_index + blocks_offset], sb);
+            blocks_offset++;
+
+            buf_offset += EXT2_BLOCK_SIZE(sb);
+        }
 
         uint bytes_remaining = buf_len - read_size;
         if (bytes_remaining < EXT2_BLOCK_SIZE(sb))
@@ -119,6 +145,12 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
             block = ext2_read_block(node->direct_blocks[block_index + 1], sb);
             memcpy(buf + buf_offset, block, bytes_remaining);
             return;
+        }
+
+        /* printf("remaining: %d\n", bytes_remaining); */
+        for (size_t i = 0x9ab; i < 0x9ab + 10; i++)
+        {
+            /* printf("%p ", buf[i]); */
         }
     }
     else

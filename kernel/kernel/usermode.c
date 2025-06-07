@@ -57,5 +57,5 @@ void jump_usermode()
 
     memcpy((void *)USER_CODE_START, usermode_main, USER_CODE_SIZE);
 
-    jump_usermode_asm();
+    /* jump_usermode_asm(); */
 }

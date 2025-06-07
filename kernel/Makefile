@@ -42,13 +42,14 @@ kernel/kernel.o \
 kernel/utils.o \
 kernel/usermode.o \
 kernel/elf/elf.o \
+kernel/scheduler/scheduler.o \
 fs/ext2/dentry.o \
 fs/ext2/file.o \
 fs/ext2/init.o \
 fs/ext2/inode.o \
 fs/ext2/misc.o \
 fs/vfs/file.o \
-fs/vfs/vfs.o 
+fs/vfs/vfs.o \
 
 OBJS=\
 $(ARCHDIR)/crti.o \

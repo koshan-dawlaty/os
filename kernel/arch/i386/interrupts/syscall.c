@@ -1,3 +1,6 @@
+#include "elf.h"
+#include "fcntl.h"
+#include "kernel/usermode.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -27,6 +30,20 @@ void syscall_handler(struct syscall_regs *registers)
     {
         /* printf("test\n"); */
         putchar(registers->ebx);
+    }
+    else if (registers->eax == 1)
+    {
+        registers->ebx = getchar();
+    }
+    else if (registers->eax == 2)
+    {
+
+        int f = open("/usr/bin/elf_test2", 0);
+        elf_32 *elf = parse_elf32(f);
+        load_elf32(elf);
+        printf("syscall\n");
+        /* jump_usermode_asm(0x60017c); */
+        /* jump_usermode_asm(elf->entry_point); */
     }
 
     /* printf("test\n"); */

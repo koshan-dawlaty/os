@@ -15,6 +15,7 @@ uint8_t keyboard_buffer_tail = 0;
 
 void push_keyboard_buffer(char c)
 {
+    /* printf("keyboard isr\n"); */
     uint8_t next_head = (keyboard_buffer_head + 1) % KEYBOARD_BUFFER_SIZE;
 
     if (next_head != keyboard_buffer_tail)
@@ -49,12 +50,10 @@ void keyboard_isr_disable()
 }
 
 ISR(keyboard_interrupt_handler, {
-    /* printf("keyboard isr\n"); */
     uint8_t scancode = inb(0x60);
     if (scancode < 0x81)
     {
         char c = keyboard_map[scancode];
-        /* printf("test\n"); */
 
         key_available = 1;
         push_keyboard_buffer(c);

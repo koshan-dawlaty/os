@@ -116,7 +116,7 @@ ext2_dentry *ext2_find_dentry(char *path, superblock *sb)
     // printf("this: %s\n", path);
     while (path[i] != '\0')
     {
-        // printf("i is:%d\n", i);
+        /* printf("i is:%d\n", i); */
         if (path[i] == '/')
         {
 
@@ -169,8 +169,8 @@ ext2_dentry *ext2_find_dentry(char *path, superblock *sb)
                         memcpy(out, temp, sizeof(ext2_dentry));
 
                         free_dentries(entries);
-                        // printf("name %s\n", entries[j]->name);
-                        // printf("inode %d\n", entries[j]->inode);
+                        /* printf("name %s\n", out->name); */
+                        /* printf("inode %d\n", out->inode); */
 
                         return out;
                     }

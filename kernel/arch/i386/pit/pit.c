@@ -2,6 +2,7 @@
 #include "interrupts/idt.h"
 #include "interrupts/pic.h"
 #include "utils.h"
+#include <scheduler.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -23,12 +24,24 @@ void init_pit()
     outb(PIT_COMMAND, 0x36);
     outb(PIT_CHANNEL0, divisor & 0xFF);
     outb(PIT_CHANNEL0, divisor >> 8);
+
     /* outb(PIT_CHANNEL0, 0); */
 }
 
 ISR(pit_handler, {
-    /* printf("pit time:%d ", get_pit_time()); */
+    /* printf("pit\n"); */
     /* printf("seconds:%d\n", get_seconds()); */
+
+    if (pit_time % 50 == 0)
+    {
+        /* printf("task switch ip:%p\n", frame->ip); */
+
+        /* switch_tasks(frame->ip); */
+
+        /* printf("%p\n", frame->ip); */
+        /* printf("pit time:%d\n", get_pit_time()); */
+    }
+
     pit_time++;
     PIC_sendEOI(0);
 });

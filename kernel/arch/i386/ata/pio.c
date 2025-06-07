@@ -31,6 +31,7 @@ ISR(ata_isr_2, {
     /* printf("ata isr 2\n"); */
     PIC_sendEOI(15);
 })
+
 void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
                   uint32_t sectors, uint32_t lba)
 {
@@ -48,7 +49,7 @@ void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
         wait_for_bit(io_offset, control_offset, 3, 1);
 
         uint16_t data = inw(io_offset + ATA_DATA);
-        // printf("%p", data);
+        /* printf("%p", data); */
 
         buffer[i] = (uint8_t)(data) & 0xFF;
         buffer[i + 1] = (uint8_t)(data >> 8);

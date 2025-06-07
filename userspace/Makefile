@@ -23,6 +23,8 @@ CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
+CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings
+
 # very bad
 LINK_LIST=-l../libc/k.a
 
@@ -42,7 +44,8 @@ START_OBJ=\
 		  $(BIN)/start.o
 
 BINARIES=\
-	elf_test
+	elf_test \
+	elf_test2 \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -51,6 +54,11 @@ BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 $(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+
+$(BIN)/elf_test2 : $(OBJS_START_BIN) $(BIN)/elf_test2.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	# $(CC) -Ttext=0x600000 -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
+	$(CC) -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
 
 all : $(BINARIES_BIN)
 	$(CC) -o $(BIN)/$
@@ -79,7 +87,12 @@ install-headers:
 install-binaries: $(BINARIES_BIN)
 	# ../build/ is bad
 	mkdir -p ../build/$(FS_ROOT)/$(BINARY_PREFIX)
-	# may break with more files in binaries
-	cp $(BIN)/$(BINARIES) ../build/$(FS_ROOT)/$(BINARY_PREFIX)
+	# $(foreach binary, $@, $(cp $(binary) ../build/$(FS_ROOT)/$(BINARY_PREFIX)))
+	for f in $(BINARIES_BIN); do \
+		cp $$f ../build/$(FS_ROOT)/$(BINARY_PREFIX); \
+	done; \
+
+	# # may break with more files in binaries
+	# cp $(BIN)/$(BINARIES) ../build/$(FS_ROOT)/$(BINARY_PREFIX)
 
 

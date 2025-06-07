@@ -104,6 +104,8 @@ Block *get_block(size_t size)
 
     return block;
 
+#else
+    return (void *)0x123456;
 #endif
 }
 
