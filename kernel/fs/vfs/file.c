@@ -9,7 +9,6 @@
 file *open_file(char *path)
 {
 
-    /* printf("open\n"); */
     // printf("len %d\n", open_files_len);
     // printf("pointer: %p\n", current_superblock);
     dentry *dentry = current_superblock->type->dentry_functions.find_dentry(

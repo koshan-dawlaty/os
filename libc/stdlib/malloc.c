@@ -26,11 +26,11 @@ typedef struct Block
 {
     size_t size;
     struct Block *next;
-} Block;
+} heap_block;
 
-void print_bin(Block **bin)
+void print_bin(heap_block **bin)
 {
-    Block *current = *bin;
+    heap_block *current = *bin;
     while (current != NULL)
     {
 
@@ -42,28 +42,28 @@ void print_bin(Block **bin)
     printf("null\n");
 }
 
-inline void *block_to_ptr(Block *block)
+inline void *block_to_ptr(heap_block *block)
 {
     return block + 1;
 }
 
-inline Block *ptr_to_block(void *ptr)
+inline heap_block *ptr_to_block(void *ptr)
 {
-    return ((Block *)ptr) - 1;
+    return ((heap_block *)ptr) - 1;
 }
 
 void *current_page = NULL;
 size_t current_page_offset = 0;
 
 #define SMALL_BIN_AMOUNT 60
-Block *small_bins[60] = {NULL};
+heap_block *small_bins[60] = {NULL};
 
-Block *unsorted_bin = NULL;
+heap_block *unsorted_bin = NULL;
 
-void insert_bin(Block **bin, Block *block)
+void insert_bin(heap_block **bin, heap_block *block)
 {
 
-    Block *old = *bin;
+    heap_block *old = *bin;
     *bin = block;
 
     (*bin)->next = old;
@@ -71,13 +71,13 @@ void insert_bin(Block **bin, Block *block)
 
 static int heap_debug = 0;
 
-Block *get_block(size_t size)
+heap_block *get_block(size_t size)
 {
 
 #ifdef __is_libk
     // bad
     if (current_page == NULL ||
-        current_page_offset + size + sizeof(Block) >= PAGE_SIZE)
+        current_page_offset + size + sizeof(heap_block) >= PAGE_SIZE)
     {
 
         current_page = get_free_pages(1);
@@ -93,14 +93,14 @@ Block *get_block(size_t size)
     }
 
     // it is something to do with parenthesis here
-    Block *block = (Block *)(current_page + current_page_offset);
+    heap_block *block = (heap_block *)(current_page + current_page_offset);
 
     /* printf("block addr: %p\n", block); */
 
     block->size = size;
     block->next = NULL;
 
-    current_page_offset += size + sizeof(Block);
+    current_page_offset += size + sizeof(heap_block);
 
     return block;
 
@@ -109,12 +109,12 @@ Block *get_block(size_t size)
 #endif
 }
 
-Block *get_block_from_bin_fast(Block **bin, int new_size)
+heap_block *get_block_from_bin_fast(heap_block **bin, int new_size)
 {
     if (*bin == NULL)
     {
 
-        Block *b = get_block(new_size);
+        heap_block *b = get_block(new_size);
 
         if (heap_debug)
         {
@@ -129,13 +129,13 @@ Block *get_block_from_bin_fast(Block **bin, int new_size)
         return b;
     }
 
-    Block *output = *bin;
+    heap_block *output = *bin;
     *bin = (*bin)->next;
 
     return output;
 }
 
-Block *get_block_from_bin(Block **bin, size_t new_size)
+heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
 {
 
     if (bin == NULL)
@@ -144,8 +144,8 @@ Block *get_block_from_bin(Block **bin, size_t new_size)
         return get_block(new_size);
     }
 
-    Block *current_block = *bin;
-    Block **prev_block = bin;
+    heap_block *current_block = *bin;
+    heap_block **prev_block = bin;
 
     /* printf("size is:%d\n", new_size); */
 
@@ -155,8 +155,8 @@ Block *get_block_from_bin(Block **bin, size_t new_size)
         /* printf("current: %ld\n", current_block->size + sizeof(Block)); */
 
         if (current_block->next != NULL &&
-            (current_block->size + sizeof(Block)) +
-                    (current_block->next->size + sizeof(Block)) ==
+            (current_block->size + sizeof(heap_block)) +
+                    (current_block->next->size + sizeof(heap_block)) ==
                 new_size)
         {
 
@@ -164,8 +164,8 @@ Block *get_block_from_bin(Block **bin, size_t new_size)
             *prev_block = current_block->next->next;
 
             current_block->next->size =
-                ((current_block->size + sizeof(Block)) +
-                 (current_block->next->size + sizeof(Block)));
+                ((current_block->size + sizeof(heap_block)) +
+                 (current_block->next->size + sizeof(heap_block)));
 
             return current_block->next;
         }
@@ -197,7 +197,7 @@ Block *get_block_from_bin(Block **bin, size_t new_size)
 
 void *malloc(size_t size)
 {
-    int total_size = align_long2(size + sizeof(Block), ALIGN);
+    int total_size = align_long2(size + sizeof(heap_block), ALIGN);
     /* printf("total size:%d\n", total_size / ALIGN); */
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
@@ -215,9 +215,9 @@ void *malloc(size_t size)
 void free(void *ptr)
 {
 
-    Block *block = ptr_to_block(ptr);
+    heap_block *block = ptr_to_block(ptr);
     /* printf("free size is:%d\n", block->size); */
-    int total_size = block->size + sizeof(Block);
+    int total_size = block->size + sizeof(heap_block);
 
     /* printf("block size:%d\n", block->size); */
     /* printf("total size:%d\n", total_size / ALIGN); */
@@ -241,7 +241,7 @@ void *realloc(void *ptr, size_t new_size)
         return malloc(new_size);
     }
 
-    Block *block = ptr_to_block(ptr);
+    heap_block *block = ptr_to_block(ptr);
     /* printf("realloc size is:%d\n", block->size); */
     /* printf("normal %p, no %p\n", block, block - 1); */
     /* printf("realloc ptr is:%p\n", ptr); */

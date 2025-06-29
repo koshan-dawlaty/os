@@ -16,7 +16,9 @@
 
 // TODO: bad
 #include "../fs/ext2/ext2.h"
+#include "scheduler.h"
 #include "unistd.h"
+#include "utils.h"
 
 extern struct pagedir init_pgdir;
 
@@ -129,30 +131,36 @@ int main()
     /* printf("done\n"); */
 
     int f1 = open("/usr/bin/elf_test", 0);
-    printf("one:%d\n", f1);
     elf_32 *elf = parse_elf32(f1);
     struct pagedir *dir1 = load_elf32(elf);
 
-    /* jump_usermode_asm(elf->entry_point); */
+    /*
+for (int i = 0; i < 1000000000; i++)
+{
+    io_wait();
+}
+    */
 
-    printf("two start\n");
     int f2 = open("/usr/bin/elf_test2", 0);
-    printf("two:%d\n", f2);
     elf_32 *elf2 = parse_elf32(f2);
     struct pagedir *dir2 = load_elf32(elf2);
 
-    /* load_pgdir(&init_pgdir); */
-    load_pgdir(dir2);
-    printf("dirs: 1:%p, 2:%p, init:%p\n", dir1, dir2, &init_pgdir);
-    printf("dirs: 1:%p, 2:%p, init:%p\n", dir1->pgdir, dir2->pgdir,
-           &init_pgdir.pgdir);
+    /* int f3 = open("/usr/bin/elf_test", 0); */
+    /* elf_32 *elf3 = parse_elf32(f3); */
+    /* struct pagedir *dir3 = load_elf32(elf3); */
 
-    printf("dirs: 1:%p, 2:%p, init:%p\n", dir1->pgdir_virtual,
-           dir2->pgdir_virtual, &init_pgdir.pgdir_virtual);
+    enable_scheduler();
+    load_pgdir(dir1);
 
-    load_pgdir(dir2);
+    printf("test\n");
 
     jump_usermode_asm(elf->entry_point);
+
+    /* printf("dir1:%p, dir2:%p\n", dir1, dir2); */
+
+    /* load_pgdir(dir1); */
+
+    /* jump_usermode_asm(elf->entry_point); */
 
     /* 0x6001AC */
 

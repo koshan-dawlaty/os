@@ -29,6 +29,14 @@ export CPPFLAGS=''
 export SYSROOT="$(pwd)/sysroot"
 export CC="$CC --sysroot=$SYSROOT"
 
+export  QEMU_FLAGS=" -cdrom os.iso
+-m 512M
+-machine pc
+-d page
+-D log.txt
+-boot d 
+-drive file=qemu.img,format=raw,if=ide,index=0"
+
 # Work around that the -elf gcc targets doesn't have a system include directory
 # because it was configured with --without-headers rather than --with-sysroot.
 if echo "$HOST" | grep -Eq -- '-elf($|-)'; then

@@ -226,7 +226,7 @@ void write_kernel_page_tables(struct pagedir *pgdir)
 {
     directory_entry *kernel_dir = (directory_entry *)DIRECTORY_ADDR;
 
-    printf("%p\n", pgdir->pgdir_virtual);
+    /* printf("%p\n", pgdir->pgdir_virtual); */
     directory_entry *other_dir = (directory_entry *)pgdir->pgdir_virtual;
 
     for (uint32_t i = 0xC0000000; i < 0xFFC00000; i += 4096 * 1024)
@@ -238,7 +238,7 @@ void write_kernel_page_tables(struct pagedir *pgdir)
         directory_entry direntry = kernel_dir[index];
         if (!((direntry & 1) == 0))
         {
-            printf("i:%p, index:%p\n", i, index);
+            /* printf("i:%p, index:%p\n", i, index); */
             /* printf("kernel:%p other:%p\n", kernel_dir, other_dir); */
             /* printf("i:%p, index:%d\n", i, index); */
             /* printf("i:%p, index:%d\n", i, i >> 22); */
@@ -302,23 +302,27 @@ void init_paging()
 
 #define USER_STACK_BASE 0xBFFF0000
 #define USER_STACK_SIZE 0x4000
-uint32_t USER_STACK_PHYSICAL = 0x3000000;
+uint32_t user_stack_physical = 0x300000;
 
 void create_userspace_stack(struct pagedir *pgdir)
 {
-    printf("new userspace stack at %p\n", USER_STACK_PHYSICAL);
+    /* printf("new userspace stack at %p\n", USER_STACK_PHYSICAL); */
     for (uint32_t i = USER_STACK_BASE - USER_STACK_SIZE; i < USER_STACK_BASE;
 
          i += PAGE_SIZE)
     {
 
-        /* printf("physical:%p, virtual:%p\n", USER_STACK_PHYSICAL, (void *)i);
+        /* printf("user stack:\n"); */
+        /* printf("physical:%p, virtual:%p\n", user_stack_physical, (void *)i);
          */
+
+        /* void *page = get_free_phys_page_dir(*pgdir); */
+        /* printf("%p\n", page); */
 
         write_pagedir(pgdir, get_free_phys_page_dir(*pgdir), (void *)i,
                       PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
-        /* write_pagedir(pgdir, (void *)USER_STACK_PHYSICAL, (void *)i, */
+        /* write_pagedir(pgdir, (void *)user_stack_physical, (void *)i, */
         /*               PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
-        USER_STACK_PHYSICAL += PAGE_SIZE;
+        /* user_stack_physical += PAGE_SIZE; */
     }
 }

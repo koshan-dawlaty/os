@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
+extern void reload_segments();
+extern void flush_tss();
+
 typedef struct
 {
     int limit;
@@ -77,6 +80,11 @@ volatile static uint8_t user_stack[USER_STACK_SIZE]
 
 volatile void *user_stack_top = &user_stack[USER_STACK_SIZE];
 
+void set_kernel_stack(uint32_t stack)
+{
+    tss.esp0 = stack;
+}
+
 uint64_t encode_gdt_entry(GDT_entry source)
 {
     uint64_t output = 0;
@@ -111,9 +119,6 @@ void add_gdt_entry(GDT_entry entry, int index)
 {
     gdt[index] = encode_gdt_entry(entry);
 }
-
-extern void reload_segments();
-extern void flush_tss();
 
 void load_gdt()
 {

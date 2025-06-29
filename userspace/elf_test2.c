@@ -8,12 +8,10 @@ void test()
 int main()
 {
     /* *(char *)(0x123456) = 'a'; */
+    /* putchar('b'); */
     while (1)
     {
-        /* test(); */
-    }
-    putchar('b');
-    while (1)
-    {
+        putchar('b');
+        /* putchar('\n'); */
     }
 }

@@ -28,21 +28,44 @@ void init_pit()
     /* outb(PIT_CHANNEL0, 0); */
 }
 
-ISR(pit_handler, {
-    /* printf("pit\n"); */
-    /* printf("seconds:%d\n", get_seconds()); */
+void pit_handler_c(struct registers *r)
+{
 
+    pit_time++;
     if (pit_time % 50 == 0)
     {
-        /* printf("task switch ip:%p\n", frame->ip); */
+        /* printf("task switch ip:%p\n", r->frame.ip); */
 
-        /* switch_tasks(frame->ip); */
+        // check if it is in usermode
+        if ((r->frame.cs & 3) == 3)
+        {
+
+            printf("sp:%p\n", r->frame.sp);
+            switch_tasks(*r);
+        }
 
         /* printf("%p\n", frame->ip); */
         /* printf("pit time:%d\n", get_pit_time()); */
     }
 
+    PIC_sendEOI(0);
+}
+
+ISR(pit_handler, {
+    /* printf("seconds:%d\n", get_seconds()); */
+
     pit_time++;
+    if (pit_time % 50 == 0)
+    {
+        /* printf("task switch ip:%p\n", frame->ip); */
+
+        printf("sp:%p\n", frame->sp);
+        /* switch_tasks(frame->ip, frame->sp); */
+
+        /* printf("%p\n", frame->ip); */
+        /* printf("pit time:%d\n", get_pit_time()); */
+    }
+
     PIC_sendEOI(0);
 });
 

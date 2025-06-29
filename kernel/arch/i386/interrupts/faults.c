@@ -10,6 +10,7 @@ extern int get_cr2();
 
 void fault_handler_wait()
 {
+    asm("cli");
     while (1)
     {
         asm("hlt");
@@ -35,13 +36,21 @@ ISR(double_fault_handler, {
     fault_handler_wait();
 });
 
-ISR(page_fault_handler, {
-    printf("page fault!\n");
+/* TODO: make this a macro in idt.h like the ISR marco but with error code
+ * parameter */
+_Pragma("clang diagnostic push");
+_Pragma("clang diagnostic ignored \"-Wexcessive-regsave\"");
+ISR_ATTRIBUTE void page_fault_handler(struct interrupt_frame *frame,
+                                      uint32_t error_code)
+{ /* this is to prevent the unused parameter warning */
+    (void)frame;
 
-    printf("faulting address:%p\n", (void *)get_cr2());
-    printf("error code:%p\n", (void *)frame->flags);
+    printf("page fault\n");
+    printf("addr:%p\n", get_cr2());
+    printf("error code:%p\n", error_code);
     fault_handler_wait();
-});
+}
+_Pragma("clang diagnostic pop");
 
 ISR(virtualization_fault_handler, {
     printf("virtualization exception\n");

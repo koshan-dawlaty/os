@@ -6,13 +6,24 @@
 
 struct syscall_regs
 {
-    uint32_t eax;
     uint32_t ebx;
     uint32_t ecx;
     uint32_t edx;
     uint32_t esi;
     uint32_t edi;
     uint32_t ebp;
+    uint32_t padding;
+    uint32_t ds;
+    uint32_t es;
+    uint32_t fs;
+    uint32_t gs;
+    uint32_t eax;
+    uint32_t ip;
+    uint32_t cs;
+    uint32_t flags;
+    uint32_t sp;
+    uint32_t ss;
+
 } __attribute__((packed));
 
 /* int test; */
@@ -22,14 +33,17 @@ void syscall_handler(struct syscall_regs *registers)
 
     /* *(char *)(0xC03FF002 + test) = 'a'; */
     /* test += 2; */
-    /* printf("eax: %d, ebx:%d, ecx:%d, edx:%d, esi:%d, edi:%d, ebp:%d\n", */
-    /*        registers->eax, registers->ebx, registers->ecx, registers->edx, */
-    /*        registers->esi, registers->edi, registers->ebp); */
+    /*
+printf("eax: %p, ebx:%p, ecx:%p, edx:%p, esi:%p, edi:%p, ebp:%p\n",
+       registers->eax, registers->ebx, registers->ecx, registers->edx,
+       registers->esi, registers->edi, registers->ebp);
+               */
 
     if (registers->eax == 0)
     {
         /* printf("test\n"); */
-        putchar(registers->ebx);
+        /* putchar(registers->ebx); */
+        *(char *)(0xC03FF000) = registers->ebx;
     }
     else if (registers->eax == 1)
     {
