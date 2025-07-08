@@ -4,7 +4,7 @@ DEFAULT_HOST!=../build/default-host.sh
 HOST?=$(DEFAULT_HOST)
 HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
 
-CFLAGS?=-O2 -g
+CFLAGS?=-O2 -g -fstack-protector-all
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -41,6 +41,7 @@ $(KERNEL_ARCH_TEST_OBJS) \
 kernel/kernel.o \
 kernel/utils.o \
 kernel/usermode.o \
+kernel/panic.o \
 kernel/elf/elf.o \
 kernel/scheduler/scheduler.o \
 fs/ext2/dentry.o \

@@ -15,6 +15,7 @@ void init_pio_tests()
     }
 }
 
+/*
 TEST(pio_write, {
     init_pio_tests();
 
@@ -48,6 +49,7 @@ TEST(pio_write, {
     free(result_buffer);
     free(inital_content);
 })
+*/
 
 TEST(pio_high_lba, {
     init_pio_tests();

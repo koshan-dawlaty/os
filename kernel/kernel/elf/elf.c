@@ -35,17 +35,21 @@ elf_32 *parse_elf32(int fd)
     elf_32 *out = malloc(sizeof(elf_32));
     uint32_t program_header_table_offset = word_from_buffer(header_buf + 28);
     uint32_t program_header_size = short_from_buffer(header_buf + 42);
+
     uint32_t section_header_table_offset = word_from_buffer(header_buf + 32);
     uint32_t section_header_size = short_from_buffer(header_buf + 46);
+
     out->program_headers_len = short_from_buffer(header_buf + 44);
     out->section_headers_len = short_from_buffer(header_buf + 48);
     out->entry_point = word_from_buffer(header_buf + 24);
+
     uint8_t *program_headers_buf =
         malloc(program_header_size * out->program_headers_len);
+
     pread(fd, program_headers_buf,
           program_header_size * out->program_headers_len,
           program_header_table_offset);
-    /* printf("offset:%d\n", program_header_table_offset); */
+
     elf_program_header_32 **program_headers =
         malloc(sizeof(elf_program_header_32 *));
     for (size_t i = 0; i < out->program_headers_len; i++)
@@ -54,10 +58,11 @@ elf_32 *parse_elf32(int fd)
             malloc(sizeof(elf_program_header_32));
         memcpy(new_header, (program_headers_buf) + (i * program_header_size),
                sizeof(elf_program_header_32));
-        /* printf("%d\n", new_header->file_offset); */
+
         program_headers[i] = new_header;
     }
     out->program_headers = program_headers;
+
     /* this seems to read larger than the ext2 inode direct blocks */
     /*
 uint8_t *section_headers_buf =
@@ -88,18 +93,15 @@ struct pagedir *load_elf32(elf_32 *elf)
 {
     struct task *t = new_task(elf->entry_point, 0xBFFEF000);
     struct pagedir *pgdir = t->pgdir;
-    /* printf("pagedir:%p\n", pgdir); */
-    /* write_kernel_page_tables(pgdir); */
+
     load_pgdir(pgdir);
+
     /* printf("len:%d\n", elf->program_headers_len); */
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
+
         elf_program_header_32 *header = elf->program_headers[j];
         /* printf("test\n"); */
-        if (j > 0)
-        {
-            /* return; */
-        }
         /* printf("%p\n", header->memory_size); */
         // load
         if (header->type == 1)
@@ -113,29 +115,37 @@ struct pagedir *load_elf32(elf_32 *elf)
             /* printf("difference:%x\n", elf->entry_point -
              * header->virutal_addr); */
             /* printf("writing header to:%p\n", elf_physaddr_start); */
+
             for (size_t i = 0; i <= header->memory_size + PAGE_SIZE;
                  i += PAGE_SIZE)
             {
-                /* printf("i:%x, mapping: %p\n", i, */
-                /*        align_long(header->virutal_addr + (i), PAGE_SIZE)); */
-                map_page((void *)elf_physaddr_start,
+
+                /* printf("%p\n", elf_physaddr_start); */
+
+                /* map_page((void *)elf_physaddr_start, */
+                /*          (void *)(header->virutal_addr + i), */
+                /*          PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
+
+                map_page((void *)get_free_phys_page(),
                          (void *)(header->virutal_addr + i),
-                         PAGING_WRITEABLE | PAGING_USER);
+                         PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+
                 /* printf("done mapping\n"); */
                 elf_physaddr_start += 4096;
             }
+
             /* this may not have zeros at the end */
             uint8_t *buf = malloc(header->file_size);
-            /*
-if (header->memory_size > header->file_size)
-{
-    for (size_t i = 0; i < header->memory_size - header->file_size;
-         i++)
-    {
-        buf[header->file_size + i] = 0;
-    }
-}
-            */
+            /* if (header->memory_size > header->file_size) */
+            /* { */
+            /*     for (size_t i = 0; i < header->memory_size -
+             * header->file_size; */
+            /*          i++) */
+            /*     { */
+            /*         buf[header->file_size + i] = 0; */
+            /*     } */
+            /* } */
+
             pread(elf->fd, buf, header->file_size, header->file_offset);
             uint8_t *dest = (uint8_t *)(header->virutal_addr);
             for (size_t i = 0; i < header->file_size; i++)
@@ -157,7 +167,7 @@ if (header->memory_size > header->file_size)
     /* printf("%p\n", elf->entry_point); */
     /* asm("sti"); */
     /* jump_usermode_asm(elf->entry_point); */
-    set_kernel_stack((uint32_t)t->stack);
+    /* set_kernel_stack((uint32_t)t->stack); */
     create_userspace_stack(pgdir);
     add_task(t);
     load_pgdir(&init_pgdir);

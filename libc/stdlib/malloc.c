@@ -84,18 +84,7 @@ heap_block *get_block(size_t size)
         current_page_offset = 0;
     }
 
-    if (heap_debug)
-    {
-        /* printf("page is: %p, offset is: %d, total: %p\n", current_page, */
-        /*        current_page_offset, current_page + current_page_offset); */
-        *(size_t *)(current_page + current_page_offset) = 'a';
-        /* printf("this runs after!!\n"); */
-    }
-
-    // it is something to do with parenthesis here
     heap_block *block = (heap_block *)(current_page + current_page_offset);
-
-    /* printf("block addr: %p\n", block); */
 
     block->size = size;
     block->next = NULL;

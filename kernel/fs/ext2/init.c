@@ -74,9 +74,10 @@ void fs_read(uint8_t *buffer, size_t buffer_size, uint64_t addr)
 uint8_t *ext2_read_block(size_t index, superblock *sb)
 {
     uint8_t *buffer = malloc(EXT2_BLOCK_SIZE(sb));
-
+    /* printf("%p ", buffer); */
+    /* printf("block addr: %d, size:%d\n", index, EXT2_BLOCK_SIZE(sb)); */
     uint64_t lba = (index * (EXT2_BLOCK_SIZE(sb) / 512));
-    // printf("block addr: %d, lba: %d\n", index, lba);
+    /* printf("block addr: %d, lba: %d\n", index, lba); */
     fs_read(buffer, EXT2_BLOCK_SIZE(sb), lba);
 
     return buffer;

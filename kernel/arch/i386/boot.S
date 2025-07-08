@@ -43,12 +43,6 @@ paging_page_table_addr:
 
 
 
-.section .text
-.global test_interrupt_handler2
-.type test_interrupt_handler2, @function
-test_interrupt_handler2:
-	cli
-    iret         
 
 
 # The kernel entry point.

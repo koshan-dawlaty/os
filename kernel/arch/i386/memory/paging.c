@@ -30,9 +30,10 @@ extern long paging_page_table_addr;
 #define free_page_bitmap_size NUM_PAGES / 8
 static uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
-#define PHYS_PAGE_START 0x100000
+#define PHYS_PAGE_START 0x1000000
 
 struct pagedir init_pgdir;
+struct pagedir *current_pagedir = &init_pgdir;
 void *get_free_phys_page_dir(struct pagedir dir)
 {
     int i = 0;
@@ -57,7 +58,7 @@ void *get_free_phys_page_dir(struct pagedir dir)
 
 void *get_free_phys_page()
 {
-    return get_free_phys_page_dir(init_pgdir);
+    return get_free_phys_page_dir(*current_pagedir);
 }
 
 void *get_physaddr(void *virtualaddr)
@@ -101,9 +102,8 @@ void flush_tlb_full()
 
 void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 {
-    write_pagedir(&init_pgdir, physaddr, virtualaddr, flags);
+    write_pagedir(current_pagedir, physaddr, virtualaddr, flags);
     flush_tlb_full();
-    return;
 }
 
 void unmap_page(void *virtual_address)
@@ -220,14 +220,16 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
 
     pt[ptindex] =
         ((directory_entry)physical_addr) | (flags & 0xFFF) | PAGING_PRESENT;
+    flush_tlb_full();
 }
 
 void write_kernel_page_tables(struct pagedir *pgdir)
 {
     directory_entry *kernel_dir = (directory_entry *)DIRECTORY_ADDR;
 
-    /* printf("%p\n", pgdir->pgdir_virtual); */
     directory_entry *other_dir = (directory_entry *)pgdir->pgdir_virtual;
+    /* printf("other dir:%p\n", other_dir); */
+    /* printf("kernel dir:%p\n", kernel_dir); */
 
     for (uint32_t i = 0xC0000000; i < 0xFFC00000; i += 4096 * 1024)
     {
@@ -239,7 +241,9 @@ void write_kernel_page_tables(struct pagedir *pgdir)
         if (!((direntry & 1) == 0))
         {
             /* printf("i:%p, index:%p\n", i, index); */
-            /* printf("kernel:%p other:%p\n", kernel_dir, other_dir); */
+            /* printf("kernel:%p other:%p\n", kernel_dir[index],
+             * other_dir[index]); */
+
             /* printf("i:%p, index:%d\n", i, index); */
             /* printf("i:%p, index:%d\n", i, i >> 22); */
             /* printf("kernel dir: %p\n", i); */
@@ -282,6 +286,8 @@ void load_pgdir(struct pagedir *d)
 
     // probably useless
     flush_tlb_full();
+
+    current_pagedir = d;
 }
 
 void init_paging()

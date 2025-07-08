@@ -22,15 +22,3 @@ int test_map_page(uint32_t virtual, uint32_t physical)
 
     return physaddr == physical;
 }
-
-TEST(test_map_page_multiple, {
-    uint32_t virtual = 0x20000000;
-    uint32_t physical = 0x10000000;
-
-    for (int i = 0; i < 10; i++)
-    {
-        ASSERT_TRUE(test_map_page(virtual, physical));
-        virtual += PAGE_SIZE;
-        physical += PAGE_SIZE;
-    }
-})

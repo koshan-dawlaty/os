@@ -1,4 +1,3 @@
-
 .extern pit_handler_c
 
 .section .text
@@ -32,5 +31,7 @@ pit_handler_asm:
     pop %ds
 
 	popa
+
+	# or $(1 << 9), 0xC(%esp)
 
 	iret

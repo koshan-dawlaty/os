@@ -98,8 +98,12 @@ ext2_dentry **ext2_parse_directory(ext2_inode *node, superblock *sb)
     return out;
 }
 
-ext2_dentry *ext2_find_dentry(char *path, superblock *sb)
+ext2_dentry *ext2_find_dentry(char *path2, superblock *sb)
 {
+
+    /* probably useless and can probably be avoided with memcmp */
+    char *path = malloc(strlen(path2) + 1);
+    memcpy(path, path2, strlen(path2) + 1);
 
     // printf("%p\n", sb->blocksize);
 
@@ -162,7 +166,7 @@ ext2_dentry *ext2_find_dentry(char *path, superblock *sb)
                     if (is_last_thing_in_path)
                     {
                         // printf("exit\n");
-                        // printf("name:%s\n", entries[j]->name);
+                        /* printf("name:%s\n", entries[j]->name); */
 
                         ext2_dentry *temp = entries[j];
                         ext2_dentry *out = malloc(sizeof(ext2_dentry));

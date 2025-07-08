@@ -69,7 +69,7 @@ void init_idt()
     idtr.base = (uintptr_t)&idt[0];
     idtr.limit = sizeof(idt) - 1;
 
-    for (int i = 32; i < 256; i++)
+    for (int i = 32; i < 255; i++)
     {
         add_idt_entry(
             (IDT_entry){

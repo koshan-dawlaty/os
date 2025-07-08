@@ -1,6 +1,14 @@
 #!/bin/sh
 set -e
 cd build
+
+
+CFLAGS="${CFLAGS} -DTESTS"
+ISO="test.iso"
+
+IMAGE_FILE="test.img"
+export CFLAGS
+export ISO
 . ./iso.sh
 
 # echo $QEMU_FLAGS
