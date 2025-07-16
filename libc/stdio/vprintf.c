@@ -109,6 +109,12 @@ int vprintf(const char *format, va_list list)
 
     int next_is_format = 0;
 
+    if (*format == 0)
+    {
+
+        putchar('a');
+    }
+
     while (*format != '\0')
     {
 
@@ -116,11 +122,13 @@ int vprintf(const char *format, va_list list)
         {
             next_is_format = 0;
 
-            // may be able to use a switch statement, but there is a chance
-            // that they will not work because the bootstrap has not
-            // initialized them
+            /*
+may be able to use a switch statement, but there is a chance
+that they will not work because the bootstrap has not initialized them
+            */
             if (*format == 's')
             {
+
                 char *str = va_arg(list, char *);
 
                 if (!print_len(str, strlen(str)))
@@ -163,8 +171,6 @@ int vprintf(const char *format, va_list list)
     }
 
     va_arg(list, const char *);
-
-    va_end(list);
 
     return 1;
 }

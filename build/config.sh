@@ -21,7 +21,7 @@ ISO="os.iso"
 export ISO
 
 
-CFLAGS="${CFLAGS} -O2 -g"
+CFLAGS="${CFLAGS} -O2 -g "
 export CFLAGS
 export CPPFLAGS=''
 

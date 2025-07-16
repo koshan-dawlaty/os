@@ -57,11 +57,11 @@ int main()
     elf_32 *elf = parse_elf32(f1);
     struct pagedir *dir1 = load_elf32(elf);
 
-    printf("test\n");
-
-    int f2 = open("/elf_test2", 0);
-    elf_32 *elf2 = parse_elf32(f2);
-    struct pagedir *dir2 = load_elf32(elf2);
+    /*
+int f2 = open("/elf_test2", 0);
+elf_32 *elf2 = parse_elf32(f2);
+struct pagedir *dir2 = load_elf32(elf2);
+    */
 
     /* int f3 = open("/usr/bin/elf_test", 0); */
     /* elf_32 *elf3 = parse_elf32(f3); */
@@ -70,6 +70,7 @@ int main()
     enable_scheduler();
     load_pgdir(dir1);
 
+    printf("jumping to usermode\n");
     jump_usermode_asm(elf->entry_point);
 
     printf("main exited\n");

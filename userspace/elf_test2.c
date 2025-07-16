@@ -11,7 +11,7 @@ int main()
     /* putchar('b'); */
     while (1)
     {
-        putchar('b');
+        /* putchar('b'); */
         /* putchar('\n'); */
     }
 }

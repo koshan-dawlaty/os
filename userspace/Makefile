@@ -13,7 +13,7 @@ HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
 FS_ROOT?=
 BINARY_PREFIX?=bin
 
-CFLAGS?=-O2 -g
+CFLAGS?=-O0 -g
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=

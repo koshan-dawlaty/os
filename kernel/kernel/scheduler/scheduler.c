@@ -79,7 +79,6 @@ void switch_tasks(struct registers regs)
     uint32_t sp = regs.frame.sp;
     uint32_t bp = regs.ebp;
 
-    printf("test\n");
     if (!scheduler_enabled)
     {
         return;
@@ -121,10 +120,12 @@ void switch_tasks(struct registers regs)
         current_task = first_task;
     }
 
-    printf("switching to:%p\n", current_task->pgdir);
-    printf("kernel stack:%p\n", current_task->stack);
-    printf("user stack:%p\n", current_task->stack_pointer);
-    printf("jumping to %p\n", current_task->instruction_pointer);
+    /*
+printf("switching to:%p\n", current_task->pgdir);
+printf("kernel stack:%p\n", current_task->stack);
+printf("user stack:%p\n", current_task->stack_pointer);
+printf("jumping to %p\n", current_task->instruction_pointer);
+    */
 
     /* set_kernel_stack((uint32_t)current_task->stack); */
     PIC_sendEOI(0);

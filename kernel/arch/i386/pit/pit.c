@@ -41,7 +41,6 @@ void pit_handler_c(struct registers *r)
         if ((r->frame.cs & 3) == 3)
         {
 
-            printf("sp:%p\n", r->frame.sp);
             switch_tasks(*r);
         }
 

@@ -21,4 +21,7 @@ syscall_wrapper_asm:
 	
 
 	int $(0x80)
+
+	add $24, %esp
+	leave
 	ret

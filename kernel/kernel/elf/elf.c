@@ -64,26 +64,29 @@ elf_32 *parse_elf32(int fd)
     out->program_headers = program_headers;
 
     /* this seems to read larger than the ext2 inode direct blocks */
-    /*
-uint8_t *section_headers_buf =
-    malloc(section_header_size * out->section_headers_len);
-printf("offset:%d\n", section_header_table_offset);
-pread(fd, section_headers_buf,
-      section_header_size * out->section_headers_len,
-      section_header_table_offset);
-elf_section_header_32 **section_headers =
-    malloc(sizeof(elf_section_header_32 *) * out->section_headers_len);
-for (size_t i = 0; i < out->section_headers_len; i++)
-{
-    elf_section_header_32 *new_header =
-        malloc(sizeof(elf_section_header_32));
-    memcpy(new_header, (section_headers_buf) + (i * section_header_size),
-           sizeof(elf_section_header_32));
-    section_headers[i] = new_header;
-}
-out->section_headers = section_headers;
-    */
-    out->fd = fd;
+
+    /* uint8_t *section_headers_buf = */
+    /*     malloc(section_header_size * out->section_headers_len); */
+    /* /1* printf("offset:%d\n", section_header_table_offset); *1/ */
+    /* pread(fd, section_headers_buf, */
+    /*       section_header_size * out->section_headers_len, */
+    /*       section_header_table_offset); */
+    /* elf_section_header_32 **section_headers = */
+    /*     malloc(sizeof(elf_section_header_32 *) * out->section_headers_len);
+     */
+    /* for (size_t i = 0; i < out->section_headers_len; i++) */
+    /* { */
+    /*     elf_section_header_32 *new_header = */
+    /*         malloc(sizeof(elf_section_header_32)); */
+    /*     memcpy(new_header, (section_headers_buf) + (i * section_header_size),
+     */
+    /*            sizeof(elf_section_header_32)); */
+    /*     section_headers[i] = new_header; */
+    /*     /1* printf("%p\n", section_headers[i]->addr); *1/ */
+    /* } */
+    /* out->section_headers = section_headers; */
+
+    /* out->fd = fd; */
     return out;
 }
 /* TODO: MAKE THIS USE GRUB MEMORY MAP */
@@ -96,7 +99,7 @@ struct pagedir *load_elf32(elf_32 *elf)
 
     load_pgdir(pgdir);
 
-    /* printf("len:%d\n", elf->program_headers_len); */
+    printf("len:%d\n", elf->program_headers_len);
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
 
@@ -135,21 +138,35 @@ struct pagedir *load_elf32(elf_32 *elf)
             }
 
             /* this may not have zeros at the end */
-            uint8_t *buf = malloc(header->file_size);
-            /* if (header->memory_size > header->file_size) */
-            /* { */
-            /*     for (size_t i = 0; i < header->memory_size -
-             * header->file_size; */
-            /*          i++) */
-            /*     { */
-            /*         buf[header->file_size + i] = 0; */
-            /*     } */
-            /* } */
+            uint8_t *buf = malloc(header->memory_size);
+            /*
+if (header->memory_size > header->file_size)
+{
 
+    for (size_t i = 0; i < header->memory_size - header->file_size;
+         i++)
+    {
+        buf[header->file_size + i] = 0;
+    }
+}
+            */
+
+            /* printf("file size:%p offset:%p\n", header->file_size, */
+            /*        header->file_offset); */
             pread(elf->fd, buf, header->file_size, header->file_offset);
+
+            /* printf("size:%p\n", header->file_size); */
+            /* printf("offset:%p\n", header->file_offset); */
+
+            /* printf("writing from %p to %p\n", header->virutal_addr, */
+            /*        header->virutal_addr + header->memory_size); */
+
             uint8_t *dest = (uint8_t *)(header->virutal_addr);
-            for (size_t i = 0; i < header->file_size; i++)
+
+            /* printf("addr:%p\n", dest); */
+            for (size_t i = 0; i < header->memory_size; i++)
             {
+
                 dest[i] = buf[i];
             }
         }

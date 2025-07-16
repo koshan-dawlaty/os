@@ -42,8 +42,8 @@ printf("eax: %p, ebx:%p, ecx:%p, edx:%p, esi:%p, edi:%p, ebp:%p\n",
     if (registers->eax == 0)
     {
         /* printf("test\n"); */
-        /* putchar(registers->ebx); */
-        *(char *)(0xC03FF000) = registers->ebx;
+        putchar(registers->ebx);
+        /* *(char *)(0xC03FF000) = registers->ebx; */
     }
     else if (registers->eax == 1)
     {
