@@ -21,6 +21,25 @@
 #include "tests/tests.h"
 #include "unistd.h"
 
+#include <stdint.h>
+#include <stdlib.h>
+
+#if UINT32_MAX == UINTPTR_MAX
+#define STACK_CHK_GUARD 0xe2dee396
+#else
+#define STACK_CHK_GUARD 0x595e9fbd94fda766
+#endif
+
+uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
+
+__attribute__((noreturn)) void __stack_chk_fail(void)
+{
+    panic("stack smashing detected");
+    while (1)
+    {
+    }
+}
+
 extern struct pagedir init_pgdir;
 
 void kernel_init()
@@ -57,34 +76,20 @@ int main()
     elf_32 *elf = parse_elf32(f1);
     struct pagedir *dir1 = load_elf32(elf);
 
-    /*
-int f2 = open("/elf_test2", 0);
-elf_32 *elf2 = parse_elf32(f2);
-struct pagedir *dir2 = load_elf32(elf2);
-    */
+    int f2 = open("/elf_test2", 0);
+    elf_32 *elf2 = parse_elf32(f2);
+    struct pagedir *dir2 = load_elf32(elf2);
 
-    /* int f3 = open("/usr/bin/elf_test", 0); */
-    /* elf_32 *elf3 = parse_elf32(f3); */
-    /* struct pagedir *dir3 = load_elf32(elf3); */
+    struct registers *temp_regs = malloc(sizeof(struct registers));
+    *temp_regs = (struct registers){0};
 
-    enable_scheduler();
+    /* printf("temp_regs addr:%p\n", temp_regs); */
+
     load_pgdir(dir1);
-
-    printf("jumping to usermode\n");
-    jump_usermode_asm(elf->entry_point);
-
+    /* asm("cli"); */
+    enable_scheduler();
+    jump_usermode_asm(elf->entry_point, temp_regs);
     printf("main exited\n");
-    while (1)
-    {
-        /* char c = getchar(); */
-
-        /* if (c == 'k') */
-        /* { */
-        /*     terminal_scroll_up(); */
-        /*     continue; */
-        /* } */
-        /* printf("%c", c); */
-    }
 
     return 0;
 }

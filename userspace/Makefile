@@ -57,8 +57,8 @@ $(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o ../libc/libc.a $(START_OBJ
 
 $(BIN)/elf_test2 : $(OBJS_START_BIN) $(BIN)/elf_test2.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	# $(CC) -Ttext=0x600000 -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
-	$(CC) -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
+	$(CC) -Ttext=0x600000 -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
+	# $(CC) -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
 
 all : $(BINARIES_BIN)
 	$(CC) -o $(BIN)/$

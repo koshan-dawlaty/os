@@ -1,9 +1,5 @@
 #include <stdio.h>
-
-#if defined(__is_libc)
-extern void syscall_wrapper_asm(uint32_t eax, uint32_t ebx, uint32_t ecx,
-                                uint32_t edx, uint32_t esi, uint32_t edi);
-#endif
+#include <utils.h>
 
 #if defined(__is_libk)
 #include <kernel/tty.h>

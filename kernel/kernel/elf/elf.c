@@ -86,7 +86,7 @@ elf_32 *parse_elf32(int fd)
     /* } */
     /* out->section_headers = section_headers; */
 
-    /* out->fd = fd; */
+    out->fd = fd;
     return out;
 }
 /* TODO: MAKE THIS USE GRUB MEMORY MAP */
@@ -99,7 +99,6 @@ struct pagedir *load_elf32(elf_32 *elf)
 
     load_pgdir(pgdir);
 
-    printf("len:%d\n", elf->program_headers_len);
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
 
@@ -129,6 +128,7 @@ struct pagedir *load_elf32(elf_32 *elf)
                 /*          (void *)(header->virutal_addr + i), */
                 /*          PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
 
+                /* printf("mapping %p\n", header->virutal_addr + i); */
                 map_page((void *)get_free_phys_page(),
                          (void *)(header->virutal_addr + i),
                          PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);

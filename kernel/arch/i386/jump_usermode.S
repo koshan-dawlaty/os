@@ -7,9 +7,11 @@ jump_usermode_asm:
 
 
 	mov 0x4(%esp), %ebx
+	mov 0x8(%esp), %edi
 	mov $(0xBFFEF000), %ecx
 	mov $(0xBFFEF000), %edx
 	# call %eax
+
 
 
 jump_usermode_asm_iret_start:
@@ -20,8 +22,10 @@ jump_usermode_asm_iret_start:
  	mov %ax, %es 
  	mov %ax, %fs
  	mov %ax, %gs # SS is handled by iret
+
  
- 
+	push %edi
+
  	# mov %esp, %eax
  	# set up the stack frame iret expects
  	# mov $(0xBFFEF000), %eax
@@ -35,6 +39,23 @@ jump_usermode_asm_iret_start:
  	push $((3 * 8) | 3) # code selector (ring 3 code with bottom 2 bits set for ring 3)
  	# push 0x04(%esp) # instruction address to return to
  	push %ebx
+
+	mov 0x14(%esp), %ecx
+
+	# mov 0x00(%ecx), %edi
+	# mov 0x04(%ecx), %esi
+	# mov 0x10(%ecx), %ebx
+	# mov 0x14(%ecx), %edx
+	# mov 0x1C(%ecx), %eax
+	# mov 0x18(%ecx), %ecx
+
+	mov 0x10(%ecx), %edi      
+	mov 0x14(%ecx), %esi      
+	mov 0x18(%ecx), %ebp      
+	mov 0x20(%ecx), %ebx      
+	mov 0x24(%ecx), %edx      
+	mov 0x2C(%ecx), %eax      
+	mov 0x28(%ecx), %ecx      
  
  	# mov $(0x20), %edx
 	# outb $(0x20), %edx
@@ -48,6 +69,10 @@ jump_usermode_asm_iret_start:
 .global switch_tasks_asm
 .type   switch_tasks_asm @function
 switch_tasks_asm:
+
+
+	# registers pointer !! 
+	mov 0x14(%esp), %edi	
 	# user bp
 	mov 0x10(%esp), %edx
 	# user sp
@@ -57,14 +82,15 @@ switch_tasks_asm:
 	# ip
 	mov 0x4(%esp), %ebx
 
-	# mov tss + 4, %eax 
 	mov %eax, tss + 4
 
 	jmp jump_usermode_asm_iret_start
 	# mov 4(tss), %ecx
 
+	cli
+	hlt
 
-	ret
+	# ret
 
 	
 
@@ -76,4 +102,28 @@ switch_tasks_asm:
 flush_tss:
 	mov $(5 * 8), %ax 
 	ltr %ax
+	ret
+
+
+
+
+.section .text
+.global switch_tasks_kernel
+.type switch_tasks_kernel @function
+switch_tasks_kernel:
+	
+	mov 0x08(%esp), %ebx
+	mov %ebx, 0x0(%esp)
+	mov 0x04(%esp), %eax
+
+	mov 0x10(%eax), %edi      
+	mov 0x14(%eax), %esi      
+	mov 0x18(%eax), %ebp      
+	mov 0x1C(%eax), %esp      
+	mov 0x20(%eax), %ebx      
+	mov 0x24(%eax), %edx      
+	mov 0x28(%eax), %ecx      
+	mov 0x2C(%eax), %eax      
+	
+	sti
 	ret

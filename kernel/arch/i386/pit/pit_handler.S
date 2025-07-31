@@ -20,8 +20,8 @@ pit_handler_asm:
 	mov %ax, %fs
 	mov %ax, %gs
 
+	cld
 	push %esp
-
 	call pit_handler_c
 	add $4, %esp
 	

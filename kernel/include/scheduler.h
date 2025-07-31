@@ -37,7 +37,9 @@ void add_task(struct task *task);
 struct task *new_task(uint32_t ip, uint32_t sp);
 
 extern void switch_tasks_asm(uint32_t ip, uint32_t kernel_sp, uint32_t user_sp,
-                             uint32_t user_bp);
+                             uint32_t user_bp, struct registers *regs);
+
+extern void switch_tasks_kernel(struct registers *regs, uint32_t ip);
 
 void enable_scheduler();
 void disable_scheduler();

@@ -4,7 +4,7 @@ DEFAULT_HOST!=../build/default-host.sh
 HOST?=$(DEFAULT_HOST)
 HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
 
-CFLAGS?=-O2 -g -fstack-protector-all
+CFLAGS?=-O2 -g 
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -15,7 +15,7 @@ EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas -fstack-protector-all
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  

@@ -17,13 +17,16 @@ char getchar()
 
     key_available = 0;
     char c = pop_keyboard_buffer();
-    printf("char:%c\n", c);
 
     return c;
 
 #else
-    char c;
-    syscall_wrapper_asm(1, &c, 0, 0, 0, 0);
+    char c = syscall_wrapper_asm(1, 0, 0, 0, 0, 0);
+
+    if (c != 0)
+    {
+        /* printf("in getchar:%c\n", c); */
+    }
     return c;
 
 #endif

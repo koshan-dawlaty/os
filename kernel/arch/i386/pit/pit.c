@@ -16,7 +16,7 @@ volatile uint64_t pit_time = 0;
 #define PIT_REAL_FREQUENCY 1193180
 
 // should not be lower than 19
-#define PIT_FREQUENCY 100
+#define PIT_FREQUENCY 50
 
 void init_pit()
 {
@@ -30,19 +30,19 @@ void init_pit()
 
 void pit_handler_c(struct registers *r)
 {
-    /* printf("pit\n"); */
 
     pit_time++;
     if (pit_time % 50 == 0)
     {
+        printf("interrupt frame sp:%p, normal sp:%p\n", r->frame.sp, r->esp);
+
         /* printf("task switch ip:%p\n", r->frame.ip); */
 
         // check if it is in usermode
-        if ((r->frame.cs & 3) == 3)
-        {
-
-            switch_tasks(*r);
-        }
+        /* if ((r->frame.cs & 3) == 3) */
+        /* { */
+        switch_tasks(*r);
+        /* } */
 
         /* printf("%p\n", frame->ip); */
         /* printf("pit time:%d\n", get_pit_time()); */
@@ -53,7 +53,7 @@ void pit_handler_c(struct registers *r)
 
 ISR(pit_handler, {
     /* printf("seconds:%d\n", get_seconds()); */
-    printf("pit\n");
+    /* printf("pit\n"); */
 
     /*     pit_time++; */
     /*     if (pit_time % 50 == 0) */

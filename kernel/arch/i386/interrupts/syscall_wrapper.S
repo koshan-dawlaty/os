@@ -2,8 +2,8 @@
 .type syscall_wrapper_asm, @function
 syscall_wrapper_asm:
 
-	push %ebp
-	mov %esp, %ebp
+	# push %ebp
+	# mov %esp, %ebp
 	
 	#mov 0x04(%esp), %eax
 	#mov 0x08(%esp), %ebx

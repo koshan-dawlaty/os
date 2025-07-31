@@ -1,8 +1,11 @@
 #include "elf.h"
+#include "endian.h"
 #include "fcntl.h"
+#include "kernel/keyboard.h"
 #include "kernel/usermode.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <utils.h>
 
 struct syscall_regs
 {
@@ -28,26 +31,37 @@ struct syscall_regs
 
 /* int test; */
 
-void syscall_handler(struct syscall_regs *registers)
+int syscall_handler(struct syscall_regs *registers)
 {
 
     /* *(char *)(0xC03FF002 + test) = 'a'; */
     /* test += 2; */
-    /*
-printf("eax: %p, ebx:%p, ecx:%p, edx:%p, esi:%p, edi:%p, ebp:%p\n",
-       registers->eax, registers->ebx, registers->ecx, registers->edx,
-       registers->esi, registers->edi, registers->ebp);
-               */
+    /* printf("eax: %p, ebx:%p, ecx:%p, edx:%p, esi:%p, edi:%p, ebp:%p\n", */
+    /*        registers->eax, registers->ebx, registers->ecx, registers->edx, */
+    /*        registers->esi, registers->edi, registers->ebp); */
 
     if (registers->eax == 0)
     {
         /* printf("test\n"); */
-        putchar(registers->ebx);
-        /* *(char *)(0xC03FF000) = registers->ebx; */
+        /* putchar(registers->ebx); */
+        *(char *)(0xC03FF000) = registers->ebx;
+        return 0;
     }
     else if (registers->eax == 1)
     {
-        registers->ebx = getchar();
+        /* registers->ebx = pop_keyboard_buffer(); */
+        char c = pop_keyboard_buffer();
+        if (c != 0)
+        {
+            printf("in syscall:%p\n", c);
+        }
+
+        printf("waiting\n");
+        while (1)
+        {
+        }
+
+        return c;
     }
     else if (registers->eax == 2)
     {
@@ -59,6 +73,13 @@ printf("eax: %p, ebx:%p, ecx:%p, edx:%p, esi:%p, edi:%p, ebp:%p\n",
         /* jump_usermode_asm(0x60017c); */
         /* jump_usermode_asm(elf->entry_point); */
     }
+    else if (registers->eax == 3)
+    {
+    }
+
+    printf("no syscall found\n");
+    /* should  be ENOSYS */
+    return -0x12345;
 
     /* printf("test\n"); */
 }

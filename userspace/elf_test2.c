@@ -5,13 +5,20 @@ void test()
     asm("nop");
 }
 
-int main()
+void main3()
 {
-    /* *(char *)(0x123456) = 'a'; */
-    /* putchar('b'); */
+
+    putchar('b');
     while (1)
     {
+
         /* putchar('b'); */
         /* putchar('\n'); */
     }
+}
+
+int main()
+{
+    /* *(char *)(0x123456) = 'a'; */
+    main3();
 }
