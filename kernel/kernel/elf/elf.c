@@ -92,10 +92,15 @@ elf_32 *parse_elf32(int fd)
 /* TODO: MAKE THIS USE GRUB MEMORY MAP */
 uint32_t elf_physaddr_start = 0x2000000;
 int test = 0;
-struct pagedir *load_elf32(elf_32 *elf)
+struct task *load_elf32(elf_32 *elf)
 {
+
+    printf("entry_point:%p\n", elf->entry_point);
+
     struct task *t = new_task(elf->entry_point, 0xBFFEF000);
     struct pagedir *pgdir = t->pgdir;
+
+    struct pagedir *temp_pgdir = get_current_pagedir();
 
     load_pgdir(pgdir);
 
@@ -187,6 +192,6 @@ if (header->memory_size > header->file_size)
     /* set_kernel_stack((uint32_t)t->stack); */
     create_userspace_stack(pgdir);
     add_task(t);
-    load_pgdir(&init_pgdir);
-    return pgdir;
+    load_pgdir(temp_pgdir);
+    return t;
 }

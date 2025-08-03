@@ -32,17 +32,14 @@ void pit_handler_c(struct registers *r)
 {
 
     pit_time++;
-    if (pit_time % 50 == 0)
+    if (pit_time % 40 == 0)
     {
-        printf("interrupt frame sp:%p, normal sp:%p\n", r->frame.sp, r->esp);
+        /* printf("interrupt frame sp:%p, normal sp:%p\n", r->frame.sp, r->esp);
+         */
 
         /* printf("task switch ip:%p\n", r->frame.ip); */
 
-        // check if it is in usermode
-        /* if ((r->frame.cs & 3) == 3) */
-        /* { */
         switch_tasks(*r);
-        /* } */
 
         /* printf("%p\n", frame->ip); */
         /* printf("pit time:%d\n", get_pit_time()); */

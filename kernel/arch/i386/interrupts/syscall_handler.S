@@ -16,7 +16,6 @@ syscall_handler_asm:
 	push %ebx
 	push %esp
 
-	sti
 	call syscall_handler
 	add $4, %esp
 

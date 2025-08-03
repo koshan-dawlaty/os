@@ -28,7 +28,7 @@ extern long paging_page_table_addr;
 #define IN_USE 1
 
 #define free_page_bitmap_size NUM_PAGES / 8
-static uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
+uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
 #define PHYS_PAGE_START 0x1000000
 
@@ -331,4 +331,9 @@ void create_userspace_stack(struct pagedir *pgdir)
         /*               PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
         /* user_stack_physical += PAGE_SIZE; */
     }
+}
+
+struct pagedir *get_current_pagedir()
+{
+    return current_pagedir;
 }

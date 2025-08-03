@@ -1,5 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
+#include "scheduler.h"
 #include <stdint.h>
 
 long align_long(long in, long align);
@@ -7,5 +8,7 @@ long align_long(long in, long align);
 uint32_t bytes_to_32_bit_int(uint8_t one, uint8_t two, uint8_t three,
                              uint8_t four);
 uint16_t bytes_to_16_bit_int(uint8_t one, uint8_t two);
+
+void print_regsiters(struct registers regs);
 
 #endif

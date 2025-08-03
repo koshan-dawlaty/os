@@ -16,6 +16,7 @@ jump_usermode_asm:
 
 jump_usermode_asm_iret_start:
 
+
  	cli
  	mov $((4 * 8) | 3), %ax # ring 3 data with bottom 2 bits set for ring 3
  	mov %ax, %ds
@@ -57,8 +58,6 @@ jump_usermode_asm_iret_start:
 	mov 0x2C(%ecx), %eax      
 	mov 0x28(%ecx), %ecx      
  
- 	# mov $(0x20), %edx
-	# outb $(0x20), %edx
  	# sti
  	iret
 
@@ -71,7 +70,7 @@ jump_usermode_asm_iret_start:
 switch_tasks_asm:
 
 
-	# registers pointer !! 
+	# registers pointer
 	mov 0x14(%esp), %edi	
 	# user bp
 	mov 0x10(%esp), %edx
@@ -92,10 +91,6 @@ switch_tasks_asm:
 
 	# ret
 
-	
-
-
-
 .section .text
 .global flush_tss
 .type flush_tss @function
@@ -104,26 +99,26 @@ flush_tss:
 	ltr %ax
 	ret
 
-
-
-
 .section .text
 .global switch_tasks_kernel
 .type switch_tasks_kernel @function
 switch_tasks_kernel:
 	
 	mov 0x08(%esp), %ebx
-	mov %ebx, 0x0(%esp)
 	mov 0x04(%esp), %eax
 
 	mov 0x10(%eax), %edi      
 	mov 0x14(%eax), %esi      
 	mov 0x18(%eax), %ebp      
+
 	mov 0x1C(%eax), %esp      
+	mov %ebx, 0x0(%esp)
+
 	mov 0x20(%eax), %ebx      
 	mov 0x24(%eax), %edx      
 	mov 0x28(%eax), %ecx      
 	mov 0x2C(%eax), %eax      
 	
 	sti
+
 	ret

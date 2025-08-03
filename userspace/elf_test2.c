@@ -7,12 +7,10 @@ void test()
 
 void main3()
 {
-
-    putchar('b');
+    printf("elf_test2 main function called\n");
     while (1)
     {
 
-        /* putchar('b'); */
         /* putchar('\n'); */
     }
 }

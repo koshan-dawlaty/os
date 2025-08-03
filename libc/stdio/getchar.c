@@ -23,9 +23,10 @@ char getchar()
 #else
     char c = syscall_wrapper_asm(1, 0, 0, 0, 0, 0);
 
-    if (c != 0)
+    /* TODO: this will make a lot of interrupts */
+    while (c == 0)
     {
-        /* printf("in getchar:%c\n", c); */
+        c = syscall_wrapper_asm(1, 0, 0, 0, 0, 0);
     }
     return c;
 

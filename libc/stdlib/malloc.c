@@ -1,3 +1,4 @@
+#include "sys/mman.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,6 +72,10 @@ void insert_bin(heap_block **bin, heap_block *block)
 
 static int heap_debug = 0;
 
+/* TODO: bad */
+void *user_malloc_addr = (void *)0xA0000000;
+uint32_t user_malloc_offset = 4096;
+
 heap_block *get_block(size_t size)
 {
 
@@ -94,7 +99,23 @@ heap_block *get_block(size_t size)
     return block;
 
 #else
+
+    if (user_malloc_offset + size + sizeof(heap_block) >= 4096)
+    {
+        /* TODO: this is not the correct way to use mmap */
+        user_malloc_addr += 4096;
+        mmap(user_malloc_addr, 0, 0, 0, 0, 0);
+        user_malloc_offset = 0;
+    }
+
+    heap_block *block = (heap_block *)(user_malloc_addr + user_malloc_offset);
+    block->size = size;
+    block->next = NULL;
+    user_malloc_offset += size + sizeof(heap_block);
+    return block;
+
     return (void *)0x123456;
+
 #endif
 }
 

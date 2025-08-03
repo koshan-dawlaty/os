@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+extern int syscall_wrapper_asm(uint32_t eax, uint32_t ebx, uint32_t ecx,
+                               uint32_t edx, uint32_t esi, uint32_t edi);
 
 void main2()
 {
@@ -35,10 +38,42 @@ void main2()
     /* } */
     /* printf("i is:%c\n", (char)i + 0x30); */
 
+    char *input = malloc(0);
+    size_t input_len = 0;
+
     while (1)
     {
-        putchar('a');
-        /* char c = 0; */
+
+        char c = getchar();
+
+        if (c == '\n')
+        {
+            execv(input, NULL);
+            input = malloc(0);
+        }
+
+        if (c == '-')
+        {
+            c = '_';
+        }
+
+        if (c == '\b')
+        {
+            input[input_len - 1] = 0;
+            input_len--;
+        }
+        else
+        {
+
+            input_len++;
+            input = realloc(input, input_len);
+            input[input_len - 1] = c;
+        }
+
+        printf("%s\n", input);
+
+        /* putchar('a'); */
+        /* char c = getchar(); */
         /* if (c != 0) */
         /* { */
         /*     printf("char is:%c\n", c); */

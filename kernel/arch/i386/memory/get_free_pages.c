@@ -1,3 +1,4 @@
+#include "ata/ata.h"
 #include "kernel/paging.h"
 #include "memory/paging_flags.h"
 #include "strings.h"
@@ -70,7 +71,9 @@ void *get_free_pages(size_t amount)
         virtual_addr += PAGE_SIZE * j;
     }
 
-    return (void *)((i * PAGE_SIZE) + VIRTUAL_PAGES_START);
+    void *address = (void *)((i * PAGE_SIZE) + VIRTUAL_PAGES_START);
+
+    return address;
 }
 
 void free_pages(void *addr, size_t amount)

@@ -2,6 +2,8 @@
 #include "gdt.h"
 #include "interrupts/pic.h"
 #include "kernel/usermode.h"
+#include "kernel/utils.h"
+#include "panic.h"
 #include "unistd.h"
 #include <kernel/paging.h>
 #include <scheduler.h>
@@ -35,14 +37,17 @@ struct task *new_task(uint32_t ip, uint32_t sp)
     /* TODO: might be bad */
     out->bp = sp;
     /* user task */
-    out->regs = (struct registers){.frame = {.cs = 0x1b}};
+    out->regs =
+        (struct registers){.esp = 0xBFFEF000, .ebp = 0xBFFEF000, .frame = {}};
     /* kernel task */
     // out->regs = (struct registers){};
 
     out->next = NULL;
-    out->stack = malloc(4096);
+
+    out->stack = get_free_pages(1) + PAGE_SIZE;
 
     out->pgdir = new_pagedir();
+
     write_kernel_page_tables(out->pgdir);
 
     return out;
@@ -74,9 +79,9 @@ void add_task(struct task *task)
     /*     jump_usermode_asm(current_task->instruction_pointer); */
 }
 
+int num_task_switches = 0;
 void switch_tasks(struct registers regs)
 {
-    printf("task switch\n");
 
     uint32_t ip = regs.frame.ip;
     uint32_t sp = regs.frame.sp;
@@ -86,6 +91,9 @@ void switch_tasks(struct registers regs)
     {
         return;
     }
+
+    /* printf("task switch number:%d\n", num_task_switches); */
+    num_task_switches++;
 
     /* asm("cli"); */
     /* asm("sti"); */
@@ -107,6 +115,7 @@ void switch_tasks(struct registers regs)
     current_task->bp = bp;
     /* printf("task registers addr:%p, registers addr:%p\n", */
     /*        &current_task->regs, &regs); */
+
     memcpy(&current_task->regs, &regs, sizeof(struct registers));
 
     /* current_task->regs.eax = 0x12345678; */
@@ -117,15 +126,18 @@ void switch_tasks(struct registers regs)
     /*     return; */
     /* } */
 
+    /* printf("switching from task %p", current_task); */
     if (current_task->next != NULL)
     {
         current_task = current_task->next;
     }
     else
     {
-        /* printf("no more tasks in queue\n"); */
         current_task = first_task;
     }
+    /* printf(" to task %p\n", current_task); */
+
+    /* print_regsiters(current_task->regs); */
 
     /*
 printf("switching to:%p\n", current_task->pgdir);
@@ -133,39 +145,35 @@ printf("kernel stack:%p\n", current_task->stack);
 printf("user stack:%p\n", current_task->stack_pointer);
 printf("jumping to %p\n", current_task->instruction_pointer);
     */
-
-    /* set_kernel_stack((uint32_t)current_task->stack); */
-
-    /*
-printf("new eax:%p\n", current_task->regs.eax);
-uint32_t *regs_ptr = (void *)&current_task->regs;
-for (size_t i = 10; i < 12; i++)
-{
-    printf("%p ", regs_ptr[i]);
-}
-putchar('\n');
-    */
-
-    printf("registers stack:%p, task stack:%p\n", current_task->regs.esp,
-           current_task->stack_pointer);
     load_pgdir(current_task->pgdir);
+
+    bool going_to_usermode = current_task->instruction_pointer < 0xC0000000;
+
+    /* bool going_to_usermode = (current_task->regs.frame.cs & 3) == 3; */
 
     PIC_sendEOI(0);
 
-    /* stupid */
-    bool going_to_usermode = current_task->instruction_pointer < 0xC0000000;
-
     if (going_to_usermode)
     {
-        printf("user\n");
-        switch_tasks_asm(
-            current_task->instruction_pointer, (uint32_t)current_task->stack,
-            current_task->stack_pointer, current_task->bp, &current_task->regs);
+        /* printf("user\n"); */
+        uint32_t stack = current_task->regs.esp;
+
+        /* if there was not a context switch for the irq the interrupt frame
+         * stack is invalid */
+        if ((current_task->regs.frame.cs & 3) == 3)
+        {
+            stack = current_task->regs.frame.sp;
+        }
+        /* printf("user stack:%p\n", stack); */
+        switch_tasks_asm(current_task->instruction_pointer,
+                         (uint32_t)current_task->stack, stack, current_task->bp,
+                         &current_task->regs);
     }
     else
     {
         printf("kernel\n");
-        printf("ip is:%p\n", current_task->instruction_pointer);
+        printf("registers bp:%p\n", current_task->regs.ebp);
+
         switch_tasks_kernel(&current_task->regs,
                             current_task->instruction_pointer);
     }

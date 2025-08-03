@@ -45,6 +45,8 @@ file/open.o \
 file/read.o \
 file/pread.o \
 utils/syscall_wrapper.o \
+sys/mman/mmap.o \
+unistd/execv.o \
 
 
 HOSTEDOBJS=\

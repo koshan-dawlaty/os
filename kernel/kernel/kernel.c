@@ -1,5 +1,6 @@
 #include "ata/ata.h"
 #include "elf.h"
+#include "gdt.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "kernel/usermode.h"
@@ -60,6 +61,7 @@ superblock *init_ext2()
 
 int main()
 {
+    asm("cli");
 
     /* useless */
     /* keyboard_init(); */
@@ -74,19 +76,20 @@ int main()
 
     int f1 = open("/elf_test", 0);
     elf_32 *elf = parse_elf32(f1);
-    struct pagedir *dir1 = load_elf32(elf);
+    struct task *task1 = load_elf32(elf);
 
-    int f2 = open("/elf_test2", 0);
-    elf_32 *elf2 = parse_elf32(f2);
-    struct pagedir *dir2 = load_elf32(elf2);
+    /* int f2 = open("/elf_test2", 0); */
+    /* elf_32 *elf2 = parse_elf32(f2); */
+    /* struct task *task2 = load_elf32(elf2); */
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
-    /* printf("temp_regs addr:%p\n", temp_regs); */
+    /* printf("test:%d\n", 1234); */
 
-    load_pgdir(dir1);
-    /* asm("cli"); */
+    load_pgdir(task1->pgdir);
+    set_kernel_stack((uint32_t)task1->stack);
+
     enable_scheduler();
     jump_usermode_asm(elf->entry_point, temp_regs);
     printf("main exited\n");

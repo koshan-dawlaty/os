@@ -2,7 +2,9 @@
 #include "endian.h"
 #include "fcntl.h"
 #include "kernel/keyboard.h"
+#include "kernel/paging.h"
 #include "kernel/usermode.h"
+#include "memory/paging_flags.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <utils.h>
@@ -43,8 +45,8 @@ int syscall_handler(struct syscall_regs *registers)
     if (registers->eax == 0)
     {
         /* printf("test\n"); */
-        /* putchar(registers->ebx); */
-        *(char *)(0xC03FF000) = registers->ebx;
+        putchar(registers->ebx);
+        /* *(char *)(0xC03FF000) = registers->ebx; */
         return 0;
     }
     else if (registers->eax == 1)
@@ -53,27 +55,43 @@ int syscall_handler(struct syscall_regs *registers)
         char c = pop_keyboard_buffer();
         if (c != 0)
         {
-            printf("in syscall:%p\n", c);
+            /* printf("in syscall:%p\n", c); */
         }
 
-        printf("waiting\n");
-        while (1)
-        {
-        }
+        /* printf("waiting\n"); */
+        /* while (1) */
+        /* { */
+        /* } */
 
         return c;
     }
     else if (registers->eax == 2)
     {
 
-        int f = open("/usr/bin/elf_test2", 0);
+        int f = open((char *)registers->ebx, 0);
+
         elf_32 *elf = parse_elf32(f);
-        load_elf32(elf);
-        printf("syscall\n");
+        if (elf != NULL)
+        {
+            load_elf32(elf);
+        }
+        /* printf("syscall\n"); */
+        return 0;
         /* jump_usermode_asm(0x60017c); */
         /* jump_usermode_asm(elf->entry_point); */
     }
     else if (registers->eax == 3)
+    {
+    }
+    else if (registers->eax == 4)
+    {
+        printf("mmap addr:%p\n", registers->ebx);
+        map_page(get_free_phys_page(), (void *)registers->ebx,
+                 PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+
+        return 1234;
+    }
+    else if (registers->eax == 5)
     {
     }
 

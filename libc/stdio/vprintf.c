@@ -101,6 +101,7 @@ char *int_to_string(intmax_t in, int base)
 
     /* printf("%c\n", buf[0]); */
     /* printf("test:%c\n", (buf[0] == '\0') + 0x30); */
+    buf[buf_size] = 0;
     return buf;
 }
 

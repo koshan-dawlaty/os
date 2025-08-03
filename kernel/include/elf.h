@@ -45,6 +45,6 @@ typedef struct
 } elf_32;
 
 elf_32 *parse_elf32(int fd);
-struct pagedir *load_elf32(elf_32 *elf);
+struct task *load_elf32(elf_32 *elf);
 
 #endif
