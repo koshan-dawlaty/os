@@ -47,6 +47,7 @@ file/pread.o \
 utils/syscall_wrapper.o \
 sys/mman/mmap.o \
 unistd/execv.o \
+unistd/sched_yield.o \
 
 
 HOSTEDOBJS=\

@@ -1,3 +1,4 @@
+#include <sched.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -38,45 +39,16 @@ void main2()
     /* } */
     /* printf("i is:%c\n", (char)i + 0x30); */
 
-    char *input = malloc(0);
-    size_t input_len = 0;
-
     while (1)
     {
 
-        char c = getchar();
-
-        if (c == '\n')
-        {
-            execv(input, NULL);
-            input = malloc(0);
-        }
-
-        if (c == '-')
-        {
-            c = '_';
-        }
-
-        if (c == '\b')
-        {
-            input[input_len - 1] = 0;
-            input_len--;
-        }
-        else
-        {
-
-            input_len++;
-            input = realloc(input, input_len);
-            input[input_len - 1] = c;
-        }
-
-        printf("%s\n", input);
-
-        /* putchar('a'); */
+        putchar('1');
+        /* sched_yield(); */
         /* char c = getchar(); */
+        /* putchar(c); */
+        /* printf("char is:%c\n", c); */
         /* if (c != 0) */
         /* { */
-        /*     printf("char is:%c\n", c); */
         /* } */
 
         /* putchar('a'); */

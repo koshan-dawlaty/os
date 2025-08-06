@@ -16,6 +16,8 @@ syscall_handler_asm:
 	push %ebx
 	push %esp
 
+	# this will allow the kernel to be preempted, however it may result in alot of race conditions
+	# sti
 	call syscall_handler
 	add $4, %esp
 

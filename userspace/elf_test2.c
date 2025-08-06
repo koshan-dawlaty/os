@@ -1,4 +1,6 @@
+#include <sched.h>
 #include <stdio.h>
+#include <unistd.h>
 
 void test()
 {
@@ -7,9 +9,10 @@ void test()
 
 void main3()
 {
-    printf("elf_test2 main function called\n");
+    /* printf("elf_test2 main function called\n"); */
     while (1)
     {
+        putchar('2');
 
         /* putchar('\n'); */
     }

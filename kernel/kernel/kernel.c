@@ -26,7 +26,8 @@
 #include <stdlib.h>
 
 #if UINT32_MAX == UINTPTR_MAX
-#define STACK_CHK_GUARD 0xe2dee396
+/* #define STACK_CHK_GUARD 0xe2dee396 */
+#define STACK_CHK_GUARD 0xBADC0DE
 #else
 #define STACK_CHK_GUARD 0x595e9fbd94fda766
 #endif
@@ -73,6 +74,10 @@ int main()
 #ifdef TESTS
     run_all_tests();
 #endif
+
+    struct registers *test1234 = malloc(sizeof(struct registers));
+    save_registers(test1234);
+    printf("%p\n", test1234->eax);
 
     int f1 = open("/elf_test", 0);
     elf_32 *elf = parse_elf32(f1);

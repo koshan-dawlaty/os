@@ -48,6 +48,7 @@ ISR_ATTRIBUTE void page_fault_handler(struct interrupt_frame *frame,
     printf("page fault\n");
     printf("addr:%p\n", get_cr2());
     printf("error code:%p\n", error_code);
+    printf("instruction pointer:%p\n", frame->ip);
     fault_handler_wait();
 }
 _Pragma("clang diagnostic pop");

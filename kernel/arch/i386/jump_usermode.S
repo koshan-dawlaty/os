@@ -107,18 +107,73 @@ switch_tasks_kernel:
 	mov 0x08(%esp), %ebx
 	mov 0x04(%esp), %eax
 
+
 	mov 0x10(%eax), %edi      
 	mov 0x14(%eax), %esi      
 	mov 0x18(%eax), %ebp      
 
 	mov 0x1C(%eax), %esp      
-	mov %ebx, 0x0(%esp)
+	mov %ebx, 0(%esp)
 
-	mov 0x20(%eax), %ebx      
-	mov 0x24(%eax), %edx      
-	mov 0x28(%eax), %ecx      
-	mov 0x2C(%eax), %eax      
+	mov 0x20(%eax), %ebx
+	mov 0x24(%eax), %edx
+	mov 0x28(%eax), %ecx
+	mov 0x2C(%eax), %eax
 	
 	sti
+	ret
+
+
+
+# void save_registers(struct registers * regs)
+.section .text
+.global save_registers
+.type save_registers @function
+save_registers:
+	push %ecx
+	pushf
+	mov 0x00(%esp), %ecx
+	popf
+
+	mov 0x08(%esp), %eax
+
+	mov %ecx, 0x30(%eax)
+	pop %ecx
+
+	mov %edi, 0x10(%esp)
+	mov %esi, 0x14(%esp)
+	mov %ebp, 0x18(%esp)
+	mov %esp, 0x1C(%esp)
+	mov %ebx, 0x20(%esp)
+	mov %edx, 0x24(%esp)
+	mov %ecx, 0x28(%esp)
+	mov %eax, %ecx
+	mov %eax, 0x2C(%esp)
+
+
+	ret
+
+
+.section .text
+.global load_registers
+.type load_registers @function
+load_registers:
+	mov 0x04(%esp), %ecx
+
+	pushf
+	mov 0x30(%ecx), %ebx
+	# TODO: this is going to cause a race condition (probably)
+	or  $(1 << 9), %ebx # set interrupt flag
+	mov %ebx, 0x00(%esp)
+	popf
+
+	mov 0x10(%ecx), %edi
+	mov 0x14(%ecx), %esi
+	mov 0x18(%ecx), %ebp
+	mov 0x1C(%ecx), %esp
+	mov 0x20(%ecx), %ebx
+	mov 0x24(%ecx), %edx
+	mov 0x2C(%ecx), %eax
+	mov 0x28(%ecx), %ecx
 
 	ret
