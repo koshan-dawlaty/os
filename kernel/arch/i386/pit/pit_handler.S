@@ -4,7 +4,6 @@
 .global pit_handler_asm
 .type   pit_handler_asm @function
 pit_handler_asm:
-	cli
 	pusha
 
 	

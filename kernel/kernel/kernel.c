@@ -75,28 +75,29 @@ int main()
     run_all_tests();
 #endif
 
-    struct registers *test1234 = malloc(sizeof(struct registers));
-    save_registers(test1234);
-    printf("%p\n", test1234->eax);
-
     int f1 = open("/elf_test", 0);
     elf_32 *elf = parse_elf32(f1);
     struct task *task1 = load_elf32(elf);
 
-    /* int f2 = open("/elf_test2", 0); */
-    /* elf_32 *elf2 = parse_elf32(f2); */
-    /* struct task *task2 = load_elf32(elf2); */
+    int f2 = open("/elf_test2", 0);
+    elf_32 *elf2 = parse_elf32(f2);
+    struct task *task2 = load_elf32(elf2);
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
     /* printf("test:%d\n", 1234); */
 
-    load_pgdir(task1->pgdir);
-    set_kernel_stack((uint32_t)task1->stack);
+    /* load_pgdir(task1->pgdir); */
+    /* printf("setting tss.esp0 to:%p\n", task1->stack); */
+    /* set_kernel_stack((uint32_t)task1->stack); */
 
     enable_scheduler();
-    jump_usermode_asm(elf->entry_point, temp_regs);
+    /* load_registers(&task1->regs); */
+    add_task(create_kernel_task());
+    add_task(task1);
+    /* add_task(task2); */
+    /* jump_usermode_asm(elf->entry_point, temp_regs); */
     printf("main exited\n");
 
     return 0;

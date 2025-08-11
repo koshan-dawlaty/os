@@ -207,19 +207,23 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
 
 void *malloc(size_t size)
 {
+    asm("cli");
+    void *retval = NULL;
     int total_size = align_long2(size + sizeof(heap_block), ALIGN);
     /* printf("total size:%d\n", total_size / ALIGN); */
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
 
-        return block_to_ptr(
+        retval = block_to_ptr(
             get_block_from_bin_fast(&(small_bins[total_size / ALIGN]), size));
     }
     else
     {
-        return block_to_ptr(get_block_from_bin(&unsorted_bin, size));
+        retval = block_to_ptr(get_block_from_bin(&unsorted_bin, size));
     }
+    asm("sti");
+    return retval;
 }
 
 void free(void *ptr)

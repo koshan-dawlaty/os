@@ -193,10 +193,13 @@ if (header->memory_size > header->file_size)
 
     /* enable_scheduler(); */
     create_userspace_stack(pgdir);
-    add_task(t);
-    /* load_pgdir(temp_pgdir); */
-    struct registers *temp_regs = malloc(sizeof(struct registers));
-    *temp_regs = (struct registers){0};
+
+    /* add_task(t); */
+    load_pgdir(temp_pgdir);
+
+    /* struct registers *temp_regs = malloc(sizeof(struct registers)); */
+    /* *temp_regs = (struct registers){0}; */
+
     /* asm("sti"); */
     /* jump_usermode_asm(elf->entry_point, temp_regs); */
     return t;

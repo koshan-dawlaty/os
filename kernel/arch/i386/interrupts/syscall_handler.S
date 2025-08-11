@@ -17,7 +17,7 @@ syscall_handler_asm:
 	push %esp
 
 	# this will allow the kernel to be preempted, however it may result in alot of race conditions
-	# sti
+	sti
 	call syscall_handler
 	add $4, %esp
 
@@ -30,6 +30,7 @@ syscall_handler_asm:
 
 
 	add $4, %esp
+	
 
 	pop %ds
 	pop %es
@@ -37,6 +38,7 @@ syscall_handler_asm:
 	pop %gs
 
 	add $4, %esp
+
 
 
 	iret              

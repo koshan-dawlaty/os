@@ -17,9 +17,6 @@ syscall_wrapper_asm:
 	mov 0x18(%ebp), %esi
 	mov 0x1C(%ebp), %edi
 
-
-	
-
 	int $(0x80)
 
 	pop %edi

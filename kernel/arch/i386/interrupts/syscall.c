@@ -47,13 +47,13 @@ int syscall_handler(struct syscall_regs *regs)
     if (regs->eax == 0)
     {
         /* printf("test\n"); */
-        /* putchar(registers->ebx); */
+        /* putchar(regs->ebx); */
         *(char *)(0xC03FF100) = regs->ebx;
         return 0;
     }
     else if (regs->eax == 1)
     {
-        asm("sti");
+        /* asm("sti"); */
         char c = getchar();
         printf("in syscall:%c\n", c);
         return c;
@@ -66,8 +66,9 @@ int syscall_handler(struct syscall_regs *regs)
         elf_32 *elf = parse_elf32(f);
         if (elf != NULL)
         {
-            load_elf32(elf);
+            add_task(load_elf32(elf));
         }
+
         /* printf("syscall\n"); */
         return 0;
         /* jump_usermode_asm(0x60017c); */
@@ -87,6 +88,7 @@ int syscall_handler(struct syscall_regs *regs)
         /*     regs->ecx, regs->eax, f}; */
 
         /* switch_tasks(r); */
+        return 1;
     }
     else if (regs->eax == 4)
     {

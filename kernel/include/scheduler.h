@@ -35,12 +35,18 @@ void add_task(struct task *task);
  */
 struct task *new_task(uint32_t ip, uint32_t sp);
 
+/*
+ * creates a task for the currently running kernel code
+ * intended to be used to create a task for the code running initially
+ */
+struct task *create_kernel_task();
+
 extern void switch_tasks_asm(uint32_t ip, uint32_t kernel_sp, uint32_t user_sp,
                              uint32_t user_bp, struct registers *regs);
 
 extern void switch_tasks_kernel(struct registers *regs, uint32_t ip);
-extern void save_registers(struct registers *regs);
-extern void load_registers(struct registers *regs);
+extern void save_registers(struct registers *regs) __attribute__((cdecl));
+extern void load_registers(struct registers *regs) __attribute__((cdecl));
 
 void schedule();
 
