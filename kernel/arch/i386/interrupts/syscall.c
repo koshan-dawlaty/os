@@ -47,15 +47,15 @@ int syscall_handler(struct syscall_regs *regs)
     if (regs->eax == 0)
     {
         /* printf("test\n"); */
-        /* putchar(regs->ebx); */
-        *(char *)(0xC03FF100) = regs->ebx;
+        putchar(regs->ebx);
+        /* *(char *)(0xC03FF100) = regs->ebx; */
         return 0;
     }
     else if (regs->eax == 1)
     {
         /* asm("sti"); */
         char c = getchar();
-        printf("in syscall:%c\n", c);
+        /* printf("in syscall:%c\n", c); */
         return c;
     }
     else if (regs->eax == 2)
@@ -86,6 +86,8 @@ int syscall_handler(struct syscall_regs *regs)
         /*     regs->gs,  regs->fs,  regs->es, regs->ds,  regs->edi, */
         /*     regs->esi, regs->ebp, regs->sp, regs->ebx, regs->edx, */
         /*     regs->ecx, regs->eax, f}; */
+
+        schedule();
 
         /* switch_tasks(r); */
         return 1;

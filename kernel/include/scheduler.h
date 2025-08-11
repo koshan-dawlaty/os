@@ -1,6 +1,5 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
-#include "interrupts/idt.h"
 #include "kernel/paging.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -10,7 +9,7 @@ struct registers
     uint32_t gs, fs, es, ds;
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
     uint32_t eflags;
-    struct interrupt_frame frame;
+
 } __attribute__((packed));
 
 struct task

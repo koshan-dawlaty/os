@@ -2,10 +2,12 @@
 #include "interrupts/idt.h"
 #include "keyboard_map.h"
 #include "x86_keyboard.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
 #include "interrupts/pic.h"
+#include "panic.h"
 #include "utils.h"
 
 volatile int key_available;
@@ -25,7 +27,7 @@ void push_keyboard_buffer(char c)
     }
     else
     {
-        printf("keyboard buffer overflow!\n");
+        panic("keyboard buffer overflow!\n");
     }
 }
 
@@ -122,4 +124,18 @@ void keyboard_init()
     keyboard_set_default();
     keyboard_set_typematic(0, 0);
     keyboard_set_led(KEYBOARD_LED_CAPS_LOCK);
+
+    /*
+push_keyboard_buffer('a');
+push_keyboard_buffer('b');
+push_keyboard_buffer('c');
+push_keyboard_buffer('d');
+push_keyboard_buffer('e');
+push_keyboard_buffer('f');
+    */
+}
+
+bool is_key_available()
+{
+    return keyboard_buffer_head != keyboard_buffer_tail;
 }

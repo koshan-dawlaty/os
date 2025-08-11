@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include <kernel/keyboard.h>
+#include <unistd.h>
 
 char getchar()
 {
@@ -7,11 +8,12 @@ char getchar()
 
     /* printf("test\n"); */
     /* printf("%d\n", key_available); */
-    while (!key_available)
+    while (!is_key_available())
     {
         /* printf("%d\n", key_available); */
         /* printf("test\n"); */
         asm volatile("hlt");
+        /* sched_yield(); */
     }
     /* printf("test\n"); */
 

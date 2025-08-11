@@ -1,7 +1,9 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+#include <stdbool.h>
 #include <stdint.h>
+
 #define KEYBOARD_BUFFER_SIZE 256
 
 static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
@@ -20,5 +22,7 @@ void keyboard_set_typematic(uint8_t rate, uint8_t delay);
 
 void keyboard_set_led(uint8_t led);
 void keyboard_init();
+
+bool is_key_available();
 
 #endif

@@ -9,18 +9,17 @@
 int main()
 {
 
-    char *input = malloc(0);
+    char input[100] = {};
     size_t input_len = 0;
 
     while (1)
     {
-
         char c = getchar();
 
         if (c == '\n')
         {
             execv(input, NULL);
-            input = malloc(0);
+            /* input = malloc(0); */
         }
 
         if (c == '-')
@@ -30,18 +29,16 @@ int main()
 
         if (c == '\b')
         {
-
             input[input_len - 1] = 0;
             input_len--;
         }
         else
         {
-
             input_len++;
-            input = realloc(input, input_len);
+            /* input = realloc(input, input_len); */
             input[input_len - 1] = c;
         }
 
-        printf("%s\n", input);
+        printf(">%s\n", input);
     }
 }

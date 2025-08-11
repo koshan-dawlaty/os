@@ -62,12 +62,13 @@ struct task *new_task(uint32_t ip, uint32_t sp)
 
     out->next = NULL;
     out->stack = get_free_pages(1) + (PAGE_SIZE - 0xC);
-    printf("task %p stack:%p\n", out, out->stack);
+    /* printf("task %p stack:%p\n", out, out->stack); */
 
-    out->regs = (struct registers){.esp = (uint32_t)out->stack,
-                                   .ebp = (uint32_t)out->stack,
-                                   .eflags = 1 << 9,
-                                   .frame = {}};
+    out->regs = (struct registers){
+        .esp = (uint32_t)out->stack,
+        .ebp = (uint32_t)out->stack,
+        .eflags = 1 << 9,
+    };
 
     /* *(uint32_t *)(out->stack) = (uint32_t)0xc0105655; */
     *(uint32_t *)(out->stack) = (uint32_t)test2;

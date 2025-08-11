@@ -39,15 +39,17 @@ void main2()
     /* } */
     /* printf("i is:%c\n", (char)i + 0x30); */
 
-    execv("/elf_test2", NULL);
+    execv("/ksh", NULL);
 
     while (1)
     {
 
         /* putchar('1'); */
-        /* sched_yield(); */
-        char c = getchar();
-        putchar(c);
+        /* printf("elf_test\n"); */
+        sched_yield();
+        /* malloc(1); */
+        /* char c = getchar(); */
+        /* putchar(c); */
         /* printf("char is:%c\n", c); */
         /* if (c != 0) */
         /* { */
