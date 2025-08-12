@@ -12,52 +12,12 @@ extern int syscall_wrapper_asm(uint32_t eax, uint32_t ebx, uint32_t ecx,
 void main2()
 {
 
-    /* putchar('a'); */
-    /* printf("abcdef\n"); */
-
-    /* puts(str); */
-    /* putchar(str[0]); */
-
-    /* *(char *)(0x1234) = 'a'; */
-
-    /* test("abcdef%s\n", "12345"); */
-    /* test("abcdef\n"); */
-    /* printf("test:%s\n", "abcdef"); */
-    /* putchar(global); */
-    /* puts("puts\n"); */
-
-    /* printf("getchar\n"); */
-    /* printf("end\n"); */
-    /* char c = getchar(); */
-    /* /1* printf("char is:%c\n", c + 0x30); *1/ */
-
-    /* size_t i = 0; */
-    /* while (c == 0) */
-    /* { */
-    /*     c = getchar(); */
-    /*     i++; */
-    /* } */
-    /* printf("i is:%c\n", (char)i + 0x30); */
-
-    execv("/ksh", NULL);
-
     while (1)
     {
-
-        /* putchar('1'); */
-        /* printf("elf_test\n"); */
-        sched_yield();
-        /* malloc(1); */
-        /* char c = getchar(); */
-        /* putchar(c); */
-        /* printf("char is:%c\n", c); */
-        /* if (c != 0) */
-        /* { */
-        /* } */
-
-        /* putchar('a'); */
-
-        /* printf("task1\n"); */
+        char *a = malloc(10);
+        *a = 'a';
+        printf("%s", a);
+        free(a);
     }
 }
 

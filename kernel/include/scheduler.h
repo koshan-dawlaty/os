@@ -53,4 +53,6 @@ void enable_scheduler();
 void disable_scheduler();
 bool is_scheduler_enabled();
 
+struct task *get_current_task();
+
 #endif

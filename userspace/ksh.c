@@ -9,7 +9,7 @@
 int main()
 {
 
-    char input[100] = {};
+    char *input = malloc(0);
     size_t input_len = 0;
 
     while (1)
@@ -19,7 +19,8 @@ int main()
         if (c == '\n')
         {
             execv(input, NULL);
-            /* input = malloc(0); */
+            free(input);
+            input = malloc(0);
         }
 
         if (c == '-')
@@ -35,7 +36,7 @@ int main()
         else
         {
             input_len++;
-            /* input = realloc(input, input_len); */
+            input = realloc(input, input_len);
             input[input_len - 1] = c;
         }
 

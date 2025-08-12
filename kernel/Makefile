@@ -44,6 +44,7 @@ kernel/usermode.o \
 kernel/panic.o \
 kernel/elf/elf.o \
 kernel/scheduler/scheduler.o \
+kernel/scheduler/semaphore.o \
 fs/ext2/dentry.o \
 fs/ext2/file.o \
 fs/ext2/init.o \

@@ -1,4 +1,5 @@
 #include "sys/mman.h"
+#include <panic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -63,7 +64,6 @@ heap_block *unsorted_bin = NULL;
 
 void insert_bin(heap_block **bin, heap_block *block)
 {
-
     heap_block *old = *bin;
     *bin = block;
 
@@ -123,18 +123,7 @@ heap_block *get_block_from_bin_fast(heap_block **bin, int new_size)
 {
     if (*bin == NULL)
     {
-
         heap_block *b = get_block(new_size);
-
-        if (heap_debug)
-        {
-            /* printf("this is running!!\n"); */
-
-            while (1)
-            {
-                asm("hlt");
-            }
-        }
 
         return b;
     }
@@ -150,7 +139,6 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
 
     if (bin == NULL)
     {
-        /* printf("no free list\n"); */
         return get_block(new_size);
     }
 
@@ -207,9 +195,9 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
 
 void *malloc(size_t size)
 {
-    asm("cli");
     void *retval = NULL;
     int total_size = align_long2(size + sizeof(heap_block), ALIGN);
+    /* printf("total size:%d\n", total_size); */
     /* printf("total size:%d\n", total_size / ALIGN); */
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
@@ -222,7 +210,6 @@ void *malloc(size_t size)
     {
         retval = block_to_ptr(get_block_from_bin(&unsorted_bin, size));
     }
-    asm("sti");
     return retval;
 }
 
@@ -231,14 +218,16 @@ void free(void *ptr)
 
     heap_block *block = ptr_to_block(ptr);
     /* printf("free size is:%d\n", block->size); */
-    int total_size = block->size + sizeof(heap_block);
+    int total_size = align_long2(block->size + sizeof(heap_block), ALIGN);
 
     /* printf("block size:%d\n", block->size); */
-    /* printf("total size:%d\n", total_size / ALIGN); */
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
+        /* printf("total size: %p\n", &small_bins[total_size / ALIGN]); */
         insert_bin(&(small_bins[total_size / ALIGN]), block);
+        /* printf("%p\n", &small_bins[total_size / ALIGN]); */
+        /* print_bin(&small_bins[total_size / ALIGN]); */
     }
     else
     {

@@ -37,7 +37,7 @@ bool is_scheduler_enabled()
 void test2(uint32_t addr)
 {
     /* panic("TASK STARTED\n"); */
-    printf("test:%p\n", addr);
+    /* printf("test:%p\n", addr); */
     if (addr < 0x8000000)
     {
         /* panic("test\n"); */
@@ -155,4 +155,9 @@ void schedule()
 
     /* printf("stack top:%p\n", *(uint32_t *)current_task->regs.esp); */
     load_registers(&current_task->regs);
+}
+
+struct task *get_current_task()
+{
+    return current_task;
 }

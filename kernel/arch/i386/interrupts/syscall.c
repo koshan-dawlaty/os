@@ -47,8 +47,8 @@ int syscall_handler(struct syscall_regs *regs)
     if (regs->eax == 0)
     {
         /* printf("test\n"); */
-        putchar(regs->ebx);
-        /* *(char *)(0xC03FF100) = regs->ebx; */
+        /* putchar(regs->ebx); */
+        *(char *)(0xC03FF100) = regs->ebx;
         return 0;
     }
     else if (regs->eax == 1)
@@ -94,7 +94,6 @@ int syscall_handler(struct syscall_regs *regs)
     }
     else if (regs->eax == 4)
     {
-        printf("mmap addr:%p\n", regs->ebx);
         map_page(get_free_phys_page(), (void *)regs->ebx,
                  PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
 

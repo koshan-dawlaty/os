@@ -19,6 +19,7 @@
 // TODO: bad
 #include "../fs/ext2/ext2.h"
 #include "scheduler.h"
+#include "semaphore.h"
 #include "tests/tests.h"
 #include "unistd.h"
 
@@ -95,9 +96,11 @@ int main()
     enable_scheduler();
     /* load_registers(&task1->regs); */
     add_task(create_kernel_task());
+
     add_task(task1);
-    /* add_task(task2); */
+    add_task(task2);
     /* jump_usermode_asm(elf->entry_point, temp_regs); */
+
     printf("main exited\n");
 
     return 0;
