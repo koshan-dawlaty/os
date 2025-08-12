@@ -63,7 +63,7 @@ LIBK_OBJS=$(FREEOBJS:.o=.libk.o)
 
 LIBK_OBJS_BIN = $(foreach obj,$(LIBK_OBJS),bin/$(obj))
 
-BINARIES=libc.a libk.a # Not ready for libc yet.
+BINARIES=libc.a libk.a 
 # BINARIES=libk.a
 
 .PHONY: all clean install install-headers install-libs
@@ -91,7 +91,7 @@ $(BIN)/%.o: %.S
 
 $(BIN)/%.libk.o: %.c
 	mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ -std=gnu11 $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
+	$(CC) -MD -MF$(BIN)/$*.libk.d -c $< -o $@ -std=gnu11 $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
 
 $(BIN)/%.libk.o: %.S
 	mkdir -p $(BIN)/$(dir $<)
@@ -111,4 +111,4 @@ install-libs: $(BINARIES)
 	cp $(BINARIES) $(DESTDIR)$(LIBDIR)
 
 -include $(BIN)/$(OBJS:.o=.d)
--include $(BIN)/$(LIBK_OBJS:.o=.d)
+-include $(BIN)/$(LIBK_OBJS:.o=.libk.d)

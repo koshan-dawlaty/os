@@ -87,10 +87,13 @@ int main()
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
+    return 0;
+
     /* printf("test:%d\n", 1234); */
 
     /* load_pgdir(task1->pgdir); */
     /* printf("setting tss.esp0 to:%p\n", task1->stack); */
+
     /* set_kernel_stack((uint32_t)task1->stack); */
 
     enable_scheduler();

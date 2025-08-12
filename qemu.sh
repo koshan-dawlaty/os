@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
-cd build
 
+cd build
 . ./iso.sh
 ./get-ext2-image.sh "qemu.img" fs-root
 

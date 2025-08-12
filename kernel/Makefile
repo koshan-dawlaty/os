@@ -84,8 +84,8 @@ BIN=bin
 all: $(BIN)/os.kernel
 
 
-
-$(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/linker.ld
+# ../libc/libk.a is bad
+$(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/linker.ld ../libc/libk.a
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -lk -lgcc
 	grub-file --is-x86-multiboot $(BIN)/os.kernel
 

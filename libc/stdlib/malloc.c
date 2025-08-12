@@ -1,5 +1,4 @@
 #include "sys/mman.h"
-#include <panic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +6,7 @@
 
 #ifdef __is_libk
 #include <kernel/paging.h>
+#include <panic.h>
 #endif
 
 // TODO: this is duplicated in kernel
@@ -195,6 +195,7 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
 
 void *malloc(size_t size)
 {
+    /* *(char *)(0x123456) = 'a'; */
     void *retval = NULL;
     int total_size = align_long2(size + sizeof(heap_block), ALIGN);
     /* printf("total size:%d\n", total_size); */
