@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
+
+if [[  $# -ge 1  ]] && [[ $1 == "num_failed"  ]] ; then
+# exec 3>&1 &>/dev/null
+echo 
+fi
+
 set -e
 ./clean.sh
 cd build
+
 
 
 if [[  $# -ge 1  ]] && [[ $1 == "debug"  ]] ; then
@@ -15,9 +22,10 @@ IMAGE_FILE="test.img"
 
 export CFLAGS
 export ISO
+
 # bad 
 . ./iso.sh
-./get-ext2-image.sh "$IMAGE_FILE" fs-root
+./get-ext2-image.sh "$IMAGE_FILE" fs-root 
 
 
 QEMU_FLAGS=" -cdrom ${ISO}
@@ -39,6 +47,27 @@ QEMU_FLAGS=" -cdrom ${ISO}
     # -device piix3-ide \
 if [[  $# -ge 1  ]] && [[ $1 == "terminal"  ]] ; then
 qemu-system-$(./target-triplet-to-arch.sh $HOST)  -nographic  -display curses $QEMU_FLAGS
+exit 0
+fi
+
+if [[  $# -ge 1  ]] && [[ $1 == "num_failed"  ]] ; then
+qemu-system-$(./target-triplet-to-arch.sh "$HOST") -serial stdio $QEMU_FLAGS  &
+
+# qemu-system-$(./target-triplet-to-arch.sh $HOST) -serial pty $QEMU_FLAGS &
+echo "test"
+cat /proc/$!/fd/1  > "test.txt"
+exit 1
+tail -f /proc/$!/fd/1 | while IFS= read -r -n1 char; do
+	echo $char
+    if [[ $char == "e" ]]; then
+        echo "test"
+		exit 1
+        break
+    fi
+done
+
+kill $!
+
 exit 0
 fi
 

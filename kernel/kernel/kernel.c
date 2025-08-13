@@ -7,6 +7,7 @@
 #include "panic.h"
 #include "pci/pci.h"
 #include "pit/pit.h"
+#include "serial.h"
 #include <fcntl.h>
 #include <kernel/tty.h>
 #include <memory/paging_flags.h>
@@ -22,6 +23,7 @@
 #include "semaphore.h"
 #include "tests/tests.h"
 #include "unistd.h"
+#include "utils.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -66,12 +68,14 @@ int main()
     asm("cli");
 
     /* useless */
-    /* keyboard_init(); */
+    keyboard_init();
     init_pit();
     init_pci();
     init_ata();
     init_vfs();
     init_usermode();
+    serial_init(0x3F8);
+
 #ifdef TESTS
     run_all_tests();
 #endif
@@ -87,22 +91,11 @@ int main()
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
-    return 0;
-
-    /* printf("test:%d\n", 1234); */
-
-    /* load_pgdir(task1->pgdir); */
-    /* printf("setting tss.esp0 to:%p\n", task1->stack); */
-
-    /* set_kernel_stack((uint32_t)task1->stack); */
-
     enable_scheduler();
-    /* load_registers(&task1->regs); */
     add_task(create_kernel_task());
 
     add_task(task1);
     add_task(task2);
-    /* jump_usermode_asm(elf->entry_point, temp_regs); */
 
     printf("main exited\n");
 

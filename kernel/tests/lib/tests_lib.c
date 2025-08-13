@@ -1,8 +1,11 @@
+#include "serial.h"
 #include "tests/tests.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define TEST_OUTPUT_SERIAL_PORT 0x3F8
 
 Test **tests = NULL;
 size_t tests_size = 0;
@@ -99,8 +102,16 @@ void run_all_tests()
         }
     }
 
+    serial_write(TEST_OUTPUT_SERIAL_PORT, failed_indexes_index + 0x30);
     for (size_t i = 0; i < failed_indexes_index; i++)
     {
         /* printf("test %s failed!\n", tests[i]->name); */
     }
+
+    /* end of input */
+    serial_write(TEST_OUTPUT_SERIAL_PORT, 'e');
+    serial_write(TEST_OUTPUT_SERIAL_PORT, 'n');
+    serial_write(TEST_OUTPUT_SERIAL_PORT, 'd');
+    serial_write(TEST_OUTPUT_SERIAL_PORT, '\n');
+    serial_write(TEST_OUTPUT_SERIAL_PORT, 4);
 }
