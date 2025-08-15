@@ -46,5 +46,6 @@ typedef struct
 
 elf_32 *parse_elf32(int fd);
 struct task *load_elf32(elf_32 *elf);
+void free_elf32(elf_32 *elf);
 
 #endif

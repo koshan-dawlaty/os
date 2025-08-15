@@ -1,6 +1,5 @@
 #include "ata/ata.h"
 #include "elf.h"
-#include "gdt.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "kernel/usermode.h"
@@ -20,10 +19,6 @@
 // TODO: bad
 #include "../fs/ext2/ext2.h"
 #include "scheduler.h"
-#include "semaphore.h"
-#include "tests/tests.h"
-#include "unistd.h"
-#include "utils.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -52,6 +47,12 @@ void kernel_init()
     terminal_initialize();
     init_paging();
 }
+
+typedef struct __attribute__((packed)) block
+{
+    size_t size;
+    struct block *next;
+} heap_block;
 
 superblock *init_ext2()
 {
@@ -88,8 +89,15 @@ int main()
     elf_32 *elf2 = parse_elf32(f2);
     struct task *task2 = load_elf32(elf2);
 
+    free_elf32(elf);
+    free_elf32(elf2);
+
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
+
+    char *a = malloc(1);
+    *a = 'a';
+    free(a);
 
     enable_scheduler();
     add_task(create_kernel_task());

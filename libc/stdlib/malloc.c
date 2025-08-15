@@ -13,18 +13,20 @@
 long align_long2(long in, long align)
 {
 
+    return ((in / align) + 1) * align;
+
     if (in % align == 0)
     {
         return in;
     }
 
-    return (in + align) - (in % align);
+    return (in + align) - (in + 1 % align);
 }
 
 // would be 8 on 64 bit
 #define ALIGN 4
 
-typedef struct Block
+typedef struct __attribute__((packed)) Block
 {
     size_t size;
     struct Block *next;
@@ -46,7 +48,7 @@ void print_bin(heap_block **bin)
 
 inline void *block_to_ptr(heap_block *block)
 {
-    return block + 1;
+    return ((heap_block *)block + 1);
 }
 
 inline heap_block *ptr_to_block(void *ptr)
@@ -218,17 +220,11 @@ void free(void *ptr)
 {
 
     heap_block *block = ptr_to_block(ptr);
-    /* printf("free size is:%d\n", block->size); */
     int total_size = align_long2(block->size + sizeof(heap_block), ALIGN);
-
-    /* printf("block size:%d\n", block->size); */
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
-        /* printf("total size: %p\n", &small_bins[total_size / ALIGN]); */
         insert_bin(&(small_bins[total_size / ALIGN]), block);
-        /* printf("%p\n", &small_bins[total_size / ALIGN]); */
-        /* print_bin(&small_bins[total_size / ALIGN]); */
     }
     else
     {

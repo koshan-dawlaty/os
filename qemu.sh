@@ -21,5 +21,5 @@ exit 0
 fi
 
 
-# qemu-system-$(./target-triplet-to-arch.sh $HOST) -monitor stdio $QEMU_FLAGS
-qemu-system-$(./target-triplet-to-arch.sh $HOST) -serial file:test.txt $QEMU_FLAGS
+qemu-system-$(./target-triplet-to-arch.sh $HOST) -monitor stdio $QEMU_FLAGS
+# qemu-system-$(./target-triplet-to-arch.sh $HOST) -serial file:test.txt $QEMU_FLAGS

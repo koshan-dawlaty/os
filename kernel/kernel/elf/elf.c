@@ -51,7 +51,7 @@ elf_32 *parse_elf32(int fd)
           program_header_table_offset);
 
     elf_program_header_32 **program_headers =
-        malloc(sizeof(elf_program_header_32 *));
+        malloc(sizeof(elf_program_header_32 *) * out->program_headers_len);
     for (size_t i = 0; i < out->program_headers_len; i++)
     {
         elf_program_header_32 *new_header =
@@ -63,31 +63,44 @@ elf_32 *parse_elf32(int fd)
     }
     out->program_headers = program_headers;
 
-    /* this seems to read larger than the ext2 inode direct blocks */
+    free(program_headers_buf);
 
-    /* uint8_t *section_headers_buf = */
-    /*     malloc(section_header_size * out->section_headers_len); */
-    /* /1* printf("offset:%d\n", section_header_table_offset); *1/ */
-    /* pread(fd, section_headers_buf, */
-    /*       section_header_size * out->section_headers_len, */
-    /*       section_header_table_offset); */
-    /* elf_section_header_32 **section_headers = */
-    /*     malloc(sizeof(elf_section_header_32 *) * out->section_headers_len);
-     */
-    /* for (size_t i = 0; i < out->section_headers_len; i++) */
-    /* { */
-    /*     elf_section_header_32 *new_header = */
-    /*         malloc(sizeof(elf_section_header_32)); */
-    /*     memcpy(new_header, (section_headers_buf) + (i * section_header_size),
-     */
-    /*            sizeof(elf_section_header_32)); */
-    /*     section_headers[i] = new_header; */
-    /*     /1* printf("%p\n", section_headers[i]->addr); *1/ */
-    /* } */
-    /* out->section_headers = section_headers; */
+    /* section headers seem to not be needed */
+    /*
+uint8_t *section_headers_buf =
+    malloc(section_header_size * out->section_headers_len);
+pread(fd, section_headers_buf,
+      section_header_size * out->section_headers_len,
+      section_header_table_offset);
+elf_section_header_32 **section_headers =
+malloc(sizeof(elf_section_header_32 *) * out->section_headers_len);
+
+for (size_t i = 0; i < out->section_headers_len; i++)
+{
+    elf_section_header_32 *new_header =
+        malloc(sizeof(elf_section_header_32));
+memcpy(new_header, (section_headers_buf) + (i * section_header_size),
+
+           sizeof(elf_section_header_32));
+    section_headers[i] = new_header;
+}
+out->section_headers = section_headers;
+    */
 
     out->fd = fd;
+
+    free(header_buf);
+
     return out;
+}
+
+void free_elf32(elf_32 *elf)
+{
+    for (size_t i = 0; i < elf->program_headers_len; i++)
+    {
+        free(elf->program_headers[i]);
+    }
+    free(elf);
 }
 /* TODO: MAKE THIS USE GRUB MEMORY MAP */
 uint32_t elf_physaddr_start = 0x2000000;
@@ -108,37 +121,17 @@ struct task *load_elf32(elf_32 *elf)
     {
 
         elf_program_header_32 *header = elf->program_headers[j];
-        /* printf("test\n"); */
-        /* printf("%p\n", header->memory_size); */
-        // load
+        /* load */
         if (header->type == 1)
         {
-            /* printf( */
-            /*     "memory_size:%p file_size:%p virutal addr:%x phys addr: %x\n
-             * ", */
-            /*     header->memory_size, header->file_size, header->virutal_addr,
-             */
-            /*     header->physical_addr); */
-            /* printf("difference:%x\n", elf->entry_point -
-             * header->virutal_addr); */
-            /* printf("writing header to:%p\n", elf_physaddr_start); */
-
             for (size_t i = 0; i <= header->memory_size + PAGE_SIZE;
                  i += PAGE_SIZE)
             {
 
-                /* printf("%p\n", elf_physaddr_start); */
-
-                /* map_page((void *)elf_physaddr_start, */
-                /*          (void *)(header->virutal_addr + i), */
-                /*          PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
-
-                /* printf("mapping %p\n", header->virutal_addr + i); */
                 map_page((void *)get_free_phys_page(),
                          (void *)(header->virutal_addr + i),
                          PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
 
-                /* printf("done mapping\n"); */
                 elf_physaddr_start += 4096;
             }
 
@@ -156,19 +149,10 @@ if (header->memory_size > header->file_size)
 }
             */
 
-            /* printf("file size:%p offset:%p\n", header->file_size, */
-            /*        header->file_offset); */
             pread(elf->fd, buf, header->file_size, header->file_offset);
-
-            /* printf("size:%p\n", header->file_size); */
-            /* printf("offset:%p\n", header->file_offset); */
-
-            /* printf("writing from %p to %p\n", header->virutal_addr, */
-            /*        header->virutal_addr + header->memory_size); */
 
             uint8_t *dest = (uint8_t *)(header->virutal_addr);
 
-            /* printf("addr:%p\n", dest); */
             for (size_t i = 0; i < header->memory_size; i++)
             {
 
@@ -180,27 +164,8 @@ if (header->memory_size > header->file_size)
             printf("unrecognized header type\n");
         }
     }
-    /* THIS WILL BREAK LATER!!!!!!!!!!!!!!!!!!*/
-    /* printf("%d\n", elf->section_headers[21]->addr); */
-    /* for (size_t i = 0; i < elf->section_headers_len; i++) */
-    /* { */
-    /*     elf_section_header_32 *header = elf->section_headers[i]; */
-    /* } */
-    /* printf("%p\n", elf->entry_point); */
-    /* asm("sti"); */
-    /* jump_usermode_asm(elf->entry_point); */
-    /* set_kernel_stack((uint32_t)t->stack); */
-
-    /* enable_scheduler(); */
     create_userspace_stack(pgdir);
-
-    /* add_task(t); */
     load_pgdir(temp_pgdir);
 
-    /* struct registers *temp_regs = malloc(sizeof(struct registers)); */
-    /* *temp_regs = (struct registers){0}; */
-
-    /* asm("sti"); */
-    /* jump_usermode_asm(elf->entry_point, temp_regs); */
     return t;
 }
