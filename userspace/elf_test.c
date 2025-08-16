@@ -11,13 +11,12 @@ extern int syscall_wrapper_asm(uint32_t eax, uint32_t ebx, uint32_t ecx,
 
 void main2()
 {
+    printf("task 1 waiting on semaphore\n");
+    syscall_wrapper_asm(5, 1, 0, 0, 0, 0);
+    printf("task 1 done waiting on semaphore\n");
 
     while (1)
     {
-        char *a = malloc(10);
-        *a = 'a';
-        printf("%s", a);
-        free(a);
     }
 }
 

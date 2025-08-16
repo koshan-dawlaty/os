@@ -1,15 +1,10 @@
 #include "scheduler.h"
+#include <kernel/semaphore.h>
+#include <panic.h>
 #include <sched.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-typedef struct
-{
-    int value;
-    int max_value;
-
-    struct task *queue;
-} semaphore;
 
 semaphore *new_semaphore(int max_value)
 {
@@ -23,21 +18,34 @@ semaphore *new_semaphore(int max_value)
 
 void wait_semaphore(semaphore *s)
 {
+
+    asm("cli");
+
     s->value--;
+    printf("%d\n", s->value);
 
     if (s->value < 0)
     {
-        while (s->value < 0)
-        {
-            sched_yield();
-        }
+        struct task *current = get_current_task();
+        remove_task(current);
+        add_task_queue(&s->queue, current);
+        printf("first in queue:%p\n", s->queue);
+        sched_yield();
     }
+    asm("sti");
 }
 void release_semaphore(semaphore *s)
 {
+    asm("cli");
     s->value++;
-    while (s->value < 0)
+
+    printf("%d\n", s->value);
+
+    if (s->value <= 0)
     {
-        sched_yield();
+        struct task *task = s->queue;
+        remove_task_queue(&s->queue, task);
+        add_task(task);
     }
+    asm("sti");
 }

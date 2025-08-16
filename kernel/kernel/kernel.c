@@ -2,6 +2,7 @@
 #include "elf.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
+#include "kernel/semaphore.h"
 #include "kernel/usermode.h"
 #include "panic.h"
 #include "pci/pci.h"
@@ -64,6 +65,8 @@ superblock *init_ext2()
     return sb;
 }
 
+extern semaphore *test_semaphore;
+
 int main()
 {
     asm("cli");
@@ -76,6 +79,8 @@ int main()
     init_vfs();
     init_usermode();
     serial_init(0x3F8);
+
+    test_semaphore = new_semaphore(1);
 
 #ifdef TESTS
     run_all_tests();
@@ -94,10 +99,6 @@ int main()
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
-
-    char *a = malloc(1);
-    *a = 'a';
-    free(a);
 
     enable_scheduler();
     add_task(create_kernel_task());

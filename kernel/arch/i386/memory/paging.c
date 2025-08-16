@@ -8,6 +8,7 @@
 #include "multiboot.h"
 #include "vga.h"
 
+#include <kernel/paging.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

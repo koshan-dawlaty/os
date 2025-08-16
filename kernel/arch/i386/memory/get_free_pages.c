@@ -1,7 +1,5 @@
-#include "ata/ata.h"
 #include "kernel/paging.h"
 #include "memory/paging_flags.h"
-#include "strings.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -24,6 +22,7 @@ static uint8_t virtual_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
 void *get_free_pages(size_t amount)
 {
+
     int i;
     size_t consecutive = 0;
     size_t consecutive_start = 0;
@@ -72,6 +71,8 @@ void *get_free_pages(size_t amount)
     }
 
     void *address = (void *)((i * PAGE_SIZE) + VIRTUAL_PAGES_START);
+
+    /* release_semaphore(get_free_pages_semaphore); */
 
     return address;
 }

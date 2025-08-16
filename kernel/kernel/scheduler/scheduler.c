@@ -77,6 +77,39 @@ struct task *create_kernel_task()
     return out;
 }
 
+void remove_task(struct task *task)
+{
+    asm("cli");
+
+    if (task == first_task)
+    {
+        struct task *temp = first_task->next;
+        first_task = temp;
+
+        return;
+    }
+
+    struct task *current = first_task;
+    struct task *previous = first_task;
+
+    while (current != NULL && current != task)
+    {
+        previous = current;
+        current = current->next;
+    }
+
+    if (current == NULL)
+    {
+        /* task not in queue */
+        printf("task not in scheduler queue\n");
+        return;
+    }
+
+    previous->next = current->next;
+
+    asm("sti");
+}
+
 void add_task(struct task *task)
 {
 
@@ -97,9 +130,46 @@ end:
     asm("sti");
 }
 
+void add_task_queue(struct task **queue, struct task *task)
+{
+
+    if (*queue == NULL)
+    {
+        *queue = task;
+        return;
+    }
+
+    struct task *temp = *queue;
+    *queue = task;
+    (*queue)->next = temp;
+}
+
+void remove_task_queue(struct task **queue, struct task *task)
+{
+
+    struct task *current = *queue;
+    struct task *previous = *queue;
+    while (current != NULL && current != task)
+    {
+        previous = current;
+        current = current->next;
+    }
+
+    if (current == NULL)
+    {
+        printf("did not find task in queue\n");
+        /* task not in queue */
+        return;
+    }
+
+    previous->next = current->next;
+}
+
 int num_task_switches = 0;
 void switch_tasks()
 {
+    printf("switching from:%p ", current_task);
+
     if (current_task->next != NULL)
     {
         current_task = current_task->next;
@@ -108,17 +178,22 @@ void switch_tasks()
     {
         current_task = first_task;
     }
+    printf("to:%p\n", current_task);
 }
 
 void schedule()
 {
-    if (!scheduler_enabled)
+    if (!scheduler_enabled || current_task == NULL)
     {
         return;
     }
 
     save_registers(&current_task->regs);
     switch_tasks();
+    if (current_task == NULL)
+    {
+        return;
+    }
 
     load_pgdir(current_task->pgdir);
     set_kernel_stack((uint32_t)current_task->stack);

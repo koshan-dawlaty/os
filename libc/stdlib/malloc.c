@@ -6,7 +6,9 @@
 
 #ifdef __is_libk
 #include <kernel/paging.h>
+#include <kernel/semaphore.h>
 #include <panic.h>
+
 #endif
 
 // TODO: this is duplicated in kernel
@@ -147,12 +149,8 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
     heap_block *current_block = *bin;
     heap_block **prev_block = bin;
 
-    /* printf("size is:%d\n", new_size); */
-
     while (current_block != NULL)
     {
-
-        /* printf("current: %ld\n", current_block->size + sizeof(Block)); */
 
         if (current_block->next != NULL &&
             (current_block->size + sizeof(heap_block)) +
@@ -173,17 +171,7 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
         // may break
         if ((current_block)->size == (size_t)align_long2(new_size, ALIGN))
         {
-
-            /* printf("matching block found\n"); */
-
-            /* printf("current_block value: %p\n", (current_block)->val); */
-            /* printf("current_block addr: %p\n", (current_block)); */
-            /* printf("current_block next: %p\n", (current_block)->next); */
-            /* printf("prev_block: %p\n", *prev_block); */
-
             (*prev_block) = current_block->next;
-
-            /* printf("prev_block: %p\n", *prev_block); */
 
             return (current_block);
         }
@@ -197,11 +185,9 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
 
 void *malloc(size_t size)
 {
-    /* *(char *)(0x123456) = 'a'; */
+
     void *retval = NULL;
     int total_size = align_long2(size + sizeof(heap_block), ALIGN);
-    /* printf("total size:%d\n", total_size); */
-    /* printf("total size:%d\n", total_size / ALIGN); */
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
@@ -242,9 +228,6 @@ void *realloc(void *ptr, size_t new_size)
     }
 
     heap_block *block = ptr_to_block(ptr);
-    /* printf("realloc size is:%d\n", block->size); */
-    /* printf("normal %p, no %p\n", block, block - 1); */
-    /* printf("realloc ptr is:%p\n", ptr); */
     void *new_ptr = malloc(new_size);
     memcpy(new_ptr, ptr, block->size);
 

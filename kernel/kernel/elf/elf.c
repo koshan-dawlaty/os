@@ -108,8 +108,6 @@ int test = 0;
 struct task *load_elf32(elf_32 *elf)
 {
 
-    printf("entry_point:%p\n", elf->entry_point);
-
     struct task *t = new_task(elf->entry_point, 0xBFFEF000);
     struct pagedir *pgdir = t->pgdir;
 

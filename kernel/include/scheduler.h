@@ -27,7 +27,17 @@ struct task
 };
 
 void switch_tasks();
+
+/* adds a task to the scheduler task queue */
 void add_task(struct task *task);
+
+/* removes a task from the scheduler task queue */
+void remove_task(struct task *task);
+
+/* adds task to queue */
+void add_task_queue(struct task **queue, struct task *task);
+/* removes task from queue */
+void remove_task_queue(struct task **queue, struct task *task);
 
 /*
  * initializes the page directory as a free page

@@ -1,12 +1,11 @@
 #include "elf.h"
-#include "endian.h"
 #include "fcntl.h"
 #include "interrupts/idt.h"
-#include "kernel/keyboard.h"
 #include "kernel/paging.h"
-#include "kernel/usermode.h"
+#include "kernel/semaphore.h"
 #include "memory/paging_flags.h"
 #include "scheduler.h"
+#include <panic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <utils.h>
@@ -34,6 +33,7 @@ struct syscall_regs
 } __attribute__((packed));
 
 /* int test; */
+semaphore *test_semaphore = NULL;
 
 int syscall_handler(struct syscall_regs *regs)
 {
@@ -47,8 +47,8 @@ int syscall_handler(struct syscall_regs *regs)
     if (regs->eax == 0)
     {
         /* printf("test\n"); */
-        /* putchar(regs->ebx); */
-        *(char *)(0xC03FF100) = regs->ebx;
+        putchar(regs->ebx);
+        /* *(char *)(0xC03FF100) = regs->ebx; */
         return 0;
     }
     else if (regs->eax == 1)
@@ -101,6 +101,10 @@ int syscall_handler(struct syscall_regs *regs)
     }
     else if (regs->eax == 5)
     {
+        wait_semaphore(test_semaphore);
+        getchar();
+        release_semaphore(test_semaphore);
+        return 1234;
     }
 
     printf("no syscall found\n");
