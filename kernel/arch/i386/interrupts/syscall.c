@@ -1,13 +1,15 @@
 #include "elf.h"
-#include "fcntl.h"
 #include "interrupts/idt.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
 #include "memory/paging_flags.h"
 #include "scheduler.h"
+#include <fcntl.h>
 #include <panic.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <utils.h>
 
 struct syscall_regs
@@ -104,6 +106,23 @@ int syscall_handler(struct syscall_regs *regs)
         wait_semaphore(test_semaphore);
         getchar();
         release_semaphore(test_semaphore);
+        return 1234;
+    }
+    else if (regs->eax == 6)
+    {
+        return pread(regs->ebx, (void *)regs->ecx, regs->edx, regs->edi);
+    }
+    else if (regs->eax == 7)
+    {
+        return open((void *)regs->ebx, 0);
+    }
+    else if (regs->eax == 8)
+    {
+        return read(regs->ebx, (void *)regs->ecx, regs->edx);
+    }
+    else if (regs->eax == 9)
+    {
+        exit(regs->ebx);
         return 1234;
     }
 

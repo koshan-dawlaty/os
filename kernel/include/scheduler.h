@@ -45,6 +45,11 @@ void remove_task_queue(struct task **queue, struct task *task);
 struct task *new_task(uint32_t ip, uint32_t sp);
 
 /*
+ * frees task t
+ * this does not dequeue t
+ */
+void free_task(struct task *t);
+/*
  * creates a task for the currently running kernel code
  * intended to be used to create a task for the code running initially
  */

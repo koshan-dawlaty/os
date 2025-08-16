@@ -1,3 +1,4 @@
+#include "utils.h"
 #include <stdio.h>
 #include <unistd.h>
 
@@ -11,5 +12,6 @@ int read(int fd, char *buf, size_t n)
     file *f = lookup_descriptor(fd);
     return read_file(f, buf, n, f->offset);
 #else
+    return syscall_wrapper_asm(8, fd, buf, n, 0, 0);
 #endif
 }

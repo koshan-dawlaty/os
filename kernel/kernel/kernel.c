@@ -86,7 +86,7 @@ int main()
     run_all_tests();
 #endif
 
-    int f1 = open("/elf_test", 0);
+    int f1 = open("/ksh", 0);
     elf_32 *elf = parse_elf32(f1);
     struct task *task1 = load_elf32(elf);
 

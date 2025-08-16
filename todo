@@ -22,3 +22,5 @@ syscall wrapper might be duplicated somewhere
 make execv and mmap actually use their arguments
 
 free might not work correctly with sizes around or above 4096
+
+do whatever linux does to not have the syscall handler just be a switch statement

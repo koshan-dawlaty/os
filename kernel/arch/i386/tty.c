@@ -1,20 +1,9 @@
 #include "kernel/tty.h"
+#include "ansi.h"
 #include "vga.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#ifndef _KERNEL_TTY_H
-#define _KERNEL_TTY_H
-
-#include <stddef.h>
-#include <stdint.h>
-
-void terminal_initialize(void);
-void terminal_putchar(char c);
-void terminal_write(const char *data, size_t size);
-void terminal_writestring(const char *data);
-
-#endif
-
 #define TERMINAL_EMPTY_CHAR ' '
 
 static const size_t VGA_WIDTH = 80;
@@ -52,8 +41,21 @@ void terminal_initialize()
     }
 }
 
+bool parsing_ansi = false;
+
 void terminal_putchar(char c)
 {
+
+    if (parsing_ansi)
+    {
+        parsing_ansi = !parse_ansi(c);
+        return;
+    }
+    if (c == '\033')
+    {
+        parsing_ansi = true;
+        return;
+    }
 
     if (c == '\n')
     {
@@ -127,4 +129,21 @@ void terminal_scroll_up()
 
     terminal_row = 0;
     terminal_column--;
+}
+
+void terminal_clear()
+{
+    terminal_row = 0;
+    terminal_column = 0;
+
+    for (size_t y = 0; y < VGA_HEIGHT; y++)
+    {
+
+        for (size_t x = 0; x < VGA_WIDTH; x++)
+        {
+            const size_t index = y * VGA_WIDTH + x;
+            terminal_buffer[index] =
+                vga_entry(TERMINAL_EMPTY_CHAR, terminal_color);
+        }
+    }
 }

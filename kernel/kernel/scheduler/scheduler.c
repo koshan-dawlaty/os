@@ -168,7 +168,7 @@ void remove_task_queue(struct task **queue, struct task *task)
 int num_task_switches = 0;
 void switch_tasks()
 {
-    printf("switching from:%p ", current_task);
+    /* printf("switching from:%p ", current_task); */
 
     if (current_task->next != NULL)
     {
@@ -178,7 +178,7 @@ void switch_tasks()
     {
         current_task = first_task;
     }
-    printf("to:%p\n", current_task);
+    /* printf("to:%p\n", current_task); */
 }
 
 void schedule()
@@ -205,4 +205,10 @@ void schedule()
 struct task *get_current_task()
 {
     return current_task;
+}
+
+void free_task(struct task *t)
+{
+    /* TODO: free the pagedir */
+    free(t);
 }

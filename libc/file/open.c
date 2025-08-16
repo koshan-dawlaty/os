@@ -1,3 +1,4 @@
+#include "utils.h"
 #include <fcntl.h>
 #include <stdio.h>
 
@@ -11,5 +12,6 @@ int open(char *path, int flags)
     file *f = open_file(path);
     return f->descriptor;
 #else
+    return syscall_wrapper_asm(7, path, flags, 0, 0, 0);
 #endif
 }

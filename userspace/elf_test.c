@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <sched.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -11,12 +12,17 @@ extern int syscall_wrapper_asm(uint32_t eax, uint32_t ebx, uint32_t ecx,
 
 void main2()
 {
-    printf("task 1 waiting on semaphore\n");
-    syscall_wrapper_asm(5, 1, 0, 0, 0, 0);
-    printf("task 1 done waiting on semaphore\n");
+
+    int fd = open("/one", 0);
+    char *buf = malloc(10);
+    pread(fd, buf, 10, 0);
+    printf("%s\n", buf);
+
+    exit(0);
 
     while (1)
     {
+        printf("test\n");
     }
 }
 

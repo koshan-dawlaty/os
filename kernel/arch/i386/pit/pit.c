@@ -33,7 +33,7 @@ void pit_handler_c(struct registers *r)
 {
 
     pit_time++;
-    if (pit_time % 40 == 0)
+    if (pit_time % 1 == 0)
     {
         /* printf("interrupt frame sp:%p, normal sp:%p\n", r->frame.sp, r->esp);
          */
