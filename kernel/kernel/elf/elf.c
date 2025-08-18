@@ -102,10 +102,28 @@ void free_elf32(elf_32 *elf)
     }
     free(elf);
 }
-/* TODO: MAKE THIS USE GRUB MEMORY MAP */
-uint32_t elf_physaddr_start = 0x2000000;
-int test = 0;
-struct task *load_elf32(elf_32 *elf)
+
+/* copies args to userspace */
+char **create_user_args(int argc, char **argv)
+{
+    /* TODO: this can run out of space */
+    char **args = get_free_pages_user(1);
+    size_t string_offset = argc * sizeof(char *);
+
+    for (int i = 0; i < argc; i++)
+    {
+        memcpy(args + string_offset, argv[i], strlen(argv[i]));
+        *(char *)(args + string_offset + strlen(argv[i]) + 1) = 0;
+
+        args[i] = (char *)(args + string_offset);
+
+        string_offset += strlen(argv[i]) + 1;
+    }
+
+    return args;
+}
+
+struct task *load_elf32(elf_32 *elf, int argc, char **argv)
 {
 
     struct task *t = new_task(elf->entry_point, 0xBFFEF000);
@@ -113,11 +131,18 @@ struct task *load_elf32(elf_32 *elf)
 
     struct pagedir *temp_pgdir = get_current_pagedir();
 
+    char **args_temp = malloc(argc * sizeof(char *));
+    for (int i = 0; i < argc; i++)
+    {
+        args_temp[i] = malloc(strlen(argv[i]) + 1);
+        memcpy(args_temp[i], argv[i], strlen(argv[i]) + 1);
+        args_temp[i][strlen(argv[i])] = 0;
+    }
+
     load_pgdir(pgdir);
 
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
-
         elf_program_header_32 *header = elf->program_headers[j];
         /* load */
         if (header->type == 1)
@@ -129,8 +154,6 @@ struct task *load_elf32(elf_32 *elf)
                 map_page((void *)get_free_phys_page(),
                          (void *)(header->virutal_addr + i),
                          PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
-
-                elf_physaddr_start += 4096;
             }
 
             /* this may not have zeros at the end */
@@ -162,7 +185,14 @@ if (header->memory_size > header->file_size)
             printf("unrecognized header type\n");
         }
     }
+
     create_userspace_stack(pgdir);
+
+    char **args = create_user_args(argc, args_temp);
+
+    *(char ***)(0xBFFEF000 + 4) = args;
+    *(int *)(0xBFFEF000) = argc;
+
     load_pgdir(temp_pgdir);
 
     return t;

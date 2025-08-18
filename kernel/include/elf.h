@@ -45,7 +45,7 @@ typedef struct
 } elf_32;
 
 elf_32 *parse_elf32(int fd);
-struct task *load_elf32(elf_32 *elf);
+struct task *load_elf32(elf_32 *elf, int argc, char **argv);
 void free_elf32(elf_32 *elf);
 
 #endif

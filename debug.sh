@@ -19,7 +19,7 @@ export ISO
 # gdb -ex "set \$flags=$QEMU_FLAGS" -x debug.gdb
 #
 
-USER_EXECUTABLE="fs-root/elf_test"
+USER_EXECUTABLE="fs-root/cat"
 USER_EXECUTABLE2="fs-root/elf_test2"
 
 KERNEL_ADDR=objdump -h isodir/boot/os.kernel | grep \ .text\  | awk '{print $4}'

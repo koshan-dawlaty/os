@@ -26,7 +26,11 @@ void main2()
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {
+    if (argc > 0)
+    {
+        printf("%d, %s\n", argc, argv[1]);
+    }
     main2();
 }

@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 int main()
@@ -19,7 +20,42 @@ int main()
 
         if (c == '\n')
         {
-            execv(input, NULL);
+
+            input = realloc(input, strlen(input) + 2);
+            input[strlen(input)] = ' ';
+
+            char **args = malloc(sizeof(char *));
+            size_t j = 0;
+
+            size_t i = 0;
+            size_t current_arg_start = 0;
+
+            while (input[i] != 0)
+            {
+
+                if (input[i] == ' ')
+                {
+                    j++;
+                    args = realloc(args, sizeof(char *) * j);
+                    args[j - 1] = malloc(i - current_arg_start + 2);
+                    args[j - 1][i - current_arg_start] = 0;
+
+                    memcpy(args[j - 1], input + current_arg_start,
+                           i - current_arg_start);
+
+                    current_arg_start = i;
+
+                    goto end;
+                }
+
+            end:
+                i++;
+            }
+
+            args = realloc(args, sizeof(char *) * (j + 1));
+            args[j] = NULL;
+
+            execv(args[0], args);
             free(input);
             input = malloc(0);
             input_len = 0;
@@ -49,6 +85,8 @@ int main()
         /* } */
         /* putchar('\n'); */
 
-        printf("\033[2J>%s\n", input);
+        putchar('\b');
+
+        printf(">%s\n", input);
     }
 }

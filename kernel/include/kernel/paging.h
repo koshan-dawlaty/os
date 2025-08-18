@@ -36,6 +36,9 @@ void *get_free_phys_page();
 
 void free_pages(void *addr, size_t amount);
 
+void *get_free_pages_user(size_t amount);
+void free_pages_user(void *addr, size_t amount);
+
 /*
  * does not set the present bit in the page
  */

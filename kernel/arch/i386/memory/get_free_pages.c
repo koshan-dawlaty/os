@@ -20,15 +20,16 @@
 
 static uint8_t virtual_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
-void *get_free_pages(size_t amount)
+void *get_free_pages_offset(size_t amount, uint8_t *bitmap,
+                            uint32_t base_addr_virtual,
+                            uint32_t base_addr_physical, uint8_t flags)
 {
-
     int i;
     size_t consecutive = 0;
     size_t consecutive_start = 0;
     for (i = 0; i < NUM_PAGES; i++)
     {
-        if (((virtual_free_page_bitmap[i / 8] >> (i % 8)) & 1) == FREE)
+        if (((bitmap[i / 8] >> (i % 8)) & 1) == FREE)
         {
             /* printf("i is:%d\n", i); */
             if (consecutive == 0)
@@ -54,8 +55,8 @@ void *get_free_pages(size_t amount)
 
     void *addr = (void *)((i)*PAGE_SIZE);
 
-    void *virtual_addr = addr + VIRTUAL_PAGES_START;
-    void *physical_addr = addr + PHYSICAL_PAGES_START;
+    void *virtual_addr = addr + base_addr_virtual;
+    void *physical_addr = addr + base_addr_physical;
 
     for (size_t j = consecutive_start; j < amount + i; j++)
     {
@@ -63,27 +64,59 @@ void *get_free_pages(size_t amount)
 
         /* printf("virtual:%p\nphysical:%p\n", virtual_addr, physical_addr); */
 
-        virtual_free_page_bitmap[j / 8] |= (1 << (j % 8));
-        map_page(physical_addr, virtual_addr, PAGING_WRITEABLE);
+        bitmap[j / 8] |= (1 << (j % 8));
+        map_page(physical_addr, virtual_addr, flags);
 
         physical_addr += PAGE_SIZE * j;
         virtual_addr += PAGE_SIZE * j;
     }
 
-    void *address = (void *)((i * PAGE_SIZE) + VIRTUAL_PAGES_START);
+    void *address = (void *)((i * PAGE_SIZE) + base_addr_virtual);
 
     /* release_semaphore(get_free_pages_semaphore); */
 
     return address;
 }
 
-void free_pages(void *addr, size_t amount)
+void free_pages_offset(void *addr, size_t amount, uint8_t *bitmap,
+                       uint32_t base_addr)
 {
 
-    size_t index = ((size_t)addr - VIRTUAL_PAGES_START);
+    size_t index = ((size_t)addr - base_addr);
     for (size_t i = 0; i < amount; i++)
     {
-        virtual_free_page_bitmap[index + i / 8] |= FREE >> ((index + i) % 8);
+        bitmap[index + i / 8] |= FREE >> ((index + i) % 8);
         unmap_page((void *)(addr + (i * PAGE_SIZE)));
     }
+}
+
+void *get_free_pages(size_t amount)
+{
+    return get_free_pages_offset(amount, virtual_free_page_bitmap,
+                                 VIRTUAL_PAGES_START, PHYSICAL_PAGES_START,
+                                 PAGING_WRITEABLE);
+}
+
+void free_pages(void *addr, size_t amount)
+{
+    free_pages_offset(addr, amount, virtual_free_page_bitmap,
+                      VIRTUAL_PAGES_START);
+}
+
+static uint8_t user_virtual_free_page_bitmap[free_page_bitmap_size] = {FREE};
+#define VIRTUAL_PAGES_USER_START 0x90000000
+#define PHYSICAL_PAGES_USER_START 0xC00000
+
+void *get_free_pages_user(size_t amount)
+{
+
+    return get_free_pages_offset(
+        amount, user_virtual_free_page_bitmap, VIRTUAL_PAGES_USER_START,
+        PHYSICAL_PAGES_USER_START, PAGING_WRITEABLE | PAGING_USER);
+}
+
+void free_pages_user(void *addr, size_t amount)
+{
+    free_pages_offset(addr, amount, user_virtual_free_page_bitmap,
+                      VIRTUAL_PAGES_USER_START);
 }

@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <vfs.h>
 
 // TODO: bad
@@ -86,16 +87,18 @@ int main()
     run_all_tests();
 #endif
 
+    char *args[] = {NULL};
+
     int f1 = open("/ksh", 0);
     elf_32 *elf = parse_elf32(f1);
-    struct task *task1 = load_elf32(elf);
+    struct task *task1 = load_elf32(elf, 0, args);
 
-    int f2 = open("/elf_test2", 0);
-    elf_32 *elf2 = parse_elf32(f2);
-    struct task *task2 = load_elf32(elf2);
+    /* int f2 = open("/elf_test2", 0); */
+    /* elf_32 *elf2 = parse_elf32(f2); */
+    /* struct task *task2 = load_elf32(elf2, 0, args); */
 
     free_elf32(elf);
-    free_elf32(elf2);
+    /* free_elf32(elf2); */
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
@@ -104,7 +107,7 @@ int main()
     add_task(create_kernel_task());
 
     add_task(task1);
-    add_task(task2);
+    /* add_task(task2); */
 
     printf("main exited\n");
 

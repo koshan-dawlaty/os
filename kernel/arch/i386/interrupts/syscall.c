@@ -68,7 +68,15 @@ int syscall_handler(struct syscall_regs *regs)
         elf_32 *elf = parse_elf32(f);
         if (elf != NULL)
         {
-            add_task(load_elf32(elf));
+            char **argv = (void *)regs->ecx;
+
+            int argc = 0;
+            while (argv[argc] != NULL)
+            {
+                argc++;
+            }
+
+            add_task(load_elf32(elf, argc, argv));
         }
 
         /* printf("syscall\n"); */
