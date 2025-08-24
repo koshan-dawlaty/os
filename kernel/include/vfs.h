@@ -71,7 +71,10 @@ typedef struct
 inline void add_file_offset(file *f, size_t add)
 {
     f->offset += add;
-    f->offset %= f->entry->inode->size - 1;
+    if (f->offset > f->entry->inode->size)
+    {
+        f->offset = f->entry->inode->size;
+    }
 }
 
 /*

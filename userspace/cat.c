@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,13 +19,16 @@ int main(int argc, char **argv)
     size_t buf_len = read_size;
 
     char *buf = malloc(buf_len);
-    while (read(fd, buf + (buf_len - read_size), buf_len) >= read_size)
+    size_t buf_offset = 0;
+    size_t bytes_read;
+    while ((bytes_read = read(fd, buf + buf_offset, read_size)) >= read_size)
     {
+
         buf_len += read_size;
+        buf_offset += read_size;
         buf = realloc(buf, buf_len);
     }
-
-    printf("%s\n", buf);
+    printf("%s", buf);
 
     exit(0);
 }

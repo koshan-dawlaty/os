@@ -21,6 +21,7 @@
 // TODO: bad
 #include "../fs/ext2/ext2.h"
 #include "scheduler.h"
+#include "unistd.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -50,27 +51,11 @@ void kernel_init()
     init_paging();
 }
 
-typedef struct __attribute__((packed)) block
-{
-    size_t size;
-    struct block *next;
-} heap_block;
-
-superblock *init_ext2()
-{
-
-    ext2_fs_type.mount();
-
-    // bad
-    superblock *sb = ext2_fs_type.superblock_functions.parse_superblock();
-    return sb;
-}
-
 extern semaphore *test_semaphore;
 
 int main()
 {
-    asm("cli");
+    asm("sti");
 
     /* useless */
     keyboard_init();
@@ -87,11 +72,11 @@ int main()
     run_all_tests();
 #endif
 
-    char *args[] = {NULL};
+    char *args[] = {"/ksh", NULL};
 
     int f1 = open("/ksh", 0);
     elf_32 *elf = parse_elf32(f1);
-    struct task *task1 = load_elf32(elf, 0, args);
+    struct task *task1 = load_elf32(elf, 1, args);
 
     /* int f2 = open("/elf_test2", 0); */
     /* elf_32 *elf2 = parse_elf32(f2); */
@@ -99,6 +84,8 @@ int main()
 
     free_elf32(elf);
     /* free_elf32(elf2); */
+
+    printf("STARTING\n");
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};

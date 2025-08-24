@@ -1,5 +1,6 @@
 #ifndef EXT2_H
 #define EXT2_H
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <vfs.h>
@@ -22,9 +23,11 @@ struct ext2_superblock
 {
 
     uint32_t total_inodes;
+    uint32_t total_blocks;
     uint16_t inode_size;
     uint32_t block_size;
     uint32_t inodes_per_group;
+    uint32_t blocks_per_group;
 
     uint32_t feature_flags_required;
     uint64_t fs_version;
@@ -38,9 +41,11 @@ inline struct ext2_superblock *EXT2_SB(superblock *sb)
 }
 
 #define EXT2_TOTAL_INODES(sb) EXT2_SB(sb)->total_inodes
+#define EXT2_TOTAL_BLOCKS(sb) EXT2_SB(sb)->total_blocks
 #define EXT2_INODE_SIZE(sb) EXT2_SB(sb)->inode_size
 #define EXT2_BLOCK_SIZE(sb) EXT2_SB(sb)->block_size
 #define EXT2_INODES_PER_GROUP(sb) EXT2_SB(sb)->inodes_per_group
+#define EXT2_BLOCKS_PER_GROUP(sb) EXT2_SB(sb)->blocks_per_group
 #define EXT2_VERSION(sb) EXT2_SB(sb)->fs_version
 
 #define EXT2_FEATURE_FLAGS_REQUIRED(sb) EXT2_SB(sb)->feature_flags_required
@@ -72,6 +77,11 @@ typedef struct __attribute__((packed))
     uint8_t os_specific2[12];
 } ext2_inode;
 
+inline ext2_inode *EXT2_INODE(inode *i)
+{
+    return i->fs_private;
+}
+
 inode *ext2_inode_to_inode(ext2_inode node);
 
 typedef size_t ext2_inode_addr;
@@ -99,6 +109,7 @@ inline uint64_t ext2_get_inode_size(ext2_inode *node)
 }
 
 uint8_t *ext2_read_block(size_t block_number, superblock *sb);
+void ext2_write_block(uint8_t *buffer, size_t block_number, superblock *sb);
 
 // name is taken from the linux kernel, it could be better
 inode *ext2_iget(ino_t inode_number, superblock *sb);
@@ -106,4 +117,9 @@ ext2_dentry *ext2_find_dentry(char *path, superblock *sb);
 
 dentry *ext2_dentry_to_dentry(ext2_dentry *dentry, superblock *sb);
 
+ext2_inode_addr ext2_inode_alloc(superblock *sb);
+uint32_t ext2_block_alloc(superblock *sb);
+
+void ext2_write_inode(inode *node, uint8_t *buf, size_t buf_len,
+                      ext2_inode_index index, superblock *sb);
 #endif

@@ -1,4 +1,5 @@
 #include "kernel/paging.h"
+#include "panic.h"
 #include "vfs_internal.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -37,27 +38,31 @@ int read_file(file *file, char *buf, size_t n, size_t off)
 
     size_t read_size = n;
 
-    if (off + n > node->size - off)
+    if (off + n > node->size)
     {
         read_size = node->size - off;
+    }
+
+    if (read_size > n)
+    {
     }
 
     current_superblock->type->inode_functions.read_inode(
         node, (uint8_t *)buf, read_size, off, current_superblock);
 
-    /*     if (read_size == 0x288) */
-    /*     { */
-    /*         for (size_t i = 0; i < 10; i++) */
-    /*         { */
-    /*             printf("%d ", buf[0x288 - 10 + i]); */
-    /*         } */
-    /*     } */
+    /* if (off > 2000) */
+    /* { */
+    /*     printf("buf:%s\n", buf); */
+    /* } */
 
     add_file_offset(file, read_size);
 
     return read_size;
 }
 
+int write_file(file *file, char *buf, size_t buf_len, size_t off)
+{
+}
 file *lookup_descriptor(int fd)
 {
     return open_files[fd];

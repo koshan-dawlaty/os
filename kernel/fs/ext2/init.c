@@ -1,11 +1,11 @@
 #include "ext2.h"
+#include "string.h"
 #include <ata/ata.h>
 #include <kernel/utils.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <vfs.h>
-#include <wctype.h>
 
 // maybe should be in header
 // also needs better name
@@ -71,16 +71,24 @@ void fs_read(uint8_t *buffer, size_t buffer_size, uint64_t addr)
     read_drive(ext2_drive, buffer, buffer_size, addr);
 }
 
+void fs_write(uint8_t *buffer, size_t len, uint64_t addr)
+{
+    write_drive(ext2_drive, buffer, len, addr);
+}
+
 uint8_t *ext2_read_block(size_t index, superblock *sb)
 {
     uint8_t *buffer = malloc(EXT2_BLOCK_SIZE(sb));
-    /* printf("%p ", buffer); */
-    /* printf("block addr: %d, size:%d\n", index, EXT2_BLOCK_SIZE(sb)); */
     uint64_t lba = (index * (EXT2_BLOCK_SIZE(sb) / 512));
-    /* printf("block addr: %d, lba: %d\n", index, lba); */
     fs_read(buffer, EXT2_BLOCK_SIZE(sb), lba);
 
     return buffer;
+}
+
+void ext2_write_block(uint8_t *buffer, size_t index, superblock *sb)
+{
+    uint64_t lba = (index * (EXT2_BLOCK_SIZE(sb) / 512));
+    fs_write(buffer, EXT2_BLOCK_SIZE(sb), lba);
 }
 
 inline uint32_t get_datablock_field(uint8_t *superblock, size_t index)
@@ -99,8 +107,10 @@ struct ext2_superblock *ext2_parse_superblock()
     fs_read(superblock_buffer, 1024, 2);
 
     sb->total_inodes = get_datablock_field(superblock_buffer, 0);
+    sb->total_blocks = get_datablock_field(superblock_buffer, 4);
     sb->block_size = 1024 << get_datablock_field(superblock_buffer, 24);
     sb->inodes_per_group = get_datablock_field(superblock_buffer, 40);
+    sb->blocks_per_group = get_datablock_field(superblock_buffer, 32);
     sb->fs_version = (superblock_buffer[62]) | (superblock_buffer[63] << 8);
     sb->fs_version |= (get_datablock_field(superblock_buffer, 76) << 16);
 
@@ -120,23 +130,13 @@ struct ext2_superblock *ext2_parse_superblock()
     size_t block_group_table_size =
         ((num_block_groups * block_group_size) / sb->block_size) + 1;
 
-    // printf("size: %p\n", block_group_table_size);
-
     size_t block_group_table_size_bytes =
         ((block_group_table_size * sb->block_size));
-    // printf("bytes:%p\n", block_group_table_size_bytes);
 
     uint8_t *buf = malloc(block_group_table_size_bytes);
-    // lba may break with block sizes > 1024
+    /* lba may break with block sizes > 1024 */
     fs_read(buf, block_group_table_size_bytes, 4);
     sb->group_descriptor_table = (ext2_group_descriptor *)buf;
-
-    // printf("%p\n", *(sb->group_descriptor_table));
-
-    for (size_t i = 0; i < block_group_table_size_bytes; i++)
-    {
-        // printf("%p", buf[i]);
-    }
 
     return sb;
 }
