@@ -2,6 +2,7 @@
 #include "string.h"
 #include <ata/ata.h>
 #include <kernel/utils.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +23,12 @@ void ext2_iread(inode *node, uint8_t *buf, size_t buf_len, size_t index,
                 superblock *sb)
 {
     ext2_read_inode(node->fs_private, buf, buf_len, index, sb);
+}
+
+void ext2_iwrite(inode *node, uint8_t *buf, size_t buf_len, size_t offset,
+                 superblock *sb)
+{
+    ext2_write_inode(node, buf, buf_len, offset, sb);
 }
 
 inode *ext2_iget(ino_t number, superblock *sb)
@@ -45,6 +52,7 @@ const struct fs_type ext2_fs_type = {
         {
             .get_inode = ext2_iget,
             .read_inode = ext2_iread,
+            .write_inode = ext2_iwrite,
         },
     .dentry_functions = {.find_dentry = ext2_dfind},
     .superblock_functions = {.parse_superblock = ext2_parse_superblock_vfs},

@@ -38,6 +38,8 @@ typedef struct
     inode *(*get_inode)(ino_t number, superblock *sb);
     void (*read_inode)(inode *, uint8_t *buf, size_t n, size_t offset,
                        superblock *sb);
+    void (*write_inode)(inode *, uint8_t *buf, size_t n, size_t offset,
+                        superblock *sb);
 
 } inode_functions;
 
@@ -84,6 +86,7 @@ file *new_file(dentry *entry);
 // maybe should return a descriptor
 file *open_file(char *path);
 int read_file(file *file, char *buf, size_t n, size_t off);
+int write_file(file *file, char *buf, size_t n, size_t off);
 file *lookup_descriptor(int fd);
 
 typedef struct

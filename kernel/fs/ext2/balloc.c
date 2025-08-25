@@ -67,6 +67,7 @@ uint32_t ext2_block_alloc(superblock *sb)
     return 0;
 }
 
+/* TODO: this does not update all other refrences to this node in memory */
 /*
  * replaces node on disk with node in memory, uses node->number for inode
  * address
@@ -114,9 +115,9 @@ ext2_get_block_from_inode(inode *vfs_node, uint8_t block_index, superblock *sb)
 void ext2_write_inode(inode *vfs_node, uint8_t *buf, size_t buf_len,
                       ext2_inode_index index, superblock *sb)
 {
+    printf("size:%d, offset:%d\n", buf_len, index);
 
     ext2_inode *node = EXT2_INODE(vfs_node);
-    printf("%d, %d\n", node->direct_blocks[0], node->direct_blocks[1]);
 
     if (index < EXT2_BLOCK_SIZE(sb) * 12)
     {
@@ -130,6 +131,7 @@ void ext2_write_inode(inode *vfs_node, uint8_t *buf, size_t buf_len,
         if (buf_len <= EXT2_BLOCK_SIZE(sb))
         {
             memcpy(current_block + block_offset, buf, buf_len);
+            printf("writing to block num:%d\n", block_num);
             ext2_write_block(current_block, block_num, sb);
 
             goto end;
@@ -147,7 +149,6 @@ void ext2_write_inode(inode *vfs_node, uint8_t *buf, size_t buf_len,
         while (buf_offset <
                ((buf_len / EXT2_BLOCK_SIZE(sb)) * EXT2_BLOCK_SIZE(sb)))
         {
-            printf("%d\n", node->direct_blocks[block_index]);
             memcpy(current_block, buf + buf_offset, EXT2_BLOCK_SIZE(sb));
             ext2_write_block(current_block, node->direct_blocks[block_index],
                              sb);
@@ -174,7 +175,7 @@ void ext2_write_inode(inode *vfs_node, uint8_t *buf, size_t buf_len,
 
 end:;
     uint64_t size = ext2_get_inode_size(node);
-    printf("%d, %d\n", node->direct_blocks[0], node->direct_blocks[1]);
+    /* printf("%d, %d\n", node->direct_blocks[0], node->direct_blocks[1]); */
 
     if (index + buf_len > size)
     {

@@ -87,6 +87,21 @@ int main()
 
     printf("STARTING\n");
 
+    int fd = open("/one", 0);
+    char *literal = "abcdefg";
+    char *wbuf = malloc(strlen(literal) + 1);
+    wbuf[strlen(literal)] = 0;
+    memcpy(wbuf, literal, strlen(literal) + 1);
+    write(fd, wbuf, strlen(literal) + 1);
+
+    char *rbuf = malloc(100);
+    pread(fd, rbuf, 100, 0);
+    for (size_t i = 0; i < 10; i++)
+    {
+        printf("%p\n", rbuf[i]);
+    }
+    printf("buf:%s\n", rbuf);
+
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 

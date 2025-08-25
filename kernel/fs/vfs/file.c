@@ -60,9 +60,25 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     return read_size;
 }
 
-int write_file(file *file, char *buf, size_t buf_len, size_t off)
+int write_file(file *file, char *buf, size_t n, size_t off)
 {
+
+    inode *node = file->entry->inode;
+
+    size_t write_size = n;
+    printf("size:%p\n", write_size);
+    /* if (off + n > node->size) */
+    /* { */
+    /*     write_size = node->size - off; */
+    /* } */
+
+    current_superblock->type->inode_functions.write_inode(
+        node, (uint8_t *)buf, write_size, off, current_superblock);
+
+    add_file_offset(file, write_size);
+    return write_size;
 }
+
 file *lookup_descriptor(int fd)
 {
     return open_files[fd];

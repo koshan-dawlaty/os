@@ -133,6 +133,14 @@ int syscall_handler(struct syscall_regs *regs)
         exit(regs->ebx);
         return 1234;
     }
+    else if (regs->eax == 10)
+    {
+        return write(regs->ebx, (void *)regs->ecx, regs->edx);
+    }
+    else if (regs->eax == 11)
+    {
+        return pwrite(regs->ebx, (void *)regs->ecx, regs->edx, regs->esi);
+    }
 
     printf("no syscall found\n");
     /* should  be ENOSYS */

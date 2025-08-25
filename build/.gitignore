@@ -7,6 +7,7 @@ qemu.img
 fs-root/usr/bin/elf_test
 fs-root/usr/bin/elf_test2
 fs-root/elf_test2
+fs-root/overwrite
 fs-root/elf_test
 fs-root/ksh
 fs-root/cat
