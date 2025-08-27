@@ -45,6 +45,7 @@ kernel/panic.o \
 kernel/elf/elf.o \
 kernel/scheduler/scheduler.o \
 kernel/scheduler/semaphore.o \
+lib/list.o \
 fs/ext2/dentry.o \
 fs/ext2/balloc.o \
 fs/ext2/file.o \

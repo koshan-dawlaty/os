@@ -4,6 +4,7 @@
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
 #include "kernel/usermode.h"
+#include "lib/list.h"
 #include "panic.h"
 #include "pci/pci.h"
 #include "pit/pit.h"
@@ -83,24 +84,10 @@ int main()
     /* struct task *task2 = load_elf32(elf2, 0, args); */
 
     free_elf32(elf);
+
     /* free_elf32(elf2); */
 
     printf("STARTING\n");
-
-    int fd = open("/one", 0);
-    char *literal = "abcdefg";
-    char *wbuf = malloc(strlen(literal) + 1);
-    wbuf[strlen(literal)] = 0;
-    memcpy(wbuf, literal, strlen(literal) + 1);
-    write(fd, wbuf, strlen(literal) + 1);
-
-    char *rbuf = malloc(100);
-    pread(fd, rbuf, 100, 0);
-    for (size_t i = 0; i < 10; i++)
-    {
-        printf("%p\n", rbuf[i]);
-    }
-    printf("buf:%s\n", rbuf);
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};

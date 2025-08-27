@@ -112,7 +112,7 @@ ext2_dentry *ext2_find_dentry(char *path2, superblock *sb)
     // this is slow, and get inode shouldn't return a heap pointer
     ext2_inode *rootdir = ext2_get_inode(2, sb);
     ext2_dentry **entries = ext2_parse_directory(rootdir, sb);
-    free(rootdir);
+    /* free(rootdir); */
 
     uint current_dir_start = 0;
     uint i = 0;
@@ -183,7 +183,7 @@ ext2_dentry *ext2_find_dentry(char *path2, superblock *sb)
                     ext2_inode *node = ext2_get_inode(entries[j]->inode, sb);
                     free_dentries(entries);
                     entries = ext2_parse_directory(node, sb);
-                    free(node);
+                    /* free(node); */
                     goto end;
                 }
 
