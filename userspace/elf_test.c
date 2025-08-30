@@ -28,7 +28,7 @@ void main2()
 
 int main(int argc, char **argv)
 {
-    if (argc > 0)
+    if (argc > 1)
     {
         printf("%d, %s\n", argc, argv[1]);
     }

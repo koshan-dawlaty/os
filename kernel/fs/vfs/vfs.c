@@ -52,12 +52,14 @@ file *new_file(dentry *entry)
     return out;
 }
 
-inode *new_inode(ino_t number, inode_size size, void *fs_private)
+inode *new_inode(ino_t number, inode_size size, inode_type type,
+                 void *fs_private)
 {
     inode *out = malloc(sizeof(inode));
 
     out->number = number;
     out->size = size;
+    out->type = type;
 
     out->fs_private = fs_private;
 

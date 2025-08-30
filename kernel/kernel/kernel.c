@@ -78,14 +78,7 @@ int main()
     int f1 = open("/ksh", 0);
     elf_32 *elf = parse_elf32(f1);
     struct task *task1 = load_elf32(elf, 1, args);
-
-    /* int f2 = open("/elf_test2", 0); */
-    /* elf_32 *elf2 = parse_elf32(f2); */
-    /* struct task *task2 = load_elf32(elf2, 0, args); */
-
     free_elf32(elf);
-
-    /* free_elf32(elf2); */
 
     printf("STARTING\n");
 
@@ -94,6 +87,8 @@ int main()
 
     enable_scheduler();
     add_task(create_kernel_task());
+
+    /* printf("%s\n", lookup_path("/dir/123456.txt")->name); */
 
     add_task(task1);
     /* add_task(task2); */

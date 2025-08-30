@@ -2,6 +2,7 @@
 #define VFS_H
 #include "sys/types.h"
 #include <stdint.h>
+#include <stdio.h>
 
 struct fs_type;
 
@@ -21,6 +22,12 @@ typedef struct
 superblock *new_superblock(size_t blocksize, void *fs_private,
                            const struct fs_type *type);
 
+typedef enum
+{
+    INODE_FILE,
+    INODE_DIR,
+} inode_type;
+
 typedef size_t inode_size;
 
 typedef struct
@@ -28,10 +35,13 @@ typedef struct
     ino_t number;
     inode_size size;
 
+    inode_type type;
+
     void *fs_private;
 } inode;
 
-inode *new_inode(ino_t number, inode_size size, void *fs_private);
+inode *new_inode(ino_t number, inode_size size, inode_type type,
+                 void *fs_private);
 
 typedef struct
 {
@@ -108,5 +118,7 @@ struct fs_type
 void register_filesystem(struct fs_type *);
 
 void init_vfs();
+
+dentry *lookup_path(const char *path);
 
 #endif

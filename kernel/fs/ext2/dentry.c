@@ -1,6 +1,9 @@
 #include "ext2.h"
+#include "kernel/paging.h"
 #include "vfs.h"
 #include <kernel/utils.h>
+#include <panic.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +19,67 @@ void free_dentries(ext2_dentry **entries)
     }
 
     // free(entries);
+}
+
+dentry **ext2_get_dentries(inode *vfs_node, superblock *sb)
+{
+    ext2_inode *node = EXT2_INODE(vfs_node);
+
+    dentry **out = malloc(sizeof(dentry));
+    size_t out_len = 0;
+
+    size_t size = ext2_get_inode_size(node);
+    uint8_t *buf = malloc(size);
+    ext2_read_inode(node, buf, size, 0, sb);
+
+    size_t i = 0;
+    while (i < size)
+    {
+
+        uint8_t *raw_dentry = buf + i;
+
+        /* for (size_t j = 0; j < 10; j++) */
+        /* { */
+        /*     printf("%p ", raw_dentry[j - 5]); */
+        /* } */
+
+        uint32_t node_num = *(uint32_t *)(raw_dentry);
+        /* printf("inode number:%d\n", node_num); */
+        uint16_t name_len = raw_dentry[6];
+        /* TODO: there may be some fields that could be used to support longer
+         * filenames */
+
+        uint8_t *name_ptr = raw_dentry + 8;
+
+        char *new_name = malloc(name_len + 1);
+        memcpy(new_name, name_ptr, name_len);
+        /* printf("printing name\n"); */
+        new_name[name_len] = 0;
+        /* printf("%s\n", new_name); */
+
+        ext2_inode *new_node = ext2_get_inode(node_num, sb);
+        inode *vfs_node = ext2_get_vfs_node(node_num, new_node);
+
+        dentry *vfs =
+            new_dentry(new_name, ext2_get_vfs_node(node_num, new_node));
+
+        out_len++;
+        out = realloc(out, out_len * sizeof(dentry));
+        out[out_len - 1] = vfs;
+
+        uint16_t total_size = bytes_to_16_bit_int(raw_dentry[4], raw_dentry[5]);
+        /* printf("inode:%d, total size:%d, name:%s\n", node_num, total_size, */
+        /*        new_name); */
+        /* printf("%d\n", i); */
+
+        i += total_size;
+    }
+
+    out_len++;
+    out = realloc(out, out_len * sizeof(dentry));
+    out[out_len - 1] = NULL;
+
+    return out;
 }
 
 /*
@@ -81,7 +145,7 @@ ext2_dentry **ext2_parse_directory(ext2_inode *node, superblock *sb)
         name[name_len] = '\0';
         // printf("%s\n", name);
         offset += (*(ptr + 4)) | (*(ptr + 5) << 8);
-        // printf("%d\n", offset);
+        /* printf("%d\n", offset); */
 
         ext2_dentry *entry = malloc(sizeof(ext2_dentry));
         entry->inode = inode;

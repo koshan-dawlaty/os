@@ -43,7 +43,7 @@ int main()
                     memcpy(args[j - 1], input + current_arg_start,
                            i - current_arg_start);
 
-                    current_arg_start = i;
+                    current_arg_start = i + 1;
 
                     goto end;
                 }

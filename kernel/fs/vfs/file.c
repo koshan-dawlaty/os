@@ -1,3 +1,5 @@
+#include "err.h"
+#include "fcntl.h"
 #include "kernel/paging.h"
 #include "panic.h"
 #include "vfs_internal.h"
@@ -12,9 +14,12 @@ file *open_file(char *path)
 
     // printf("len %d\n", open_files_len);
     // printf("pointer: %p\n", current_superblock);
-    dentry *dentry = current_superblock->type->dentry_functions.find_dentry(
-        path, current_superblock);
-    // printf("dentry:%p\n", dentry);
+    dentry *dentry = lookup_path(path);
+    if (IS_ERR(dentry))
+    {
+        /* printf("error:%d\n", GET_ERR(dentry)); */
+        return (void *)dentry;
+    }
 
     file *out = new_file(dentry);
 
@@ -37,14 +42,11 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     inode *node = file->entry->inode;
 
     size_t read_size = n;
+    /* printf("size:%d\n", node->size); */
 
     if (off + n > node->size)
     {
         read_size = node->size - off;
-    }
-
-    if (read_size > n)
-    {
     }
 
     current_superblock->type->inode_functions.read_inode(
@@ -56,6 +58,7 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     /* } */
 
     add_file_offset(file, read_size);
+    /* printf("returning %d\n", read_size); */
 
     return read_size;
 }

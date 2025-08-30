@@ -1,7 +1,9 @@
 #include "container_of.h"
+#include "err.h"
 #include "ext2.h"
 #include "kernel/utils.h"
 #include "lib/list.h"
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +16,12 @@ struct ext2_inode_cache
     ext2_inode *node;
     list l;
 };
+
+inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node)
+{
+    return new_inode(num, ext2_get_inode_size(node), ext2_get_inode_type(node),
+                     node);
+}
 
 /* struct ext2_inode_cache ext2_inode_cache = {0, NULL, .l = LIST_INIT()}; */
 list ext2_inode_cache_list = LIST_INIT();
@@ -39,73 +47,30 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
 
     if (inode_number == 0)
     {
-        return NULL;
+        return ERR_PTR(-ENOENT);
     }
 
     uint32_t group_index = (inode_number - 1) / EXT2_INODES_PER_GROUP(sb);
-
-    /* block_group_descriptor_t group = */
-    /*     block_group_descriptor_table[(inode - 1) / inodes_per_group]; */
-
-    // printf("%d\n", inode);
     ext2_group_descriptor group = EXT2_GROUP_DESCRIPTOR_TABLE(sb)[group_index];
 
-    // printf("inode usage:%p\n", group.inode_usage);
-
     uint8_t *inode_usage = ext2_read_block(group.inode_usage, sb);
-
-    for (int i = 0; i < 512; i++)
-    {
-        // printf("%p ", inode_usage[i]);
-    }
-
-    // printf("\n");
 
     uint8_t node_exists = ((inode_usage[(inode_number - 1) / 8]) &
                            (1 << (inode_number - 1) % 8)) != 0;
 
-    // printf("%p\n", ((inode_usage[(inode) / 8])));
-    // printf("%p\n", ((inode_usage[(inode) / 8]) & (1 << (inode - 1 % 8))));
     if (!node_exists)
     {
-        // shouldn't print
-        printf("node not found\n");
-
-        return NULL;
+        return ERR_PTR(-ENOENT);
     }
-
-    /* for (size_t i = 0; i < 512; i++) */
-    /* { */
-
-    /*     /1* printf("%p ", inode_usage[i]); *1/ */
-    /* } */
-    /* void *table = (void *)read_block((group.inode_table)); */
-    /* printf("%p\n", *table); */
-    /* return table[(inode - 1) % inodes_per_group]; */
-    /* void *table = (void *)read_block(group.inode_table + */
-    /*                                  ((inode * inode_size) / block_size)); */
 
     uint32_t node_index = (inode_number - 1) % EXT2_INODES_PER_GROUP(sb);
 
-    /* uint8_t *node_ptr = read_block((group.inode_table) + */
-    /*                                ((node_index * inode_size) / block_size));
-     */
     uint32_t table_index = group.inode_table;
 
     uint8_t *table_ptr =
         ext2_read_block(((table_index) + ((node_index * EXT2_INODE_SIZE(sb)) /
                                           EXT2_BLOCK_SIZE(sb))),
                         sb);
-
-    // printf("%d\n", table_index);
-    // printf("reading: %d\n",
-    //        ((table_index) +
-    //         ((node_index * EXT2_INODE_SIZE(sb)) / EXT2_BLOCK_SIZE(sb))));
-
-    for (size_t i = 0; i < EXT2_BLOCK_SIZE(sb); i++)
-    {
-        // printf("%p", table_ptr[i]);
-    }
 
     ext2_inode *node =
         (ext2_inode *)(table_ptr + ((node_index * EXT2_INODE_SIZE(sb)) %

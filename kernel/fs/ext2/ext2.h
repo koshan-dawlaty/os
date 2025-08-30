@@ -122,4 +122,10 @@ uint32_t ext2_block_alloc(superblock *sb);
 
 void ext2_write_inode(inode *node, uint8_t *buf, size_t buf_len,
                       ext2_inode_index index, superblock *sb);
+
+inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node);
+
+dentry **ext2_get_dentries(inode *vfs_node, superblock *sb);
+
+inode_type ext2_get_inode_type(ext2_inode *node);
 #endif

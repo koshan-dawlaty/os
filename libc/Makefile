@@ -31,6 +31,7 @@ FREEOBJS=\
 $(ARCH_FREEOBJS) \
 string/strlen.o \
 string/strcmp.o \
+string/strncmp.o \
 stdlib/atoi.o \
 stdlib/exit.o \
 stdlib/malloc.o \
