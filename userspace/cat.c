@@ -15,6 +15,12 @@ int main(int argc, char **argv)
 
     int fd = open(argv[1], 0);
 
+    if (fd == -1)
+    {
+        printf("not found\n");
+        exit(1);
+    }
+
     size_t read_size = 10;
     size_t buf_len = read_size;
 

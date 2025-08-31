@@ -80,19 +80,13 @@ int main()
     struct task *task1 = load_elf32(elf, 1, args);
     free_elf32(elf);
 
-    printf("STARTING\n");
-
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
     enable_scheduler();
     add_task(create_kernel_task());
 
-    /* printf("%s\n", lookup_path("/dir/123456.txt")->name); */
-
     add_task(task1);
-    /* add_task(task2); */
-
     printf("main exited\n");
 
     return 0;

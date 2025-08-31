@@ -2,6 +2,7 @@
 
 int strncmp(const char *s1, const char *s2, size_t n)
 {
+
     /* if (strlen((char *)s1) != strlen((char *)s2)) */
     /* { */
     /*     return 1; */

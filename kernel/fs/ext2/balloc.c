@@ -115,7 +115,6 @@ ext2_get_block_from_inode(inode *vfs_node, uint8_t block_index, superblock *sb)
 void ext2_write_inode(inode *vfs_node, uint8_t *buf, size_t buf_len,
                       ext2_inode_index index, superblock *sb)
 {
-    printf("size:%d, offset:%d\n", buf_len, index);
 
     ext2_inode *node = EXT2_INODE(vfs_node);
 
@@ -131,7 +130,6 @@ void ext2_write_inode(inode *vfs_node, uint8_t *buf, size_t buf_len,
         if (buf_len <= EXT2_BLOCK_SIZE(sb))
         {
             memcpy(current_block + block_offset, buf, buf_len);
-            printf("writing to block num:%d\n", block_num);
             ext2_write_block(current_block, block_num, sb);
 
             goto end;

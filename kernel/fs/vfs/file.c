@@ -12,19 +12,17 @@
 file *open_file(char *path)
 {
 
-    // printf("len %d\n", open_files_len);
-    // printf("pointer: %p\n", current_superblock);
     dentry *dentry = lookup_path(path);
     if (IS_ERR(dentry))
     {
-        /* printf("error:%d\n", GET_ERR(dentry)); */
+
         return (void *)dentry;
     }
 
     file *out = new_file(dentry);
 
     open_files_len++;
-    // TODO: this will result in open_files fragmenting
+    /* TODO: this will result in open_files fragmenting when files are closed */
     open_files = realloc(open_files, (open_files_len) * sizeof(file *));
 
     /* printf("open_files:%p\n", open_files); */
@@ -69,11 +67,6 @@ int write_file(file *file, char *buf, size_t n, size_t off)
     inode *node = file->entry->inode;
 
     size_t write_size = n;
-    printf("size:%p\n", write_size);
-    /* if (off + n > node->size) */
-    /* { */
-    /*     write_size = node->size - off; */
-    /* } */
 
     current_superblock->type->inode_functions.write_inode(
         node, (uint8_t *)buf, write_size, off, current_superblock);
