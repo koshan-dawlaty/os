@@ -44,6 +44,7 @@ stdio/puts.o \
 stdio/getchar.o \
 stdio/vprintf.o \
 file/open.o \
+file/creat.o \
 file/read.o \
 file/write.o \
 file/pread.o \

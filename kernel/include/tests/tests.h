@@ -24,6 +24,7 @@ void test_assert_true(int condition);
 #define ASSERT_EQ(a, b) test_assert_eq(a, b)
 #define ASSERT_NE(a, b) test_assert_ne(a, b)
 #define ASSERT_TRUE(a) test_assert_true(a)
+#define FAIL_TEST() fail_test();
 
 #ifdef TESTS
 #define TEST_CONSTRUCTOR(name)                                                 \

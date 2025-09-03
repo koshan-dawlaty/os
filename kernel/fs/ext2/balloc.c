@@ -1,5 +1,8 @@
 #include "ext2.h"
+#include "kernel/types.h"
+#include "kernel/utils.h"
 #include "panic.h"
+#include "utils.h"
 #include "vfs.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -26,6 +29,13 @@ ext2_inode_addr ext2_inode_alloc(superblock *sb)
             {
                 usage_bitmap[(i - 1) / 8] |= (1 << (i - 1) % 8);
                 ext2_write_block(usage_bitmap, usage_block, sb);
+
+                inode *node = ext2_iget(i, sb);
+                ext2_inode *ext2_node = EXT2_INODE(node);
+                ext2_node->type = 0x81ed;
+                ext2_node->size_low = 0;
+                ext2_update_inode(node, sb);
+
                 free(usage_bitmap);
 
                 return i;
@@ -181,4 +191,57 @@ end:;
         node->size_low = index + buf_len;
         ext2_update_inode(vfs_node, sb);
     }
+}
+
+dentry *ext2_append_dentry(inode *entry, char *name, ino_t number,
+                           superblock *sb)
+{
+
+    /* TODO: this will not work if the size goes beyond one block */
+
+    ext2_inode *ext2_entry = EXT2_INODE(entry);
+
+    u8 *buf = malloc(EXT2_BLOCK_SIZE(sb));
+    ext2_read_inode(ext2_entry, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
+    size_t i = 0;
+    while (i < EXT2_BLOCK_SIZE(sb))
+    {
+        u8 *raw_entry = buf + i;
+
+        u16 len = *(u16 *)(raw_entry + 4);
+
+        if (i + len >= EXT2_BLOCK_SIZE(sb))
+        {
+
+            size_t new_len = align_long(8 + (*(u8 *)(raw_entry + 6)) + 4, 4);
+
+            i += new_len;
+            *(u16 *)(raw_entry + 4) = new_len;
+
+            break;
+        }
+
+        i += len;
+    }
+
+    ext2_write_inode(entry, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
+
+    size_t buf_len = align_long((strlen(name) + 9) + 4, 4);
+    char *new_buf = malloc(buf_len);
+
+    memcpy(new_buf + 8, name, strlen(name));
+    new_buf[8 + strlen(name)] = 0;
+    *(u32 *)new_buf = number;
+    *(u16 *)(new_buf + 4) = EXT2_BLOCK_SIZE(sb) - i;
+    *(u8 *)(new_buf + 6) = strlen(name);
+
+    buf[6] = strlen(new_buf + 8);
+
+    ext2_write_inode(entry, (uint8_t *)new_buf, buf_len, i, sb);
+
+    /* TODO: bad */
+    ext2_entry->size_low = EXT2_BLOCK_SIZE(sb);
+    ext2_update_inode(entry, sb);
+
+    return new_dentry(name, entry);
 }

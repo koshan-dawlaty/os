@@ -20,6 +20,8 @@ file systems:
 	very bad error handling	
 
 	pathname lookup
+
+	ext2 dentry walking is kinda bad
 	
 
 syscall wrapper might be duplicated somewhere

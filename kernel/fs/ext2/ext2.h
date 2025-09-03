@@ -128,4 +128,9 @@ inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node);
 dentry **ext2_get_dentries(inode *vfs_node, superblock *sb);
 
 inode_type ext2_get_inode_type(ext2_inode *node);
+
+dentry *ext2_append_dentry(inode *entry, char *name, ino_t number,
+                           superblock *sb);
+
+void ext2_update_inode(inode *node, superblock *sb);
 #endif

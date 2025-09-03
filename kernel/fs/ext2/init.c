@@ -43,20 +43,25 @@ inode *ext2_iget(ino_t number, superblock *sb)
     return out;
 }
 
+inode *ext2_ialloc(superblock *sb)
+{
+    ino_t num = ext2_inode_alloc(sb);
+    return ext2_iget(num, sb);
+}
+
 struct ext2_superblock *ext2_parse_superblock();
 superblock *ext2_parse_superblock_vfs();
 dentry *ext2_mount();
 
 const struct fs_type ext2_fs_type = {
     .name = "ext2",
-    .inode_functions =
-        {
-            .get_inode = ext2_iget,
-            .read_inode = ext2_iread,
-            .write_inode = ext2_iwrite,
-        },
+    .inode_functions = {.get_inode = ext2_iget,
+                        .read_inode = ext2_iread,
+                        .write_inode = ext2_iwrite,
+                        .alloc_inode = ext2_ialloc},
     .dentry_functions = {.find_dentry = ext2_dfind,
-                         .get_dentries = ext2_get_dentries},
+                         .get_dentries = ext2_get_dentries,
+                         .append_dentry = ext2_append_dentry},
     .superblock_functions = {.parse_superblock = ext2_parse_superblock_vfs},
 
     .mount = ext2_mount,
@@ -163,6 +168,19 @@ dentry *ext2_mount()
 
     ext2_dentry *ext2_entry = ext2_find_dentry("/.", sb);
     dentry *out = ext2_dentry_to_dentry(ext2_entry, sb);
+
+    /* ext2_inode_addr node = ext2_inode_alloc(sb); */
+    /* inode *real_node = ext2_iget(node, sb); */
+    /* ext2_inode *ext2_node = EXT2_INODE(real_node); */
+
+    /* ext2_node->type = 0x8e1d; */
+    /* ext2_node->size_low = 0; */
+
+    /* ext2_update_inode(real_node, sb); */
+
+    /* ext2_append_dentry(out->inode, "newfile", node, sb); */
+
+    /* printf("%p\n", ext2_get_inode(13, sb)->type); */
 
     free(ext2_entry);
     return out;

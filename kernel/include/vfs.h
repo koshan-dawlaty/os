@@ -26,6 +26,7 @@ typedef enum
 {
     INODE_FILE,
     INODE_DIR,
+    INODE_INVALID,
 } inode_type;
 
 typedef size_t inode_size;
@@ -51,6 +52,8 @@ typedef struct
     void (*write_inode)(inode *, uint8_t *buf, size_t n, size_t offset,
                         superblock *sb);
 
+    inode *(*alloc_inode)(superblock *sb);
+
 } inode_functions;
 
 typedef struct
@@ -65,6 +68,8 @@ typedef struct
 {
     dentry *(*find_dentry)(char *path, superblock *sb);
     dentry **(*get_dentries)(inode *inode, superblock *sb);
+    dentry *(*append_dentry)(inode *entry, char *name, ino_t number,
+                             superblock *sb);
 } dentry_functions;
 
 typedef uint32_t fd_t;
@@ -120,5 +125,6 @@ void register_filesystem(struct fs_type *);
 void init_vfs();
 
 dentry *lookup_path(const char *path);
+file *create_file(char *path);
 
 #endif

@@ -271,14 +271,14 @@ dentry *ext2_dentry_to_dentry(ext2_dentry *dentry, superblock *sb)
     return new_dentry(dentry->name, ext2_iget(dentry->inode, sb));
 }
 
-void ext2_append_dir(ext2_inode *dir, ext2_inode *node, superblock *sb)
-{
-    ext2_dentry **entries = ext2_parse_directory(dir, sb);
+/* void ext2_append_dir(ext2_inode *dir, ext2_inode *node, superblock *sb) */
+/* { */
+/*     ext2_dentry **entries = ext2_parse_directory(dir, sb); */
 
-    size_t i = 0;
+/*     size_t i = 0; */
 
-    while (entries[i] != NULL)
-    {
-        i++;
-    }
-}
+/*     while (entries[i] != NULL) */
+/*     { */
+/*         i++; */
+/*     } */
+/* } */

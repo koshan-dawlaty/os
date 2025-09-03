@@ -38,7 +38,6 @@ dentry *parse_component(dentry **dentries, char *component)
 
         i++;
     }
-
     return NULL;
 }
 
@@ -49,8 +48,6 @@ dentry *lookup_path(const char *path)
         /* TODO: may have to parse relative paths at some point */
         return ERR_PTR(-EINVAL);
     }
-
-    dentry *retval = NULL;
 
     inode *root_node = pathname_get_root_dir();
 
@@ -82,6 +79,7 @@ dentry *lookup_path(const char *path)
             {
                 return ERR_PTR(-ENOENT);
             }
+
             inode *node = entry->inode;
 
             if (node->type == INODE_DIR)
@@ -100,7 +98,5 @@ dentry *lookup_path(const char *path)
         j++;
     }
 
-end:
-
-    return retval;
+    return ERR_PTR(-ENOENT);
 }

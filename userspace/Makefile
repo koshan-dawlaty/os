@@ -47,6 +47,7 @@ BINARIES=\
 	elf_test \
 	elf_test2 \
 	overwrite \
+	touch \
 	ksh \
 	cat \
 
@@ -73,6 +74,11 @@ $(BIN)/overwrite : $(OBJS_START_BIN) $(BIN)/overwrite.o ../libc/libc.a $(START_O
 $(BIN)/cat : $(OBJS_START_BIN) $(BIN)/cat.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+
+$(BIN)/touch : $(OBJS_START_BIN) $(BIN)/touch.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+
 
 all : $(BINARIES_BIN)
 	$(CC) -o $(BIN)/$

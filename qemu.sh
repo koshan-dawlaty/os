@@ -3,6 +3,7 @@ set -e
 
 cd build
 . ./iso.sh
+rm -f qemu.img
 ./get-ext2-image.sh "qemu.img" fs-root
 
 

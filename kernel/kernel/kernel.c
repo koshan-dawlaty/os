@@ -63,6 +63,7 @@ int main()
     init_pit();
     init_pci();
     init_ata();
+
     init_vfs();
     init_usermode();
     serial_init(0x3F8);
@@ -77,6 +78,7 @@ int main()
 
     int f1 = open("/ksh", 0);
     elf_32 *elf = parse_elf32(f1);
+
     struct task *task1 = load_elf32(elf, 1, args);
     free_elf32(elf);
 
@@ -85,6 +87,10 @@ int main()
 
     enable_scheduler();
     add_task(create_kernel_task());
+
+    /* creat("testfile123a", 000); */
+
+    /* printf("open result:%p\n", open("/testfile123a", 0)); */
 
     add_task(task1);
     printf("main exited\n");

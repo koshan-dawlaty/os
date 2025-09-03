@@ -15,7 +15,6 @@ file *open_file(char *path)
     dentry *dentry = lookup_path(path);
     if (IS_ERR(dentry))
     {
-
         return (void *)dentry;
     }
 
@@ -40,7 +39,6 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     inode *node = file->entry->inode;
 
     size_t read_size = n;
-    /* printf("size:%d\n", node->size); */
 
     if (off + n > node->size)
     {
@@ -78,4 +76,20 @@ int write_file(file *file, char *buf, size_t n, size_t off)
 file *lookup_descriptor(int fd)
 {
     return open_files[fd];
+}
+
+file *create_file(char *name)
+{
+
+    inode *new = current_superblock->type->inode_functions.alloc_inode(
+        current_superblock);
+
+    /* TODO: breaks if not ext2 */
+    inode *root = current_superblock->type->inode_functions.get_inode(
+        2, current_superblock);
+
+    dentry *out = current_superblock->type->dentry_functions.append_dentry(
+        root, name, new->number, current_superblock);
+
+    return new_file(out);
 }

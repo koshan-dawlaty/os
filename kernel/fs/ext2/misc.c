@@ -13,6 +13,8 @@ inode_type ext2_get_inode_type(ext2_inode *node)
     {
         return INODE_FILE;
     }
-
-    panic("unknown inode type:%p\n", type);
+    else
+    {
+        return INODE_INVALID;
+    }
 }
