@@ -1,3 +1,4 @@
+#include "dcache.h"
 #include "vfs_internal.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +18,8 @@ void init_vfs()
     // TODO: change this
     ext2_fs_type.mount();
     current_superblock = ext2_fs_type.superblock_functions.parse_superblock();
+
+    init_dcache();
     // printf("superblock:%p\n", current_superblock);
 }
 

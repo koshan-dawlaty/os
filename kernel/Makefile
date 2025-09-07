@@ -55,6 +55,7 @@ fs/ext2/misc.o \
 fs/vfs/file.o \
 fs/vfs/pathname.o \
 fs/vfs/vfs.o \
+fs/vfs/dcache.o \
 
 OBJS=\
 $(ARCHDIR)/crti.o \

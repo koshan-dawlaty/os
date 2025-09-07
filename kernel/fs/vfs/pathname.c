@@ -1,3 +1,4 @@
+#include "dcache.h"
 #include "err.h"
 #include "vfs.h"
 #include "vfs_internal.h"
@@ -22,6 +23,7 @@ inode *pathname_get_inode(ino_t number)
 inode *pathname_get_root_dir()
 {
     /* TODO: will break if root inode is not 2 */
+
     return pathname_get_inode(2);
 }
 
@@ -49,9 +51,10 @@ dentry *lookup_path(const char *path)
         return ERR_PTR(-EINVAL);
     }
 
-    inode *root_node = pathname_get_root_dir();
+    inode *current_node = pathname_get_root_dir();
 
-    dentry **current_dir = pathname_get_dentries(root_node);
+    dentry *current_dir = NULL;
+
     size_t component_offset = 0;
 
     size_t j = 0;
@@ -74,7 +77,18 @@ dentry *lookup_path(const char *path)
 
             component_offset += component_len;
 
-            dentry *entry = parse_component(current_dir, component);
+            dentry *entry = get_dcache(component, current_dir);
+
+            if (entry == NULL)
+            {
+                entry = parse_component(pathname_get_dentries(current_node),
+                                        component);
+
+                add_dcache(current_dir, entry);
+            }
+
+            current_dir = entry;
+
             if (entry == NULL)
             {
                 return ERR_PTR(-ENOENT);
@@ -84,7 +98,7 @@ dentry *lookup_path(const char *path)
 
             if (node->type == INODE_DIR)
             {
-                current_dir = pathname_get_dentries(node);
+                current_node = node;
             }
             else if (node->type == INODE_FILE)
             {

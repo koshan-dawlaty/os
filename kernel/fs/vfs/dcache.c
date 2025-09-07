@@ -1,0 +1,142 @@
+#include "container_of.h"
+#include "err.h"
+#include "kernel/utils.h"
+#include "lib/list.h"
+#include <panic.h>
+#include <stdlib.h>
+#include <string.h>
+#include <vfs.h>
+
+struct dcache_value
+{
+    dentry *entry;
+    list l;
+};
+
+struct dcache_value *new_dcache_value(dentry *entry)
+{
+    struct dcache_value *out = malloc(sizeof(struct dcache_value));
+
+    out->entry = entry;
+    out->l = LIST_INIT();
+
+    return out;
+}
+
+struct dcache_dir
+{
+    /* parent directory, NULL is root */
+    dentry *dir;
+    list *values_head;
+    list l;
+};
+
+struct dcache_dir *new_dcache_dir(dentry *dir)
+{
+    struct dcache_dir *out = malloc(sizeof(struct dcache_dir));
+    out->dir = dir;
+    out->values_head = NULL;
+    out->l = LIST_INIT();
+
+    return out;
+}
+
+list dcache_list = LIST_INIT();
+
+struct dcache_dir *get_dcache_dir(dentry *entry)
+{
+
+    list *pos;
+    list_for_each(pos, &dcache_list)
+    {
+
+        struct dcache_dir *dir = containerof(pos, struct dcache_dir, l);
+
+        if (dir->dir == entry)
+        {
+            return dir;
+        }
+    }
+
+    return NULL;
+}
+
+struct dcache_value *get_dcache_value(char *component, struct dcache_dir *dir)
+{
+
+    list *pos;
+    list_for_each(pos, dir->values_head)
+    {
+        struct dcache_value *value = containerof(pos, struct dcache_value, l);
+
+        if (!strcmp(value->entry->name, component))
+        {
+
+            return value;
+        }
+    }
+    return NULL;
+}
+
+dentry *get_dcache(char *component, dentry *parent)
+{
+
+    struct dcache_dir *dir = get_dcache_dir(parent);
+
+    if (dir == NULL)
+    {
+        return NULL;
+    }
+
+    struct dcache_value *value = get_dcache_value(component, dir);
+
+    if (value == NULL)
+    {
+        return NULL;
+    }
+
+    return value->entry;
+}
+
+struct dcache_dir *add_dcache_dir(dentry *dir)
+{
+
+    struct dcache_dir *new_dir = new_dcache_dir(dir);
+    list_add(&new_dir->l, &dcache_list);
+
+    return new_dir;
+}
+
+void add_dcache(dentry *parent, dentry *new_entry)
+{
+
+    /* printf("adding %p to cache\n", parent); */
+
+    struct dcache_dir *dir = get_dcache_dir(parent);
+
+    if (dir == NULL)
+    {
+        dir = add_dcache_dir(parent);
+    }
+
+    struct dcache_value *new_value = new_dcache_value(new_entry);
+
+    if (dir->values_head == NULL)
+    {
+        dir->values_head = &new_value->l;
+    }
+    else
+    {
+        list_add(&new_value->l, dir->values_head);
+    }
+
+    list *pos;
+    list_for_each(pos, dir->values_head)
+    {
+        struct dcache_value *value = containerof(pos, struct dcache_value, l);
+    }
+}
+
+void init_dcache()
+{
+}

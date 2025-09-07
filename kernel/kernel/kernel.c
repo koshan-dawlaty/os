@@ -74,6 +74,8 @@ int main()
     run_all_tests();
 #endif
 
+    /* return 1; */
+
     char *args[] = {"/ksh", NULL};
 
     int f1 = open("/ksh", 0);
@@ -91,6 +93,9 @@ int main()
     /* creat("testfile123a", 000); */
 
     /* printf("open result:%p\n", open("/testfile123a", 0)); */
+
+    printf("start\n");
+    open("/dir/f", 0);
 
     add_task(task1);
     printf("main exited\n");
