@@ -2,6 +2,7 @@
 #include "gdt.h"
 #include "interrupts/pic.h"
 #include "kernel/usermode.h"
+#include "vfs.h"
 #include <kernel/paging.h>
 #include <scheduler.h>
 #include <stdbool.h>
@@ -56,6 +57,10 @@ struct task *new_task(uint32_t ip, uint32_t sp)
         .ebp = (uint32_t)out->stack,
         .eflags = 1 << 9,
     };
+
+    /* out->working_dir = get_root_dir(); */
+    /* NULL is used to signify root dir */
+    out->working_dir = NULL;
 
     *(uint32_t *)(out->stack) = (uint32_t)new_task_usermode_start;
     *(uint32_t *)(out->stack + 8) = ip;

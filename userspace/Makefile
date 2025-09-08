@@ -80,6 +80,7 @@ $(BIN)/touch : $(OBJS_START_BIN) $(BIN)/touch.o ../libc/libc.a $(START_OBJ)  $(O
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 
+
 all : $(BINARIES_BIN)
 	$(CC) -o $(BIN)/$
 

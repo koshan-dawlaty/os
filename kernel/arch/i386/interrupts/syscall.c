@@ -146,6 +146,10 @@ int syscall_handler(struct syscall_regs *regs)
         /* TODO: this should be implemented with an open flag instead */
         return creat((void *)regs->ebx, regs->ecx);
     }
+    else if (regs->eax == 13)
+    {
+        return chdir((void *)regs->ebx);
+    }
 
     printf("no syscall found\n");
     /* should  be ENOSYS */

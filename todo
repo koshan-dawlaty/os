@@ -31,4 +31,4 @@ free might not work correctly with sizes around or above 4096
 
 do whatever linux does to not have the syscall handler just be a switch statement
 
-
+maybe NULL shoudnt be used to mean root directory in dcache / pathname lookup (but i think linux does it so mabye its fine ??)

@@ -55,7 +55,21 @@ int main()
             args = realloc(args, sizeof(char *) * (j + 1));
             args[j] = NULL;
 
-            execv(args[0], args);
+            if (!strcmp(args[0], "cd"))
+            {
+                if (args[1] != NULL)
+                {
+                    chdir(args[1]);
+                }
+                else
+                {
+                    printf("not enough arguments\n");
+                }
+            }
+            else
+            {
+                execv(args[0], args);
+            }
             free(input);
             input = malloc(0);
             input_len = 0;

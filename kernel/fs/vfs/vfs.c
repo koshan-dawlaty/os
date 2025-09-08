@@ -11,6 +11,15 @@ superblock *current_superblock = NULL;
 file **open_files = NULL;
 size_t open_files_len = 0;
 
+dentry *get_root_dir()
+{
+    inode *node = current_superblock->type->inode_functions.get_inode(
+        2, current_superblock);
+    dentry *entry = new_dentry("/", node);
+
+    return entry;
+}
+
 void init_vfs()
 {
     open_files = malloc(0);

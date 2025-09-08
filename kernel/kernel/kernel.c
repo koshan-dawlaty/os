@@ -74,8 +74,6 @@ int main()
     run_all_tests();
 #endif
 
-    /* return 1; */
-
     char *args[] = {"/ksh", NULL};
 
     int f1 = open("/ksh", 0);
@@ -94,8 +92,10 @@ int main()
 
     /* printf("open result:%p\n", open("/testfile123a", 0)); */
 
-    printf("start\n");
-    open("/dir/f", 0);
+    /* chdir("/dir"); */
+    /* printf("absolut:%p\n", lookup_path("/dir/f")); */
+    /* printf("relative:%s\n", lookup_path("f")->name); */
+    /* printf("relative:%p\n", lookup_path("one")); */
 
     add_task(task1);
     printf("main exited\n");

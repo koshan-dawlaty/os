@@ -127,4 +127,6 @@ void init_vfs();
 dentry *lookup_path(const char *path);
 file *create_file(char *path);
 
+dentry *get_root_dir();
+
 #endif

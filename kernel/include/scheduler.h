@@ -1,6 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 #include "kernel/paging.h"
+#include "vfs.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -24,6 +25,8 @@ struct task
 
     struct registers regs;
     uint32_t bp;
+
+    dentry *working_dir;
 };
 
 void switch_tasks();

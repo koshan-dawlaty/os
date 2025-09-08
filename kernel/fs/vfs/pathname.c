@@ -1,5 +1,7 @@
+#include "complex.h"
 #include "dcache.h"
 #include "err.h"
+#include "scheduler.h"
 #include "vfs.h"
 #include "vfs_internal.h"
 #include <errno.h>
@@ -27,7 +29,7 @@ inode *pathname_get_root_dir()
     return pathname_get_inode(2);
 }
 
-dentry *parse_component(dentry **dentries, char *component)
+dentry *parse_dentries_component(dentry **dentries, char *component)
 {
     size_t i = 0;
     while (dentries[i] != NULL)
@@ -43,74 +45,125 @@ dentry *parse_component(dentry **dentries, char *component)
     return NULL;
 }
 
-dentry *lookup_path(const char *path)
+size_t parse_component(const char *path, inode **current_node,
+                       dentry **current_dir)
 {
-    if (*path != '/')
+
+    if (*path == '/')
     {
-        /* TODO: may have to parse relative paths at some point */
-        return ERR_PTR(-EINVAL);
+        path++;
+    }
+    size_t component_len = 0;
+
+    while (path[component_len] != 0 && path[component_len] != '/')
+    {
+        component_len++;
     }
 
-    inode *current_node = pathname_get_root_dir();
+    char *component = malloc(component_len + 1);
+    memcpy(component, path, component_len);
+    component[component_len] = 0;
 
+    printf("component:%s\n", component);
+
+    dentry *entry = get_dcache(component, *current_dir);
+
+    if (entry == NULL)
+    {
+        dentry **dentries = pathname_get_dentries(*current_node);
+        /* printf("starting\n"); */
+        /* while (*dentries != NULL) */
+        /* { */
+        /*     printf("%s\n", (*dentries)->name); */
+        /*     dentries++; */
+        /* } */
+        /* printf("end\n"); */
+        /* dentries = pathname_get_dentries(*current_node); */
+
+        entry = parse_dentries_component(dentries, component);
+
+        if (entry == NULL)
+        {
+
+            *current_dir = ERR_PTR(-ENOENT);
+            goto end;
+        }
+
+        add_dcache(*current_dir, entry);
+    }
+
+    *current_dir = entry;
+
+    inode *node = entry->inode;
+
+    if (node->type == INODE_DIR)
+    {
+        *current_node = node;
+    }
+    else if (node->type == INODE_FILE)
+    {
+        *current_dir = entry;
+    }
+    else
+    {
+        panic("unhandled dentry type in lookup_path!!!");
+    }
+
+    /* *current_dir = ERR_PTR(-ENOENT); */
+
+end:
+
+    return component_len;
+}
+
+dentry *lookup_path(const char *path)
+{
+    inode *current_node = NULL;
     dentry *current_dir = NULL;
 
     size_t component_offset = 0;
 
-    size_t j = 0;
-    while (path[j] != 0)
+    if (*path != '/')
     {
-        if (path[j] == '/')
+
+        current_dir = get_current_task()->working_dir;
+        if (current_dir == NULL)
         {
-            component_offset++;
-
-            size_t component_len = 0;
-            while ((path + component_offset)[component_len] != 0 &&
-                   (path + component_offset)[component_len] != '/')
-            {
-                component_len++;
-            }
-
-            char *component = malloc(component_len + 1);
-            memcpy(component, path + component_offset, component_len);
-            component[component_len] = 0;
-
-            component_offset += component_len;
-
-            dentry *entry = get_dcache(component, current_dir);
-
-            if (entry == NULL)
-            {
-                entry = parse_component(pathname_get_dentries(current_node),
-                                        component);
-
-                add_dcache(current_dir, entry);
-            }
-
-            current_dir = entry;
-
-            if (entry == NULL)
-            {
-                return ERR_PTR(-ENOENT);
-            }
-
-            inode *node = entry->inode;
-
-            if (node->type == INODE_DIR)
-            {
-                current_node = node;
-            }
-            else if (node->type == INODE_FILE)
-            {
-                return entry;
-            }
-            else
-            {
-                panic("unhandled dentry type in lookup_path!!!");
-            }
+            current_node = pathname_get_root_dir();
         }
-        j++;
+        else
+        {
+            current_node = current_dir->inode;
+            printf("in dir:%s\n", current_dir->name);
+        }
+    }
+    else
+    {
+        component_offset++;
+        current_node = pathname_get_root_dir();
+        current_dir = NULL;
     }
 
-    return ERR_PTR(-ENOENT);
+    if (current_dir != NULL)
+    {
+        printf("starting at dir:%s\n", current_dir->name);
+    }
+
+    while (*(path + component_offset) != 0)
+    {
+
+        printf("path:%s\n", path + component_offset);
+        component_offset += parse_component(path + component_offset,
+                                            &current_node, &current_dir);
+
+        /* component_offset++; */
+
+        /* printf("%d\n", current_node->number); */
+        if (IS_ERR(current_dir))
+        {
+            return current_dir;
+        }
+    }
+
+    return current_dir;
 }
