@@ -21,7 +21,7 @@ ISO="os.iso"
 export ISO
 
 
-CFLAGS="${CFLAGS} -O2 -g "
+CFLAGS="${CFLAGS} -O2 -g  -mcmodel=kernel -mno-red-zone" 
 export CFLAGS
 export CPPFLAGS=''
 
@@ -29,13 +29,30 @@ export CPPFLAGS=''
 export SYSROOT="$(pwd)/sysroot"
 export CC="$CC --sysroot=$SYSROOT"
 
-export  QEMU_FLAGS=" -cdrom os.iso
+
+QEMU_FLAGS=" -cdrom os.iso
 -m 512M
 -machine pc
 -d page
 -D log.txt
 -boot d 
 -drive file=qemu.img,format=raw,if=ide,index=0"
+
+if [ $HOST =  "x86_64" ]; then
+
+	# TODO: probably not secure, and nixos only
+	cp -f /run/libvirt/nix-ovmf/OVMF_CODE.fd . 
+	cp -f /run/libvirt/nix-ovmf/OVMF_VARS.fd . 
+	
+	QEMU_FLAGS="$QEMU_FLAGS -cpu qemu64
+	-drive if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on 
+  	-drive if=pflash,format=raw,unit=1,file=OVMF_VARS.fd 
+"
+
+
+fi
+
+export QEMU_FLAGS
 
 # Work around that the -elf gcc targets doesn't have a system include directory
 # because it was configured with --without-headers rather than --with-sysroot.

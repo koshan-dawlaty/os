@@ -1,7 +1,7 @@
 #ifndef ATA_H
 #define ATA_H
 
-#include "interrupts/idt.h"
+// #include "interrupts/idt.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -34,8 +34,8 @@
 
 void init_ata();
 
-ISR_ATTRIBUTE void ata_isr_1(struct interrupt_frame *);
-ISR_ATTRIBUTE void ata_isr_2(struct interrupt_frame *);
+// ISR_ATTRIBUTE void ata_isr_1(struct interrupt_frame *);
+// ISR_ATTRIBUTE void ata_isr_2(struct interrupt_frame *);
 
 // TODO: move to other header file
 

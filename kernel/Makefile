@@ -20,6 +20,7 @@ CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
+ARCHDIR_x86=x86_64
 ARCHDIR=arch/$(HOSTARCH)
 
 
@@ -58,25 +59,23 @@ fs/vfs/vfs.o \
 fs/vfs/dcache.o \
 
 OBJS=\
-$(ARCHDIR)/crti.o \
-$(ARCHDIR)/crtbegin.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
 $(KERNEL_OBJS) \
 $(TEST_OBJS) \
-$(ARCHDIR)/crtend.o \
-$(ARCHDIR)/crtn.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
 
+# $(ARCHDIR)/$(ARCHDIR_x86)/crtend.o 
+# $(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o 
 LINK_LIST=\
 $(LDFLAGS) \
-$(ARCHDIR)/crti.o \
-$(ARCHDIR)/crtbegin.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
 $(KERNEL_OBJS) \
 $(TEST_OBJS) \
 $(LIBS) \
-$(ARCHDIR)/crtend.o \
-$(ARCHDIR)/crtn.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
 
 LINK_LIST_BIN = $(foreach obj,$(LINK_LIST),bin/$(obj))
 
@@ -89,12 +88,13 @@ all: $(BIN)/os.kernel
 
 
 # ../libc/libk.a is bad
-$(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/linker.ld ../libc/libk.a
-	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -lk -lgcc
+$(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk.a
+	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -lk -lgcc
 	grub-file --is-x86-multiboot $(BIN)/os.kernel
 
 
-$(BIN)/$(ARCHDIR)/crtbegin.o $(BIN)/$(ARCHDIR)/crtend.o:
+# ia_32 only
+$(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o $(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
 
 

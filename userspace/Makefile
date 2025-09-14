@@ -28,13 +28,15 @@ CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strin
 # very bad
 LINK_LIST=-l../libc/k.a
 
+ARCHDIR_x86=x86_64
+
 OBJS_START=\
-$(ARCHDIR)/crti.o \
-$(ARCHDIR)/crtbegin.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o \
 
 OBJS_END=\
-$(ARCHDIR)/crtend.o \
-$(ARCHDIR)/crtn.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
 
 # this is kinda bad
 OBJS_START_BIN = $(foreach obj,$(OBJS_START),bin/$(obj))
@@ -93,7 +95,7 @@ $(BIN)/%.o: %.c
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) 
 
 
-$(BIN)/$(ARCHDIR)/crtbegin.o $(BIN)/$(ARCHDIR)/crtend.o:
+$(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o $(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
 
 clean:

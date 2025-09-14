@@ -41,7 +41,7 @@ ISR(double_fault_handler, {
 _Pragma("clang diagnostic push");
 _Pragma("clang diagnostic ignored \"-Wexcessive-regsave\"");
 ISR_ATTRIBUTE void page_fault_handler(struct interrupt_frame *frame,
-                                      uint32_t error_code)
+                                      unsigned long int error_code)
 { /* this is to prevent the unused parameter warning */
     (void)frame;
 

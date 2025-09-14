@@ -48,7 +48,6 @@ file/creat.o \
 file/read.o \
 file/write.o \
 file/pread.o \
-utils/syscall_wrapper.o \
 sys/mman/mmap.o \
 unistd/execv.o \
 unistd/chdir.o \
