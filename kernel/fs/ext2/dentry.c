@@ -282,3 +282,8 @@ dentry *ext2_dentry_to_dentry(ext2_dentry *dentry, superblock *sb)
 /*         i++; */
 /*     } */
 /* } */
+
+int ext2_remove_dentry(inode *node, char *name, superblock *sb)
+{
+    ext2_dentry **entries = ext2_get_dentries(node, sb);
+}

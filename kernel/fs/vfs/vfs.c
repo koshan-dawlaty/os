@@ -53,6 +53,11 @@ dentry *new_dentry(char *name, inode *inode)
 
     return out;
 }
+void free_dentry(dentry *entry)
+{
+    free(entry->name);
+    /* TODO: free inode */
+}
 
 file *new_file(dentry *entry)
 {

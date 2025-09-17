@@ -19,4 +19,23 @@ void list_add(list *new, list *head);
 #define LIST_ENTRY(ptr, type, member) containerof(ptr, type, member)
 #define list_for_each(pos, head) for (pos = head; pos != NULL; pos = pos->next)
 
+/*
+ * doubly linked list
+ */
+typedef struct list2
+{
+    struct list2 *prev, *next;
+} list2;
+
+#define LIST2_INIT(...)                                                        \
+    (list2)                                                                    \
+    {                                                                          \
+        .prev = NULL, .next = NULL                                             \
+    }
+
+#define list2_for_each(pos, head) for (pos = head; pos != NULL; pos = pos->next)
+
+void list2_add(list2 *new, list2 *head);
+void list2_remove(list2 *value);
+
 #endif

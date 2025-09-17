@@ -63,6 +63,7 @@ typedef struct
 } dentry;
 
 dentry *new_dentry(char *name, inode *inode);
+void free_dentry(dentry *entry);
 
 typedef struct
 {
