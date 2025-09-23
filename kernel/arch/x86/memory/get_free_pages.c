@@ -75,6 +75,8 @@ void *get_free_pages_offset(size_t amount, uint8_t *bitmap,
 
     /* release_semaphore(get_free_pages_semaphore); */
 
+    // asm("hlt");
+
     return address;
 }
 

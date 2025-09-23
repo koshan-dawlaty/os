@@ -2,7 +2,11 @@
 #define ARCH_I386_VGA_H
 #include <stdint.h>
 
+#ifdef CONFIG_x86_64
+static uint16_t *VGA_MEMORY = (uint16_t *)0xffffc000000b8000;
+#elif defined(CONFIG_x86_32)
 static uint16_t *VGA_MEMORY = (uint16_t *)0xC03FF000;
+#endif
 
 enum vga_color
 {

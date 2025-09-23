@@ -21,7 +21,7 @@ ISO="os.iso"
 export ISO
 
 
-CFLAGS="${CFLAGS} -O2 -g  -mcmodel=kernel -mno-red-zone" 
+CFLAGS="${CFLAGS} -O1 -g  -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -DCONFIG_x86_64" 
 export CFLAGS
 export CPPFLAGS=''
 
@@ -33,7 +33,7 @@ export CC="$CC --sysroot=$SYSROOT"
 QEMU_FLAGS=" -cdrom os.iso
 -m 512M
 -machine pc
--d page
+-d mmu
 -D log.txt
 -boot d 
 -drive file=qemu.img,format=raw,if=ide,index=0"

@@ -19,12 +19,6 @@
 .endm
 
 
-.global stack_top
-.section .bootstrap_stack, "aw", @nobits
-.align 16
-stack_bottom:
-.skip 16384 # 16 KiB
-stack_top:
 
 
 
@@ -44,6 +38,9 @@ stack_top:
 .set PDT_ID,  0x3000
 .set PT_ID,   0x4000
 
+.set PAGING_PHYSICAL_MAP_ADDR, 0x5000
+.set PAGING_PHYSICAL_MAP_VADDR, 0xffffc00000000000
+
 .set PAGING_ADDR_MASK, 0xffffffffff000
 
 .set PAGING_PRESENT, 1
@@ -51,8 +48,7 @@ stack_top:
 
 .set KERNEL_PHYSADDR, 0x00100000
 .extern KERNEL_VMA
-# .set KERNEL_PHYSADDR, 0xffffffff80000000
-
+ .set KERNEL_VADDR, 0xffffffff80100000
 
 # .extern KERNEL_PHYSADDR
 
@@ -62,6 +58,7 @@ stack_top:
 .type _start, @function
 _start:
 
+	# TODO: maybe use a macro for things like this?
 	movl $(PDPT_ID | PAGING_PRESENT | PAGING_READABLE), PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)
 	movl $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8) + 4
 	movl $(PDT_ID | PAGING_PRESENT | PAGING_READABLE), PDPT_ID + (((KERNEL_PHYSADDR >> 30) & 0x1FF) * 8)
@@ -82,11 +79,21 @@ _start:
 	movl %eax, (%ecx, %edx, 8)
 	movl $0, 4(%ecx, %edx, 8)
 	add $1, %edx
-	# TODO: check if this is the right order for cmp	
+	
 	cmp $512, %edx
 	jl 1b
 
-	movl $(PML4_ADDR_PHYSICAL | PAGING_PRESENT | PAGING_READABLE), PML4_ADDR_PHYSICAL + (512 * 8) + 4 
+	.set MASK_32, 0xFFFFFFFF
+
+	# TODO: only maps 1GB of physical memory
+	# map all physical memory
+	movl $(((PAGING_PHYSICAL_MAP_ADDR >> 32) & MASK_32)), PML4_ADDR_PHYSICAL + (((PAGING_PHYSICAL_MAP_VADDR >> 39) & 0x1FF) * 8) + 4
+	movl $((PAGING_PHYSICAL_MAP_ADDR & MASK_32)	| PAGING_READABLE | PAGING_PRESENT), PML4_ADDR_PHYSICAL + (((PAGING_PHYSICAL_MAP_VADDR >> 39) & 0x1FF) * 8)
+
+	movl $(0 | (1 << 7) | PAGING_PRESENT | PAGING_READABLE), PAGING_PHYSICAL_MAP_ADDR + 0 
+
+
+	
 
 	# https://wiki.osdev.org/Setting_Up_Long_Mode
 	mov $(PML4_ADDR_PHYSICAL), %eax
@@ -95,6 +102,7 @@ _start:
 	mov %cr4, %eax
 	or $(1 << 5), %eax
 	mov %eax, %cr4
+
 
 	mov $(0xC0000080), %ecx
     rdmsr
@@ -106,15 +114,14 @@ _start:
 	mov %eax, %cr0
 
 
-
 	# mov $(PDPT_ID & PAGING_ADDR_MASK | PAGING_PRESENT | PAGING_READABLE), PML4_ADDR_PHYSICAL 
 	# mov $(PDT_ID & PAGING_ADDR_MASK | PAGING_PRESENT | PAGING_READABLE), PDPT_ID 
 lgdt .Pointer
 
- ljmp $0x08, $entry_64
+ljmp $0x08, $entry_64
 
     
-
+	# mov $'a', 0
 
 putchar 'd', 100
 	cli	
@@ -158,26 +165,87 @@ GDT:
         .quad GDT
 
 
-.set PDPT_ADDR 0x5000
-.set PDT_ADDR 0x6000
-.set PT_ADDR 0x7000
+.set PDPT_ADDR, 0x5000
+.set PDT_ADDR, 0x6000
+.set PT_ADDR, 0x7000
 
 
 
-.section .text
 .code64
 .global entry_64
 .type entry_64, @function
 entry_64:
+
+	# mov $'a', %rax
+
+
+	mov $(PDPT_ADDR | PAGING_PRESENT | PAGING_READABLE), %rax
+	movq %rax, ((PML4_ADDR_PHYSICAL + PAGING_PHYSICAL_MAP_VADDR) + (((KERNEL_VADDR >> 39) & 0x1FF) * 8))
+
+	mov $(PDT_ADDR | PAGING_PRESENT | PAGING_READABLE), %rax
+	movq %rax, ((PDPT_ADDR + PAGING_PHYSICAL_MAP_VADDR) + (((KERNEL_VADDR >> 30) & 0x1FF) * 8))
+
+	mov $(PT_ADDR | PAGING_PRESENT | PAGING_READABLE), %rax
+	movq %rax, ((PDT_ADDR + PAGING_PHYSICAL_MAP_VADDR) + (((KERNEL_VADDR >> 21) & 0x1FF) * 8))
 	
-	movq $(PDPT_ADDR | PAGING_PRESENT | PAGING_READABLE), PML4_ADDR_PHYSICAL
 
 	
+
+
+	# where it should be mapped
+	movq $(PAGING_PHYSICAL_MAP_VADDR + PT_ADDR ), %rcx 
+	mov $0, %rdx
+
+	1:
+		mov %rdx, %rax
+		shl $12, %rax
+		
+		# mov $KERNEL_PHYSADDR, %rdi
+		addq %rdi, %rax
+		or $(3), %rax
+
+		movq %rax, (%rcx, %rdx, 8)
+		
+
+		add $1, %rdx
+		cmp $512, %rdx
+		jl 1b
+
+	# mov $'a', 0xffffffff80000000
+	# mov $'a', 0xffffffff80101180
+	# mov $'a', 0xffffffff80201180
+
+	jmp entry_64_2	
+
+
 
 	# putchar 'a', 100	
 
 	# mov $stack_top, %rsp
-	
+
 	# call main
+
+	hlt
+
+
+
+.section .stack
+.align 16
+stack_bottom:
+.skip 16384
+stack_top:
+
+.section .text
+.global entry_64_2
+.type entry_64_2, @function
+entry_64_2:
+
+	// mov $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)	
 	
+	
+	mov $stack_top, %rsp
+
+	call main
+		
+
 	hlt

@@ -48,12 +48,12 @@ void print_bin(heap_block **bin)
     printf("null\n");
 }
 
-inline void *block_to_ptr(heap_block *block)
+static inline void *block_to_ptr(heap_block *block)
 {
     return ((heap_block *)block + 1);
 }
 
-inline heap_block *ptr_to_block(void *ptr)
+static inline heap_block *ptr_to_block(void *ptr)
 {
     return ((heap_block *)ptr) - 1;
 }

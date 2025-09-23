@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef uint32_t directory_entry;
 typedef uint32_t table_entry;
@@ -22,7 +23,13 @@ extern long paging_page_table_addr;
 #define paging_page_table ((table_entry *)&paging_page_table_addr)
 
 #define PAGE_SIZE 4096
+
+#ifdef CONFIG_x86_64
+#define DIRECTORY_ADDR ((directory_entry *)0xffffc00000001000)
+
+#elif defined(CONFIG_x86_64)
 #define DIRECTORY_ADDR ((directory_entry *)0xFFFFF000)
+#endif
 
 #define NUM_PAGES 1024
 
@@ -32,7 +39,7 @@ extern long paging_page_table_addr;
 #define free_page_bitmap_size NUM_PAGES / 8
 uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
-#define PHYS_PAGE_START 0x1000000
+#define PHYS_PAGE_START 0x2000000
 
 struct pagedir init_pgdir;
 struct pagedir *current_pagedir = &init_pgdir;
@@ -55,7 +62,13 @@ void *get_free_phys_page_dir(struct pagedir dir)
     dir.physical_pagetables[i] = (PHYS_PAGE_START + (i * PAGE_SIZE)) | 0x03;
     /* printf("test\n"); */
 
-    return (void *)(PHYS_PAGE_START + (i * PAGE_SIZE));
+    void *addr = (void *)(PHYS_PAGE_START + (i * PAGE_SIZE));
+
+#ifdef CONFIG_x86_64
+    memset(addr + 0xffffc00000000000, 0, PAGE_SIZE);
+#endif
+
+    return addr;
 }
 
 void *get_free_phys_page()
@@ -142,11 +155,13 @@ void init_paging()
     init_idt();
 
     init_pgdir =
-        (struct pagedir){.pgdir = get_physaddr(DIRECTORY_ADDR),
+        (struct pagedir){.pgdir = 0x1000,
                          .pgdir_virtual = DIRECTORY_ADDR,
                          .physical_pagetables = paging_page_table,
                          /* will break if this is not the current pagedir */
                          .pagetable = (void *)0xFFC00000};
+
+    *current_pagedir = init_pgdir;
 
     /* test(0xD0000000, 0x1000000); */
     /* get_free_pages_test(); */

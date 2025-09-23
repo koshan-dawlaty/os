@@ -55,9 +55,17 @@ extern semaphore *test_semaphore;
 
 int main()
 {
-    /* *(char *)(0xb8002) = 'a'; */
+
+    terminal_initialize();
+    init_paging();
+
+    /* char *page = NULL; */
+
+    /* char *page = get_free_pages(1); */
+
+    char *page = malloc(100);
+    printf("test:%d\n", 10);
     /* *(char *)(0xb8003) = 7; */
-    //     *(char *)(1) = 'a';
     return 0;
     /* asm("sti"); */
 

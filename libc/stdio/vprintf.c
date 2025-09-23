@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* seems to use SSE registers on x86_64, and it does not seem to be used
+ * anywhere */
+/*
 double pow(double x, double y)
 {
     int i = 0;
@@ -16,7 +19,7 @@ double pow(double x, double y)
     }
 
     return x;
-}
+} */
 
 int print_len(const char *str, size_t len)
 {

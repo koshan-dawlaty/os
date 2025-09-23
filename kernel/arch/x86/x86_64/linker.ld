@@ -43,13 +43,13 @@ SECTIONS
    .bss : AT(ADDR(.bss) - KERNEL_VMA)
    {
        _bss = .;
-       *(.bss)
 
+       *(.bss)
+	   *(.stack)
        /*
         * You usually need to include generated COMMON symbols
         * under kernel BSS section or use gcc's -fno-common
         */
-
         *(COMMON)
        . = ALIGN(4096);
    }

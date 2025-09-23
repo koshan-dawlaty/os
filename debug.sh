@@ -29,4 +29,5 @@ USERSPACE_ADDR=objdump -h $USER_EXECUTABLE2 | grep \ .text\  | awk '{print $4}'
 gdb -ex " add-symbol-file isodir/boot/os.kernel $KERNEL_ADDR" \
 	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
-	-ex "target remote | qemu-system-i386 -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")"
+	-ex "target remote | qemu-system-x86_64 -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")" \
+	-ex ""
