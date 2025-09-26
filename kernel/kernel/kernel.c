@@ -58,24 +58,12 @@ int main()
 
     terminal_initialize();
     init_paging();
-
-    /* char *page = NULL; */
-
-    /* char *page = get_free_pages(1); */
-
-    char *page = malloc(100);
-    printf("test:%d\n", 10);
-    /* *(char *)(0xb8003) = 7; */
-    return 0;
-    /* asm("sti"); */
-
-    /* /1* useless *1/ */
-    /* keyboard_init(); */
-    /* init_pit(); */
+    keyboard_init();
+    init_pit();
     /* init_pci(); */
-    /* init_ata(); */
+    init_ata();
+    init_vfs();
 
-    /* init_vfs(); */
     /* init_usermode(); */
     /* serial_init(0x3F8); */
 
@@ -111,5 +99,5 @@ int main()
     /* add_task(task1); */
     /* printf("main exited\n"); */
 
-    /* return 0; */
+    return 0;
 }

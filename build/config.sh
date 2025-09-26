@@ -33,24 +33,23 @@ export CC="$CC --sysroot=$SYSROOT"
 QEMU_FLAGS=" -cdrom os.iso
 -m 512M
 -machine pc
--d mmu
+-d int
 -D log.txt
 -boot d 
 -drive file=qemu.img,format=raw,if=ide,index=0"
 
-if [ $HOST =  "x86_64" ]; then
+# if [ $HOST =  "x86_64" ]; then
 
-	# TODO: probably not secure, and nixos only
-	cp -f /run/libvirt/nix-ovmf/OVMF_CODE.fd . 
-	cp -f /run/libvirt/nix-ovmf/OVMF_VARS.fd . 
+# 	cp -f /run/libvirt/nix-ovmf/OVMF_CODE.fd . 
+# 	cp -f /run/libvirt/nix-ovmf/OVMF_VARS.fd . 
 	
-	QEMU_FLAGS="$QEMU_FLAGS -cpu qemu64
-	-drive if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on 
-  	-drive if=pflash,format=raw,unit=1,file=OVMF_VARS.fd 
-"
+# 	QEMU_FLAGS="$QEMU_FLAGS -cpu qemu64
+# 	-drive if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on 
+#   	-drive if=pflash,format=raw,unit=1,file=OVMF_VARS.fd 
+# "
 
 
-fi
+# fi
 
 export QEMU_FLAGS
 

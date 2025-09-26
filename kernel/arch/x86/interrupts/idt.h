@@ -1,17 +1,23 @@
 #ifndef IDT_H
 #define IDT_H
+#include "kernel/types.h"
 #include <stdint.h>
 
 void init_idt();
 
 struct interrupt_frame
 {
+#ifdef CONFIG_x86_64
+    u64 ip, cs, flags, sp;
+    u16 ss;
+#else
     uint32_t ip;
     uint32_t cs;
     uint32_t flags;
     uint32_t sp;
     uint32_t ss;
-};
+#endif
+} __attribute__((packed));
 
 #define ISR_ATTRIBUTE __attribute__((interrupt, target("general-regs-only")))
 

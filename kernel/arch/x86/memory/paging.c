@@ -152,7 +152,6 @@ void load_pgdir(struct pagedir *d)
 void init_paging()
 {
     init_gdt();
-    init_idt();
 
     init_pgdir =
         (struct pagedir){.pgdir = 0x1000,

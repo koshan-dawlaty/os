@@ -2,6 +2,7 @@
 #include "idt_internal.h"
 
 #include "interrupts/idt.h"
+#include "kernel/types.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -20,6 +21,7 @@ void fault_handler_wait()
 ISR(gpf_handler, {
     printf("gpf!!!\n");
     printf("error code:%p\n", (void *)frame->flags);
+    printf("ip:%p\n", (void *)frame->ip);
 
     fault_handler_wait();
 });
@@ -75,17 +77,20 @@ void init_faults()
 {
     for (uint8_t i = 0; i < 32; i++)
     {
-        add_idt_entry((IDT_entry){(uint32_t)default_fault_handler, 8, 0x8F}, i);
+        add_idt_entry((IDT_entry){(ptr)default_fault_handler, 8, 0x8F, 0}, i);
     }
 
-    add_idt_entry((IDT_entry){(uint32_t)gpf_handler, 8, 0x8F}, 0x0D);
+    add_idt_entry((IDT_entry){(ptr)gpf_handler, 8, 0x8F, 0}, 0x0D);
 
-    add_idt_entry((IDT_entry){(uint32_t)invalid_opcode, 8, 0x8F}, 0x06);
+    add_idt_entry((IDT_entry){(ptr)invalid_opcode, 8, 0x8F, 0}, 0x06);
 
-    add_idt_entry((IDT_entry){(uint32_t)double_fault_handler, 8, 0x8F}, 0x08);
-    add_idt_entry((IDT_entry){(uint32_t)tss_fault_handler, 8, 0x8F}, 0x0A);
-    add_idt_entry((IDT_entry){(uint32_t)page_fault_handler, 8, 0x8F}, 0x0E);
-    add_idt_entry((IDT_entry){(uint32_t)virtualization_fault_handler, 8, 0x8F},
-                  0x20);
-    add_idt_entry((IDT_entry){(uint32_t)division_fault_handler, 8, 0x8F}, 0);
+    add_idt_entry((IDT_entry){(ptr)double_fault_handler, 8, 0x8F, 0}, 0x08);
+    add_idt_entry((IDT_entry){(ptr)tss_fault_handler, 8, 0x8F, 0}, 0x0A);
+    add_idt_entry((IDT_entry){(ptr)page_fault_handler, 8, 0x8F, 0}, 0x0E);
+
+    /* add_idt_entry( */
+    /*     (IDT_entry){(uint32_t)virtualization_fault_handler, 8, 0x8F, 0},
+     * 0x20); */
+
+    add_idt_entry((IDT_entry){(ptr)division_fault_handler, 8, 0x8F, 0}, 0);
 }

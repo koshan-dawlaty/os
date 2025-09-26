@@ -1,6 +1,7 @@
 #include <kernel/tty.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,8 +39,7 @@ int print(const char *str)
     return 1;
 }
 
-// TODO: kinda slow
-char *int_to_string(intmax_t in, int base)
+char *int_to_string_unsigned(uintmax_t in, uintmax_t base, bool negative)
 {
     if (in == 0)
     {
@@ -51,15 +51,8 @@ char *int_to_string(intmax_t in, int base)
         return buf;
     }
 
-    int negative = 0;
-    if (in < 0)
-    {
-        negative = 1;
-        in *= -1;
-    }
-
     size_t digits_len = 0;
-    intmax_t in_temp = in;
+    uintmax_t in_temp = in;
     while (in_temp > 0)
     {
         digits_len++;
@@ -84,7 +77,7 @@ char *int_to_string(intmax_t in, int base)
     /* printf("%c\n", buf[0]); */
     while (in > 0)
     {
-        intmax_t digit = in % base;
+        uintmax_t digit = in % base;
         /* printf("in:%p, digit:%p\n", (void *)in, (void *)digit); */
         if (digit < 10)
         {
@@ -106,6 +99,17 @@ char *int_to_string(intmax_t in, int base)
     /* printf("test:%c\n", (buf[0] == '\0') + 0x30); */
     buf[buf_size] = 0;
     return buf;
+}
+
+// TODO: kinda slow
+char *int_to_string(intmax_t in, int base)
+{
+    if (in < 0)
+    {
+        return int_to_string_unsigned(in, base, true);
+    }
+
+    return int_to_string_unsigned(in, base, false);
 }
 
 int vprintf(const char *format, va_list list)
@@ -148,18 +152,18 @@ that they will not work because the bootstrap has not initialized them
             }
             else if (*format == 'd')
             {
-                int i = va_arg(list, int);
+                long i = va_arg(list, int);
                 print(int_to_string(i, 10));
             }
             else if (*format == 'x')
             {
-                int x = va_arg(list, int);
+                long long x = va_arg(list, int);
                 print(int_to_string(x, 16));
             }
             else if (*format == 'p')
             {
-                void *p = va_arg(list, void *);
-                print(int_to_string((uint32_t)p, 16));
+                uint64_t p = va_arg(list, uint64_t);
+                print(int_to_string_unsigned((uint64_t)p, 16, false));
             }
         }
         else if (*format == '%')
