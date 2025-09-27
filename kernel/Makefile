@@ -44,6 +44,8 @@ kernel/utils.o \
 kernel/usermode.o \
 kernel/panic.o \
 kernel/elf/elf.o \
+kernel/elf/elf32.o \
+kernel/elf/elf64.o \
 kernel/scheduler/scheduler.o \
 kernel/scheduler/semaphore.o \
 lib/list.o \

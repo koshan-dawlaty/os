@@ -2,50 +2,37 @@
 #define ELF_H
 
 #include "kernel/paging.h"
+#include "kernel/types.h"
 #include <stdint.h>
 
 typedef struct
 {
+    u32 type;
+    u32 flags;
 
-    uint32_t type;
-    uint32_t file_offset;
-    uint32_t virutal_addr;
-    uint32_t physical_addr;
-    uint32_t file_size;
-    uint32_t memory_size;
-    uint32_t flags;
-    uint32_t align;
-} elf_program_header_32;
+    ptr virtual_addr;
+    ptr physical_addr;
 
-typedef struct
-{
-    uint32_t name;
-    uint32_t type;
-    uint32_t flags;
-    uint32_t addr;
-    uint32_t offset;
-    uint32_t size;
-    uint32_t lint;
-    uint32_t info;
-    uint32_t align;
-    uint32_t element_size;
-} elf_section_header_32;
+    ptr file_offset;
+
+    ptr size_file;
+    ptr size_memory;
+
+    ptr align;
+} elf_program_header;
 
 typedef struct
 {
-    uint16_t program_headers_len;
-    elf_program_header_32 **program_headers;
-
-    uint16_t section_headers_len;
-    elf_section_header_32 **section_headers;
-
-    uint32_t entry_point;
-
     int fd;
-} elf_32;
+    size_t program_headers_len;
+    ptr entry_point;
+    elf_program_header **program_headers;
+} elf;
 
-elf_32 *parse_elf32(int fd);
-struct task *load_elf32(elf_32 *elf, int argc, char **argv);
-void free_elf32(elf_32 *elf);
+elf *parse_elf32(int fd);
+elf *parse_elf64(int fd);
+elf *parse_elf(int fd);
+struct task *load_elf(elf *elf, int argc, char **argv);
+void free_elf(elf *elf);
 
 #endif

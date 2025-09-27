@@ -73,13 +73,13 @@ int main()
     /* run_all_tests(); */
     /* #endif */
 
-    /* char *args[] = {"/ksh", NULL}; */
+    char *args[] = {"/ksh", NULL};
 
-    /* int f1 = open("/ksh", 0); */
-    /* elf_32 *elf = parse_elf32(f1); */
+    int f1 = open("/ksh", 0);
+    elf *elf = parse_elf(f1);
 
-    /* struct task *task1 = load_elf32(elf, 1, args); */
-    /* free_elf32(elf); */
+    struct task *task1 = load_elf(elf, 1, args);
+    /* free_elf(elf); */
 
     /* struct registers *temp_regs = malloc(sizeof(struct registers)); */
     /* *temp_regs = (struct registers){0}; */

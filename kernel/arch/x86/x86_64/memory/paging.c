@@ -71,4 +71,47 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
 
 void *get_physaddr(void *virtualaddr)
 {
+
+    u64 virtual = align_long((u64)virtualaddr, PAGE_SIZE);
+
+    u64 pml4_index = (virtual >> 39) & 0x1FF;
+    u64 pdpt_index = (virtual >> 30) & 0x1FF;
+    u64 pdt_index = (virtual >> 21) & 0x1FF;
+    u64 pt_index = (virtual >> 12) & 0x1FF;
+
+    u64 *pml4 = (void *)get_current_pagedir()->pgdir_virtual;
+    u64 pml4_entry = pml4[pml4_index];
+
+    if ((pml4_entry & 1) == 0)
+    {
+        return (void *)0;
+    }
+
+    u64 *pdpt_physical = (void *)(((pml4[pml4_index]) & ~0xFFF));
+    // u64 *pdpt_physical = (void *)(pml4[pml4_index]);
+    u64 *pdpt = get_virtual_addr(pdpt_physical);
+    u64 pdpt_entry = pdpt[pdpt_index];
+
+    if ((pdpt_entry & 1) == 0)
+    {
+        return (void *)0;
+    }
+
+    u64 *pdt_physical = (void *)((pdpt[pdpt_index]) & ~0xFFF);
+    u64 *pdt = get_virtual_addr(pdt_physical);
+    u64 pdt_entry = pdt[pdt_index];
+
+    if ((pdt_entry & 1) == 0)
+    {
+        return (void *)0;
+    }
+
+    u64 *pt_physical = (void *)((pdt[pdt_index]) & ~0xFFF);
+    u64 *pt = get_virtual_addr(pt_physical);
+
+    u64 pt_entry = pt[pt_index];
+
+    return (void *)((pt_entry & ~0xfff) + ((u64)virtualaddr & 0xfff));
+
+    flush_tlb_full();
 }

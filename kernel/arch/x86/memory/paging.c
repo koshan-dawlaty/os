@@ -129,8 +129,11 @@ struct pagedir *new_pagedir()
     out->physical_pagetables = get_free_pages(1);
     out->pagetable = get_free_pages(1);
 
+#ifdef CONFIG_x86_32
     out->pgdir_virtual[1023] =
         (uint32_t)(out->pgdir) | PAGING_WRITEABLE | PAGING_PRESENT;
+
+#endif
 
     return out;
 }
@@ -139,7 +142,6 @@ void load_pgdir(struct pagedir *d)
 {
     /* unsigned long cr3; */
     /* __asm__ volatile("mov %%cr3, %0" : "=r"(cr3)); */
-    /* printf("trying to load dir\n"); */
     __asm__ volatile("mov %0, %%cr3" : : "r"(d->pgdir));
     /* printf("loaded dir\n"); */
 
