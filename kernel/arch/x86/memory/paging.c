@@ -45,7 +45,7 @@ struct pagedir init_pgdir;
 struct pagedir *current_pagedir = &init_pgdir;
 void *get_free_phys_page_dir(struct pagedir dir)
 {
-    int i = 0;
+    u64 i = 0;
 
     while (i < NUM_PAGES)
     {
@@ -82,45 +82,6 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
     flush_tlb_full();
 }
 
-void write_kernel_page_tables(struct pagedir *pgdir)
-{
-    directory_entry *kernel_dir = (directory_entry *)DIRECTORY_ADDR;
-
-    directory_entry *other_dir = (directory_entry *)pgdir->pgdir_virtual;
-    /* printf("other dir:%p\n", other_dir); */
-    /* printf("kernel dir:%p\n", kernel_dir); */
-
-    for (uint32_t i = 0xC0000000; i < 0xFFC00000; i += 4096 * 1024)
-    {
-
-        uint32_t index = i >> 22;
-
-        /* printf("%d\n", index); */
-        directory_entry direntry = kernel_dir[index];
-        if (!((direntry & 1) == 0))
-        {
-            /* printf("i:%p, index:%p\n", i, index); */
-            /* printf("kernel:%p other:%p\n", kernel_dir[index],
-             * other_dir[index]); */
-
-            /* printf("i:%p, index:%d\n", i, index); */
-            /* printf("i:%p, index:%d\n", i, i >> 22); */
-            /* printf("kernel dir: %p\n", i); */
-
-            other_dir[index] = kernel_dir[index];
-
-            /* printf("kernel after:  %p\n", kernel_dir[index]); */
-            /* other_dir[index] = 0x12345; */
-        }
-    }
-
-    /* other_dir[1023] = */
-    /*     (uint32_t)get_physaddr(other_dir) | PAGING_WRITEABLE |
-     * PAGING_PRESENT; */
-
-    /* printf("end\n"); */
-}
-
 struct pagedir *new_pagedir()
 {
     struct pagedir *out = malloc(sizeof(struct pagedir));
@@ -132,7 +93,6 @@ struct pagedir *new_pagedir()
 #ifdef CONFIG_x86_32
     out->pgdir_virtual[1023] =
         (uint32_t)(out->pgdir) | PAGING_WRITEABLE | PAGING_PRESENT;
-
 #endif
 
     return out;
@@ -142,6 +102,7 @@ void load_pgdir(struct pagedir *d)
 {
     /* unsigned long cr3; */
     /* __asm__ volatile("mov %%cr3, %0" : "=r"(cr3)); */
+    printf("VIRTUAL ADDRESS:%p\n", d->pgdir_virtual);
     __asm__ volatile("mov %0, %%cr3" : : "r"(d->pgdir));
     /* printf("loaded dir\n"); */
 

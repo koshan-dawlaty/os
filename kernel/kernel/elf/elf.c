@@ -56,9 +56,7 @@ struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
     struct task *t = new_task(elf->entry_point, 0xBFFEF000);
-    printf("test\n");
     struct pagedir *pgdir = t->pgdir;
-
     struct pagedir *temp_pgdir = get_current_pagedir();
 
     char **args_temp = malloc(argc * sizeof(char *));
@@ -70,11 +68,10 @@ struct task *load_elf(elf *elf, int argc, char **argv)
     }
 
     printf("loading pgdir\n");
+
     load_pgdir(pgdir);
 
     printf("pagedir is now invalid\n");
-
-    asm("hlt");
 
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
@@ -128,6 +125,7 @@ if (header->memory_size > header->file_size)
     *(char ***)(0xBFFEF000 + 4) = args;
     *(int *)(0xBFFEF000) = argc;
 
+    printf("test\n");
     load_pgdir(temp_pgdir);
 
     return t;

@@ -11,20 +11,24 @@
 #define FREE 0
 #define IN_USE 1
 
+#ifdef CONFIG_x86_64
+#define VIRTUAL_PAGES_START 0xffffD00000000000
+#else
 #define VIRTUAL_PAGES_START 0xD0000000
+#endif
 // TODO: this will almost definitely conflict
 // with get_free_phys_page in paging.c
-#define PHYSICAL_PAGES_START 0x600000
+#define PHYSICAL_PAGES_START 0x6000000
 
 #define free_page_bitmap_size NUM_PAGES / 8
 
 static uint8_t virtual_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
 void *get_free_pages_offset(size_t amount, uint8_t *bitmap,
-                            uint32_t base_addr_virtual,
-                            uint32_t base_addr_physical, uint8_t flags)
+                            ptr base_addr_virtual, ptr base_addr_physical,
+                            uint8_t flags)
 {
-    int i;
+    ptr i;
     size_t consecutive = 0;
     size_t consecutive_start = 0;
     for (i = 0; i < NUM_PAGES; i++)
@@ -65,6 +69,7 @@ void *get_free_pages_offset(size_t amount, uint8_t *bitmap,
         /* printf("virtual:%p\nphysical:%p\n", virtual_addr, physical_addr); */
 
         bitmap[j / 8] |= (1 << (j % 8));
+
         map_page(physical_addr, virtual_addr, flags);
 
         physical_addr += PAGE_SIZE * j;
@@ -81,7 +86,7 @@ void *get_free_pages_offset(size_t amount, uint8_t *bitmap,
 }
 
 void free_pages_offset(void *addr, size_t amount, uint8_t *bitmap,
-                       uint32_t base_addr)
+                       ptr base_addr)
 {
 
     size_t index = ((size_t)addr - base_addr);

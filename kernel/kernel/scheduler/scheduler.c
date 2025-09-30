@@ -41,7 +41,7 @@ void new_task_usermode_start(uint32_t addr)
     jump_usermode_asm(addr, temp_regs);
 }
 
-struct task *new_task(uint32_t ip, uint32_t sp)
+struct task *new_task(ptr ip, ptr sp)
 {
     struct task *out = malloc(sizeof(struct task));
 
@@ -50,11 +50,11 @@ struct task *new_task(uint32_t ip, uint32_t sp)
     out->bp = sp;
 
     out->next = NULL;
-    out->stack = get_free_pages(1) + (PAGE_SIZE - 0xC);
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x18);
 
     out->regs = (struct registers){
-        .esp = (uint32_t)out->stack,
-        .ebp = (uint32_t)out->stack,
+        .esp = (ptr)out->stack,
+        .ebp = (ptr)out->stack,
         .eflags = 1 << 9,
     };
 
@@ -62,8 +62,8 @@ struct task *new_task(uint32_t ip, uint32_t sp)
     /* NULL is used to signify root dir */
     out->working_dir = NULL;
 
-    *(uint32_t *)(out->stack) = (uint32_t)new_task_usermode_start;
-    *(uint32_t *)(out->stack + 8) = ip;
+    *(ptr *)(out->stack) = (ptr)new_task_usermode_start;
+    *(ptr *)(out->stack + 8) = ip;
 
     out->pgdir = new_pagedir();
     write_kernel_page_tables(out->pgdir);
@@ -117,6 +117,10 @@ void remove_task(struct task *task)
 
 void add_task(struct task *task)
 {
+    printf("adding task %p\n", task);
+    while (1)
+    {
+    };
 
     asm("cli");
 
@@ -194,7 +198,9 @@ void schedule()
     }
 
     save_registers(&current_task->regs);
+
     switch_tasks();
+
     if (current_task == NULL)
     {
         return;

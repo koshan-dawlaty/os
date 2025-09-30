@@ -53,20 +53,12 @@ void pit_handler_c(struct registers *r)
 }
 
 ISR(pit_handler, {
-    /* printf("seconds:%d\n", get_seconds()); */
-    /* printf("pit\n"); */
-
-    /*     pit_time++; */
-    /*     if (pit_time % 50 == 0) */
-    /*     { */
-    /*         /1* printf("task switch ip:%p\n", frame->ip); *1/ */
-
-    /*         printf("sp:%p\n", frame->sp); */
-    /*         /1* switch_tasks(frame->ip, frame->sp); *1/ */
-
-    /*         /1* printf("%p\n", frame->ip); *1/ */
-    /*         /1* printf("pit time:%d\n", get_pit_time()); *1/ */
-    /*     } */
+    printf("test\n");
+    /* pit_time++; */
+    /* if (pit_time % 1 == 0) */
+    /* { */
+    /*     schedule(); */
+    /* } */
 
     PIC_sendEOI(0);
 });

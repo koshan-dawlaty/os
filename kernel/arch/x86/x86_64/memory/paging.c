@@ -5,11 +5,28 @@
 
 void *paging_page_table_addr = 0;
 
+extern struct pagedir init_pgdir;
+
 void flush_tlb_full()
 {
     u64 cr3;
     __asm__ volatile("mov %%cr3, %0" : "=r"(cr3));
     __asm__ volatile("mov %0, %%cr3" : : "r"(cr3));
+}
+
+void write_kernel_page_tables(struct pagedir *pgdir)
+{
+
+    for (u64 i = 384; i < 512; i++)
+
+    {
+
+        u64 direntry = init_pgdir.pgdir_virtual[i];
+        if (!((direntry & 1) == 0))
+        {
+            pgdir->pgdir_virtual[i] = init_pgdir.pgdir_virtual[i];
+        }
+    }
 }
 
 void unmap_page(void *virtualaddr)

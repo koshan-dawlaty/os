@@ -1,30 +1,39 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 #include "kernel/paging.h"
+#include "kernel/types.h"
 #include "vfs.h"
 #include <stdbool.h>
 #include <stdint.h>
 
 struct registers
 {
+
+#ifdef CONFIG_x86_32
     uint32_t gs, fs, es, ds;
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
     uint32_t eflags;
+#elif defined(CONFIG_x86_64)
+
+    u64 gs, fs, es, ds;
+    u64 edi, esi, ebp, esp, ebx, edx, ecx, eax;
+    u64 eflags;
+#endif
 
 } __attribute__((packed));
 
 struct task
 {
-    uint32_t instruction_pointer;
+    ptr instruction_pointer;
     /* user */
-    uint32_t stack_pointer;
+    ptr stack_pointer;
     struct task *next;
 
     struct pagedir *pgdir;
     void *stack;
 
     struct registers regs;
-    uint32_t bp;
+    ptr bp;
 
     dentry *working_dir;
 };
@@ -45,7 +54,7 @@ void remove_task_queue(struct task **queue, struct task *task);
 /*
  * initializes the page directory as a free page
  */
-struct task *new_task(uint32_t ip, uint32_t sp);
+struct task *new_task(ptr ip, ptr sp);
 
 /*
  * frees task t

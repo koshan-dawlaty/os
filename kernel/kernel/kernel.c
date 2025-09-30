@@ -1,5 +1,6 @@
 #include "ata/ata.h"
 #include "elf.h"
+#include "interrupts/idt.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
@@ -58,11 +59,18 @@ int main()
 
     terminal_initialize();
     init_paging();
+    /* init_idt(); */
     keyboard_init();
     init_pit();
-    /* init_pci(); */
+    init_pci();
     init_ata();
     init_vfs();
+
+    printf("test\n");
+    /* asm("int $(0x50)"); */
+    /* printf("test:%p\n", malloc(1)); */
+
+    /* printf("%p\n", *(char *)get_free_pages(1)); */
 
     /* init_usermode(); */
     /* serial_init(0x3F8); */
@@ -79,12 +87,14 @@ int main()
     elf *elf = parse_elf(f1);
 
     struct task *task1 = load_elf(elf, 1, args);
+
+    printf("test\n");
     /* free_elf(elf); */
 
     /* struct registers *temp_regs = malloc(sizeof(struct registers)); */
     /* *temp_regs = (struct registers){0}; */
 
-    /* enable_scheduler(); */
+    enable_scheduler();
     /* add_task(create_kernel_task()); */
 
     /* /1* creat("testfile123a", 000); *1/ */
@@ -96,7 +106,8 @@ int main()
     /* /1* printf("relative:%s\n", lookup_path("f")->name); *1/ */
     /* /1* printf("relative:%p\n", lookup_path("one")); *1/ */
 
-    /* add_task(task1); */
+    add_task(task1);
+
     /* printf("main exited\n"); */
 
     return 0;

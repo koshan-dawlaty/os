@@ -123,7 +123,6 @@ ljmp $0x08, $entry_64
     
 	# mov $'a', 0
 
-putchar 'd', 100
 	cli	
 	hlt
 
@@ -239,12 +238,20 @@ stack_top:
 .global entry_64_2
 .type entry_64_2, @function
 entry_64_2:
+	# mov $0x10, %ax
+	# mov %ax, %ss
+	# mov %ax, %ds
+	# mov %ax, %es
+	# mov %ax, %fs
+	# mov %ax, %gs
 
-	// mov $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)	
+	# mov $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)	
+	mov $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)
 	
 	mov $stack_top, %rsp
 
 	call main
+
 		
 1:
 	hlt
