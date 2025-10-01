@@ -49,10 +49,11 @@ void load_idt()
 
     asm volatile("lidt %0" : : "m"(idtr));
 
+    /* swap_segments(); */
+
     remap_pic(0x20, 0x28);
-    swap_segments();
     IRQ_clear_mask(0);
-    IRQ_clear_mask(1);
+    /* IRQ_clear_mask(1); */
 
     asm volatile("sti");
 }
@@ -67,6 +68,7 @@ ISR(irq7, { printf("irq7!!!\n"); })
 void init_idt()
 {
 
+    printf("%p\n", default_interrupt_handler);
     idtr.addr = (u64)&idt[0];
     idtr.size = sizeof(idt) - 1;
 
@@ -83,7 +85,7 @@ void init_idt()
 
     init_faults();
 
-    add_idt_entry((IDT_entry){.offset = (u64)pit_handler,
+    add_idt_entry((IDT_entry){.offset = (u64)pit_test,
                               .segment_selector = 8,
                               .flags = 0x8E,
                               .stack_table = 0},
@@ -101,6 +103,5 @@ void init_idt()
                                  .stack_table = 0},
                      0x50);
     */
-
     load_idt();
 }

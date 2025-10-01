@@ -59,14 +59,16 @@ int main()
 
     terminal_initialize();
     init_paging();
-    /* init_idt(); */
+
+    init_idt();
+
     keyboard_init();
+
     init_pit();
     init_pci();
     init_ata();
     init_vfs();
 
-    printf("test\n");
     /* asm("int $(0x50)"); */
     /* printf("test:%p\n", malloc(1)); */
 

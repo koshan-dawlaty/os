@@ -18,7 +18,7 @@
 #endif
 // TODO: this will almost definitely conflict
 // with get_free_phys_page in paging.c
-#define PHYSICAL_PAGES_START 0x6000000
+#define PHYSICAL_PAGES_START 0x600000
 
 #define free_page_bitmap_size NUM_PAGES / 8
 
