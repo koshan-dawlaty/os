@@ -58,9 +58,9 @@ int main()
 {
 
     terminal_initialize();
-    init_paging();
-
     init_idt();
+    init_paging();
+    return 1;
 
     keyboard_init();
 

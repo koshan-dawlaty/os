@@ -175,6 +175,14 @@ GDT:
 .type entry_64, @function
 entry_64:
 
+	mov $0x10, %ax
+	# mov $8, %ax
+	mov %ax, %ss
+	mov %ax, %ds
+	mov %ax, %es
+	mov %ax, %fs
+	mov %ax, %gs
+
 	# mov $'a', %rax
 
 

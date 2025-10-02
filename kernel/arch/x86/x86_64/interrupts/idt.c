@@ -47,15 +47,15 @@ extern void swap_segments();
 void load_idt()
 {
 
-    asm volatile("lidt %0" : : "m"(idtr));
+    asm("lidt %0" : : "m"(idtr));
 
     /* swap_segments(); */
 
     remap_pic(0x20, 0x28);
     IRQ_clear_mask(0);
-    /* IRQ_clear_mask(1); */
+    IRQ_clear_mask(1);
 
-    asm volatile("sti");
+    asm("sti");
 }
 
 ISR(pit_test, {
@@ -63,12 +63,18 @@ ISR(pit_test, {
     PIC_sendEOI(0);
 });
 
+void pit_test123()
+{
+    printf("help me \n");
+}
+
 ISR(irq7, { printf("irq7!!!\n"); })
 
+extern void pit_test_asm();
 void init_idt()
 {
 
-    printf("%p\n", default_interrupt_handler);
+    /* printf("%p\n", default_interrupt_handler); */
     idtr.addr = (u64)&idt[0];
     idtr.size = sizeof(idt) - 1;
 

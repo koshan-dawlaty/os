@@ -20,8 +20,11 @@ void fault_handler_wait()
 
 ISR(gpf_handler, {
     printf("gpf!!!\n");
+    printf("cs:%p\n", (void *)frame->cs);
     printf("error code:%p\n", (void *)frame->flags);
     printf("ip:%p\n", (void *)frame->ip);
+    printf("sp:%p\n", (void *)frame->sp);
+    printf("ss:%p\n", frame->ss);
 
     fault_handler_wait();
 });
@@ -87,7 +90,8 @@ void init_faults()
 
     add_idt_entry((IDT_entry){(ptr)gpf_handler, 8, 0x8F, 0}, 0x0D);
 
-    add_idt_entry((IDT_entry){(ptr)coprocesser_segment_overrun, 8, 0x8F, 0}, 9);
+    /* add_idt_entry((IDT_entry){(ptr)coprocesser_segment_overrun, 8, 0x8F, 0},
+     * 9); */
 
     add_idt_entry((IDT_entry){(ptr)invalid_opcode, 8, 0x8F, 0}, 0x06);
 
