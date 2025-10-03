@@ -9,9 +9,11 @@ extern struct pagedir init_pgdir;
 
 void flush_tlb_full()
 {
+    asm("cli");
     u64 cr3;
     __asm__ volatile("mov %%cr3, %0" : "=r"(cr3));
     __asm__ volatile("mov %0, %%cr3" : : "r"(cr3));
+    asm("sti");
 }
 
 void write_kernel_page_tables(struct pagedir *pgdir)

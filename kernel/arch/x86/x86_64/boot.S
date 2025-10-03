@@ -254,7 +254,7 @@ entry_64_2:
 	# mov %ax, %gs
 
 	# mov $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)	
-	mov $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)
+	# mov $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)
 	
 	mov $stack_top, %rsp
 

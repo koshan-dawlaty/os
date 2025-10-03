@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <kernel/tty.h>
 #include <memory/paging_flags.h>
+#include <pci/pci.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -60,7 +61,10 @@ int main()
     terminal_initialize();
     init_idt();
     init_paging();
-    return 1;
+
+    /* get_free_pages(1); */
+
+    map_page((void *)0x12345678, (void *)0x123466, 0);
 
     keyboard_init();
 
@@ -96,7 +100,7 @@ int main()
     /* struct registers *temp_regs = malloc(sizeof(struct registers)); */
     /* *temp_regs = (struct registers){0}; */
 
-    enable_scheduler();
+    /* enable_scheduler(); */
     /* add_task(create_kernel_task()); */
 
     /* /1* creat("testfile123a", 000); *1/ */
@@ -108,7 +112,7 @@ int main()
     /* /1* printf("relative:%s\n", lookup_path("f")->name); *1/ */
     /* /1* printf("relative:%p\n", lookup_path("one")); *1/ */
 
-    add_task(task1);
+    /* add_task(task1); */
 
     /* printf("main exited\n"); */
 

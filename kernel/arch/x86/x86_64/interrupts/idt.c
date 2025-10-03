@@ -3,6 +3,7 @@
 #include "interrupts/idt_internal.h"
 #include "interrupts/pic.h"
 #include "kernel/types.h"
+#include "keyboard/x86_keyboard.h"
 #include "pit/pit.h"
 #include "sys/types.h"
 #include <stddef.h>
@@ -49,11 +50,9 @@ void load_idt()
 
     asm("lidt %0" : : "m"(idtr));
 
-    /* swap_segments(); */
-
     remap_pic(0x20, 0x28);
     IRQ_clear_mask(0);
-    IRQ_clear_mask(1);
+    /* IRQ_clear_mask(1); */
 
     asm("sti");
 }
@@ -91,11 +90,17 @@ void init_idt()
 
     init_faults();
 
-    add_idt_entry((IDT_entry){.offset = (u64)pit_test,
+    add_idt_entry((IDT_entry){.offset = (u64)pit_handler,
                               .segment_selector = 8,
                               .flags = 0x8E,
                               .stack_table = 0},
                   0x20);
+
+    add_idt_entry((IDT_entry){.offset = (u64)keyboard_interrupt_handler,
+                              .segment_selector = 8,
+                              .flags = 0x8E,
+                              .stack_table = 0},
+                  0x21);
 
     /* add_idt_entry((IDT_entry){.offset = (u64)irq7, */
     /*                           .segment_selector = 8, */
