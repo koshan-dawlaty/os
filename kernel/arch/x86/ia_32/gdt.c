@@ -1,4 +1,5 @@
 #include "gdt.h"
+#include "kernel/types.h"
 #include "utils.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -80,7 +81,7 @@ volatile static uint8_t user_stack[USER_STACK_SIZE]
 
 volatile void *user_stack_top = &user_stack[USER_STACK_SIZE];
 
-void set_kernel_stack(uint32_t stack)
+void set_kernel_stack(ptr stack)
 {
     tss.esp0 = stack;
 }
@@ -124,7 +125,7 @@ void load_gdt()
 {
 
     gdtr.limit = sizeof(gdt) - 1;
-    gdtr.base = (uint32_t)&gdt;
+    gdtr.base = (ptr)&gdt;
 
     asm volatile("lgdt (%0)" : : "r"(&gdtr));
 
@@ -157,7 +158,7 @@ void init_gdt()
     register int esp asm("esp");
 
     tss.ss0 = 0x10;
-    tss.esp0 = (uint32_t)kernel_stack_top;
+    tss.esp0 = (ptr)kernel_stack_top;
 
     // tss
     add_gdt_entry((GDT_entry){sizeof(tss) - 1, 0x89, 0x0, (uint32_t)&tss}, 5);

@@ -20,26 +20,27 @@ static idtr_t idtr;
 /* should just be a 128 bit value */
 struct idt_real
 {
-    u64 one;
-    u64 two;
+    u16 offset_low;
+    u16 selector;
+    u8 ist;
+    u8 type_attr;
+    u16 offset_mid;
+    u32 offset_high;
+    u32 zero;
 } __attribute__((packed));
 
 static struct idt_real idt[256] = {};
 
 void add_idt_entry(IDT_entry entry, u8 index)
 {
-    u8 *ptr = ((u8 *)(idt)) + index * 16;
-
-    ((u16 *)(ptr))[0] = (entry.offset & 0xFFFF);
-
-    ((u16 *)(ptr))[1] = (entry.segment_selector);
-
-    ptr[4] = (entry.stack_table);
-    ptr[5] = (entry.flags);
-
-    ((u16 *)(ptr))[3] = ((entry.offset >> 16) & 0xFFFF);
-    ((u32 *)(ptr))[2] = ((entry.offset >> 32) & 0xFFFFFFFF);
-    ((u32 *)(ptr))[3] = 0;
+    struct idt_real *real = &idt[index];
+    real->offset_low = entry.offset & 0xFFFF;
+    real->selector = entry.segment_selector;
+    real->ist = entry.stack_table;
+    real->type_attr = entry.flags;
+    real->offset_mid = (entry.offset >> 16) & 0xFFFF;
+    real->offset_high = (entry.offset >> 32) & 0xFFFFFFFF;
+    real->zero = 0;
 }
 
 ISR(default_interrupt_handler, { printf("default interrupt handler\n"); });
@@ -52,24 +53,25 @@ void load_idt()
 
     remap_pic(0x20, 0x28);
     IRQ_clear_mask(0);
-    /* IRQ_clear_mask(1); */
+    IRQ_clear_mask(1);
 
     asm("sti");
 }
+
+ISR(double_fault_handler2, {
+
+                           })
 
 ISR(pit_test, {
     printf("pit_test\n");
     PIC_sendEOI(0);
 });
 
-void pit_test123()
-{
-    printf("help me \n");
-}
-
 ISR(irq7, { printf("irq7!!!\n"); })
 
 extern void pit_test_asm();
+
+char double_fault_stack[4096] = {};
 void init_idt()
 {
 
@@ -101,6 +103,8 @@ void init_idt()
                               .flags = 0x8E,
                               .stack_table = 0},
                   0x21);
+
+    add_idt_entry((IDT_entry){(ptr)double_fault_handler2, 8, 0x8F, 1}, 0x08);
 
     /* add_idt_entry((IDT_entry){.offset = (u64)irq7, */
     /*                           .segment_selector = 8, */

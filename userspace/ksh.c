@@ -11,6 +11,10 @@
 int main()
 {
 
+    while (1)
+    {
+    }
+
     char *input = malloc(0);
     size_t input_len = 0;
 

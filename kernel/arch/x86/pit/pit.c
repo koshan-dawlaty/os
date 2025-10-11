@@ -53,12 +53,11 @@ void pit_handler_c(struct registers *r)
 }
 
 ISR(pit_handler, {
-    printf("test\n");
-    /* pit_time++; */
-    /* if (pit_time % 1 == 0) */
-    /* { */
-    /*     schedule(); */
-    /* } */
+    pit_time++;
+    if (pit_time % 50 == 0)
+    {
+        schedule();
+    }
 
     PIC_sendEOI(0);
 });

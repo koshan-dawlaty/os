@@ -83,24 +83,33 @@ ISR(coprocesser_segment_overrun, {
 
 void init_faults()
 {
+    const u8 idt_fault_flags = 0x8F;
+
     for (uint8_t i = 0; i < 32; i++)
     {
-        add_idt_entry((IDT_entry){(ptr)default_fault_handler, 8, 0x8F, 0}, i);
+        add_idt_entry(
+            (IDT_entry){(ptr)default_fault_handler, 8, idt_fault_flags, 0}, i);
     }
 
-    add_idt_entry((IDT_entry){(ptr)gpf_handler, 8, 0x8F, 0}, 0x0D);
+    add_idt_entry((IDT_entry){(ptr)gpf_handler, 8, idt_fault_flags, 0}, 0x0D);
 
-    /* add_idt_entry((IDT_entry){(ptr)coprocesser_segment_overrun, 8, 0x8F, 0},
-     * 9); */
+    /* add_idt_entry((IDT_entry){(ptr)coprocesser_segment_overrun, 8,
+     * idt_fault_flags, 0}, 9); */
 
-    add_idt_entry((IDT_entry){(ptr)invalid_opcode, 8, 0x8F, 0}, 0x06);
+    add_idt_entry((IDT_entry){(ptr)invalid_opcode, 8, idt_fault_flags, 0},
+                  0x06);
 
-    add_idt_entry((IDT_entry){(ptr)double_fault_handler, 8, 0x8F, 0}, 0x08);
-    add_idt_entry((IDT_entry){(ptr)tss_fault_handler, 8, 0x8F, 0}, 0x0A);
-    add_idt_entry((IDT_entry){(ptr)page_fault_handler, 8, 0x8F, 0}, 0x0E);
+    add_idt_entry((IDT_entry){(ptr)double_fault_handler, 8, idt_fault_flags, 0},
+                  0x08);
+    add_idt_entry((IDT_entry){(ptr)tss_fault_handler, 8, idt_fault_flags, 0},
+                  0x0A);
+    add_idt_entry((IDT_entry){(ptr)page_fault_handler, 8, idt_fault_flags, 0},
+                  0x0E);
 
-    add_idt_entry((IDT_entry){(ptr)virtualization_fault_handler, 8, 0x8F, 0},
-                  0x20);
+    add_idt_entry(
+        (IDT_entry){(ptr)virtualization_fault_handler, 8, idt_fault_flags, 0},
+        0x20);
 
-    add_idt_entry((IDT_entry){(ptr)division_fault_handler, 8, 0x8F, 0}, 0);
+    add_idt_entry(
+        (IDT_entry){(ptr)division_fault_handler, 8, idt_fault_flags, 0}, 0);
 }

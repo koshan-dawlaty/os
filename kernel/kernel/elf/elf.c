@@ -67,14 +67,10 @@ struct task *load_elf(elf *elf, int argc, char **argv)
         args_temp[i][strlen(argv[i])] = 0;
     }
 
-    printf("loading pgdir\n");
-
     load_pgdir(pgdir);
-
-    printf("pagedir is now invalid\n");
-
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
+
         elf_program_header *header = elf->program_headers[j];
         /* load */
         if (header->type == 1)
@@ -82,6 +78,8 @@ struct task *load_elf(elf *elf, int argc, char **argv)
             for (size_t i = 0; i <= header->size_memory + PAGE_SIZE;
                  i += PAGE_SIZE)
             {
+
+                printf("mapping at:%p\n", header->virtual_addr + i);
 
                 map_page((void *)get_free_phys_page(),
                          (void *)(header->virtual_addr + i),
@@ -120,12 +118,11 @@ if (header->memory_size > header->file_size)
 
     create_userspace_stack(pgdir);
 
-    char **args = create_user_args(argc, args_temp);
+    /* char **args = create_user_args(argc, args_temp); */
 
-    *(char ***)(0xBFFEF000 + 4) = args;
-    *(int *)(0xBFFEF000) = argc;
+    /* *(char ***)(0xBFFEF000 + 4) = args; */
+    /* *(int *)(0xBFFEF000) = argc; */
 
-    printf("test\n");
     load_pgdir(temp_pgdir);
 
     return t;

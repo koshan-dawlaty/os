@@ -1,10 +1,12 @@
 #include "ata/ata.h"
 #include "elf.h"
+#include "gdt.h"
 #include "interrupts/idt.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
 #include "kernel/usermode.h"
+#include "kernel/utils.h"
 #include "lib/list.h"
 #include "panic.h"
 #include "pit/pit.h"
@@ -59,12 +61,16 @@ int main()
 {
 
     terminal_initialize();
-    init_idt();
+
     init_paging();
+
+    init_gdt();
+    init_idt();
 
     /* get_free_pages(1); */
 
     map_page((void *)0x12345678, (void *)0x123466, 0);
+    printf("this is a number:%d\n", 123);
 
     keyboard_init();
 
@@ -94,27 +100,12 @@ int main()
 
     struct task *task1 = load_elf(elf, 1, args);
 
-    printf("test\n");
-    /* free_elf(elf); */
+    free_elf(elf);
 
-    /* struct registers *temp_regs = malloc(sizeof(struct registers)); */
-    /* *temp_regs = (struct registers){0}; */
+    add_task(create_kernel_task());
 
-    /* enable_scheduler(); */
-    /* add_task(create_kernel_task()); */
-
-    /* /1* creat("testfile123a", 000); *1/ */
-
-    /* /1* printf("open result:%p\n", open("/testfile123a", 0)); *1/ */
-
-    /* /1* chdir("/dir"); *1/ */
-    /* /1* printf("absolut:%p\n", lookup_path("/dir/f")); *1/ */
-    /* /1* printf("relative:%s\n", lookup_path("f")->name); *1/ */
-    /* /1* printf("relative:%p\n", lookup_path("one")); *1/ */
-
-    /* add_task(task1); */
-
-    /* printf("main exited\n"); */
+    enable_scheduler();
+    add_task(task1);
 
     return 0;
 }

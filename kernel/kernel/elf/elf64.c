@@ -27,8 +27,8 @@ typedef struct
 
 elf *parse_elf64(int fd)
 {
-    uint8_t *header_buf = malloc(52);
-    pread(fd, header_buf, 52, 0);
+    uint8_t *header_buf = malloc(64);
+    pread(fd, header_buf, 64, 0);
     if (header_buf[0] != 0x7F || header_buf[1] != 'E' || header_buf[2] != 'L' ||
         header_buf[3] != 'F')
     {
@@ -42,6 +42,8 @@ elf *parse_elf64(int fd)
     out->entry_point = long_from_buffer(header_buf + 24);
 
     out->program_headers_len = short_from_buffer(header_buf + 56);
+    out->program_headers =
+        malloc(out->program_headers_len * sizeof(elf_program_header));
 
     free(header_buf);
 

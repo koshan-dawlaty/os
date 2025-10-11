@@ -11,27 +11,10 @@ swap_segments:
 	ret
 
 
-
-.globl pit_test_asm
-.type pit_test_asm, @function
-pit_test_asm:
-    pushq %rax
-    pushq %rcx
-    pushq %rdx
-    pushq %rsi
-    pushq %rdi
-    pushq %r8
-    pushq %r9
-    pushq %r10
-    pushq %r11
-    call pit_test123
-    popq %r11
-    popq %r10
-    popq %r9
-    popq %r8
-    popq %rdi
-    popq %rsi
-    popq %rdx
-    popq %rcx
-    popq %rax
-    iretq
+.section .text
+.global flush_tss
+.type flush_tss @function
+flush_tss:
+	mov $0x28, %ax 
+	ltr %ax
+	ret

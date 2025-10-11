@@ -8,8 +8,7 @@ void init_idt();
 struct interrupt_frame
 {
 #ifdef CONFIG_x86_64
-    u64 ip, cs, flags, sp;
-    u16 ss;
+    u64 ip, cs, flags, sp, ss;
 #else
     uint32_t ip;
     uint32_t cs;

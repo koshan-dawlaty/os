@@ -9,11 +9,9 @@ extern struct pagedir init_pgdir;
 
 void flush_tlb_full()
 {
-    asm("cli");
     u64 cr3;
     __asm__ volatile("mov %%cr3, %0" : "=r"(cr3));
     __asm__ volatile("mov %0, %%cr3" : : "r"(cr3));
-    asm("sti");
 }
 
 void write_kernel_page_tables(struct pagedir *pgdir)
@@ -58,7 +56,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
 
     if ((pml4_entry & 1) == 0)
     {
-        pml4[pml4_index] = (u64)get_free_phys_page() | 0x3;
+        pml4[pml4_index] = (u64)get_free_phys_page() | 0x3 | flags;
     }
 
     /* TODO: math might be wrong */
@@ -69,7 +67,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
 
     if ((pdpt_entry & 1) == 0)
     {
-        pdpt[pdpt_index] = (u64)get_free_phys_page() | 0x3;
+        pdpt[pdpt_index] = (u64)get_free_phys_page() | 0x3 | flags;
     }
 
     u64 *pdt_physical = (void *)((pdpt[pdpt_index]) & ~0xFFF);
@@ -78,12 +76,12 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
 
     if ((pdt_entry & 1) == 0)
     {
-        pdt[pdt_index] = (u64)get_free_phys_page() | 0x3;
+        pdt[pdt_index] = (u64)get_free_phys_page() | 0x3 | flags;
     }
 
     u64 *pt_physical = (void *)((pdt[pdt_index]) & ~0xFFF);
     u64 *pt = get_virtual_addr(pt_physical);
-    pt[pt_index] = physical | 0x3;
+    pt[pt_index] = physical | 0x3 | flags;
 
     flush_tlb_full();
 }

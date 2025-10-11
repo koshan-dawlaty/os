@@ -102,9 +102,9 @@ void load_pgdir(struct pagedir *d)
 {
     /* unsigned long cr3; */
     /* __asm__ volatile("mov %%cr3, %0" : "=r"(cr3)); */
-    printf("VIRTUAL ADDRESS:%p\n", d->pgdir_virtual);
+    /* printf("VIRTUAL ADDRESS:%p\n", d->pgdir_virtual); */
+
     __asm__ volatile("mov %0, %%cr3" : : "r"(d->pgdir));
-    /* printf("loaded dir\n"); */
 
     // probably useless
     flush_tlb_full();
@@ -114,11 +114,10 @@ void load_pgdir(struct pagedir *d)
 
 void init_paging()
 {
-    init_gdt();
 
     init_pgdir =
-        (struct pagedir){.pgdir = 0x1000,
-                         .pgdir_virtual = DIRECTORY_ADDR,
+        (struct pagedir){.pgdir = (void *)0x1000,
+                         .pgdir_virtual = (void *)DIRECTORY_ADDR,
                          .physical_pagetables = paging_page_table,
                          /* will break if this is not the current pagedir */
                          .pagetable = (void *)0xFFC00000};
@@ -136,7 +135,7 @@ uint32_t user_stack_physical = 0x300000;
 void create_userspace_stack(struct pagedir *pgdir)
 {
     /* printf("new userspace stack at %p\n", USER_STACK_PHYSICAL); */
-    for (uint32_t i = USER_STACK_BASE - USER_STACK_SIZE; i < USER_STACK_BASE;
+    for (ptr i = USER_STACK_BASE - USER_STACK_SIZE; i < USER_STACK_BASE;
 
          i += PAGE_SIZE)
     {

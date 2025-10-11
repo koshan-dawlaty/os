@@ -21,10 +21,6 @@
 
 
 
-
-
-
-
 # PML4 -> 512^4 * 4096   >> 39 bits
 # PDPT -> 512^3 * 4096   >> 30 bits
 # PD -> 512 * 512 * 4096 >> 21 bits
@@ -92,8 +88,6 @@ _start:
 
 	movl $(0 | (1 << 7) | PAGING_PRESENT | PAGING_READABLE), PAGING_PHYSICAL_MAP_ADDR + 0 
 
-
-	
 
 	# https://wiki.osdev.org/Setting_Up_Long_Mode
 	mov $(PML4_ADDR_PHYSICAL), %eax
@@ -236,6 +230,7 @@ entry_64:
 
 
 
+.global stack_top
 .section .stack
 .align 16
 stack_bottom:
@@ -254,13 +249,15 @@ entry_64_2:
 	# mov %ax, %gs
 
 	# mov $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)	
-	# mov $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)
+	mov $0, PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)
+
+	mov %cr3, %rax
+	mov %rax, %cr3
 	
 	mov $stack_top, %rsp
-
+	
 	call main
 
-		
 1:
 	hlt
 	jmp 1b

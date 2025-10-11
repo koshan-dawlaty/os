@@ -6,6 +6,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/* TODO: mabye do the architecture specific part of this architecture
+ * independent */
+/* the stack pointer is the member of this struct that is guaranteed to exist */
 struct registers
 {
 
@@ -16,8 +19,11 @@ struct registers
 #elif defined(CONFIG_x86_64)
 
     u64 gs, fs, es, ds;
+    /* 0x20 */
     u64 edi, esi, ebp, esp, ebx, edx, ecx, eax;
+    /* 0x60 */
     u64 eflags;
+    u64 r8, r9, r10, r11, r12, r13, r14, r15;
 #endif
 
 } __attribute__((packed));

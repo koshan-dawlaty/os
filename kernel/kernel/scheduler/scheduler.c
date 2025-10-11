@@ -2,6 +2,7 @@
 #include "gdt.h"
 #include "interrupts/pic.h"
 #include "kernel/usermode.h"
+#include "utils.h"
 #include "vfs.h"
 #include <kernel/paging.h>
 #include <scheduler.h>
@@ -33,11 +34,13 @@ bool is_scheduler_enabled()
     return scheduler_enabled;
 }
 
-void new_task_usermode_start(uint32_t addr)
+void new_task_usermode_start(ptr addr)
 {
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
+    printf("jumping to: %p\n", addr);
+    printf("regs: %p\n", temp_regs);
     jump_usermode_asm(addr, temp_regs);
 }
 
@@ -50,12 +53,13 @@ struct task *new_task(ptr ip, ptr sp)
     out->bp = sp;
 
     out->next = NULL;
-    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x18);
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
 
     out->regs = (struct registers){
         .esp = (ptr)out->stack,
         .ebp = (ptr)out->stack,
         .eflags = 1 << 9,
+        .edi = (ip),
     };
 
     /* out->working_dir = get_root_dir(); */
@@ -63,7 +67,7 @@ struct task *new_task(ptr ip, ptr sp)
     out->working_dir = NULL;
 
     *(ptr *)(out->stack) = (ptr)new_task_usermode_start;
-    *(ptr *)(out->stack + 8) = ip;
+    /* *(ptr *)(out->stack + 8) = ip; */
 
     out->pgdir = new_pagedir();
     write_kernel_page_tables(out->pgdir);
@@ -74,6 +78,7 @@ struct task *new_task(ptr ip, ptr sp)
 struct task *create_kernel_task()
 {
     struct task *out = new_task(0, 0);
+    printf("added task:%p\n", out);
 
     save_registers(&out->regs);
     out->pgdir = &init_pgdir;
@@ -118,11 +123,6 @@ void remove_task(struct task *task)
 void add_task(struct task *task)
 {
     printf("adding task %p\n", task);
-    while (1)
-    {
-    };
-
-    asm("cli");
 
     if (current_task == NULL)
     {
@@ -177,8 +177,7 @@ void remove_task_queue(struct task **queue, struct task *task)
 int num_task_switches = 0;
 void switch_tasks()
 {
-    /* printf("switching from:%p ", current_task); */
-
+    printf("switching from:%p ", current_task);
     if (current_task->next != NULL)
     {
         current_task = current_task->next;
@@ -187,11 +186,14 @@ void switch_tasks()
     {
         current_task = first_task;
     }
-    /* printf("to:%p\n", current_task); */
+    printf("to:%p\n", current_task);
 }
+
+extern void tss_test();
 
 void schedule()
 {
+    printf("scheduling!!! %p\n", current_task);
     if (!scheduler_enabled || current_task == NULL)
     {
         return;
@@ -206,8 +208,13 @@ void schedule()
         return;
     }
 
+    /* printf("%p\n", current_task->pgdir->pgdir); */
+    /* printf("%p\n", current_task->pgdir->pgdir_virtual); */
+
     load_pgdir(current_task->pgdir);
-    set_kernel_stack((uint32_t)current_task->stack);
+
+    set_kernel_stack((ptr)current_task->stack);
+    tss_test();
 
     PIC_sendEOI(0);
     load_registers(&current_task->regs);
