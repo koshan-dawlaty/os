@@ -58,10 +58,6 @@ void load_idt()
     asm("sti");
 }
 
-ISR(double_fault_handler2, {
-
-                           })
-
 ISR(pit_test, {
     printf("pit_test\n");
     PIC_sendEOI(0);
@@ -103,8 +99,6 @@ void init_idt()
                               .flags = 0x8E,
                               .stack_table = 0},
                   0x21);
-
-    add_idt_entry((IDT_entry){(ptr)double_fault_handler2, 8, 0x8F, 1}, 0x08);
 
     /* add_idt_entry((IDT_entry){.offset = (u64)irq7, */
     /*                           .segment_selector = 8, */

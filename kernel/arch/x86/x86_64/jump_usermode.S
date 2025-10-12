@@ -6,8 +6,6 @@ jump_usermode_asm:
 	mov $(0x00000000BFFEF000), %rdx
 	mov %rdi, %rbx
 
-	
-
  	cli
  	mov $((4 * 8) | 3), %ax # ring 3 data with bottom 2 bits set for ring 3
  	mov %ax, %ds
@@ -15,34 +13,32 @@ jump_usermode_asm:
  	mov %ax, %fs
  	mov %ax, %gs # SS is handled by iret
 
- 
-	push %rsi # registers
+	push %rsi
 
  	# mov %esp, %eax
- 	# set up the stack frame iret expects
+ 	
  	mov $(0x00000000BFFEF000), %rax
 	mov %rdx, %rbp
 	# sub $4, %ebp
  	# mov %rcx, %rax
- 	pushq $((4 * 8) | 3) # data selector
+ 	pushq $((4 * 8) | 3)
  	pushq %rax # user esp
  	pushf
- 	# or $(1 << 9), 0(%rsp)
- 	pushq $((3 * 8) | 3) # code selector (ring 3 code with bottom 2 bits set for ring 3)
- 	# push 0x04(%esp) # instruction address to return to
- 	pushq %rbx # ip
+ 	or $(1 << 9), 0(%rsp)
+ 	pushq $((3 * 8) | 3)
+ 	
+ 	pushq %rbx 
 
 	mov %rsi, %rcx
 
-	mov 0x20(%rcx), %rdi      
-	mov 0x28(%rcx), %rsi      
-	mov 0x30(%rcx), %rbp      
-	mov 0x38(%rcx), %rbx      
-	mov 0x40(%rcx), %rdx      
-	mov 0x50(%rcx), %rax      
-	mov 0x48(%rcx), %rcx      
- 
- 	# sti
+	# mov 0x20(%rcx), %rdi
+	# mov 0x28(%rcx), %rsi
+	# mov 0x30(%rcx), %rbp
+	# mov 0x38(%rcx), %rbx
+	# mov 0x40(%rcx), %rdx
+	# mov 0x50(%rcx), %rax
+	# mov 0x48(%rcx), %rcx
+
  	iretq
 	
 
@@ -113,19 +109,19 @@ save_registers:
 	mov %rdi, 0x78(%rax)
 
 	mov 0x50(%rsp), %rdi
-	mov %rdi, 0x88(%rax)
+	mov %rdi, 0x80(%rax)
 
 	mov 0x58(%rsp), %rdi
-	mov %rdi, 0x90(%rax)
+	mov %rdi, 0x88(%rax)
 	
 	mov 0x60(%rsp), %rdi
-	mov %rdi, 0x98(%rax)
+	mov %rdi, 0x90(%rax)
 
 	mov 0x68(%rsp), %rdi
-	mov %rdi, 0xA0(%rax)
+	mov %rdi, 0x98(%rax)
 
 	mov 0x70(%rsp), %rdi
-	mov %rdi, 0xA8(%rax)
+	mov %rdi, 0xA0(%rax)
 
 
 	# lea %eip, 0x34(%eax)
@@ -145,6 +141,13 @@ load_registers:
 
 
 	mov %rdi, %rcx
+
+	mov 0x60(%rcx), %rax 
+
+	push %rax
+	# mov %rax, 0(%esp)
+	popfq
+
 
 	mov 0x20(%rcx), %rdi
 	mov 0x28(%rcx), %rsi

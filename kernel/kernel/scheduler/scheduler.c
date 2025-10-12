@@ -2,6 +2,7 @@
 #include "gdt.h"
 #include "interrupts/pic.h"
 #include "kernel/usermode.h"
+#include "unistd.h"
 #include "utils.h"
 #include "vfs.h"
 #include <kernel/paging.h>
@@ -44,12 +45,10 @@ void new_task_usermode_start(ptr addr)
     jump_usermode_asm(addr, temp_regs);
 }
 
-struct task *new_task(ptr ip, ptr sp)
+struct task *new_task_user(ptr ip, ptr sp)
 {
     struct task *out = malloc(sizeof(struct task));
 
-    out->instruction_pointer = ip;
-    out->stack_pointer = sp;
     out->bp = sp;
 
     out->next = NULL;
@@ -75,9 +74,28 @@ struct task *new_task(ptr ip, ptr sp)
     return out;
 }
 
+struct task *new_task(ptr ip)
+{
+    struct task *out = malloc(sizeof(struct task));
+
+    out->next = NULL;
+
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
+    out->working_dir = NULL;
+
+    out->regs.esp = (ptr)out->stack;
+    out->regs.eflags = 1 << 9;
+
+    *(ptr *)(out->stack) = ip;
+    out->pgdir = new_pagedir();
+    write_kernel_page_tables(out->pgdir);
+
+    return out;
+}
+
 struct task *create_kernel_task()
 {
-    struct task *out = new_task(0, 0);
+    struct task *out = new_task(0);
     printf("added task:%p\n", out);
 
     save_registers(&out->regs);

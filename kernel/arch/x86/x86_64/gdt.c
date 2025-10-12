@@ -73,7 +73,7 @@ void init_gdt()
     gdtr.limit = sizeof(gdt) - 1;
     gdtr.base = (ptr)&gdt;
 
-    tss.ist1 = (ptr)(&double_fault_stack[sizeof(double_fault_stack)]);
+    /* tss.ist1 = (ptr)(&double_fault_stack[sizeof(double_fault_stack)]); */
 
     asm volatile("lgdt (%0)" : : "r"(&gdtr));
     swap_segments();

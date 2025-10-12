@@ -102,9 +102,8 @@ int main()
 
     free_elf(elf);
 
-    add_task(create_kernel_task());
-
     enable_scheduler();
+    add_task(create_kernel_task());
     add_task(task1);
 
     return 0;

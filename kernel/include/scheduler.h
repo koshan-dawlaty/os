@@ -18,11 +18,13 @@ struct registers
     uint32_t eflags;
 #elif defined(CONFIG_x86_64)
 
+    /*  0   8   10  18 */
     u64 gs, fs, es, ds;
-    /* 0x20 */
+    /*  20   28   30   38   40   48   50   58 */
     u64 edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    /* 0x60 */
+    /*  60 */
     u64 eflags;
+    /*  68  70  78   80   88   90   98   A0 */
     u64 r8, r9, r10, r11, r12, r13, r14, r15;
 #endif
 
@@ -30,17 +32,11 @@ struct registers
 
 struct task
 {
-    ptr instruction_pointer;
-    /* user */
-    ptr stack_pointer;
     struct task *next;
-
     struct pagedir *pgdir;
     void *stack;
-
     struct registers regs;
     ptr bp;
-
     dentry *working_dir;
 };
 
@@ -60,7 +56,9 @@ void remove_task_queue(struct task **queue, struct task *task);
 /*
  * initializes the page directory as a free page
  */
-struct task *new_task(ptr ip, ptr sp);
+struct task *new_task(ptr ip);
+
+struct task *new_task_user(ptr ip, ptr sp);
 
 /*
  * frees task t
