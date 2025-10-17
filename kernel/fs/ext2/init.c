@@ -169,6 +169,11 @@ dentry *ext2_mount()
     ext2_dentry *ext2_entry = ext2_find_dentry("/.", sb);
     dentry *out = ext2_dentry_to_dentry(ext2_entry, sb);
 
+    if (ext2_remove_dentry(ext2_iget(2, sb), "one", sb) != 0)
+    {
+        printf("ERROR\n");
+    }
+
     /* ext2_inode_addr node = ext2_inode_alloc(sb); */
     /* inode *real_node = ext2_iget(node, sb); */
     /* ext2_inode *ext2_node = EXT2_INODE(real_node); */

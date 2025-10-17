@@ -198,12 +198,13 @@ dentry *ext2_append_dentry(inode *entry, char *name, ino_t number,
 {
 
     /* TODO: this will not work if the size goes beyond one block */
-
     ext2_inode *ext2_entry = EXT2_INODE(entry);
 
     u8 *buf = malloc(EXT2_BLOCK_SIZE(sb));
     ext2_read_inode(ext2_entry, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
     size_t i = 0;
+
+    /* TODO: loop is bad */
     while (i < EXT2_BLOCK_SIZE(sb))
     {
         u8 *raw_entry = buf + i;

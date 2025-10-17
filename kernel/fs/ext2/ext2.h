@@ -132,5 +132,8 @@ inode_type ext2_get_inode_type(ext2_inode *node);
 dentry *ext2_append_dentry(inode *entry, char *name, ino_t number,
                            superblock *sb);
 
+/* removes a dentry matching name from entry */
+int ext2_remove_dentry(inode *entry, char *name, superblock *sb);
+
 void ext2_update_inode(inode *node, superblock *sb);
 #endif
