@@ -75,6 +75,8 @@ typedef struct
     dentry **(*get_dentries)(dentry *entry, superblock *sb);
     dentry *(*append_dentry)(dentry *entry, char *name, ino_t number,
                              superblock *sb);
+
+    int (*remove_dentry)(dentry *, char *, superblock *);
 } dentry_functions;
 
 typedef uint32_t fd_t;
@@ -107,7 +109,6 @@ file *new_file(dentry *entry);
 file *open_file(char *path);
 int read_file(file *file, char *buf, size_t n, size_t off);
 int write_file(file *file, char *buf, size_t n, size_t off);
-int remove_file(file *f);
 file *lookup_descriptor(int fd);
 
 typedef struct
@@ -134,5 +135,7 @@ dentry *lookup_path(const char *path);
 file *create_file(char *path);
 
 dentry *get_root_dir();
+
+int delete_dentry(dentry *entry);
 
 #endif

@@ -45,6 +45,7 @@ stdio/getchar.o \
 stdio/vprintf.o \
 file/open.o \
 file/creat.o \
+file/unlink.o \
 file/read.o \
 file/write.o \
 file/pread.o \

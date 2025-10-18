@@ -4,6 +4,7 @@
 #include "kernel/semaphore.h"
 #include "memory/paging_flags.h"
 #include "scheduler.h"
+#include <errno.h>
 #include <fcntl.h>
 #include <panic.h>
 #include <stdint.h>
@@ -152,12 +153,9 @@ int syscall_handler(struct syscall_regs *regs)
     }
     else if (regs->eax == 14)
     {
-        return chdir((void *)regs->ebx);
+        return unlink((char *)regs->ebx);
     }
 
     printf("no syscall found\n");
-    /* should  be ENOSYS */
-    return -0x12345;
-
-    /* printf("test\n"); */
+    return -ENOSYS;
 }

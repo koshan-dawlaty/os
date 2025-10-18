@@ -11,6 +11,6 @@ dentry *get_dcache(char *component, dentry *parent);
 
 void add_dcache(dentry *parent, dentry *new_entry);
 void init_dcache();
-void remove_dcache(dentry *entry, dentry *parent);
+void remove_dcache(dentry *entry);
 
 #endif

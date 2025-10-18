@@ -27,8 +27,6 @@ inode *ext2_iget(ino_t number, superblock *sb)
     inode *out = new_inode(number, ext2_get_inode_size(ext2),
                            ext2_get_inode_type(ext2), ext2);
 
-    // printf("iget:%p\n", out->fs_private);
-
     return out;
 }
 
@@ -49,7 +47,8 @@ const struct fs_type ext2_fs_type = {
                         .write_inode = ext2_iwrite,
                         .alloc_inode = ext2_ialloc},
     .dentry_functions = {.get_dentries = ext2_get_dentries,
-                         .append_dentry = ext2_append_dentry},
+                         .append_dentry = ext2_append_dentry,
+                         .remove_dentry = ext2_remove_dentry},
     .superblock_functions = {.parse_superblock = ext2_parse_superblock_vfs},
 
     .mount = ext2_mount,
@@ -153,24 +152,6 @@ dentry *ext2_mount()
 
     superblock *sb =
         new_superblock(ext2_sb->block_size, ext2_sb, &ext2_fs_type);
-
-    /* if (ext2_remove_dentry(ext2_iget(2, sb), "one", sb) != 0) */
-    /* { */
-    /*     printf("ERROR\n"); */
-    /* } */
-
-    /* ext2_inode_addr node = ext2_inode_alloc(sb); */
-    /* inode *real_node = ext2_iget(node, sb); */
-    /* ext2_inode *ext2_node = EXT2_INODE(real_node); */
-
-    /* ext2_node->type = 0x8e1d; */
-    /* ext2_node->size_low = 0; */
-
-    /* ext2_update_inode(real_node, sb); */
-
-    /* ext2_append_dentry(out->inode, "newfile", node, sb); */
-
-    /* printf("%p\n", ext2_get_inode(13, sb)->type); */
 
     /* TODO: fix */
     return NULL;

@@ -86,6 +86,15 @@ inode *new_inode(ino_t number, inode_size size, inode_type type,
     return out;
 }
 
+int delete_dentry(dentry *entry)
+{
+
+    remove_dcache(entry);
+
+    return current_superblock->type->dentry_functions.remove_dentry(
+        entry->parent, entry->name, current_superblock);
+}
+
 void register_filesystem(struct fs_type *type)
 {
 }

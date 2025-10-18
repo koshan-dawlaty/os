@@ -131,7 +131,7 @@ dentry *ext2_append_dentry(dentry *entry, char *name, ino_t number,
                            superblock *sb);
 
 /* removes a dentry matching name from entry */
-int ext2_remove_dentry(inode *entry, char *name, superblock *sb);
+int ext2_remove_dentry(dentry *entry, char *name, superblock *sb);
 
 void ext2_update_inode(inode *node, superblock *sb);
 #endif

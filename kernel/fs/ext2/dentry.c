@@ -268,8 +268,10 @@ ext2_dentry *ext2_find_dentry(char *path2, superblock *sb)
     return NULL;
 }
 
-int ext2_remove_dentry(inode *node, char *name, superblock *sb)
+int ext2_remove_dentry(dentry *entry, char *name, superblock *sb)
 {
+
+    inode *node = entry->inode;
 
     /* TODO: this will not work if the size goes beyond one block */
     ext2_inode *ext2_entry = EXT2_INODE(node);

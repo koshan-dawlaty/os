@@ -87,7 +87,3 @@ file *create_file(char *name)
 
     return new_file(out);
 }
-
-int remove_file(file *f)
-{
-}

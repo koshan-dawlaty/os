@@ -152,8 +152,10 @@ void add_dcache(dentry *parent, dentry *new_entry)
     }
 }
 
-void remove_dcache(dentry *entry, dentry *parent)
+void remove_dcache(dentry *entry)
 {
+
+    dentry *parent = entry->parent;
 
     struct dcache_dir *dir = get_dcache_dir(parent);
 
