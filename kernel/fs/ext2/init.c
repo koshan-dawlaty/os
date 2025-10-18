@@ -8,17 +8,6 @@
 #include <stdlib.h>
 #include <vfs.h>
 
-// maybe should be in header
-// also needs better name
-dentry *ext2_dfind(char *path, superblock *sb)
-{
-    ext2_dentry *ext2 = ext2_find_dentry(path, sb);
-    dentry *out = ext2_dentry_to_dentry(ext2, sb);
-    free(ext2);
-
-    return out;
-}
-
 void ext2_iread(inode *node, uint8_t *buf, size_t buf_len, size_t index,
                 superblock *sb)
 {
@@ -59,8 +48,7 @@ const struct fs_type ext2_fs_type = {
                         .read_inode = ext2_iread,
                         .write_inode = ext2_iwrite,
                         .alloc_inode = ext2_ialloc},
-    .dentry_functions = {.find_dentry = ext2_dfind,
-                         .get_dentries = ext2_get_dentries,
+    .dentry_functions = {.get_dentries = ext2_get_dentries,
                          .append_dentry = ext2_append_dentry},
     .superblock_functions = {.parse_superblock = ext2_parse_superblock_vfs},
 
@@ -166,13 +154,10 @@ dentry *ext2_mount()
     superblock *sb =
         new_superblock(ext2_sb->block_size, ext2_sb, &ext2_fs_type);
 
-    ext2_dentry *ext2_entry = ext2_find_dentry("/.", sb);
-    dentry *out = ext2_dentry_to_dentry(ext2_entry, sb);
-
-    if (ext2_remove_dentry(ext2_iget(2, sb), "one", sb) != 0)
-    {
-        printf("ERROR\n");
-    }
+    /* if (ext2_remove_dentry(ext2_iget(2, sb), "one", sb) != 0) */
+    /* { */
+    /*     printf("ERROR\n"); */
+    /* } */
 
     /* ext2_inode_addr node = ext2_inode_alloc(sb); */
     /* inode *real_node = ext2_iget(node, sb); */
@@ -187,6 +172,6 @@ dentry *ext2_mount()
 
     /* printf("%p\n", ext2_get_inode(13, sb)->type); */
 
-    free(ext2_entry);
-    return out;
+    /* TODO: fix */
+    return NULL;
 }

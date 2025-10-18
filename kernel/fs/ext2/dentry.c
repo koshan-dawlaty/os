@@ -24,9 +24,9 @@ void free_dentries(ext2_dentry **entries)
     // free(entries);
 }
 
-dentry **ext2_get_dentries(inode *vfs_node, superblock *sb)
+dentry **ext2_get_dentries(dentry *entry, superblock *sb)
 {
-    ext2_inode *node = EXT2_INODE(vfs_node);
+    ext2_inode *node = EXT2_INODE(entry->inode);
 
     dentry **out = malloc(sizeof(dentry));
     size_t out_len = 0;
@@ -64,7 +64,7 @@ dentry **ext2_get_dentries(inode *vfs_node, superblock *sb)
         inode *vfs_node = ext2_get_vfs_node(node_num, new_node);
 
         dentry *vfs =
-            new_dentry(new_name, ext2_get_vfs_node(node_num, new_node));
+            new_dentry(new_name, entry, ext2_get_vfs_node(node_num, new_node));
 
         out_len++;
         out = realloc(out, out_len * sizeof(dentry));
@@ -266,12 +266,6 @@ ext2_dentry *ext2_find_dentry(char *path2, superblock *sb)
 
     printf("not found\n");
     return NULL;
-}
-
-dentry *ext2_dentry_to_dentry(ext2_dentry *dentry, superblock *sb)
-{
-
-    return new_dentry(dentry->name, ext2_iget(dentry->inode, sb));
 }
 
 int ext2_remove_dentry(inode *node, char *name, superblock *sb)

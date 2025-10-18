@@ -1,7 +1,5 @@
+#include "dcache.h"
 #include "err.h"
-#include "fcntl.h"
-#include "kernel/paging.h"
-#include "panic.h"
 #include "vfs_internal.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -84,12 +82,12 @@ file *create_file(char *name)
     inode *new = current_superblock->type->inode_functions.alloc_inode(
         current_superblock);
 
-    /* TODO: breaks if not ext2 */
-    inode *root = current_superblock->type->inode_functions.get_inode(
-        2, current_superblock);
-
     dentry *out = current_superblock->type->dentry_functions.append_dentry(
-        root, name, new->number, current_superblock);
+        get_root_dir(), name, new->number, current_superblock);
 
     return new_file(out);
+}
+
+int remove_file(file *f)
+{
 }

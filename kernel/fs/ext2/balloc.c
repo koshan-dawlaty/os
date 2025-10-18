@@ -193,12 +193,12 @@ end:;
     }
 }
 
-dentry *ext2_append_dentry(inode *entry, char *name, ino_t number,
+dentry *ext2_append_dentry(dentry *entry, char *name, ino_t number,
                            superblock *sb)
 {
 
     /* TODO: this will not work if the size goes beyond one block */
-    ext2_inode *ext2_entry = EXT2_INODE(entry);
+    ext2_inode *ext2_entry = EXT2_INODE(entry->inode);
 
     u8 *buf = malloc(EXT2_BLOCK_SIZE(sb));
     ext2_read_inode(ext2_entry, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
@@ -225,7 +225,7 @@ dentry *ext2_append_dentry(inode *entry, char *name, ino_t number,
         i += len;
     }
 
-    ext2_write_inode(entry, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
+    ext2_write_inode(entry->inode, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
 
     size_t buf_len = align_long((strlen(name) + 9) + 4, 4);
     char *new_buf = malloc(buf_len);
@@ -238,11 +238,11 @@ dentry *ext2_append_dentry(inode *entry, char *name, ino_t number,
 
     buf[6] = strlen(new_buf + 8);
 
-    ext2_write_inode(entry, (uint8_t *)new_buf, buf_len, i, sb);
+    ext2_write_inode(entry->inode, (uint8_t *)new_buf, buf_len, i, sb);
 
     /* TODO: bad */
     ext2_entry->size_low = EXT2_BLOCK_SIZE(sb);
-    ext2_update_inode(entry, sb);
+    ext2_update_inode(entry->inode, sb);
 
-    return new_dentry(name, entry);
+    return new_dentry(name, entry, entry->inode);
 }

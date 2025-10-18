@@ -15,7 +15,9 @@ dentry *get_root_dir()
 {
     inode *node = current_superblock->type->inode_functions.get_inode(
         2, current_superblock);
-    dentry *entry = new_dentry("/", node);
+
+    /* TODO: maybe dont make a new dentry? */
+    dentry *entry = new_dentry("/", NULL, node);
 
     return entry;
 }
@@ -45,11 +47,12 @@ superblock *new_superblock(size_t blocksize, void *fs_private,
     return out;
 }
 
-dentry *new_dentry(char *name, inode *inode)
+dentry *new_dentry(char *name, dentry *parent, inode *inode)
 {
     dentry *out = malloc(sizeof(dentry));
     out->inode = inode;
     out->name = name;
+    out->parent = parent;
 
     return out;
 }

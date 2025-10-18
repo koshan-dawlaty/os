@@ -115,8 +115,6 @@ void ext2_write_block(uint8_t *buffer, size_t block_number, superblock *sb);
 inode *ext2_iget(ino_t inode_number, superblock *sb);
 ext2_dentry *ext2_find_dentry(char *path, superblock *sb);
 
-dentry *ext2_dentry_to_dentry(ext2_dentry *dentry, superblock *sb);
-
 ext2_inode_addr ext2_inode_alloc(superblock *sb);
 uint32_t ext2_block_alloc(superblock *sb);
 
@@ -125,11 +123,11 @@ void ext2_write_inode(inode *node, uint8_t *buf, size_t buf_len,
 
 inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node);
 
-dentry **ext2_get_dentries(inode *vfs_node, superblock *sb);
+dentry **ext2_get_dentries(dentry *dir, superblock *sb);
 
 inode_type ext2_get_inode_type(ext2_inode *node);
 
-dentry *ext2_append_dentry(inode *entry, char *name, ino_t number,
+dentry *ext2_append_dentry(dentry *entry, char *name, ino_t number,
                            superblock *sb);
 
 /* removes a dentry matching name from entry */

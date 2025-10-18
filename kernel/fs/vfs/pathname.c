@@ -10,10 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-dentry **pathname_get_dentries(inode *node)
+dentry **pathname_get_dentries(dentry *dir)
 {
     return current_superblock->type->dentry_functions.get_dentries(
-        node, current_superblock);
+        dir, current_superblock);
 }
 
 inode *pathname_get_inode(ino_t number)
@@ -48,7 +48,6 @@ dentry *parse_dentries_component(dentry **dentries, char *component)
 size_t parse_component(const char *path, inode **current_node,
                        dentry **current_dir)
 {
-
     if (*path == '/')
     {
         path++;
@@ -64,13 +63,11 @@ size_t parse_component(const char *path, inode **current_node,
     memcpy(component, path, component_len);
     component[component_len] = 0;
 
-    printf("component:%s\n", component);
-
     dentry *entry = get_dcache(component, *current_dir);
 
     if (entry == NULL)
     {
-        dentry **dentries = pathname_get_dentries(*current_node);
+        dentry **dentries = pathname_get_dentries(*current_dir);
         /* printf("starting\n"); */
         /* while (*dentries != NULL) */
         /* { */
@@ -120,7 +117,6 @@ dentry *lookup_path(const char *path)
 {
     inode *current_node = NULL;
     dentry *current_dir = NULL;
-
     size_t component_offset = 0;
 
     if (*path != '/')
@@ -130,29 +126,23 @@ dentry *lookup_path(const char *path)
         if (current_dir == NULL)
         {
             current_node = pathname_get_root_dir();
+            current_dir = get_root_dir();
         }
         else
         {
             current_node = current_dir->inode;
-            printf("in dir:%s\n", current_dir->name);
         }
     }
     else
     {
         component_offset++;
         current_node = pathname_get_root_dir();
-        current_dir = NULL;
-    }
-
-    if (current_dir != NULL)
-    {
-        printf("starting at dir:%s\n", current_dir->name);
+        current_dir = get_root_dir();
     }
 
     while (*(path + component_offset) != 0)
     {
 
-        printf("path:%s\n", path + component_offset);
         component_offset += parse_component(path + component_offset,
                                             &current_node, &current_dir);
 
