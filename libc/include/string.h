@@ -12,5 +12,6 @@ char *strdup(char *str);
 
 // TODO: does not return which string is alphabetically greater
 int strcmp(const char *s1, const char *s2);
+int strncmp(const char *s1, const char *s2, size_t len);
 
 #endif

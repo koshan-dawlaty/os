@@ -38,6 +38,7 @@ stdlib/malloc.o \
 string/memcpy.o \
 string/memset.o \
 string/strdup.o \
+string/strtok.o \
 stdio/putchar.o \
 stdio/printf.o \
 stdio/puts.o \

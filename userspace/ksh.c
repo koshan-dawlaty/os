@@ -21,39 +21,26 @@ int main()
         if (c == '\n')
         {
 
-            input = realloc(input, strlen(input) + 2);
-            input[strlen(input)] = ' ';
+            input_len++;
+            input = realloc(input, input_len);
+            input[input_len - 1] = 0;
 
+            char *s = strtok(input, " ");
             char **args = malloc(sizeof(char *));
-            size_t j = 0;
 
             size_t i = 0;
-            size_t current_arg_start = 0;
-
-            while (input[i] != 0)
+            while (s != NULL)
             {
-
-                if (input[i] == ' ')
-                {
-                    j++;
-                    args = realloc(args, sizeof(char *) * j);
-                    args[j - 1] = malloc(i - current_arg_start + 2);
-                    args[j - 1][i - current_arg_start] = 0;
-
-                    memcpy(args[j - 1], input + current_arg_start,
-                           i - current_arg_start);
-
-                    current_arg_start = i + 1;
-
-                    goto end;
-                }
-
-            end:
                 i++;
+                args = realloc(args, sizeof(char *) * i);
+                args[i - 1] = s;
+
+                s = strtok(NULL, " ");
             }
 
-            args = realloc(args, sizeof(char *) * (j + 1));
-            args[j] = NULL;
+            i++;
+            args = realloc(args, sizeof(char *) * (i));
+            args[i - 1] = NULL;
 
             if (!strcmp(args[0], "cd"))
             {
@@ -92,12 +79,6 @@ int main()
             input = realloc(input, input_len);
             input[input_len - 1] = c;
         }
-
-        /* for (size_t i = 0; i < input_len + 2; i++) */
-        /* { */
-        /*     putchar('\b'); */
-        /* } */
-        /* putchar('\n'); */
 
         putchar('\b');
 
