@@ -92,7 +92,7 @@ typedef struct
     dentry *entry;
 } file;
 
-inline void add_file_offset(file *f, size_t add)
+static inline void add_file_offset(file *f, size_t add)
 {
     f->offset += add;
     if (f->offset > f->entry->inode->size)

@@ -12,3 +12,4 @@ fs-root/elf_test
 fs-root/ksh
 fs-root/cat
 fs-root/touch
+fs-root/rm

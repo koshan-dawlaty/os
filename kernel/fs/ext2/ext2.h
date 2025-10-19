@@ -35,7 +35,7 @@ struct ext2_superblock
     ext2_group_descriptor *group_descriptor_table;
 };
 
-inline struct ext2_superblock *EXT2_SB(superblock *sb)
+static inline struct ext2_superblock *EXT2_SB(superblock *sb)
 {
     return sb->fs_private;
 }
@@ -77,7 +77,7 @@ typedef struct __attribute__((packed))
     uint8_t os_specific2[12];
 } ext2_inode;
 
-inline ext2_inode *EXT2_INODE(inode *i)
+static inline ext2_inode *EXT2_INODE(inode *i)
 {
     return i->fs_private;
 }
@@ -102,9 +102,9 @@ ext2_inode_addr find_inode(char *path);
 
 ext2_inode *ext2_get_inode(ext2_inode_addr inode, superblock *sb);
 
-inline uint64_t ext2_get_inode_size(ext2_inode *node)
+static inline uint64_t ext2_get_inode_size(ext2_inode *node)
 {
-    // MAY BREAK
+    /* MAY BREAK */
     return node->size_low;
 }
 

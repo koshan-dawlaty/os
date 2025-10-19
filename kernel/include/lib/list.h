@@ -10,6 +10,7 @@ typedef struct list
 
 list new_list();
 void list_add(list *new, list *head);
+int list_remove(list *entry, list *head);
 
 #define LIST_INIT(...)                                                         \
     (list)                                                                     \

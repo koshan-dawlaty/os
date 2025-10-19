@@ -166,6 +166,11 @@ void remove_dcache(dentry *entry)
 
     struct dcache_value *value = get_dcache_value(entry->name, dir);
 
+    if (value == NULL)
+    {
+        return;
+    }
+
     list2_remove(&value->l);
 }
 

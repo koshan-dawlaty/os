@@ -93,7 +93,7 @@ void ext2_write_block(uint8_t *buffer, size_t index, superblock *sb)
     fs_write(buffer, EXT2_BLOCK_SIZE(sb), lba);
 }
 
-inline uint32_t get_datablock_field(uint8_t *superblock, size_t index)
+static inline uint32_t get_datablock_field(uint8_t *superblock, size_t index)
 {
     return bytes_to_32_bit_int(superblock[index], superblock[index + 1],
                                superblock[index + 2], superblock[index + 3]);

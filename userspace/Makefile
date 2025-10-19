@@ -50,6 +50,7 @@ BINARIES=\
 	touch \
 	ksh \
 	cat \
+	rm \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -72,6 +73,10 @@ $(BIN)/overwrite : $(OBJS_START_BIN) $(BIN)/overwrite.o ../libc/libc.a $(START_O
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/cat : $(OBJS_START_BIN) $(BIN)/cat.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+
+$(BIN)/rm : $(OBJS_START_BIN) $(BIN)/rm.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
