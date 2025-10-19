@@ -88,6 +88,8 @@ int main()
     enable_scheduler();
     add_task(create_kernel_task());
 
+    open("/testdir/testdir2/testfile2", 0);
+
     /* creat("testfile123a", 000); */
 
     /* printf("open result:%p\n", open("/testfile123a", 0)); */

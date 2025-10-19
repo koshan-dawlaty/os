@@ -48,12 +48,16 @@ dentry *parse_dentries_component(dentry **dentries, char *component)
 size_t parse_component(const char *path, inode **current_node,
                        dentry **current_dir)
 {
+    /* TODO: stupid */
+    bool starts_with_slash = false;
+
     if (*path == '/')
     {
+        starts_with_slash = true;
         path++;
     }
-    size_t component_len = 0;
 
+    size_t component_len = 0;
     while (path[component_len] != 0 && path[component_len] != '/')
     {
         component_len++;
@@ -110,6 +114,11 @@ size_t parse_component(const char *path, inode **current_node,
 
 end:
 
+    /* TODO stupid */
+    if (starts_with_slash)
+    {
+        component_len++;
+    }
     return component_len;
 }
 
