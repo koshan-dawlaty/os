@@ -19,8 +19,7 @@ struct ext2_inode_cache
 
 inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node)
 {
-    return new_inode(num, ext2_get_inode_size(node), ext2_get_inode_type(node),
-                     node);
+    return new_inode(num, ext2_get_inode_size(node), node);
 }
 
 /* struct ext2_inode_cache ext2_inode_cache = {0, NULL, .l = LIST_INIT()}; */

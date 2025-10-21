@@ -22,13 +22,6 @@ typedef struct
 superblock *new_superblock(size_t blocksize, void *fs_private,
                            const struct fs_type *type);
 
-typedef enum
-{
-    INODE_FILE,
-    INODE_DIR,
-    INODE_INVALID,
-} inode_type;
-
 typedef size_t inode_size;
 
 typedef struct
@@ -36,13 +29,10 @@ typedef struct
     ino_t number;
     inode_size size;
 
-    inode_type type;
-
     void *fs_private;
 } inode;
 
-inode *new_inode(ino_t number, inode_size size, inode_type type,
-                 void *fs_private);
+inode *new_inode(ino_t number, inode_size size, void *fs_private);
 
 typedef struct
 {
@@ -56,17 +46,27 @@ typedef struct
 
 } inode_functions;
 
+typedef enum
+{
+    DENTRY_FILE,
+    DENTRY_DIR,
+    DENTRY_INVALID,
+    DENTRY_MOUNT_POINT,
+} dentry_type;
+
 typedef struct dentry
 {
     char *name;
     struct dentry *parent;
     inode *inode;
+
+    dentry_type type;
 } dentry;
 
 /*
  * passing parent as NULL will make the dentry be at the root dir
  */
-dentry *new_dentry(char *name, dentry *parent, inode *inode);
+dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type);
 void free_dentry(dentry *entry);
 
 typedef struct

@@ -125,7 +125,10 @@ inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node);
 
 dentry **ext2_get_dentries(dentry *dir, superblock *sb);
 
-inode_type ext2_get_inode_type(ext2_inode *node);
+/*
+ * returns the type that should be used for the dentry that points to the inode
+ */
+dentry_type ext2_get_dentry_type(ext2_inode *node);
 
 dentry *ext2_append_dentry(dentry *entry, char *name, ino_t number,
                            superblock *sb);

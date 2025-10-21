@@ -95,13 +95,11 @@ size_t parse_component(const char *path, inode **current_node,
 
     *current_dir = entry;
 
-    inode *node = entry->inode;
-
-    if (node->type == INODE_DIR)
+    if (entry->type == DENTRY_DIR)
     {
-        *current_node = node;
+        *current_node = entry->inode;
     }
-    else if (node->type == INODE_FILE)
+    else if (entry->type == DENTRY_FILE)
     {
         *current_dir = entry;
     }

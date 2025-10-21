@@ -244,5 +244,6 @@ dentry *ext2_append_dentry(dentry *entry, char *name, ino_t number,
     ext2_entry->size_low = EXT2_BLOCK_SIZE(sb);
     ext2_update_inode(entry->inode, sb);
 
-    return new_dentry(name, entry, entry->inode);
+    return new_dentry(name, entry, entry->inode,
+                      ext2_get_dentry_type(EXT2_INODE(entry->inode)));
 }
