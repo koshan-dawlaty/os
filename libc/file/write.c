@@ -1,5 +1,6 @@
 #include "sys/types.h"
 #include "utils.h"
+#include <errno.h>
 #include <unistd.h>
 #ifdef __is_libk
 #include <vfs.h>
@@ -7,6 +8,11 @@
 
 int write(int fd, void *buf, size_t n)
 {
+    if (fd < 0)
+    {
+        return -EINVAL;
+    }
+
 #ifdef __is_libk
     file *f = lookup_descriptor(fd);
     return write_file(f, buf, n, f->offset);
@@ -17,6 +23,11 @@ int write(int fd, void *buf, size_t n)
 
 int pwrite(int fd, void *buf, size_t n, off_t off)
 {
+    if (fd < 0)
+    {
+        return -EINVAL;
+    }
+
 #ifdef __is_libk
     file *f = lookup_descriptor(fd);
     return write_file(f, buf, n, off);

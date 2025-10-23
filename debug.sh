@@ -11,6 +11,9 @@ export CFLAGS
 export ISO
 . ./iso.sh
 
+rm -f qemu.img
+./get-ext2-image.sh "qemu.img" fs-root
+
 # echo $QEMU_FLAGS
 
 # qemu-system-i386 -gdb tcp::1234 -S $QEMU_FLAGS &

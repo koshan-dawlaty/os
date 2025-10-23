@@ -13,17 +13,20 @@ HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
 FS_ROOT?=
 BINARY_PREFIX?=bin
 
-CFLAGS?=-O0 -g
+CFLAGS?= -g
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas 
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
 CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings -fomit-frame-pointer
+# this gets rid of moddi3 and simliar functions
+CFLAGS:=$(CFLAGS) -fno-semantic-interposition
+
 
 # very bad
 LINK_LIST=-l../libc/k.a

@@ -91,5 +91,13 @@ int main()
     add_task(task1);
     printf("main exited\n");
 
+    creat("tree", 0);
+    unlink("tree");
+    int fd = open("tree", 0);
+    printf("fd:%d\n", fd);
+    char *buf = malloc(100);
+    read(fd, buf, 100);
+    printf("read:%s\n", buf);
+
     return 0;
 }
