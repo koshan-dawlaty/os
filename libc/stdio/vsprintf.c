@@ -96,10 +96,14 @@ const size_t buf_increment = 10;
 void increment_buf(char **buf, size_t *len, size_t *capacity, size_t add)
 {
 
-    if ((*len + add + 1) > *capacity)
+    if ((*len + add + 1) >= *capacity)
     {
-        *capacity += *len + add + buf_increment;
-        *buf = realloc(*buf, *capacity + 1);
+        while ((*len + add + 1) > *capacity)
+        {
+            *capacity += buf_increment;
+        }
+
+        *buf = realloc(*buf, *capacity);
     }
 
     *len += add;
@@ -117,12 +121,10 @@ char *vrprintf(const char *format, va_list list)
 {
 
     char *out = malloc(buf_increment);
-    out[0] = 0;
+
     /* total bytes */
     size_t out_len = 0;
     size_t capacity = 10;
-
-    size_t i = 0;
 
     int next_is_format = 0;
 
@@ -147,7 +149,8 @@ that they will not work because the bootstrap has not initialized them
                 char *str = va_arg(list, char *);
 
                 increment_buf(&out, &out_len, &capacity, strlen(str));
-                strcat(out, str);
+
+                memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }
             else if (*format == 'c')
             {
@@ -161,7 +164,8 @@ that they will not work because the bootstrap has not initialized them
                 char *str = int_to_string(i, 10);
 
                 increment_buf(&out, &out_len, &capacity, strlen(str));
-                strcat(out, str);
+
+                memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }
             else if (*format == 'x')
             {
@@ -169,7 +173,8 @@ that they will not work because the bootstrap has not initialized them
                 char *str = int_to_string(x, 16);
 
                 increment_buf(&out, &out_len, &capacity, strlen(str));
-                strcat(out, str);
+
+                memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }
             else if (*format == 'p')
             {
@@ -177,7 +182,8 @@ that they will not work because the bootstrap has not initialized them
                 char *str = int_to_string((uint32_t)p, 16);
 
                 increment_buf(&out, &out_len, &capacity, strlen(str));
-                strcat(out, str);
+
+                memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }
         }
         else if (*format == '%')

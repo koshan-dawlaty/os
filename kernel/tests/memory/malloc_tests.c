@@ -18,7 +18,9 @@ TEST(malloc_test_basic, {
     ASSERT_EQ(*two, 67890);
     free(two);
 
-    ASSERT_EQ((int)one, (int)two);
+    ASSERT_EQ(
+        (uintptr_t)one, (uintptr_t)two,
+        "malloc should return the same pointer after an allocation and a free");
 })
 
 test_result *malloc_test_multiple(size_t size, int amount)
@@ -53,7 +55,8 @@ TEST(malloc_test_diffrent_addrs, {
     int *one = malloc(10);
     int *two = malloc(10);
 
-    ASSERT_NE((uint32_t)one, (uint32_t)two);
+    ASSERT_NE((uint32_t)one, (uint32_t)two,
+              "malloc returned the same pointer without for two allocations");
 
     free(one);
     free(two);

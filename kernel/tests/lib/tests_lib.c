@@ -42,8 +42,6 @@ test_result *get_failed_test(intmax_t num, ...)
         format = va_arg(args, const char *);
 
         reason = vrprintf(format, args);
-
-        printf("found the reason:%s\n", reason);
     }
 
     va_end(args);
@@ -123,8 +121,10 @@ void run_all_tests()
     /* printf("running tests\n"); */
 
     int *failed_indexes = malloc(sizeof(size_t) * tests_size);
+    test_result **failed_results = malloc(sizeof(test_result) * tests_size);
     /* printf("this is:%p\n", failed_indexes); */
-    size_t failed_indexes_index = 0;
+    size_t failed_indexes_len = 0;
+    size_t results_len = 0;
 
     for (size_t i = 0; i < tests_size; i++)
     {
@@ -138,15 +138,33 @@ void run_all_tests()
 
         if (result->failed)
         {
-            failed_indexes[failed_indexes_index] = i;
-            failed_indexes_index++;
+            failed_indexes[failed_indexes_len] = i;
+            failed_results[results_len] = result;
+            failed_indexes_len++;
+            results_len++;
+        }
+        else
+        {
+            free(result);
         }
     }
 
-    serial_write(TEST_OUTPUT_SERIAL_PORT, failed_indexes_index + 0x30);
-    for (size_t i = 0; i < failed_indexes_index; i++)
+    serial_write(TEST_OUTPUT_SERIAL_PORT, failed_indexes_len + 0x30);
+    for (size_t i = 0; i < failed_indexes_len; i++)
     {
-        printf("test %s failed!\n", tests[failed_indexes[i]]->name);
+        test *t = tests[failed_indexes[i]];
+        test_result *r = failed_results[i];
+        printf("test %s failed!\n", t->name);
+        if (r->message != NULL)
+        {
+            printf("reason:%s\n", r->message);
+        }
+    }
+
+    free(failed_indexes);
+    for (size_t i = 0; i < results_len; i++)
+    {
+        free(failed_results[i]);
     }
 
     /* end of input */
