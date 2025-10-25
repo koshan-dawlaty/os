@@ -21,9 +21,10 @@ TEST(malloc_test_basic, {
     ASSERT_EQ((int)one, (int)two);
 })
 
-void malloc_test_multiple(size_t size, int amount)
+test_result *malloc_test_multiple(size_t size, int amount)
 {
 
+    FAIL_TEST();
     char **ptrs = malloc(size * amount * sizeof(char));
 
     for (int i = 0; i < amount; i++)
@@ -44,6 +45,8 @@ void malloc_test_multiple(size_t size, int amount)
     }
 
     free(ptrs);
+
+    SUCCEED_TEST("");
 }
 
 TEST(malloc_test_diffrent_addrs, {

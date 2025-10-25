@@ -76,8 +76,9 @@ int main()
         else
         {
             input_len++;
-            input = realloc(input, input_len);
+            input = realloc(input, input_len + 1);
             input[input_len - 1] = c;
+            input[input_len] = 0;
         }
 
         putchar('\b');
