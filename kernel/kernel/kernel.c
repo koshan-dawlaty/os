@@ -80,6 +80,8 @@ void kernel_task3()
 {
     printf("3 is running\n");
     sleep(30);
+    printf("this\n");
+
     printf("this is kernel task3\n");
     while (1)
     {
