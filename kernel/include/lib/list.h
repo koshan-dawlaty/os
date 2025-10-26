@@ -1,4 +1,5 @@
 #ifndef LIST_H
+#define LIST_H
 
 /*
  * singly linked list
@@ -34,9 +35,15 @@ typedef struct list2
         .prev = NULL, .next = NULL                                             \
     }
 
+#define LIST2_EMPTY(head)                                                      \
+    (list2)                                                                    \
+    {                                                                          \
+        .prev = head, .next = head                                             \
+    }
+
 #define list2_for_each(pos, head) for (pos = head; pos != NULL; pos = pos->next)
 
 void list2_add(list2 *new, list2 *head);
-void list2_remove(list2 *value);
+void list2_remove(list2 *value, list2 **head);
 
 #endif

@@ -55,6 +55,7 @@ file/pread.o \
 utils/syscall_wrapper.o \
 sys/mman/mmap.o \
 unistd/execv.o \
+unistd/sleep.o \
 unistd/chdir.o \
 sched/sched_yield.o \
 

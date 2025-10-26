@@ -1,6 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 #include "kernel/paging.h"
+#include "kernel/types.h"
 #include "vfs.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -45,7 +46,8 @@ void remove_task_queue(struct task **queue, struct task *task);
 /*
  * initializes the page directory as a free page
  */
-struct task *new_task(uint32_t ip, uint32_t sp);
+struct task *new_task_user(ptr ip, ptr sp);
+struct task *new_task(ptr ip);
 
 /*
  * frees task t
@@ -72,5 +74,10 @@ void disable_scheduler();
 bool is_scheduler_enabled();
 
 struct task *get_current_task();
+
+/*
+ * adds a task to the sleep queue that will sleep for time scheduler ticks
+ */
+void add_sleep_queue(struct task *task, size_t time);
 
 #endif

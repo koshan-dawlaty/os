@@ -126,7 +126,7 @@ char **create_user_args(int argc, char **argv)
 struct task *load_elf32(elf_32 *elf, int argc, char **argv)
 {
 
-    struct task *t = new_task(elf->entry_point, 0xBFFEF000);
+    struct task *t = new_task_user(elf->entry_point, 0xBFFEF000);
     struct pagedir *pgdir = t->pgdir;
 
     struct pagedir *temp_pgdir = get_current_pagedir();

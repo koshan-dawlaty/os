@@ -2,8 +2,11 @@
 #include "gdt.h"
 #include "interrupts/pic.h"
 #include "kernel/usermode.h"
+#include "lib/list.h"
+#include "sleep.h"
 #include "vfs.h"
 #include <kernel/paging.h>
+#include <kernel/types.h>
 #include <scheduler.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -33,7 +36,7 @@ bool is_scheduler_enabled()
     return scheduler_enabled;
 }
 
-void new_task_usermode_start(uint32_t addr)
+void new_task_usermode_start(ptr addr)
 {
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
@@ -41,30 +44,48 @@ void new_task_usermode_start(uint32_t addr)
     jump_usermode_asm(addr, temp_regs);
 }
 
-struct task *new_task(uint32_t ip, uint32_t sp)
+struct task *new_task_user(ptr ip, ptr sp)
 {
     struct task *out = malloc(sizeof(struct task));
 
-    out->instruction_pointer = ip;
-    out->stack_pointer = sp;
     out->bp = sp;
 
     out->next = NULL;
     out->stack = get_free_pages(1) + (PAGE_SIZE - 0xC);
 
     out->regs = (struct registers){
-        .esp = (uint32_t)out->stack,
-        .ebp = (uint32_t)out->stack,
+        .esp = (ptr)out->stack,
+        .ebp = (ptr)out->stack,
         .eflags = 1 << 9,
+        .edi = (ip),
     };
 
     /* out->working_dir = get_root_dir(); */
     /* NULL is used to signify root dir */
     out->working_dir = NULL;
 
-    *(uint32_t *)(out->stack) = (uint32_t)new_task_usermode_start;
-    *(uint32_t *)(out->stack + 8) = ip;
+    *(ptr *)(out->stack) = (ptr)new_task_usermode_start;
+    *(ptr *)(out->stack + 8) = ip;
 
+    out->pgdir = new_pagedir();
+    write_kernel_page_tables(out->pgdir);
+
+    return out;
+}
+
+struct task *new_task(ptr ip)
+{
+    struct task *out = malloc(sizeof(struct task));
+
+    out->next = NULL;
+
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0xc);
+    out->working_dir = NULL;
+
+    out->regs.esp = (ptr)out->stack;
+    out->regs.eflags = 1 << 9;
+
+    *(ptr *)(out->stack) = ip;
     out->pgdir = new_pagedir();
     write_kernel_page_tables(out->pgdir);
 
@@ -73,7 +94,8 @@ struct task *new_task(uint32_t ip, uint32_t sp)
 
 struct task *create_kernel_task()
 {
-    struct task *out = new_task(0, 0);
+    struct task *out = new_task(0);
+    printf("added task:%p\n", out);
 
     save_registers(&out->regs);
     out->pgdir = &init_pgdir;
@@ -188,6 +210,9 @@ void switch_tasks()
 
 void schedule()
 {
+
+    increment_sleep_queue();
+
     if (!scheduler_enabled || current_task == NULL)
     {
         return;

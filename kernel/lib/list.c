@@ -1,5 +1,6 @@
 #include "lib/list.h"
 #include <err.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 list new_list()
@@ -18,6 +19,12 @@ void list_add(list *new, list *head)
 
 int list_remove(list *entry, list *head)
 {
+
+    if (entry == head)
+    {
+        head = head->next;
+    }
+
     list *current = head;
     list *prev = head;
     while (current != NULL)
@@ -53,12 +60,20 @@ void list2_add(list2 *new, list2 *head)
     new->prev = head;
 }
 
-void list2_remove(list2 *value)
+/* TODO: bad */
+void list2_remove(list2 *value, list2 **head)
 {
     if (value->next == NULL && value->prev == NULL)
     {
-
+        *head = NULL;
         return;
+    }
+
+    if (value == *head)
+    {
+        list2 *temp = (*head)->next;
+        *head = temp;
+        (*head)->prev = NULL;
     }
 
     if (value->next == NULL)

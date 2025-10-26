@@ -45,6 +45,7 @@ kernel/usermode.o \
 kernel/panic.o \
 kernel/elf/elf.o \
 kernel/scheduler/scheduler.o \
+kernel/scheduler/sleep.o \
 kernel/scheduler/semaphore.o \
 lib/list.o \
 lib/rc.o \

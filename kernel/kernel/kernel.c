@@ -8,6 +8,8 @@
 #include "panic.h"
 #include "pci/pci.h"
 #include "pit/pit.h"
+#include "scheduler.h"
+#include "scheduler/sleep.h"
 #include "serial.h"
 #include <fcntl.h>
 #include <kernel/tty.h>
@@ -54,6 +56,36 @@ void kernel_init()
 
 extern semaphore *test_semaphore;
 
+void kernel_task1()
+{
+    printf("1 is running\n");
+    sleep(1); /* 6 */
+    printf("this is kernel task1\n");
+    while (1)
+    {
+    }
+}
+
+void kernel_task2()
+{
+    printf("2 is running\n");
+    sleep(2); /* 5 */
+    printf("this is kernel task2\n");
+    while (1)
+    {
+    }
+}
+
+void kernel_task3()
+{
+    printf("3 is running\n");
+    sleep(3);
+    printf("this is kernel task3\n");
+    while (1)
+    {
+    }
+}
+
 int main()
 {
     asm("sti");
@@ -91,17 +123,11 @@ int main()
     enable_scheduler();
     add_task(create_kernel_task());
 
-    add_task(task1);
-    printf("main exited\n");
+    /* add_task(task1); */
 
-    /* creat("tree", 0); */
-    /* unlink("tree"); */
-    /* int fd = open("tree", 0); */
-
-    /* printf("fd:%d\n", fd); */
-    /* char *buf = malloc(100); */
-    /* read(fd, buf, 100); */
-    /* printf("read:%s\n", buf); */
+    add_task(new_task((ptr)kernel_task1));
+    add_task(new_task((ptr)kernel_task2));
+    add_task(new_task((ptr)kernel_task3));
 
     return 0;
 }
