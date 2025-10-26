@@ -43,7 +43,13 @@ typedef struct list2
 
 #define list2_for_each(pos, head) for (pos = head; pos != NULL; pos = pos->next)
 
+/*
+ * adds new somewhere in the list
+ */
 void list2_add(list2 *new, list2 *head);
+void list2_add_front(list2 *new, list2 **head);
 void list2_remove(list2 *value, list2 **head);
+void list2_insert_after(list2 *new, list2 *after);
+void list2_insert_end(list2 *new, list2 **head);
 
 #endif

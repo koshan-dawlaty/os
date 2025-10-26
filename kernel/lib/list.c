@@ -1,7 +1,9 @@
 #include "lib/list.h"
+#include "kernel/tty.h"
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 list new_list()
 {
@@ -60,6 +62,16 @@ void list2_add(list2 *new, list2 *head)
     new->prev = head;
 }
 
+void list2_add_front(list2 *new, list2 **head)
+{
+    list2 *temp = *head;
+    *head = new;
+
+    new->next = temp;
+    temp->prev = new;
+    new->prev = NULL;
+}
+
 /* TODO: bad */
 void list2_remove(list2 *value, list2 **head)
 {
@@ -90,4 +102,40 @@ void list2_remove(list2 *value, list2 **head)
 
     value->next->prev = value->prev;
     value->prev->next = value->next;
+}
+
+void list2_insert_after(list2 *new, list2 *after)
+{
+
+    list2 *temp = after->next;
+
+    after->next = new;
+    new->prev = after;
+
+    new->next = temp;
+    if (temp != NULL)
+    {
+        temp->prev = new;
+    }
+}
+
+void list2_insert_end(list2 *new, list2 **head)
+{
+    if (*head == NULL)
+    {
+        new = *head;
+        return;
+    }
+
+    list2 *current = *head;
+    list2 *prev = *head;
+
+    while (current != NULL)
+    {
+        prev = current;
+        current = current->next;
+    }
+
+    prev->next = new;
+    new->prev = prev;
 }

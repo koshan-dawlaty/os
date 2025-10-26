@@ -59,7 +59,7 @@ extern semaphore *test_semaphore;
 void kernel_task1()
 {
     printf("1 is running\n");
-    sleep(1); /* 6 */
+    sleep(10);
     printf("this is kernel task1\n");
     while (1)
     {
@@ -69,7 +69,7 @@ void kernel_task1()
 void kernel_task2()
 {
     printf("2 is running\n");
-    sleep(2); /* 5 */
+    sleep(20);
     printf("this is kernel task2\n");
     while (1)
     {
@@ -79,7 +79,7 @@ void kernel_task2()
 void kernel_task3()
 {
     printf("3 is running\n");
-    sleep(3);
+    sleep(30);
     printf("this is kernel task3\n");
     while (1)
     {
