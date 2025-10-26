@@ -71,8 +71,39 @@ kill $!
 exit 0
 fi
 
-qemu-system-$(./target-triplet-to-arch.sh $HOST) -monitor stdio $QEMU_FLAGS
+SERIAL_PIPE=$(mktemp /tmp/QEMU_SERIAL_PIPE_XXXXXXX)
 
+mkfifo "${SERIAL_PIPE}.in"
+mkfifo "${SERIAL_PIPE}.out"
+
+
+# gdb -ex " add-symbol-file isodir/boot/os.kernel $KERNEL_ADDR" \
+# 	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
+# 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
+# 	-ex "target remote | qemu-system-i386 -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")"
+qemu-system-$(./target-triplet-to-arch.sh $HOST) -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE &
+QEMU_PID=$!
+
+
+
+FILE_NAME="$SERIAL_PIPE.out"
+
+
+TEST_OUTPUT=""
+
+while IFS= read -r -n1 char; do
+
+	TEST_OUTPUT="${TEST_OUTPUT}$char"
+  if [[ $char == $'\x04' ]]; then
+	  	
+		break
+  fi
+done < $FILE_NAME
+
+TEST_OUTPUT="${TEST_OUTPUT%?}"
+
+echo "THIS IS THE OUTPUT $TEST_OUTPUT"
+kill $QEMU_PID
 
 cd ..
 ./clean.sh

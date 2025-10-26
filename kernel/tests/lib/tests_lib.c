@@ -1,7 +1,7 @@
 #include "serial.h"
-#include <extension.h>
-
+#include "tap.h"
 #include "tests/tests.h"
+#include <extension.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -46,7 +46,7 @@ test_result *get_failed_test(intmax_t num, ...)
 
     va_end(args);
 
-    if (format == NULL)
+    if (num == 0)
     {
         reason = NULL;
     }
@@ -121,10 +121,9 @@ void run_all_tests()
     /* printf("running tests\n"); */
 
     int *failed_indexes = malloc(sizeof(size_t) * tests_size);
-    test_result **failed_results = malloc(sizeof(test_result) * tests_size);
+    test_result **results = malloc(sizeof(test_result) * tests_size);
     /* printf("this is:%p\n", failed_indexes); */
     size_t failed_indexes_len = 0;
-    size_t results_len = 0;
 
     for (size_t i = 0; i < tests_size; i++)
     {
@@ -139,38 +138,38 @@ void run_all_tests()
         if (result->failed)
         {
             failed_indexes[failed_indexes_len] = i;
-            failed_results[results_len] = result;
             failed_indexes_len++;
-            results_len++;
         }
-        else
-        {
-            free(result);
-        }
+
+        results[i] = result;
     }
 
-    serial_write(TEST_OUTPUT_SERIAL_PORT, failed_indexes_len + 0x30);
-    for (size_t i = 0; i < failed_indexes_len; i++)
-    {
-        test *t = tests[failed_indexes[i]];
-        test_result *r = failed_results[i];
-        printf("test %s failed!\n", t->name);
-        if (r->message != NULL)
-        {
-            printf("reason:%s\n", r->message);
-        }
-    }
+    /* serial_write(TEST_OUTPUT_SERIAL_PORT, failed_indexes_len + 0x30); */
+    /* for (size_t i = 0; i < failed_indexes_len; i++) */
+    /* { */
+    /*     test *t = tests[failed_indexes[i]]; */
+    /*     /1* test_result *r = results[i]; *1/ */
+    /*     printf("test %s failed!\n", t->name); */
+    /*     /1* if (r->message != NULL) *1/ */
+    /*     /1* { *1/ */
+    /*     /1*     printf("reason:%s\n", r->message); *1/ */
+    /*     /1* } *1/ */
+    /* } */
 
     free(failed_indexes);
-    for (size_t i = 0; i < results_len; i++)
+
+    char *tap = format_test_results_tap(tests, results, tests_size);
+
+    for (size_t i = 0; i < tests_size; i++)
     {
-        free(failed_results[i]);
+        free(results[i]);
     }
+
+    serial_writestring(tap, strlen(tap), TEST_OUTPUT_SERIAL_PORT);
 
     /* end of input */
     serial_write(TEST_OUTPUT_SERIAL_PORT, 'e');
     serial_write(TEST_OUTPUT_SERIAL_PORT, 'n');
     serial_write(TEST_OUTPUT_SERIAL_PORT, 'd');
-    serial_write(TEST_OUTPUT_SERIAL_PORT, '\n');
     serial_write(TEST_OUTPUT_SERIAL_PORT, 4);
 }

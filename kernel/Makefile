@@ -33,6 +33,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 TEST_OBJS=\
 		  tests/tests_main.o \
 		  tests/lib/tests_lib.o \
+		  tests/lib/tap.o \
 
 KERNEL_OBJS= \
 $(KERNEL_ARCH_OBJS) \

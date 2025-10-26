@@ -10,4 +10,5 @@
  * version of vsprintf that uses a heap pointer that it reallocs
  */
 char *vrprintf(const char *format, va_list list);
+char *rprintf(char *format, ...);
 #endif

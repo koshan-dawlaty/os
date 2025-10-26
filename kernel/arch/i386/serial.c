@@ -1,8 +1,17 @@
 #include "serial.h"
+#include "kernel/types.h"
 #include "utils.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+
+void serial_writestring(char *str, size_t len, u16 port)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        serial_write(port, str[i]);
+    }
+}
 
 void serial_init(uint16_t port)
 {

@@ -105,13 +105,12 @@ void increment_buf(char **buf, size_t *len, size_t *capacity, size_t add)
 
         *buf = realloc(*buf, *capacity);
     }
-
-    *len += add;
 }
 
 void append_buf(char **buf, size_t *buf_len, size_t *capacity, char new)
 {
     increment_buf(buf, buf_len, capacity, 1);
+    (*buf_len)++;
     (*buf)[*buf_len - 1] = new;
     (*buf)[*buf_len] = 0;
 }
@@ -150,6 +149,7 @@ that they will not work because the bootstrap has not initialized them
 
                 increment_buf(&out, &out_len, &capacity, strlen(str));
 
+                out_len += strlen(str);
                 memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }
             else if (*format == 'c')
@@ -165,6 +165,7 @@ that they will not work because the bootstrap has not initialized them
 
                 increment_buf(&out, &out_len, &capacity, strlen(str));
 
+                out_len += strlen(str);
                 memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }
             else if (*format == 'x')
@@ -174,6 +175,7 @@ that they will not work because the bootstrap has not initialized them
 
                 increment_buf(&out, &out_len, &capacity, strlen(str));
 
+                out_len += strlen(str);
                 memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }
             else if (*format == 'p')
@@ -182,7 +184,7 @@ that they will not work because the bootstrap has not initialized them
                 char *str = int_to_string((uint32_t)p, 16);
 
                 increment_buf(&out, &out_len, &capacity, strlen(str));
-
+                out_len += strlen(str);
                 memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }
         }
@@ -201,4 +203,16 @@ that they will not work because the bootstrap has not initialized them
     append_buf(&out, &out_len, &capacity, 0);
 
     return out;
+}
+
+char *rprintf(char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+
+    char *buf = vrprintf(format, args);
+
+    va_end(args);
+
+    return buf;
 }
