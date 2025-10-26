@@ -122,7 +122,7 @@ end:
 
 dentry *lookup_path(const char *path)
 {
-    printf("looking up path:%s\n", path);
+    /* printf("looking up path:%s\n", path); */
     inode *current_node = NULL;
     dentry *current_dir = NULL;
     size_t component_offset = 0;

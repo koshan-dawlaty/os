@@ -29,7 +29,7 @@ elf_32 *parse_elf32(int fd)
     if (header_buf[0] != 0x7F || header_buf[1] != 'E' || header_buf[2] != 'L' ||
         header_buf[3] != 'F')
     {
-        printf("invalid elf header\n");
+        /* printf("invalid elf header\n"); */
         return NULL;
     }
     elf_32 *out = malloc(sizeof(elf_32));

@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -55,7 +56,20 @@ int main()
             }
             else
             {
-                execv(args[0], args);
+                int err = execv(args[0], args);
+                if (err < 0)
+                {
+                    printf("could not execute, ");
+                    if (err == -ENOENT)
+                    {
+                        printf("file not found");
+                    }
+                    else if (err == -ENOEXEC)
+                    {
+                        printf("file not executable");
+                    }
+                    printf("\n");
+                }
             }
             free(input);
             input = malloc(0);

@@ -63,27 +63,7 @@ int syscall_handler(struct syscall_regs *regs)
     }
     else if (regs->eax == 2)
     {
-
-        int f = open((char *)regs->ebx, 0);
-
-        elf_32 *elf = parse_elf32(f);
-        if (elf != NULL)
-        {
-            char **argv = (void *)regs->ecx;
-
-            int argc = 0;
-            while (argv[argc] != NULL)
-            {
-                argc++;
-            }
-
-            add_task(load_elf32(elf, argc, argv));
-        }
-
-        /* printf("syscall\n"); */
-        return 0;
-        /* jump_usermode_asm(0x60017c); */
-        /* jump_usermode_asm(elf->entry_point); */
+        return execv((void *)regs->ebx, (void *)regs->ecx);
     }
     else if (regs->eax == 3)
     {
