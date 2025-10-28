@@ -88,21 +88,26 @@ QEMU_PID=$!
 
 FILE_NAME="$SERIAL_PIPE.out"
 
-
 TEST_OUTPUT=""
 
 while IFS= read -r -n1 char; do
 
 	TEST_OUTPUT="${TEST_OUTPUT}$char"
+	
+  if [[ $char == $'\n' ]]; then
+	  echo "TEST"
+		break
+  fi
+
   if [[ $char == $'\x04' ]]; then
-	  	
 		break
   fi
 done < $FILE_NAME
 
 TEST_OUTPUT="${TEST_OUTPUT%?}"
 
-echo "THIS IS THE OUTPUT $TEST_OUTPUT"
+printf "THIS IS THE OUTPUT %s" "$TEST_OUTPUT"
+
 kill $QEMU_PID
 
 cd ..

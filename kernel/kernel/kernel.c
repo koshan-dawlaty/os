@@ -56,31 +56,58 @@ void kernel_init()
 
 extern semaphore *test_semaphore;
 
+semaphore *shared_memory_semaphore;
+char *shared;
 void kernel_task1()
 {
     printf("1 is running\n");
-    sleep(10);
+    sleep(1);
     printf("this is kernel task1\n");
     while (1)
     {
+        wait_semaphore(shared_memory_semaphore);
+        memcpy(shared, "one", 4);
+
+        schedule();
+        if (strcmp(shared, "one"))
+        {
+            printf("task1: shared memory was corrupted to:%s\n", shared);
+        }
+
+        release_semaphore(shared_memory_semaphore);
+
+        schedule();
     }
 }
 
 void kernel_task2()
 {
     printf("2 is running\n");
-    sleep(20);
+    sleep(2);
     printf("this is kernel task2\n");
     while (1)
     {
+
+        wait_semaphore(shared_memory_semaphore);
+
+        memcpy(shared, "two", 4);
+
+        schedule();
+        if (strcmp(shared, "two"))
+        {
+            printf("task2: shared memory was corrupted to:%s\n", shared);
+        }
+
+        release_semaphore(shared_memory_semaphore);
+
+        schedule();
     }
 }
 
 void kernel_task3()
 {
     printf("3 is running\n");
-    sleep(30);
-    printf("this\n");
+    sleep(3);
 
     printf("this is kernel task3\n");
     while (1)
@@ -126,6 +153,9 @@ int main()
     add_task(create_kernel_task());
 
     /* add_task(task1); */
+
+    shared = malloc(10);
+    shared_memory_semaphore = new_semaphore(1);
 
     add_task(new_task((ptr)kernel_task1));
     add_task(new_task((ptr)kernel_task2));

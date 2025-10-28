@@ -37,8 +37,9 @@ void add_sleep_queue(struct task *task, size_t time)
         struct sleep_queue_entry *entry =
             LIST_ENTRY(pos, struct sleep_queue_entry, l);
 
-        printf("new value:%d, current:%d, item:%d\n", ticks - entry->ticks,
-               ticks, entry->ticks);
+        /* printf("new value:%d, current:%d, item:%d\n", ticks - entry->ticks,
+         */
+        /*        ticks, entry->ticks); */
 
         if ((int)(ticks - entry->ticks) < 0)
         {
@@ -49,7 +50,7 @@ void add_sleep_queue(struct task *task, size_t time)
         ticks -= entry->ticks;
     }
 
-    printf("adding with:%d time, %d ticks\n", time, ticks);
+    /* printf("adding with:%d time, %d ticks\n", time, ticks); */
 
     new->task = task;
     new->ticks = ticks;
@@ -66,7 +67,7 @@ void add_sleep_queue(struct task *task, size_t time)
     {
         list2_insert_after(&new->l, prev);
     }
-    print_sleep_queue();
+    /* print_sleep_queue(); */
 
     remove_task(task);
 

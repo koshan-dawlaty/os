@@ -31,7 +31,7 @@ TEST(vfs_basic, {
 })
 
 TEST(vfs_create_basic, {
-    creat("testfile1234", 000);
+    creat("testfile1234", 0);
     if (open("/testfile1234", 0) == -1)
     {
         FAIL_TEST("could not open /testfile1234");

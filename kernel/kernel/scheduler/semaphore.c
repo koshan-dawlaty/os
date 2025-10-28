@@ -22,14 +22,14 @@ void wait_semaphore(semaphore *s)
     asm("cli");
 
     s->value--;
-    printf("%d\n", s->value);
+    /* printf("%d\n", s->value); */
 
     if (s->value < 0)
     {
         struct task *current = get_current_task();
         remove_task(current);
         add_task_queue(&s->queue, current);
-        printf("first in queue:%p\n", s->queue);
+
         sched_yield();
     }
 
@@ -41,7 +41,7 @@ void release_semaphore(semaphore *s)
 
     s->value++;
 
-    printf("%d\n", s->value);
+    /* printf("%d\n", s->value); */
 
     if (s->value <= 0)
     {

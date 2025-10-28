@@ -132,7 +132,7 @@ void run_all_tests()
         /*     printf("addr: %p\n", tests[i]); */
         /* } */
 
-        printf("running: %s\n", tests[i]->name);
+        /* printf("running: %s\n", tests[i]->name); */
         test_result *result = run_test(tests[i]);
 
         if (result->failed)
@@ -167,9 +167,8 @@ void run_all_tests()
 
     serial_writestring(tap, strlen(tap), TEST_OUTPUT_SERIAL_PORT);
 
+    /* printf("%s\n", tap); */
+
     /* end of input */
-    serial_write(TEST_OUTPUT_SERIAL_PORT, 'e');
-    serial_write(TEST_OUTPUT_SERIAL_PORT, 'n');
-    serial_write(TEST_OUTPUT_SERIAL_PORT, 'd');
     serial_write(TEST_OUTPUT_SERIAL_PORT, 4);
 }
