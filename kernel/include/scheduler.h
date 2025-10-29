@@ -58,7 +58,7 @@ void remove_task_queue(struct task **queue, struct task *task);
  */
 struct task *new_task(ptr ip);
 
-struct task *new_task_user(ptr ip, ptr sp);
+struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv);
 
 /*
  * frees task t

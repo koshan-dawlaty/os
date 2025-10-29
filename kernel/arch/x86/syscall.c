@@ -2,6 +2,7 @@
 #include "interrupts/idt.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
+#include "kernel/types.h"
 #include "memory/paging_flags.h"
 #include "scheduler.h"
 #include <fcntl.h>
@@ -12,25 +13,24 @@
 #include <unistd.h>
 #include <utils.h>
 
+/* eax should be at 19 words offset */
 struct syscall_regs
 {
-    uint32_t ebx;
-    uint32_t ecx;
-    uint32_t edx;
-    uint32_t esi;
-    uint32_t edi;
-    uint32_t ebp;
-    uint32_t padding;
-    uint32_t ds;
-    uint32_t es;
-    uint32_t fs;
-    uint32_t gs;
-    uint32_t eax;
-    uint32_t ip;
-    uint32_t cs;
-    uint32_t flags;
-    uint32_t sp;
-    uint32_t ss;
+    ptr ebx;
+    ptr ecx;
+    ptr edx;
+    ptr esi;
+    ptr edi;
+    ptr ebp;
+    ptr padding;
+    ptr fs;
+    ptr gs;
+    ptr eax;
+    ptr ip;
+    u64 cs;
+    ptr flags;
+    ptr sp;
+    u64 ss;
 
 } __attribute__((packed));
 
@@ -65,7 +65,7 @@ int syscall_handler(struct syscall_regs *regs)
 
         int f = open((char *)regs->ebx, 0);
 
-        elf_32 *elf = parse_elf32(f);
+        elf *elf = parse_elf(f);
         if (elf != NULL)
         {
             char **argv = (void *)regs->ecx;
@@ -76,7 +76,7 @@ int syscall_handler(struct syscall_regs *regs)
                 argc++;
             }
 
-            add_task(load_elf32(elf, argc, argv));
+            add_task(load_elf(elf, argc, argv));
         }
 
         /* printf("syscall\n"); */

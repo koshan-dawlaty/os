@@ -20,7 +20,7 @@ struct tss
     u64 reserved3;
     u16 reserved4;
     u16 iopb;
-};
+} __attribute__((packed));
 
 struct tss tss;
 
@@ -32,7 +32,7 @@ struct GDT_register
 
 struct GDT_register gdtr;
 
-u64 gdt[7] = {};
+u64 __attribute__((aligned(8))) gdt[7] = {};
 
 extern void swap_segments();
 extern void flush_tss();
@@ -61,9 +61,9 @@ void init_gdt()
     u64 limit = sizeof(tss) - 1;
     tss.rsp0 = stack_top;
 
-    gdt[5] = ((u64)limit & 0xFFFF) | ((base & 0xFFFFFF) << 16) |
-             ((u64)0x89 << 40) | (((limit >> 16) & 0xF) << 48) |
-             (((base >> 24) & 0xFF) << 56);
+    gdt[5] = ((limit & 0xFFFF)) | ((base & 0xFFFFFF) << 16) |
+             ((uint64_t)0x89 << 40) | // 0x89 = 64-bit TSS (available)
+             ((limit >> 16) & 0xF) << 48 | ((base >> 24) & 0xFF) << 56;
     gdt[6] = (base >> 32) & 0xFFFFFFFFULL;
 
     printf("%p\n", gdt[5]);
@@ -79,19 +79,6 @@ void init_gdt()
     swap_segments();
 
     flush_tss();
-}
-
-void tss_test()
-{
-    printf("TSS KERNEL STACK:%p\n", tss.rsp0);
-
-    u64 *ptr = (u64 *)(tss.rsp0);
-    for (size_t i = 0; i < 10; i++)
-    {
-
-        printf("%p ", *ptr);
-        ptr++;
-    }
 }
 
 void set_kernel_stack(ptr stack)

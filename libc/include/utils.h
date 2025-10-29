@@ -1,10 +1,10 @@
 #ifndef LIBC_UTILS
 #define LIBC_UTILS
+#include <kernel/types.h>
 #include <stdint.h>
 
 #if defined(__is_libc)
-extern int syscall_wrapper_asm(uint32_t eax, uint32_t ebx, uint32_t ecx,
-                               uint32_t edx, uint32_t esi, uint32_t edi);
+extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
 #endif
 
 #endif

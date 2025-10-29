@@ -92,7 +92,7 @@ void free_pages_offset(void *addr, size_t amount, uint8_t *bitmap,
     size_t index = ((size_t)addr - base_addr);
     for (size_t i = 0; i < amount; i++)
     {
-        bitmap[index + i / 8] |= FREE >> ((index + i) % 8);
+        bitmap[index + (i / 8)] |= FREE >> ((index + i) % 8);
         unmap_page((void *)(addr + (i * PAGE_SIZE)));
     }
 }

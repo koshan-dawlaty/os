@@ -8,12 +8,14 @@
 #include <string.h>
 #include <unistd.h>
 
+typedef uintptr_t ptr;
+extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
+
 int main()
 {
 
-    while (1)
-    {
-    }
+    /* putchar('a'); */
+    /* syscall_wrapper_asm(12, 'a', 0, 0, 0, 0); */
 
     char *input = malloc(0);
     size_t input_len = 0;

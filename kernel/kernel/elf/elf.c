@@ -24,26 +24,6 @@ void free_elf(elf *elf)
     free(elf);
 }
 
-/* copies args to userspace */
-char **create_user_args(int argc, char **argv)
-{
-    /* TODO: this can run out of space */
-    char **args = get_free_pages_user(1);
-    size_t string_offset = argc * sizeof(char *);
-
-    for (int i = 0; i < argc; i++)
-    {
-        memcpy(args + string_offset, argv[i], strlen(argv[i]));
-        *(char *)(args + string_offset + strlen(argv[i]) + 1) = 0;
-
-        args[i] = (char *)(args + string_offset);
-
-        string_offset += strlen(argv[i]) + 1;
-    }
-
-    return args;
-}
-
 elf *parse_elf(int fd)
 {
 #ifdef CONFIG_x86_32
@@ -55,17 +35,10 @@ elf *parse_elf(int fd)
 struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
-    struct task *t = new_task_user(elf->entry_point, 0xBFFEF000);
+    /* ARGS NEEDS TO BE AFTER THE PAGEDIR WAS LOADED */
+    struct task *t = new_task_user(elf->entry_point, 0xBFFEF000, argc, argv);
     struct pagedir *pgdir = t->pgdir;
     struct pagedir *temp_pgdir = get_current_pagedir();
-
-    char **args_temp = malloc(argc * sizeof(char *));
-    for (int i = 0; i < argc; i++)
-    {
-        args_temp[i] = malloc(strlen(argv[i]) + 1);
-        memcpy(args_temp[i], argv[i], strlen(argv[i]) + 1);
-        args_temp[i][strlen(argv[i])] = 0;
-    }
 
     load_pgdir(pgdir);
     for (size_t j = 0; j < elf->program_headers_len; j++)
@@ -118,9 +91,7 @@ if (header->memory_size > header->file_size)
 
     create_userspace_stack(pgdir);
 
-    /* char **args = create_user_args(argc, args_temp); */
-
-    /* *(char ***)(0xBFFEF000 + 4) = args; */
+    /* *(char ***)(0xBFFEF000 + sizeof(ptr)) = args; */
     /* *(int *)(0xBFFEF000) = argc; */
 
     load_pgdir(temp_pgdir);

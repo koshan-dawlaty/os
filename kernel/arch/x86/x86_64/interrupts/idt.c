@@ -9,6 +9,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
+
 typedef struct
 {
     u16 size;
@@ -99,6 +101,7 @@ void init_idt()
                               .flags = 0x8E,
                               .stack_table = 0},
                   0x21);
+    add_idt_entry((IDT_entry){(ptr)syscall_handler_asm, 0x8, 0xEE, 0}, 0x80);
 
     /* add_idt_entry((IDT_entry){.offset = (u64)irq7, */
     /*                           .segment_selector = 8, */

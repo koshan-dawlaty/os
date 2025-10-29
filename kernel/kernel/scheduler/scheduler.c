@@ -35,17 +35,41 @@ bool is_scheduler_enabled()
     return scheduler_enabled;
 }
 
-void new_task_usermode_start(ptr addr)
+void new_task_usermode_start(int argc, char **argv, ptr addr)
 {
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
+
+    temp_regs->esi = (ptr)argv;
+    temp_regs->edi = (ptr)argc;
+
     printf("jumping to: %p\n", addr);
     printf("regs: %p\n", temp_regs);
     jump_usermode_asm(addr, temp_regs);
 }
 
-struct task *new_task_user(ptr ip, ptr sp)
+/* copies args to userspace */
+char **create_user_args(int argc, char **argv)
+{
+    /* TODO: this can run out of space */
+    char **args = get_free_pages_user(1);
+    size_t string_offset = argc * sizeof(char *);
+
+    for (int i = 0; i < argc; i++)
+    {
+        memcpy(args + string_offset, argv[i], strlen(argv[i]));
+        *(char *)(args + string_offset + strlen(argv[i]) + 1) = 0;
+
+        args[i] = (char *)(args + string_offset);
+
+        string_offset += strlen(argv[i]) + 1;
+    }
+
+    return args;
+}
+
+struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 {
     struct task *out = malloc(sizeof(struct task));
 
@@ -66,10 +90,31 @@ struct task *new_task_user(ptr ip, ptr sp)
     out->working_dir = NULL;
 
     *(ptr *)(out->stack) = (ptr)new_task_usermode_start;
+    /* edx is the third argument first and second are set later in this function
+     */
+    out->regs.edx = ip;
     /* *(ptr *)(out->stack + 8) = ip; */
 
     out->pgdir = new_pagedir();
     write_kernel_page_tables(out->pgdir);
+
+    char **args_temp = malloc(argc * sizeof(char *));
+    for (int i = 0; i < argc; i++)
+    {
+        args_temp[i] = malloc(strlen(argv[i]) + 1);
+        memcpy(args_temp[i], argv[i], strlen(argv[i]) + 1);
+        args_temp[i][strlen(argv[i])] = 0;
+    }
+
+    /* TODO: this calls load_pgdir alot */
+    struct pagedir *temp = get_current_pagedir();
+    load_pgdir(out->pgdir);
+    char **args = create_user_args(argc, args_temp);
+
+    out->regs.edi = argc;
+    out->regs.esi = (u64)args;
+
+    load_pgdir(temp);
 
     return out;
 }
@@ -195,7 +240,7 @@ void remove_task_queue(struct task **queue, struct task *task)
 int num_task_switches = 0;
 void switch_tasks()
 {
-    printf("switching from:%p ", current_task);
+    /* printf("switching from:%p ", current_task); */
     if (current_task->next != NULL)
     {
         current_task = current_task->next;
@@ -204,14 +249,12 @@ void switch_tasks()
     {
         current_task = first_task;
     }
-    printf("to:%p\n", current_task);
+    /* printf("to:%p\n", current_task); */
 }
-
-extern void tss_test();
 
 void schedule()
 {
-    printf("scheduling!!! %p\n", current_task);
+    /* printf("scheduling!!! %p\n", current_task); */
     if (!scheduler_enabled || current_task == NULL)
     {
         return;
@@ -232,7 +275,6 @@ void schedule()
     load_pgdir(current_task->pgdir);
 
     set_kernel_stack((ptr)current_task->stack);
-    tss_test();
 
     PIC_sendEOI(0);
     load_registers(&current_task->regs);
