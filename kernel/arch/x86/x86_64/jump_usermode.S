@@ -63,7 +63,7 @@ save_registers:
 	push %r10 # 48
 	push %r9 # 40
 	push %r8 # 38
-	pushf # 30
+	pushfq # 30
 	push %rcx # 28
 	push %rdx # 20
 	push %rbx # 18

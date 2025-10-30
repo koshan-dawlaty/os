@@ -13,6 +13,7 @@ int main(int argc, char **argv)
     }
     int fd = open(argv[1], 0);
 
+    printf("%d\n", strlen(argv[2]));
     write(fd, argv[2], strlen(argv[2]));
 
     exit(0);

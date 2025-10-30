@@ -52,8 +52,6 @@ struct task *load_elf(elf *elf, int argc, char **argv)
                  i += PAGE_SIZE)
             {
 
-                printf("mapping at:%p\n", header->virtual_addr + i);
-
                 map_page((void *)get_free_phys_page(),
                          (void *)(header->virtual_addr + i),
                          PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);

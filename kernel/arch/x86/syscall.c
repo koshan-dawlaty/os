@@ -22,7 +22,7 @@ struct syscall_regs
     ptr esi;
     ptr edi;
     ptr ebp;
-    ptr padding;
+
     ptr fs;
     ptr gs;
     ptr eax;

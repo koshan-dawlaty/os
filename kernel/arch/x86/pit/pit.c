@@ -53,7 +53,7 @@ void pit_handler_c(struct registers *r)
 
 ISR(pit_handler, {
     pit_time++;
-    if (pit_time % 50 == 0)
+    if (pit_time % 10 == 0)
     {
         schedule();
     }

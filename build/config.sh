@@ -21,7 +21,8 @@ ISO="os.iso"
 export ISO
 
 
-CFLAGS="${CFLAGS} -O1 -g  -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -DCONFIG_x86_64" 
+export ARCH=x86_64
+CFLAGS="${CFLAGS} -O1 -g  -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -DCONFIG_$ARCH" 
 export CFLAGS
 export CPPFLAGS=''
 

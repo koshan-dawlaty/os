@@ -44,8 +44,6 @@ void new_task_usermode_start(int argc, char **argv, ptr addr)
     temp_regs->esi = (ptr)argv;
     temp_regs->edi = (ptr)argc;
 
-    printf("jumping to: %p\n", addr);
-    printf("regs: %p\n", temp_regs);
     jump_usermode_asm(addr, temp_regs);
 }
 
@@ -141,7 +139,6 @@ struct task *new_task(ptr ip)
 struct task *create_kernel_task()
 {
     struct task *out = new_task(0);
-    printf("added task:%p\n", out);
 
     save_registers(&out->regs);
     out->pgdir = &init_pgdir;
@@ -185,7 +182,6 @@ void remove_task(struct task *task)
 
 void add_task(struct task *task)
 {
-    printf("adding task %p\n", task);
 
     if (current_task == NULL)
     {

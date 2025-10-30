@@ -5,7 +5,7 @@ syscall_handler_asm:
 	push %rax
 	push %gs
 	push %fs
-	push $(-38)
+	# push $(-38)
 	push %rbp
 	push %rdi
 	push %rsi
@@ -27,7 +27,7 @@ syscall_handler_asm:
 	pop %rbp
 
 
-	add $8, %rsp
+	# add $8, %rsp
 	
 
 	pop %fs

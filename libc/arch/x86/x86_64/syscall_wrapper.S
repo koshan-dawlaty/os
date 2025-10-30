@@ -10,14 +10,18 @@ syscall_wrapper_asm:
 	push %rdi
 
 
+	push %rcx
+
 	mov %rdi, %rax
 	mov %rsi, %rbx
 	mov %rdx, %rcx
-	mov %rcx, %rdx
+	mov 0(%esp), %rdx
 	mov %r8, %rsi
 	mov %r9, %rdi
 
 	int $(0x80)
+
+	pop %rcx
 
 	pop %rdi
 	pop %rsi
