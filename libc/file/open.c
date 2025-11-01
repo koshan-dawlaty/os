@@ -13,7 +13,6 @@ int open(char *path, int flags)
     file *f = open_file(path);
     if (IS_ERR(f))
     {
-        printf("error:%p\n", GET_ERR(f));
         return -1;
     }
 

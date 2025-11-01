@@ -35,7 +35,7 @@ struct ext2_superblock
     ext2_group_descriptor *group_descriptor_table;
 };
 
-inline struct ext2_superblock *EXT2_SB(superblock *sb)
+static inline struct ext2_superblock *EXT2_SB(superblock *sb)
 {
     return sb->fs_private;
 }
@@ -77,7 +77,7 @@ typedef struct __attribute__((packed))
     uint8_t os_specific2[12];
 } ext2_inode;
 
-inline ext2_inode *EXT2_INODE(inode *i)
+static inline ext2_inode *EXT2_INODE(inode *i)
 {
     return i->fs_private;
 }
@@ -102,9 +102,9 @@ ext2_inode_addr find_inode(char *path);
 
 ext2_inode *ext2_get_inode(ext2_inode_addr inode, superblock *sb);
 
-inline uint64_t ext2_get_inode_size(ext2_inode *node)
+static inline uint64_t ext2_get_inode_size(ext2_inode *node)
 {
-    // MAY BREAK
+    /* MAY BREAK */
     return node->size_low;
 }
 
@@ -115,8 +115,6 @@ void ext2_write_block(uint8_t *buffer, size_t block_number, superblock *sb);
 inode *ext2_iget(ino_t inode_number, superblock *sb);
 ext2_dentry *ext2_find_dentry(char *path, superblock *sb);
 
-dentry *ext2_dentry_to_dentry(ext2_dentry *dentry, superblock *sb);
-
 ext2_inode_addr ext2_inode_alloc(superblock *sb);
 uint32_t ext2_block_alloc(superblock *sb);
 
@@ -125,12 +123,18 @@ void ext2_write_inode(inode *node, uint8_t *buf, size_t buf_len,
 
 inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node);
 
-dentry **ext2_get_dentries(inode *vfs_node, superblock *sb);
+dentry **ext2_get_dentries(dentry *dir, superblock *sb);
 
-inode_type ext2_get_inode_type(ext2_inode *node);
+/*
+ * returns the type that should be used for the dentry that points to the inode
+ */
+dentry_type ext2_get_dentry_type(ext2_inode *node);
 
-dentry *ext2_append_dentry(inode *entry, char *name, ino_t number,
+dentry *ext2_append_dentry(dentry *entry, char *name, ino_t number,
                            superblock *sb);
+
+/* removes a dentry matching name from entry */
+int ext2_remove_dentry(dentry *entry, char *name, superblock *sb);
 
 void ext2_update_inode(inode *node, superblock *sb);
 #endif

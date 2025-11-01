@@ -13,7 +13,6 @@ int creat(const char *path, mode_t mode)
     file *f = create_file(path);
     if (IS_ERR(f))
     {
-        printf("error:%p\n", GET_ERR(f));
         return -1;
     }
 

@@ -5,6 +5,7 @@
 #include "kernel/types.h"
 #include "memory/paging_flags.h"
 #include "scheduler.h"
+#include <errno.h>
 #include <fcntl.h>
 #include <panic.h>
 #include <stdint.h>
@@ -63,27 +64,7 @@ int syscall_handler(struct syscall_regs *regs)
     }
     else if (regs->eax == 2)
     {
-
-        int f = open((char *)regs->ebx, 0);
-
-        elf *elf = parse_elf(f);
-        if (elf != NULL)
-        {
-            char **argv = (void *)regs->ecx;
-
-            int argc = 0;
-            while (argv[argc] != NULL)
-            {
-                argc++;
-            }
-
-            add_task(load_elf(elf, argc, argv));
-        }
-
-        /* printf("syscall\n"); */
-        return 0;
-        /* jump_usermode_asm(0x60017c); */
-        /* jump_usermode_asm(elf->entry_point); */
+        return execv((void *)regs->ebx, (void *)regs->ecx);
     }
     else if (regs->eax == 3)
     {
@@ -151,10 +132,11 @@ int syscall_handler(struct syscall_regs *regs)
     {
         return chdir((void *)regs->ebx);
     }
+    else if (regs->eax == 14)
+    {
+        return unlink((char *)regs->ebx);
+    }
 
     printf("no syscall found\n");
-    /* should  be ENOSYS */
-    return -0x12345;
-
-    /* printf("test\n"); */
+    return -ENOSYS;
 }

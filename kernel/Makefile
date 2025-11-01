@@ -35,6 +35,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 TEST_OBJS=\
 		  tests/tests_main.o \
 		  tests/lib/tests_lib.o \
+		  tests/lib/tap.o \
 
 KERNEL_OBJS= \
 $(KERNEL_ARCH_OBJS) \
@@ -48,8 +49,10 @@ kernel/elf/elf.o \
 kernel/elf/elf32.o \
 kernel/elf/elf64.o \
 kernel/scheduler/scheduler.o \
+kernel/scheduler/sleep.o \
 kernel/scheduler/semaphore.o \
 lib/list.o \
+lib/rc.o \
 fs/ext2/dentry.o \
 fs/ext2/balloc.o \
 fs/ext2/file.o \

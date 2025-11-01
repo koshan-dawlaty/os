@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -8,6 +9,12 @@
 
 int read(int fd, char *buf, size_t n)
 {
+
+    if (fd < 0)
+    {
+        return -EINVAL;
+    }
+
 #ifdef __is_libk
     file *f = lookup_descriptor(fd);
     return read_file(f, buf, n, f->offset);

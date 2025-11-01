@@ -32,11 +32,13 @@ void wait_semaphore(semaphore *s)
         printf("first in queue:%p\n", s->queue);
         sched_yield();
     }
+
     asm("sti");
 }
 void release_semaphore(semaphore *s)
 {
     asm("cli");
+
     s->value++;
 
     printf("%d\n", s->value);
@@ -47,5 +49,6 @@ void release_semaphore(semaphore *s)
         remove_task_queue(&s->queue, task);
         add_task(task);
     }
+
     asm("sti");
 }

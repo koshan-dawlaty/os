@@ -2,10 +2,13 @@
 #include "gdt.h"
 #include "interrupts/pic.h"
 #include "kernel/usermode.h"
+#include "lib/list.h"
+#include "sleep.h"
 #include "unistd.h"
 #include "utils.h"
 #include "vfs.h"
 #include <kernel/paging.h>
+#include <kernel/types.h>
 #include <scheduler.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -118,6 +121,7 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     return out;
 }
 
+/*
 struct task *new_task(ptr ip)
 {
     struct task *out = malloc(sizeof(struct task));
@@ -125,6 +129,25 @@ struct task *new_task(ptr ip)
     out->next = NULL;
 
     out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
+    out->working_dir = NULL;
+
+    out->regs.esp = (ptr)out->stack;
+    out->regs.eflags = 1 << 9;
+
+    *(ptr *)(out->stack) = ip;
+    out->pgdir = new_pagedir();
+    write_kernel_page_tables(out->pgdir);
+
+    return out;
+}*/
+
+struct task *new_task(ptr ip)
+{
+    struct task *out = malloc(sizeof(struct task));
+
+    out->next = NULL;
+
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0xc);
     out->working_dir = NULL;
 
     out->regs.esp = (ptr)out->stack;
@@ -251,7 +274,9 @@ void switch_tasks()
 
 void schedule()
 {
-    /* printf("scheduling!!! %p\n", current_task); */
+
+    increment_sleep_queue();
+
     if (!scheduler_enabled || current_task == NULL)
     {
         return;

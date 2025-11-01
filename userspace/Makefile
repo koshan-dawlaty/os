@@ -17,17 +17,20 @@ BIN=bin
 FS_ROOT?=
 BINARY_PREFIX?=bin
 
-CFLAGS?=-O0 -g
+CFLAGS?= -g
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas 
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
 CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings -fomit-frame-pointer
+# this gets rid of moddi3 and simliar functions
+CFLAGS:=$(CFLAGS) -fno-semantic-interposition
+
 
 # very bad
 LINK_LIST=-l../libc/k.a
@@ -68,6 +71,7 @@ BINARIES=\
 	touch \
 	ksh \
 	cat \
+	rm \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -90,6 +94,10 @@ $(BIN)/overwrite : $(OBJS_START_BIN) $(BIN)/overwrite.o ../libc/libc.a $(START_O
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/cat : $(OBJS_START_BIN) $(BIN)/cat.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+
+$(BIN)/rm : $(OBJS_START_BIN) $(BIN)/rm.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 

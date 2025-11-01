@@ -32,6 +32,7 @@ LIBK_CPPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 FREEOBJS=\
 $(ARCH_FREEOBJS) \
 string/strlen.o \
+string/strcat.o \
 string/strcmp.o \
 string/strncmp.o \
 stdlib/atoi.o \
@@ -40,18 +41,22 @@ stdlib/malloc.o \
 string/memcpy.o \
 string/memset.o \
 string/strdup.o \
+string/strtok.o \
 stdio/putchar.o \
 stdio/printf.o \
+stdio/vsprintf.o \
 stdio/puts.o \
 stdio/getchar.o \
 stdio/vprintf.o \
 file/open.o \
 file/creat.o \
+file/unlink.o \
 file/read.o \
 file/write.o \
 file/pread.o \
 sys/mman/mmap.o \
 unistd/execv.o \
+unistd/sleep.o \
 unistd/chdir.o \
 sched/sched_yield.o \
 

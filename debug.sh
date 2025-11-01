@@ -1,4 +1,5 @@
 #!/bin/sh
+
 set -e
 cd build
 
@@ -10,6 +11,9 @@ cd build
 export CFLAGS
 export ISO
 . ./iso.sh
+
+rm -f qemu.img
+./get-ext2-image.sh "qemu.img" fs-root
 
 # echo $QEMU_FLAGS
 

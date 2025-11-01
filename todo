@@ -22,6 +22,8 @@ file systems:
 	pathname lookup
 
 	ext2 dentry walking is kinda bad
+
+	ext2 dentry parsing is kinda bad
 	
 
 syscall wrapper might be duplicated somewhere

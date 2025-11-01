@@ -7,5 +7,6 @@
  */
 int open(char *path, int flags);
 int creat(const char *path, mode_t mode);
+int unlink(const char *path);
 
 #endif

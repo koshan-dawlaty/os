@@ -10,6 +10,8 @@
 #include "lib/list.h"
 #include "panic.h"
 #include "pit/pit.h"
+#include "scheduler.h"
+#include "scheduler/sleep.h"
 #include "serial.h"
 #include <fcntl.h>
 #include <kernel/tty.h>
@@ -57,6 +59,38 @@ void kernel_init()
 
 extern semaphore *test_semaphore;
 
+void kernel_task1()
+{
+    printf("1 is running\n");
+    sleep(10);
+    printf("this is kernel task1\n");
+    while (1)
+    {
+    }
+}
+
+void kernel_task2()
+{
+    printf("2 is running\n");
+    sleep(20);
+    printf("this is kernel task2\n");
+    while (1)
+    {
+    }
+}
+
+void kernel_task3()
+{
+    printf("3 is running\n");
+    sleep(30);
+    printf("this\n");
+
+    printf("this is kernel task3\n");
+    while (1)
+    {
+    }
+}
+
 int main()
 {
 
@@ -69,12 +103,17 @@ int main()
 
     printf("this is a number:%d\n", 123);
 
+    /* useless */
     keyboard_init();
 
     init_pit();
     init_pci();
     init_ata();
     init_vfs();
+
+#ifdef TESTS
+    run_all_tests();
+#endif
 
     /* asm("int $(0x50)"); */
     /* printf("test:%p\n", malloc(1)); */

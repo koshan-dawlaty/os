@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -27,39 +28,27 @@ int main()
         if (c == '\n')
         {
 
-            input = realloc(input, strlen(input) + 2);
-            input[strlen(input)] = ' ';
+            input_len++;
+            input = realloc(input, input_len);
+            input[input_len - 1] = 0;
 
+            char *s = strtok(input, " ");
             char **args = malloc(sizeof(char *));
-            size_t j = 0;
 
             size_t i = 0;
-            size_t current_arg_start = 0;
-
-            while (input[i] != 0)
+            while (s != NULL)
             {
-
-                if (input[i] == ' ')
-                {
-                    j++;
-                    args = realloc(args, sizeof(char *) * j);
-                    args[j - 1] = malloc(i - current_arg_start + 2);
-                    args[j - 1][i - current_arg_start] = 0;
-
-                    memcpy(args[j - 1], input + current_arg_start,
-                           i - current_arg_start);
-
-                    current_arg_start = i + 1;
-
-                    goto end;
-                }
-
-            end:
                 i++;
+                args = realloc(args, sizeof(char *) * i);
+                args[i - 1] = s;
+                printf("ptr:%p\n", args[i - 1]);
+
+                s = strtok(NULL, " ");
             }
 
-            args = realloc(args, sizeof(char *) * (j + 1));
-            args[j] = NULL;
+            i++;
+            args = realloc(args, sizeof(char *) * (i));
+            args[i - 1] = NULL;
 
             if (!strcmp(args[0], "cd"))
             {
@@ -74,7 +63,20 @@ int main()
             }
             else
             {
-                execv(args[0], args);
+                int err = execv(args[0], args);
+                if (err < 0)
+                {
+                    printf("could not execute, ");
+                    if (err == -ENOENT)
+                    {
+                        printf("file not found");
+                    }
+                    else if (err == -ENOEXEC)
+                    {
+                        printf("file not executable");
+                    }
+                    printf("\n");
+                }
             }
             free(input);
             input = malloc(0);
@@ -95,15 +97,10 @@ int main()
         else
         {
             input_len++;
-            input = realloc(input, input_len);
+            input = realloc(input, input_len + 1);
             input[input_len - 1] = c;
+            input[input_len] = 0;
         }
-
-        /* for (size_t i = 0; i < input_len + 2; i++) */
-        /* { */
-        /*     putchar('\b'); */
-        /* } */
-        /* putchar('\n'); */
 
         putchar('\b');
 

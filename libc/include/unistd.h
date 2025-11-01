@@ -6,5 +6,7 @@ int read(int fd, char *buf, size_t n);
 int pread(int fd, char *buf, size_t n, size_t offset);
 int execv(const char *path, char *const argv[]);
 int sched_yield();
+int unlink(const char *name);
+unsigned sleep(unsigned int seconds);
 
 #endif

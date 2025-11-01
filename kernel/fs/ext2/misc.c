@@ -2,19 +2,19 @@
 #include "vfs.h"
 #include <panic.h>
 
-inode_type ext2_get_inode_type(ext2_inode *node)
+dentry_type ext2_get_dentry_type(ext2_inode *node)
 {
     size_t type = (node->type >> 12);
     if (type == 4)
     {
-        return INODE_DIR;
+        return DENTRY_DIR;
     }
     else if (type == 8)
     {
-        return INODE_FILE;
+        return DENTRY_FILE;
     }
     else
     {
-        return INODE_INVALID;
+        return DENTRY_INVALID;
     }
 }

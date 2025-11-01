@@ -231,7 +231,10 @@ void *realloc(void *ptr, size_t new_size)
     void *new_ptr = malloc(new_size);
     memcpy(new_ptr, ptr, block->size);
 
-    /* free(ptr); */
+    if (ptr != new_ptr)
+    {
+        /* free(ptr); */
+    }
 
     return new_ptr;
 }

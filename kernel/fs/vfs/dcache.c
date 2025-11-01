@@ -2,34 +2,49 @@
 #include "err.h"
 #include "kernel/utils.h"
 #include "lib/list.h"
+#include "lib/refcount.h"
 #include <panic.h>
 #include <stdlib.h>
 #include <string.h>
 #include <vfs.h>
 
+struct dcache_dir
+{
+    /* parent directory, NULL is root */
+    dentry *dir;
+    list2 *values_head;
+    list l;
+};
+
 struct dcache_value
 {
     dentry *entry;
-    list l;
+    list2 l;
+
+    refcount *rc;
 };
+
+void dcache_free_value(struct dcache_value *value)
+{
+    free_dentry(value->entry);
+}
+
+void dcache_rc_value_release(refcount *rc)
+{
+    struct dcache_value *value = containerof(rc, struct dcache_value, rc);
+    free(value->entry);
+}
 
 struct dcache_value *new_dcache_value(dentry *entry)
 {
     struct dcache_value *out = malloc(sizeof(struct dcache_value));
 
     out->entry = entry;
-    out->l = LIST_INIT();
+    out->l = LIST2_INIT();
+    out->rc = new_refcount();
 
     return out;
 }
-
-struct dcache_dir
-{
-    /* parent directory, NULL is root */
-    dentry *dir;
-    list *values_head;
-    list l;
-};
 
 struct dcache_dir *new_dcache_dir(dentry *dir)
 {
@@ -64,14 +79,14 @@ struct dcache_dir *get_dcache_dir(dentry *entry)
 struct dcache_value *get_dcache_value(char *component, struct dcache_dir *dir)
 {
 
-    list *pos;
-    list_for_each(pos, dir->values_head)
+    list2 *pos;
+    list2_for_each(pos, dir->values_head)
     {
         struct dcache_value *value = containerof(pos, struct dcache_value, l);
 
         if (!strcmp(value->entry->name, component))
         {
-
+            /* refcount_get(value->rc); */
             return value;
         }
     }
@@ -127,14 +142,36 @@ void add_dcache(dentry *parent, dentry *new_entry)
     }
     else
     {
-        list_add(&new_value->l, dir->values_head);
+        list2_add(&new_value->l, dir->values_head);
     }
 
-    list *pos;
-    list_for_each(pos, dir->values_head)
+    list2 *pos;
+    list2_for_each(pos, dir->values_head)
     {
         struct dcache_value *value = containerof(pos, struct dcache_value, l);
     }
+}
+
+void remove_dcache(dentry *entry)
+{
+
+    dentry *parent = entry->parent;
+
+    struct dcache_dir *dir = get_dcache_dir(parent);
+
+    if (dir == NULL)
+    {
+        return;
+    }
+
+    struct dcache_value *value = get_dcache_value(entry->name, dir);
+
+    if (value == NULL)
+    {
+        return;
+    }
+
+    list2_remove(&value->l, &dir->values_head);
 }
 
 void init_dcache()

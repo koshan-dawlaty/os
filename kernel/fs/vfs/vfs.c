@@ -15,7 +15,9 @@ dentry *get_root_dir()
 {
     inode *node = current_superblock->type->inode_functions.get_inode(
         2, current_superblock);
-    dentry *entry = new_dentry("/", node);
+
+    /* TODO: maybe dont make a new dentry? */
+    dentry *entry = new_dentry("/", NULL, node, DENTRY_DIR);
 
     return entry;
 }
@@ -45,13 +47,20 @@ superblock *new_superblock(size_t blocksize, void *fs_private,
     return out;
 }
 
-dentry *new_dentry(char *name, inode *inode)
+dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type)
 {
     dentry *out = malloc(sizeof(dentry));
     out->inode = inode;
     out->name = name;
+    out->parent = parent;
+    out->type = type;
 
     return out;
+}
+void free_dentry(dentry *entry)
+{
+    free(entry->name);
+    /* TODO: free inode */
 }
 
 file *new_file(dentry *entry)
@@ -64,18 +73,25 @@ file *new_file(dentry *entry)
     return out;
 }
 
-inode *new_inode(ino_t number, inode_size size, inode_type type,
-                 void *fs_private)
+inode *new_inode(ino_t number, inode_size size, void *fs_private)
 {
     inode *out = malloc(sizeof(inode));
 
     out->number = number;
     out->size = size;
-    out->type = type;
 
     out->fs_private = fs_private;
 
     return out;
+}
+
+int delete_dentry(dentry *entry)
+{
+
+    remove_dcache(entry);
+
+    return current_superblock->type->dentry_functions.remove_dentry(
+        entry->parent, entry->name, current_superblock);
 }
 
 void register_filesystem(struct fs_type *type)

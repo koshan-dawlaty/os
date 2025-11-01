@@ -22,13 +22,6 @@ typedef struct
 superblock *new_superblock(size_t blocksize, void *fs_private,
                            const struct fs_type *type);
 
-typedef enum
-{
-    INODE_FILE,
-    INODE_DIR,
-    INODE_INVALID,
-} inode_type;
-
 typedef size_t inode_size;
 
 typedef struct
@@ -36,13 +29,10 @@ typedef struct
     ino_t number;
     inode_size size;
 
-    inode_type type;
-
     void *fs_private;
 } inode;
 
-inode *new_inode(ino_t number, inode_size size, inode_type type,
-                 void *fs_private);
+inode *new_inode(ino_t number, inode_size size, void *fs_private);
 
 typedef struct
 {
@@ -56,20 +46,37 @@ typedef struct
 
 } inode_functions;
 
-typedef struct
+typedef enum
+{
+    DENTRY_FILE,
+    DENTRY_DIR,
+    DENTRY_INVALID,
+    DENTRY_MOUNT_POINT,
+} dentry_type;
+
+typedef struct dentry
 {
     char *name;
+    struct dentry *parent;
     inode *inode;
+
+    dentry_type type;
 } dentry;
 
-dentry *new_dentry(char *name, inode *inode);
+/*
+ * passing parent as NULL will make the dentry be at the root dir
+ */
+dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type);
+void free_dentry(dentry *entry);
 
 typedef struct
 {
-    dentry *(*find_dentry)(char *path, superblock *sb);
-    dentry **(*get_dentries)(inode *inode, superblock *sb);
-    dentry *(*append_dentry)(inode *entry, char *name, ino_t number,
+    // dentry *(*find_dentry)(char *path, superblock *sb);
+    dentry **(*get_dentries)(dentry *entry, superblock *sb);
+    dentry *(*append_dentry)(dentry *entry, char *name, ino_t number,
                              superblock *sb);
+
+    int (*remove_dentry)(dentry *, char *, superblock *);
 } dentry_functions;
 
 typedef uint32_t fd_t;
@@ -85,7 +92,7 @@ typedef struct
     dentry *entry;
 } file;
 
-inline void add_file_offset(file *f, size_t add)
+static inline void add_file_offset(file *f, size_t add)
 {
     f->offset += add;
     if (f->offset > f->entry->inode->size)
@@ -128,5 +135,7 @@ dentry *lookup_path(const char *path);
 file *create_file(char *path);
 
 dentry *get_root_dir();
+
+int delete_dentry(dentry *entry);
 
 #endif

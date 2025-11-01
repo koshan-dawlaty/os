@@ -24,7 +24,7 @@ export ISO
 
 
 export ARCH=$(./default-host.sh)
-CFLAGS="${CFLAGS} -O1 -g -isystem=/usr/include -nostdlib $(./arch-flags.sh $ARCH) -DCONFIG_$ARCH " 
+CFLAGS="${CFLAGS} -O0 -g -isystem=/usr/include -nostdlib $(./arch-flags.sh $ARCH) -DCONFIG_$ARCH " 
 export CFLAGS
 export CPPFLAGS=''
 

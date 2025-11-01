@@ -90,4 +90,9 @@ void scheduler_set_regs_arguments(int argc, char **argv, ptr ip,
 
 void scheduler_set_regs_argv(int argc, char **argv, struct registers *regs);
 
+/*
+ * adds a task to the sleep queue that will sleep for time scheduler ticks
+ */
+void add_sleep_queue(struct task *task, size_t time);
+
 #endif
