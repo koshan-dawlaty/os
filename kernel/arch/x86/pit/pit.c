@@ -28,29 +28,6 @@ void init_pit()
     /* outb(PIT_CHANNEL0, 0); */
 }
 
-void pit_handler_c(struct registers *r)
-{
-
-    pit_time++;
-    if (pit_time % 10 == 0)
-    {
-        /* printf("interrupt frame sp:%p, normal sp:%p\n", r->frame.sp, r->esp);
-         */
-
-        /* printf("task switch ip:%p\n", r->frame.ip); */
-
-        if (is_scheduler_enabled())
-        {
-            schedule();
-        }
-
-        /* printf("%p\n", frame->ip); */
-        /* printf("pit time:%d\n", get_pit_time()); */
-    }
-
-    PIC_sendEOI(0);
-}
-
 ISR(pit_handler, {
     pit_time++;
     if (pit_time % 10 == 0)
