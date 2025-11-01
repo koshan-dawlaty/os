@@ -11,7 +11,7 @@ typedef struct
     uint16_t segment_selector;
     uint8_t flags;
 
-#else
+#elif defined(CONFIG_x86_64)
     u64 offset;
     u16 segment_selector;
     u8 flags;

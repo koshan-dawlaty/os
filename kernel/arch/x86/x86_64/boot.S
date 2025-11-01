@@ -256,6 +256,8 @@ entry_64_2:
 	
 	mov $stack_top, %rsp
 	
+	call kernel_init
+	call _init
 	call main
 
 1:

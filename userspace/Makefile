@@ -35,6 +35,7 @@ LINK_LIST=-l../libc/k.a
 # ARCHDIR_x86=x86_64
 
 
+ifdef CONFIG_x86_32
 OBJS_START=\
 $(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o \
@@ -42,6 +43,16 @@ $(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o \
 OBJS_END=\
 $(ARCHDIR)/$(ARCHDIR_x86)/crtend.o \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
+
+else
+OBJS_START=\
+	$(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
+
+OBJS_END=\
+	$(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
+
+endif
+
 
 # this is kinda bad
 OBJS_START_BIN = $(foreach obj,$(OBJS_START),bin/$(obj))
@@ -100,8 +111,10 @@ $(BIN)/%.o: %.c
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) 
 
 
+ifdef CONFIG_x86_32
 $(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o $(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
+endif
 
 clean:
 	$(RM) -r bin/*

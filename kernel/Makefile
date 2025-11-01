@@ -61,12 +61,19 @@ fs/vfs/pathname.o \
 fs/vfs/vfs.o \
 fs/vfs/dcache.o \
 
+ifdef CONFIG_x86_32
+ARCH_OBJS2=
+	$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o \
+	$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o \
+else 
+ARCH_OBJS2=
+endif
+
 OBJS=\
 $(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
-$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o  \
+$(ARCH_OBJS2) \
 $(KERNEL_OBJS) \
 $(TEST_OBJS) \
-$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o  \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
  
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
@@ -75,11 +82,9 @@ OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 LINK_LIST=\
 $(LDFLAGS) \
 $(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
-$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o  \
 $(KERNEL_OBJS) \
 $(TEST_OBJS) \
 $(LIBS) \
-$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o  \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
 
 LINK_LIST_BIN = $(foreach obj,$(LINK_LIST),bin/$(obj))
@@ -98,9 +103,11 @@ $(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk.a
 	grub-file --is-x86-multiboot $(BIN)/os.kernel
 
 
+ifdef CONFIG_x86_32
 # ia_32 only
 $(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o $(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
+endif
 
 
 $(BIN)/%.o: %.S

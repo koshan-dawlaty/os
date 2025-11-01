@@ -66,10 +66,6 @@ void init_gdt()
              ((limit >> 16) & 0xF) << 48 | ((base >> 24) & 0xFF) << 56;
     gdt[6] = (base >> 32) & 0xFFFFFFFFULL;
 
-    printf("%p\n", gdt[5]);
-    printf("%p\n", gdt[6]);
-    printf("%p\n", &tss);
-
     gdtr.limit = sizeof(gdt) - 1;
     gdtr.base = (ptr)&gdt;
 
