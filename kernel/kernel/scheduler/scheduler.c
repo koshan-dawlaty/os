@@ -9,6 +9,7 @@
 #include "vfs.h"
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <memory/get_free_pages.h>
 #include <scheduler.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -57,6 +58,7 @@ char **create_user_args(int argc, char **argv)
 {
     /* TODO: this can run out of space */
     char **args = get_free_pages_user(1);
+
     size_t string_offset = argc * sizeof(char *);
 
     for (int i = 0; i < argc; i++)

@@ -6,6 +6,22 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#define DEFAULT_BITMAP_SIZE 1024 /* size in pages */
+u8 gfp_kernel_bitmap[DEFAULT_BITMAP_SIZE / 8] = {GFP_FREE};
+const struct memory_zone gfp_kernel_zone = {
+    .virtual = 0xffffD00000000000,
+    .physical = 0x6000000,
+    .size = DEFAULT_BITMAP_SIZE,
+    .bitmap = gfp_kernel_bitmap,
+    .pg_flags = PAGING_WRITEABLE,
+};
+
+struct memory_zone gfp_user_zone = {.virtual = 0x90000000,
+                                    .physical = 0xC00000,
+                                    .size = DEFAULT_BITMAP_SIZE,
+                                    .bitmap = NULL,
+                                    .pg_flags = PAGING_WRITEABLE | PAGING_USER};
+
 /*
  * @amount: the number of pages to allocate
  * @zone: the zone to allocated the pages from

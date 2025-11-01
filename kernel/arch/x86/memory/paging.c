@@ -5,6 +5,7 @@
 #include "kernel/utils.h"
 #include "memory/paging_flags.h"
 #include "memory/paging_internal.h"
+#include <memory/get_free_pages.h>
 
 #include "multiboot.h"
 #include "vga.h"

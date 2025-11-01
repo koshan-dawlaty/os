@@ -27,21 +27,8 @@ struct memory_zone
     /* TODO: add a lock here */
 };
 
-#define DEFAULT_BITMAP_SIZE 1024 /* size in pages */
-u8 gfp_kernel_bitmap[DEFAULT_BITMAP_SIZE / 8] = {GFP_FREE};
-const struct memory_zone gfp_kernel_zone = {
-    .virtual = 0xffffD00000000000,
-    .physical = 0x6000000,
-    .size = DEFAULT_BITMAP_SIZE,
-    .bitmap = gfp_kernel_bitmap,
-    .pg_flags = PAGING_WRITEABLE,
-};
-
-struct memory_zone gfp_user_zone = {.virtual = 0x90000000,
-                                    .physical = 0xC00000,
-                                    .size = DEFAULT_BITMAP_SIZE,
-                                    .bitmap = NULL,
-                                    .pg_flags = PAGING_WRITEABLE | PAGING_USER};
+extern const struct memory_zone gfp_kernel_zone;
+extern struct memory_zone gfp_user_zone;
 
 /*
  * @amount: the number of pages to allocate
@@ -63,9 +50,24 @@ void free_pages_zone(void *addr, size_t amount, const struct memory_zone *zone);
  */
 void init_gfp_zones();
 
-// static inline void *get_free_pages(size_t amount)
-// {
-//     return get_free_pages_zone(amount, &gfp_kernel_zone);
-// }
+static inline void *get_free_pages(size_t amount)
+{
+    return get_free_pages_zone(amount, &gfp_kernel_zone);
+}
+
+static inline void free_pages(void *addr, size_t amount)
+{
+    free_pages_zone(addr, amount, &gfp_kernel_zone);
+}
+
+static inline void *get_free_pages_user(size_t amount)
+{
+    return get_free_pages_zone(amount, &gfp_user_zone);
+}
+
+static inline void free_pages_user(void *addr, size_t amount)
+{
+    free_pages_zone(addr, amount, &gfp_user_zone);
+}
 
 #endif

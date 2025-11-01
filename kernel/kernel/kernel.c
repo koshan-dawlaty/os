@@ -8,6 +8,7 @@
 #include "kernel/usermode.h"
 #include "kernel/utils.h"
 #include "lib/list.h"
+#include "memory/get_free_pages.h"
 #include "panic.h"
 #include "pit/pit.h"
 #include "scheduler.h"
@@ -50,12 +51,6 @@ __attribute__((noreturn)) void __stack_chk_fail(void)
 }
 
 extern struct pagedir init_pgdir;
-
-void kernel_init()
-{
-    terminal_initialize();
-    init_paging();
-}
 
 extern semaphore *test_semaphore;
 
@@ -116,6 +111,13 @@ void kernel_task3()
     while (1)
     {
     }
+}
+
+void kernel_init()
+{
+    terminal_initialize();
+    init_paging();
+    init_gfp_zones();
 }
 
 int main()

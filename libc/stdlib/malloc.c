@@ -5,8 +5,8 @@
 #include <string.h>
 
 #ifdef __is_libk
-#include <kernel/paging.h>
 #include <kernel/semaphore.h>
+#include <memory/get_free_pages.h>
 #include <panic.h>
 
 #endif
