@@ -74,8 +74,6 @@ void insert_bin(heap_block **bin, heap_block *block)
     (*bin)->next = old;
 }
 
-static int heap_debug = 0;
-
 /* TODO: bad */
 void *user_malloc_addr = (void *)0xA0000000;
 uint32_t user_malloc_offset = 4096;

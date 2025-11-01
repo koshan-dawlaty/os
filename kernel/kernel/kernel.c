@@ -5,7 +5,6 @@
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
-#include "kernel/usermode.h"
 #include "kernel/utils.h"
 #include "lib/list.h"
 #include "memory/get_free_pages.h"

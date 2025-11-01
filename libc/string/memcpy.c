@@ -3,7 +3,7 @@
 
 typedef unsigned char memcpy_t;
 
-void *memcpy(void *dstptr, void *srcptr, size_t size)
+void *memcpy(void *dstptr, const void *srcptr, size_t size)
 {
     memcpy_t *dst = (memcpy_t *)dstptr;
     memcpy_t *src = (memcpy_t *)srcptr;

@@ -12,11 +12,11 @@
 int execv(const char *path, char *const argv[])
 {
 #ifndef __is_libk
-    return syscall_wrapper_asm(2, (uint32_t)path, (uint32_t)argv, 0, 0, 0);
+    return syscall_wrapper_asm(2, (uintptr_t)path, (uintptr_t)argv, 0, 0, 0);
 
 #else
 
-    int f = open(path, 0);
+    int f = open((char *)path, 0);
 
     if (f < 0)
     {
@@ -33,7 +33,7 @@ int execv(const char *path, char *const argv[])
             argc++;
         }
 
-        add_task(load_elf(elf, argc, argv));
+        add_task(load_elf(elf, argc, (char **)argv));
     }
     else
     {

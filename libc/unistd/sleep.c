@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <unistd.h>
 
 #ifdef __is_libk
@@ -15,4 +16,7 @@ unsigned sleep(unsigned int seconds)
 #else
 /* TODO: syscall */
 #endif
+
+    /* TODO: return value */
+    return -EINVAL;
 }

@@ -1,7 +1,6 @@
 #include "elf.h"
 #include "gdt.h"
 #include "interrupts/pic.h"
-#include "kernel/usermode.h"
 #include "lib/list.h"
 #include "sleep.h"
 #include "unistd.h"

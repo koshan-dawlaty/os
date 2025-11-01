@@ -169,7 +169,7 @@ that they will not work because the bootstrap has not initialized them
             else if (*format == 'p')
             {
                 void *p = va_arg(list, void *);
-                char *str = int_to_string((uint32_t)p, 16);
+                char *str = int_to_string((uintptr_t)p, 16);
 
                 increment_buf(&out, &out_len, &capacity, strlen(str));
                 out_len += strlen(str);

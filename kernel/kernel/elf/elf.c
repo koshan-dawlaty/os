@@ -1,6 +1,5 @@
 #include "gdt.h"
 #include "kernel/paging.h"
-#include "kernel/usermode.h"
 #include "kernel/utils.h"
 #include "memory/paging_flags.h"
 #include "scheduler.h"

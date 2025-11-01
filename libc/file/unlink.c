@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <utils.h>
 
 #ifdef __is_libk
 #include <vfs.h>
@@ -11,6 +12,6 @@ int unlink(const char *path)
     return delete_dentry(entry);
 
 #else
-    return syscall_wrapper_asm(14, path, 0, 0, 0, 0);
+    return syscall_wrapper_asm(14, (uintptr_t)path, 0, 0, 0, 0);
 #endif
 }

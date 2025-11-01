@@ -39,13 +39,17 @@ extern long paging_page_table_addr;
 #define free_page_bitmap_size NUM_PAGES / 8
 uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
+#ifdef CONFIG_x86_64
 #define PHYS_PAGE_START 0x200000
+#elif defined(CONFIG_x86_32)
+#define PHYS_PAGE_START 0x200000
+#endif
 
 struct pagedir init_pgdir;
 struct pagedir *current_pagedir = &init_pgdir;
 void *get_free_phys_page_dir(struct pagedir dir)
 {
-    u64 i = 0;
+    ptr i = 0;
 
     while (i < NUM_PAGES)
     {

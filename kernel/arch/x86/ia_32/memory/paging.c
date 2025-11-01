@@ -15,8 +15,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef uint32_t directory_entry;
-typedef uint32_t table_entry;
+typedef ptr directory_entry;
+typedef ptr table_entry;
 
 extern long paging_page_table_addr;
 #define paging_page_table ((table_entry *)&paging_page_table_addr)
@@ -112,7 +112,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
             /* printf("this\n"); */
         }
 
-        table_entry *new_table = get_free_phys_page_dir(*pgdir);
+        table_entry *new_table = get_free_phys_page();
         if (pgdir != &init_pgdir)
         {
             /* printf("physaddr:%p, virtual:%p\n", physaddr, virtualaddr); */

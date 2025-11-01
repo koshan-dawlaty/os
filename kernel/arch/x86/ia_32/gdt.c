@@ -72,12 +72,11 @@ struct tss_t
 } __attribute__((packed));
 struct tss_t tss;
 
-static uint64_t gdt[6] = {0};
-static struct GDT_register gdtr;
+uint64_t gdt[6] = {0};
+struct GDT_register gdtr;
 
 #define USER_STACK_SIZE 0x4000
-volatile static uint8_t user_stack[USER_STACK_SIZE]
-    __attribute__((aligned(16)));
+volatile uint8_t user_stack[USER_STACK_SIZE] __attribute__((aligned(16)));
 
 volatile void *user_stack_top = &user_stack[USER_STACK_SIZE];
 

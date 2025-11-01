@@ -21,8 +21,6 @@ test_result *new_test_result(bool failed, char *message)
     out->failed = failed;
     out->message = message;
 
-    /* TODO: bad */
-
     return out;
 }
 test_result *get_failed_test(intmax_t num, ...)
@@ -32,7 +30,6 @@ test_result *get_failed_test(intmax_t num, ...)
 
     char *reason;
 
-    /* TODO: use vsprintf for format */
     const char *format = NULL;
     if (num == 1)
     {
@@ -114,6 +111,8 @@ void add_test(test *t)
 test_result *run_test(test *test)
 {
     test_result *result = test->func();
+
+    return result;
 }
 
 void run_all_tests()

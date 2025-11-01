@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <extension.h>
 #include <kernel/tty.h>
 #include <kernel/types.h>
@@ -37,4 +38,8 @@ int vprintf(const char *format, va_list list)
     char *str = vrprintf(format, list);
     print(str);
     free(str);
+
+    /* TODO: make return value standard compliant */
+
+    return -EINVAL;
 }

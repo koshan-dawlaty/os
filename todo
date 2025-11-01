@@ -36,3 +36,6 @@ do whatever linux does to not have the syscall handler just be a switch statemen
 maybe NULL shoudnt be used to mean root directory in dcache / pathname lookup (but i think linux does it so mabye its fine ??)
 
 struct pagedir should maybe be architecture specific, and generic code should instead maybe use a struct address_space
+
+
+many libc functions cast const char * to char *

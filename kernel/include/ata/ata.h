@@ -50,7 +50,6 @@ void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
 void write_ata_pio(uint16_t io_offset, uint16_t control_offset, uint32_t lba,
                    uint8_t *buffer, size_t buffer_size);
 
-// TODO: kinda bad
 extern uint16_t ata_bus_master_register;
 
 typedef struct
