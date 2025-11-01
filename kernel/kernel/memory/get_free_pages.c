@@ -1,33 +1,18 @@
+#include "memory/paging_flags.h"
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <lib/list.h>
+#include <memory/get_free_pages.h>
 #include <stddef.h>
+#include <stdlib.h>
 
-struct memory_zone
-{
-    ptr virtual;
-    ptr physical;
-
-    ptr size; /* the size of this zone in pages */
-
-    u8 *bitmap;
-    u8 pg_flags; /* paging flags to be used with this zone */
-
-    /* TODO: add a lock here */
-};
-
-/* TODO: define this somewhere in architecture */
-#define PAGE_SIZE 4096
-
-#define GFP_FREE 0
-#define GFP_IN_USE 1
-
-const struct memory_zone gpf_kernel_zone = {
-    .virtual = 0xffffD00000000000,
-    .physical = 0x6000000,
-
-};
-
-void *get_free_pages_zone(size_t amount, struct memory_zone *zone)
+/*
+ * @amount: the number of pages to allocate
+ * @zone: the zone to allocated the pages from
+ *
+ * returns address of allocated memory
+ */
+void *get_free_pages_zone(size_t amount, const struct memory_zone *zone)
 {
 
     ptr i;
@@ -83,4 +68,23 @@ void *get_free_pages_zone(size_t amount, struct memory_zone *zone)
     /* release_semaphore(get_free_pages_semaphore); */
 
     return address;
+}
+
+void free_pages_zone(void *addr, size_t amount, const struct memory_zone *zone)
+{
+
+    size_t index = ((size_t)addr - zone->virtual);
+    for (size_t i = 0; i < amount; i++)
+    {
+        zone->bitmap[(index + i) / 8] |= GFP_FREE >> ((index + i) % 8);
+        unmap_page((void *)(addr + (i * PAGE_SIZE)));
+    }
+}
+
+/*
+ * initalizes all of the zones that dont use a bitmap in the kernel binary
+ */
+void init_gfp_zones()
+{
+    gfp_user_zone.bitmap = malloc(gfp_user_zone.size / 8);
 }
