@@ -1,14 +1,18 @@
 CC?=i686-elf-gcc
+
 DEFAULT_HOST!=../build/default-host.sh
 HOST?=$(DEFAULT_HOST)
-HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
-ARCHDIR=arch/$(HOSTARCH)
+HOSTARCH!=../build/archdir.sh $(HOST)
+
+
+ARCHDIR_x86=$(notdir $(HOSTARCH))
+ARCHDIR=arch/$(firstword $(subst /, ,$(HOSTARCH)))
+
+
+# ARCHDIR=arch/$(HOSTARCH)
 
 BIN=bin
 
-DEFAULT_HOST!=../build/default-host.sh
-HOST?=$(DEFAULT_HOST)
-HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
 
 FS_ROOT?=
 BINARY_PREFIX?=bin
@@ -28,7 +32,8 @@ CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strin
 # very bad
 LINK_LIST=-l../libc/k.a
 
-ARCHDIR_x86=x86_64
+# ARCHDIR_x86=x86_64
+
 
 OBJS_START=\
 $(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
@@ -119,3 +124,5 @@ install-binaries: $(BINARIES_BIN)
 	# cp $(BIN)/$(BINARIES) ../build/$(FS_ROOT)/$(BINARY_PREFIX)
 
 
+test : 
+	echo $(HOSTARCH)

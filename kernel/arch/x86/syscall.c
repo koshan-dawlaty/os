@@ -27,10 +27,10 @@ struct syscall_regs
     ptr gs;
     ptr eax;
     ptr ip;
-    u64 cs;
+    ptr cs;
     ptr flags;
     ptr sp;
-    u64 ss;
+    ptr ss;
 
 } __attribute__((packed));
 
@@ -42,9 +42,9 @@ int syscall_handler(struct syscall_regs *regs)
 
     /* *(char *)(0xC03FF002 + test) = 'a'; */
     /* test += 2; */
-    /* printf("eax: %p, ebx:%p, ecx:%p, edx:%p, esi:%p, edi:%p, ebp:%p\n", */
-    /*        registers->eax, registers->ebx, registers->ecx, registers->edx, */
-    /*        registers->esi, registers->edi, registers->ebp); */
+    printf("eax: %p, ebx:%p, ecx:%p, edx:%p, esi:%p, edi:%p, ebp:%p\n",
+           regs->eax, regs->ebx, regs->ecx, regs->edx, regs->esi, regs->edi,
+           regs->ebp);
 
     if (regs->eax == 0)
     {

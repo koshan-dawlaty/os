@@ -2,7 +2,7 @@ CC?=i686-elf-gcc
 
 DEFAULT_HOST!=../build/default-host.sh
 HOST?=$(DEFAULT_HOST)
-HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
+HOSTARCH!=../build/archdir.sh $(HOST)
 
 CFLAGS?=-O2 -g 
 CPPFLAGS?=
@@ -20,8 +20,9 @@ CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
-ARCHDIR_x86=x86_64
-ARCHDIR=arch/$(HOSTARCH)
+
+ARCHDIR_x86=$(notdir $(HOSTARCH))
+ARCHDIR=arch/$(firstword $(subst /, ,$(HOSTARCH)))
 
 
 include $(ARCHDIR)/make.config
@@ -62,21 +63,23 @@ fs/vfs/dcache.o \
 
 OBJS=\
 $(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o  \
 $(KERNEL_OBJS) \
 $(TEST_OBJS) \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o  \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
-
+ 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
 
-# $(ARCHDIR)/$(ARCHDIR_x86)/crtend.o 
-# $(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o 
 LINK_LIST=\
 $(LDFLAGS) \
 $(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o  \
 $(KERNEL_OBJS) \
 $(TEST_OBJS) \
 $(LIBS) \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o  \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
 
 LINK_LIST_BIN = $(foreach obj,$(LINK_LIST),bin/$(obj))

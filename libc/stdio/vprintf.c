@@ -1,4 +1,5 @@
 #include <kernel/tty.h>
+#include <kernel/types.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -162,8 +163,8 @@ that they will not work because the bootstrap has not initialized them
             }
             else if (*format == 'p')
             {
-                uint64_t p = va_arg(list, uint64_t);
-                print(int_to_string_unsigned((uint64_t)p, 16, false));
+                ptr p = va_arg(list, ptr);
+                print(int_to_string_unsigned((ptr)p, 16, false));
             }
         }
         else if (*format == '%')

@@ -17,7 +17,7 @@ typedef struct
     u32 memory_size;
     u32 flags;
     u32 align;
-} elf_program_header_32;
+} __attribute__((packed)) elf_program_header_32;
 
 elf *parse_elf32(int fd)
 {
@@ -33,7 +33,7 @@ elf *parse_elf32(int fd)
     uint32_t program_header_table_offset = word_from_buffer(header_buf + 28);
     uint32_t program_header_size = short_from_buffer(header_buf + 42);
 
-    out->entry_point = word_from_buffer(header_buf + 32);
+    out->entry_point = word_from_buffer(header_buf + 24);
 
     out->program_headers_len = short_from_buffer(header_buf + 44);
 
@@ -45,12 +45,12 @@ elf *parse_elf32(int fd)
           program_header_table_offset);
 
     elf_program_header **program_headers =
-        malloc(sizeof(elf_program_header_32 *) * out->program_headers_len);
+        malloc(sizeof(elf_program_header *) * out->program_headers_len);
     for (size_t i = 0; i < out->program_headers_len; i++)
     {
         elf_program_header_32 *raw_header =
-            (elf_program_header_32 *)(program_headers_buf) +
-            (i * program_header_size);
+            (elf_program_header_32 *)(program_headers_buf +
+                                      (i * program_header_size));
 
         elf_program_header *new_header = malloc(sizeof(elf_program_header));
 
@@ -62,6 +62,8 @@ elf *parse_elf32(int fd)
         new_header->type = raw_header->type;
         new_header->virtual_addr = raw_header->virutal_addr;
         new_header->physical_addr = raw_header->physical_addr;
+
+        printf("type!!:%p\n", raw_header->type);
 
         program_headers[i] = new_header;
     }

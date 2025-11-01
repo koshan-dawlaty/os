@@ -14,8 +14,11 @@ extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
 int main()
 {
 
-    /* putchar('a'); */
-    /* syscall_wrapper_asm(12, 'a', 0, 0, 0, 0); */
+    syscall_wrapper_asm(0, 'a', 0, 0, 0, 0);
+    putchar('a');
+    while (1)
+    {
+    }
 
     char *input = malloc(0);
     size_t input_len = 0;

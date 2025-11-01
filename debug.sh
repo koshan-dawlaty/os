@@ -19,7 +19,7 @@ export ISO
 # gdb -ex "set \$flags=$QEMU_FLAGS" -x debug.gdb
 #
 
-USER_EXECUTABLE="fs-root/overwrite"
+USER_EXECUTABLE="fs-root/ksh"
 USER_EXECUTABLE2="fs-root/elf_test2"
 
 KERNEL_ADDR=objdump -h isodir/boot/os.kernel | grep \ .text\  | awk '{print $4}'
@@ -29,5 +29,5 @@ USERSPACE_ADDR=objdump -h $USER_EXECUTABLE2 | grep \ .text\  | awk '{print $4}'
 gdb -ex " add-symbol-file isodir/boot/os.kernel $KERNEL_ADDR" \
 	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
-	-ex "target remote | qemu-system-x86_64 -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")" \
+	-ex "target remote | $QEMU_COMMAND -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")" \
 	-ex ""

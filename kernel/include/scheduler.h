@@ -85,5 +85,9 @@ void disable_scheduler();
 bool is_scheduler_enabled();
 
 struct task *get_current_task();
+void scheduler_set_regs_arguments(int argc, char **argv, ptr ip,
+                                  struct registers *regs);
+
+void scheduler_set_regs_argv(int argc, char **argv, struct registers *regs);
 
 #endif

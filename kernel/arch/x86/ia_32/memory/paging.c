@@ -1,8 +1,6 @@
 #include "kernel/paging.h"
 #include "gdt.h"
 
-#error "should be x86-64"
-
 #include "interrupts/idt.h"
 #include "kernel/tty.h"
 #include "kernel/utils.h"
@@ -26,7 +24,7 @@ extern long paging_page_table_addr;
 #define PAGE_SIZE 4096
 #define DIRECTORY_ADDR ((directory_entry *)0xFFFFF000)
 
-struct pagedir init_pgdir;
+extern struct pagedir init_pgdir;
 
 void *get_physaddr(void *virtualaddr)
 {

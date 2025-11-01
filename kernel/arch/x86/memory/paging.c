@@ -26,8 +26,7 @@ extern long paging_page_table_addr;
 
 #ifdef CONFIG_x86_64
 #define DIRECTORY_ADDR ((directory_entry *)0xffffc00000001000)
-
-#elif defined(CONFIG_x86_64)
+#elif defined(CONFIG_x86_32)
 #define DIRECTORY_ADDR ((directory_entry *)0xFFFFF000)
 #endif
 
@@ -115,8 +114,15 @@ void load_pgdir(struct pagedir *d)
 void init_paging()
 {
 
+#ifdef CONFIG_x86_32
+    void *directory_physical = get_physaddr(DIRECTORY_ADDR);
+#else
+
+    void *directory_physical = (void *)0x1000;
+#endif
+
     init_pgdir =
-        (struct pagedir){.pgdir = (void *)0x1000,
+        (struct pagedir){.pgdir = directory_physical,
                          .pgdir_virtual = (void *)DIRECTORY_ADDR,
                          .physical_pagetables = paging_page_table,
                          /* will break if this is not the current pagedir */

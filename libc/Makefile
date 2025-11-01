@@ -1,6 +1,6 @@
 DEFAULT_HOST!=../build/default-host.sh
 HOST?=$(DEFAULT_HOST)
-HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
+HOSTARCH!=../build/archdir.sh $(HOST)
 
 CFLAGS?=-O2 -g
 CPPFLAGS?=
@@ -18,7 +18,9 @@ CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude -I$(DESTDIR)$(INCLUDEDIR)
 LIBK_CFLAGS:=$(CFLAGS)
 LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_libk
 
-ARCHDIR=arch/$(HOSTARCH)
+
+ARCHDIR_x86=$(notdir $(HOSTARCH))
+ARCHDIR=arch/$(firstword $(subst /, ,$(HOSTARCH)))
 
 include $(ARCHDIR)/make.config
 

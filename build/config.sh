@@ -4,9 +4,11 @@ PROJECTS="../libc ../kernel ../userspace"
 export MAKE=${MAKE:-make}
 export HOST=${HOST:-$(./default-host.sh)}
 
-export AR=${HOST}-ar
-export AS=${HOST}-as
-export CC=${HOST}-gcc
+COMPILER_PREFIX=$(./compiler-arch.sh $HOST) 
+
+export AR=${COMPILER_PREFIX}-ar
+export AS=${COMPILER_PREFIX}-as
+export CC=${COMPILER_PREFIX}-gcc
 
 export PREFIX=/usr
 export EXEC_PREFIX=$PREFIX
@@ -21,10 +23,12 @@ ISO="os.iso"
 export ISO
 
 
-export ARCH=x86_64
-CFLAGS="${CFLAGS} -O1 -g  -mcmodel=kernel -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -DCONFIG_$ARCH" 
+export ARCH=x86_32
+CFLAGS="${CFLAGS} -O1 -g -nostdlib $(./arch-flags.sh $ARCH) -DCONFIG_$ARCH " 
 export CFLAGS
 export CPPFLAGS=''
+
+export QEMU_COMMAND=qemu-system-$(./qemu-arch.sh $ARCH)
 
 # Configure the cross-compiler to use the desired system root.
 export SYSROOT="$(pwd)/sysroot"

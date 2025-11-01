@@ -1,8 +1,7 @@
 #!/bin/sh
 
-if [ $1 = "x86_64-elf"  ] || [ $1 = "i686-elf"; then
+if [ $1 = "x86_64-elf"  ] || [ $1 = "i686-elf" ]; then
 	echo "x86"
-
 fi
 
 

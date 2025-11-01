@@ -60,16 +60,13 @@ extern semaphore *test_semaphore;
 int main()
 {
 
-    terminal_initialize();
-
-    init_paging();
-
     init_gdt();
     init_idt();
 
     /* get_free_pages(1); */
 
     map_page((void *)0x12345678, (void *)0x123466, 0);
+
     printf("this is a number:%d\n", 123);
 
     keyboard_init();
