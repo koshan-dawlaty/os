@@ -8,8 +8,13 @@
 
 #define DEFAULT_BITMAP_SIZE 1024 /* size in pages */
 u8 gfp_kernel_bitmap[DEFAULT_BITMAP_SIZE / 8] = {GFP_FREE};
+
 const struct memory_zone gfp_kernel_zone = {
+#ifdef CONFIG_x86_64
     .virtual = 0xffffD00000000000,
+#elif defined(CONFIG_x86_32)
+    .virtual = 0xD0000000,
+#endif
     .physical = 0x6000000,
     .size = DEFAULT_BITMAP_SIZE,
     .bitmap = gfp_kernel_bitmap,
