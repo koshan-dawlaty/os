@@ -26,6 +26,7 @@ char *strtok_r(char *s, char *sep, char **state)
             out[i] = 0;
 
             *state = s + strlen(out) + 1;
+            printf("returning:%p\n", out);
 
             return out;
         }

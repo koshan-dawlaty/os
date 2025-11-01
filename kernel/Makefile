@@ -2,7 +2,7 @@ CC?=i686-elf-gcc
 
 DEFAULT_HOST!=../build/default-host.sh
 HOST?=$(DEFAULT_HOST)
-HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
+HOSTARCH!=../build/archdir.sh $(HOST)
 
 CFLAGS?=-O2 -g 
 CPPFLAGS?=
@@ -20,7 +20,9 @@ CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
-ARCHDIR=arch/$(HOSTARCH)
+
+ARCHDIR_x86=$(notdir $(HOSTARCH))
+ARCHDIR=arch/$(firstword $(subst /, ,$(HOSTARCH)))
 
 
 include $(ARCHDIR)/make.config
@@ -44,6 +46,8 @@ kernel/utils.o \
 kernel/usermode.o \
 kernel/panic.o \
 kernel/elf/elf.o \
+kernel/elf/elf32.o \
+kernel/elf/elf64.o \
 kernel/scheduler/scheduler.o \
 kernel/scheduler/sleep.o \
 kernel/scheduler/semaphore.o \
@@ -60,26 +64,31 @@ fs/vfs/pathname.o \
 fs/vfs/vfs.o \
 fs/vfs/dcache.o \
 
+ifdef CONFIG_x86_32
+ARCH_OBJS2=
+	$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o \
+	$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o \
+else 
+ARCH_OBJS2=
+endif
+
 OBJS=\
-$(ARCHDIR)/crti.o \
-$(ARCHDIR)/crtbegin.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
+$(ARCH_OBJS2) \
 $(KERNEL_OBJS) \
 $(TEST_OBJS) \
-$(ARCHDIR)/crtend.o \
-$(ARCHDIR)/crtn.o \
-
+$(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
+ 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
 
 LINK_LIST=\
 $(LDFLAGS) \
-$(ARCHDIR)/crti.o \
-$(ARCHDIR)/crtbegin.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
 $(KERNEL_OBJS) \
 $(TEST_OBJS) \
 $(LIBS) \
-$(ARCHDIR)/crtend.o \
-$(ARCHDIR)/crtn.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
 
 LINK_LIST_BIN = $(foreach obj,$(LINK_LIST),bin/$(obj))
 
@@ -92,13 +101,16 @@ all: $(BIN)/os.kernel
 
 
 # ../libc/libk.a is bad
-$(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/linker.ld ../libc/libk.a
-	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -lk -lgcc
+$(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk.a
+	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -lk -lgcc
 	grub-file --is-x86-multiboot $(BIN)/os.kernel
 
 
-$(BIN)/$(ARCHDIR)/crtbegin.o $(BIN)/$(ARCHDIR)/crtend.o:
+ifdef CONFIG_x86_32
+# ia_32 only
+$(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o $(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
+endif
 
 
 $(BIN)/%.o: %.S

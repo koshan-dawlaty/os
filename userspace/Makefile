@@ -1,14 +1,18 @@
 CC?=i686-elf-gcc
+
 DEFAULT_HOST!=../build/default-host.sh
 HOST?=$(DEFAULT_HOST)
-HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
-ARCHDIR=arch/$(HOSTARCH)
+HOSTARCH!=../build/archdir.sh $(HOST)
+
+
+ARCHDIR_x86=$(notdir $(HOSTARCH))
+ARCHDIR=arch/$(firstword $(subst /, ,$(HOSTARCH)))
+
+
+# ARCHDIR=arch/$(HOSTARCH)
 
 BIN=bin
 
-DEFAULT_HOST!=../build/default-host.sh
-HOST?=$(DEFAULT_HOST)
-HOSTARCH!=../build/target-triplet-to-arch.sh $(HOST)
 
 FS_ROOT?=
 BINARY_PREFIX?=bin
@@ -31,13 +35,27 @@ CFLAGS:=$(CFLAGS) -fno-semantic-interposition
 # very bad
 LINK_LIST=-l../libc/k.a
 
+# ARCHDIR_x86=x86_64
+
+
+ifdef CONFIG_x86_32
 OBJS_START=\
-$(ARCHDIR)/crti.o \
-$(ARCHDIR)/crtbegin.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o \
 
 OBJS_END=\
-$(ARCHDIR)/crtend.o \
-$(ARCHDIR)/crtn.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o \
+$(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
+
+else
+OBJS_START=\
+	$(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
+
+OBJS_END=\
+	$(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
+
+endif
+
 
 # this is kinda bad
 OBJS_START_BIN = $(foreach obj,$(OBJS_START),bin/$(obj))
@@ -101,8 +119,10 @@ $(BIN)/%.o: %.c
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) 
 
 
-$(BIN)/$(ARCHDIR)/crtbegin.o $(BIN)/$(ARCHDIR)/crtend.o:
+ifdef CONFIG_x86_32
+$(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtbegin.o $(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
+endif
 
 clean:
 	$(RM) -r bin/*
@@ -125,3 +145,5 @@ install-binaries: $(BINARIES_BIN)
 	# cp $(BIN)/$(BINARIES) ../build/$(FS_ROOT)/$(BINARY_PREFIX)
 
 
+test : 
+	echo $(HOSTARCH)

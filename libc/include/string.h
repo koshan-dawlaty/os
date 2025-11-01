@@ -14,5 +14,7 @@ char *strdup(char *str);
 int strcmp(const char *s1, const char *s2);
 int strncmp(const char *s1, const char *s2, size_t len);
 int strcat(char *dest, char *src);
+char *strtok(char *s, char *sep);
+char *strtok_r(char *s, char *sep, char **state);
 
 #endif

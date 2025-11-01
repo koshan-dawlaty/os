@@ -9,18 +9,6 @@
 
 #include <kernel/tty.h>
 
-double pow(double x, double y)
-{
-    int i = 0;
-    while (i < y)
-    {
-        x *= x;
-        i++;
-    }
-
-    return x;
-}
-
 // TODO: kinda slow
 char *int_to_string(intmax_t in, int base)
 {

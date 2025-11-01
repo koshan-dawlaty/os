@@ -1,5 +1,6 @@
 #ifndef PAGING_H
 #define PAGING_H
+#include "kernel/types.h"
 #define PAGE_SIZE 4096
 
 #include "multiboot.h"
@@ -9,10 +10,10 @@
 
 struct pagedir
 {
-    uint32_t *pgdir;
+    ptr *pgdir;
     /* the virtual address of the page directory in the initial page directory
      */
-    uint32_t *pgdir_virtual;
+    ptr *pgdir_virtual;
     /* used to map physical pages */
     uint32_t *physical_pagetables;
     /* virtual address of the self referencing page table */

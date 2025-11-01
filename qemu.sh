@@ -17,10 +17,14 @@ rm -f qemu.img
 
     # -device piix3-ide \
 if [[  $# -ge 1  ]] && [[ $1 == "terminal"  ]] ; then
-qemu-system-$(./target-triplet-to-arch.sh $HOST)  -nographic  -display curses $QEMU_FLAGS
+# qemu-system-$(./target-triplet-to-arch.sh $HOST)  -nographic  -display curses $QEMU_FLAGS
+
+$QEMU_COMMAND -nographic  -display curses $QEMU_FLAGS
 exit 0
 fi
 
 
-qemu-system-$(./target-triplet-to-arch.sh $HOST) -monitor stdio $QEMU_FLAGS
+
+
+$QEMU_COMMAND -monitor stdio $QEMU_FLAGS
 # qemu-system-$(./target-triplet-to-arch.sh $HOST) -serial file:test.txt $QEMU_FLAGS

@@ -81,7 +81,7 @@ mkfifo "${SERIAL_PIPE}.out"
 # 	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
 # 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
 # 	-ex "target remote | qemu-system-i386 -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")"
-qemu-system-$(./target-triplet-to-arch.sh $HOST) -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE &
+$QEMU_COMMAND -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE &
 QEMU_PID=$!
 
 

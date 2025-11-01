@@ -2,7 +2,6 @@
 #define STDIO_H
 
 #include <stdarg.h>
-#include <stdint.h>
 
 int putchar(int ic);
 int puts(char *c);

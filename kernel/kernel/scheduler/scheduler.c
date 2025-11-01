@@ -4,6 +4,8 @@
 #include "kernel/usermode.h"
 #include "lib/list.h"
 #include "sleep.h"
+#include "unistd.h"
+#include "utils.h"
 #include "vfs.h"
 #include <kernel/paging.h>
 #include <kernel/types.h>
@@ -36,22 +38,48 @@ bool is_scheduler_enabled()
     return scheduler_enabled;
 }
 
-void new_task_usermode_start(ptr addr)
+void new_task_usermode_start(int argc, char **argv, ptr addr)
 {
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
+
+    temp_regs->esp = 0xBFFEF000;
+    scheduler_set_regs_argv(argc, argv, temp_regs);
+
+    printf("jumping to:%p\n", addr);
+
     jump_usermode_asm(addr, temp_regs);
 }
 
-struct task *new_task_user(ptr ip, ptr sp)
+/* copies args to userspace */
+char **create_user_args(int argc, char **argv)
+{
+    /* TODO: this can run out of space */
+    char **args = get_free_pages_user(1);
+    size_t string_offset = argc * sizeof(char *);
+
+    for (int i = 0; i < argc; i++)
+    {
+        memcpy(args + string_offset, argv[i], strlen(argv[i]));
+        *(char *)(args + string_offset + strlen(argv[i]) + 1) = 0;
+
+        args[i] = (char *)(args + string_offset);
+
+        string_offset += strlen(argv[i]) + 1;
+    }
+
+    return args;
+}
+
+struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 {
     struct task *out = malloc(sizeof(struct task));
 
     out->bp = sp;
 
     out->next = NULL;
-    out->stack = get_free_pages(1) + (PAGE_SIZE - 0xC);
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
 
     out->regs = (struct registers){
         .esp = (ptr)out->stack,
@@ -65,13 +93,53 @@ struct task *new_task_user(ptr ip, ptr sp)
     out->working_dir = NULL;
 
     *(ptr *)(out->stack) = (ptr)new_task_usermode_start;
-    *(ptr *)(out->stack + 8) = ip;
+    /* edx is the third argument first and second are set later in this function
+     */
+    /* *(ptr *)(out->stack + 8) = ip; */
 
     out->pgdir = new_pagedir();
     write_kernel_page_tables(out->pgdir);
 
+    char **args_temp = malloc(argc * sizeof(char *));
+    for (int i = 0; i < argc; i++)
+    {
+        args_temp[i] = malloc(strlen(argv[i]) + 1);
+        memcpy(args_temp[i], argv[i], strlen(argv[i]) + 1);
+        args_temp[i][strlen(argv[i])] = 0;
+    }
+
+    /* TODO: this calls load_pgdir alot */
+    struct pagedir *temp = get_current_pagedir();
+    load_pgdir(out->pgdir);
+    char **args = create_user_args(argc, args_temp);
+
+    printf("address:%p\n", ip);
+    scheduler_set_regs_arguments(argc, args, ip, &out->regs);
+
+    load_pgdir(temp);
+
     return out;
 }
+
+/*
+struct task *new_task(ptr ip)
+{
+    struct task *out = malloc(sizeof(struct task));
+
+    out->next = NULL;
+
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
+    out->working_dir = NULL;
+
+    out->regs.esp = (ptr)out->stack;
+    out->regs.eflags = 1 << 9;
+
+    *(ptr *)(out->stack) = ip;
+    out->pgdir = new_pagedir();
+    write_kernel_page_tables(out->pgdir);
+
+    return out;
+}*/
 
 struct task *new_task(ptr ip)
 {
@@ -95,7 +163,6 @@ struct task *new_task(ptr ip)
 struct task *create_kernel_task()
 {
     struct task *out = new_task(0);
-    printf("added task:%p\n", out);
 
     save_registers(&out->regs);
     out->pgdir = &init_pgdir;
@@ -139,8 +206,6 @@ void remove_task(struct task *task)
 
 void add_task(struct task *task)
 {
-
-    asm("cli");
 
     if (current_task == NULL)
     {
@@ -196,7 +261,6 @@ int num_task_switches = 0;
 void switch_tasks()
 {
     /* printf("switching from:%p ", current_task); */
-
     if (current_task->next != NULL)
     {
         current_task = current_task->next;
@@ -219,14 +283,20 @@ void schedule()
     }
 
     save_registers(&current_task->regs);
+
     switch_tasks();
+
     if (current_task == NULL)
     {
         return;
     }
 
+    /* printf("%p\n", current_task->pgdir->pgdir); */
+    /* printf("%p\n", current_task->pgdir->pgdir_virtual); */
+
     load_pgdir(current_task->pgdir);
-    set_kernel_stack((uint32_t)current_task->stack);
+
+    set_kernel_stack((ptr)current_task->stack);
 
     PIC_sendEOI(0);
     load_registers(&current_task->regs);

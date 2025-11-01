@@ -78,6 +78,11 @@ void add_sleep_queue(struct task *task, size_t time)
 void increment_sleep_queue()
 {
 
+    if (sleep_queue_head == NULL)
+    {
+        return;
+    }
+
     struct sleep_queue_entry *head =
         LIST_ENTRY(sleep_queue_head, struct sleep_queue_entry, l);
 

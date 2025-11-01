@@ -9,8 +9,14 @@
 #include <string.h>
 #include <unistd.h>
 
+typedef uintptr_t ptr;
+extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
+
 int main()
 {
+
+    syscall_wrapper_asm(0, 'a', 0, 0, 0, 0);
+    putchar('a');
 
     char *input = malloc(0);
     size_t input_len = 0;
@@ -35,6 +41,7 @@ int main()
                 i++;
                 args = realloc(args, sizeof(char *) * i);
                 args[i - 1] = s;
+                printf("ptr:%p\n", args[i - 1]);
 
                 s = strtok(NULL, " ");
             }

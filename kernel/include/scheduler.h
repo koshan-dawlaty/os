@@ -6,27 +6,37 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/* TODO: mabye do the architecture specific part of this architecture
+ * independent */
+/* the stack pointer is the member of this struct that is guaranteed to exist */
 struct registers
 {
+
+#ifdef CONFIG_x86_32
     uint32_t gs, fs, es, ds;
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
     uint32_t eflags;
+#elif defined(CONFIG_x86_64)
+
+    /*  0   8   10  18 */
+    u64 gs, fs, es, ds;
+    /*  20   28   30   38   40   48   50   58 */
+    u64 edi, esi, ebp, esp, ebx, edx, ecx, eax;
+    /*  60 */
+    u64 eflags;
+    /*  68  70  78   80   88   90   98   A0 */
+    u64 r8, r9, r10, r11, r12, r13, r14, r15;
+#endif
 
 } __attribute__((packed));
 
 struct task
 {
-    uint32_t instruction_pointer;
-    /* user */
-    uint32_t stack_pointer;
     struct task *next;
-
     struct pagedir *pgdir;
     void *stack;
-
     struct registers regs;
-    uint32_t bp;
-
+    ptr bp;
     dentry *working_dir;
 };
 
@@ -46,8 +56,9 @@ void remove_task_queue(struct task **queue, struct task *task);
 /*
  * initializes the page directory as a free page
  */
-struct task *new_task_user(ptr ip, ptr sp);
 struct task *new_task(ptr ip);
+
+struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv);
 
 /*
  * frees task t
@@ -74,6 +85,10 @@ void disable_scheduler();
 bool is_scheduler_enabled();
 
 struct task *get_current_task();
+void scheduler_set_regs_arguments(int argc, char **argv, ptr ip,
+                                  struct registers *regs);
+
+void scheduler_set_regs_argv(int argc, char **argv, struct registers *regs);
 
 /*
  * adds a task to the sleep queue that will sleep for time scheduler ticks

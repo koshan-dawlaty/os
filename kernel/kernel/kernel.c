@@ -1,12 +1,14 @@
 #include "ata/ata.h"
 #include "elf.h"
+#include "gdt.h"
+#include "interrupts/idt.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
 #include "kernel/usermode.h"
+#include "kernel/utils.h"
 #include "lib/list.h"
 #include "panic.h"
-#include "pci/pci.h"
 #include "pit/pit.h"
 #include "scheduler.h"
 #include "scheduler/sleep.h"
@@ -14,6 +16,7 @@
 #include <fcntl.h>
 #include <kernel/tty.h>
 #include <memory/paging_flags.h>
+#include <pci/pci.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -117,37 +120,50 @@ void kernel_task3()
 
 int main()
 {
-    asm("sti");
 
-    printf("abc:%p\n", main);
-    printf("abcdef:%p\n", 2);
+    init_gdt();
+    init_idt();
+
+    /* get_free_pages(1); */
+
+    map_page((void *)0x12345678, (void *)0x123466, 0);
+
+    printf("this is a number:%d\n", 123);
 
     /* useless */
     keyboard_init();
+
     init_pit();
     init_pci();
     init_ata();
-
     init_vfs();
-    init_usermode();
-    serial_init(0x3F8);
-
-    test_semaphore = new_semaphore(1);
 
 #ifdef TESTS
     run_all_tests();
 #endif
 
+    /* asm("int $(0x50)"); */
+    /* printf("test:%p\n", malloc(1)); */
+
+    /* printf("%p\n", *(char *)get_free_pages(1)); */
+
+    /* init_usermode(); */
+    /* serial_init(0x3F8); */
+
+    /* test_semaphore = new_semaphore(1); */
+
+    /* #ifdef TESTS */
+    /* run_all_tests(); */
+    /* #endif */
+
     char *args[] = {"/ksh", NULL};
 
     int f1 = open("/ksh", 0);
-    elf_32 *elf = parse_elf32(f1);
+    elf *elf = parse_elf(f1);
 
-    struct task *task1 = load_elf32(elf, 1, args);
-    free_elf32(elf);
+    struct task *task1 = load_elf(elf, 1, args);
 
-    struct registers *temp_regs = malloc(sizeof(struct registers));
-    *temp_regs = (struct registers){0};
+    free_elf(elf);
 
     enable_scheduler();
     add_task(create_kernel_task());
@@ -157,9 +173,7 @@ int main()
     shared = malloc(10);
     shared_memory_semaphore = new_semaphore(1);
 
-    add_task(new_task((ptr)kernel_task1));
-    add_task(new_task((ptr)kernel_task2));
-    add_task(new_task((ptr)kernel_task3));
+    add_task(task1);
 
     return 0;
 }

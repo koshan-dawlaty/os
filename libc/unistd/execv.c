@@ -23,7 +23,7 @@ int execv(const char *path, char *const argv[])
         return -ENOENT;
     }
 
-    elf_32 *elf = parse_elf32(f);
+    elf *elf = parse_elf(f);
     if (elf != NULL)
     {
 
@@ -33,7 +33,7 @@ int execv(const char *path, char *const argv[])
             argc++;
         }
 
-        add_task(load_elf32(elf, argc, argv));
+        add_task(load_elf(elf, argc, argv));
     }
     else
     {
