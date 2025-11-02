@@ -31,18 +31,29 @@ SECTIONS
 	{
 		*(.data)
 	}
-	.ctors ALIGN (4) : AT (ADDR(.ctors) - 0xC0000000) {
-        __CTOR_LIST__ = .;
-        KEEP(*(.ctors))
-        KEEP(*(.init_array))
-        __CTOR_END__ = .;
-    }
 	.bss ALIGN (4K) : AT (ADDR (.bss) - 0xC0000000)
 	{
 		*(COMMON)
 		*(.bss)
 		*(.bootstrap_stack)
 	}
+
+
+	.ctors ALIGN (4) : AT(ADDR(.ctors) - 0xC0000000)
+	{
+		PROVIDE(__ctors_start = .);
+		KEEP(*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+		KEEP(*(.ctors))
+		PROVIDE(__ctors_end = .);
+	}
+
+
+	/* .fini_array : ALIGN(8) { */
+	/* 	PROVIDE_HIDDEN(__fini_array_start = .); */
+	/* 	KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*))) */
+	/* 	KEEP(*(.fini_array)) */
+	/* 	PROVIDE_HIDDEN(__fini_array_end = .); */
+	/* } */
 	/* Add a symbol that indicates the end address of the kernel. */
 	_kernel_end = .;
 }

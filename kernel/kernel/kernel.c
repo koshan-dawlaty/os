@@ -31,6 +31,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include <tests/tests.h>
 
 #if UINT32_MAX == UINTPTR_MAX
 /* #define STACK_CHK_GUARD 0xe2dee396 */
@@ -119,8 +120,22 @@ void kernel_init()
     init_gfp_zones();
 }
 
+extern void (*__ctors_start[])(void);
+extern void (*__ctors_end[])(void);
+
+void call_constructors(void)
+{
+
+    for (void (**ctor)(void) = __ctors_start; ctor < __ctors_end; ++ctor)
+    {
+        (*ctor)();
+    }
+}
+
 int main()
 {
+
+    call_constructors();
 
     init_gdt();
     init_idt();

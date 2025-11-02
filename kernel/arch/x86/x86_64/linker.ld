@@ -54,6 +54,22 @@ SECTIONS
        . = ALIGN(4096);
    }
 
+
+	.ctors ALIGN (4) : AT(ADDR(.ctors) - KERNEL_VMA)
+	{
+		PROVIDE(__ctors_start = .);
+		KEEP(*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+		KEEP(*(.ctors))
+		PROVIDE(__ctors_end = .);
+	}
+
+	/* .fini_array : ALIGN(8) { */
+	/* 	PROVIDE_HIDDEN(__fini_array_start = .); */
+	/* 	KEEP(*(SORT_BY_INIT_PRIORITY(.fini_array.*))) */
+	/* 	KEEP(*(.fini_array)) */
+	/* 	PROVIDE_HIDDEN(__fini_array_end = .); */
+	/* } */
+
    _end = .;
 
    /DISCARD/ :
