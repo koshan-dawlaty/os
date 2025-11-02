@@ -94,7 +94,8 @@ void *get_free_pages_zone(size_t amount, const struct memory_zone *zone)
 void free_pages_zone(void *addr, size_t amount, const struct memory_zone *zone)
 {
 
-    size_t index = ((size_t)addr - zone->virtual);
+    size_t index = (((size_t)addr - zone->virtual)) / 4096;
+
     for (size_t i = 0; i < amount; i++)
     {
         zone->bitmap[(index + i) / 8] |= GFP_FREE >> ((index + i) % 8);
