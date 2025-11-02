@@ -131,7 +131,7 @@ void run_all_tests()
         /*     printf("addr: %p\n", tests[i]); */
         /* } */
 
-        /* printf("running: %s\n", tests[i]->name); */
+        printf("running: %s\n", tests[i]->name);
         test_result *result = run_test(tests[i]);
 
         if (result->failed)

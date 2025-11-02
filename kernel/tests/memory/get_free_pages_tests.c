@@ -24,25 +24,32 @@ TEST(get_free_pages_test_basic, {
     free_pages(three, 1);
 })
 
-TEST(get_free_pages_test_multiple, {
+test_result *get_free_pages_test_multiple_test()
+{
     int amount = 10;
     int size = 1;
-    // bad
     int **ptrs = malloc(amount * sizeof(void *));
-
     for (int i = 0; i < amount; i++)
     {
         ptrs[i] = get_free_pages(size);
         *(ptrs[i]) = i;
     }
-
     for (int i = 0; i < amount; i++)
     {
-        ASSERT_EQ(*ptrs[i], i);
+        if (*ptrs[i] != i)
+        {
+            return get_failed_test((int)0);
+        };
     }
-
     for (int i = 0; i < amount; i++)
     {
         free_pages(ptrs[i], size);
     }
-})
+    return new_test_result(0, "");
+}
+__attribute__((constructor)) void
+get_free_pages_test_multiple_test_constructor()
+{
+    add_test(new_test("get_free_pages_test_multiple",
+                      get_free_pages_test_multiple_test));
+}

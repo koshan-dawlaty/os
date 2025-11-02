@@ -113,13 +113,6 @@ void kernel_task3()
     }
 }
 
-void kernel_init()
-{
-    terminal_initialize();
-    init_paging();
-    init_gfp_zones();
-}
-
 extern void (*__ctors_start[])(void);
 extern void (*__ctors_end[])(void);
 
@@ -132,19 +125,15 @@ void call_constructors(void)
     }
 }
 
-int main()
+void kernel_init()
 {
 
-    call_constructors();
+    terminal_initialize();
+    init_paging();
+    init_gfp_zones();
 
     init_gdt();
     init_idt();
-
-    /* get_free_pages(1); */
-
-    map_page((void *)0x12345678, (void *)0x123466, 0);
-
-    printf("this is a number:%d\n", 123);
 
     /* useless */
     keyboard_init();
@@ -154,23 +143,15 @@ int main()
     init_ata();
     init_vfs();
 
+    call_constructors();
+
 #ifdef TESTS
     run_all_tests();
 #endif
+}
 
-    /* asm("int $(0x50)"); */
-    /* printf("test:%p\n", malloc(1)); */
-
-    /* printf("%p\n", *(char *)get_free_pages(1)); */
-
-    /* init_usermode(); */
-    /* serial_init(0x3F8); */
-
-    /* test_semaphore = new_semaphore(1); */
-
-    /* #ifdef TESTS */
-    /* run_all_tests(); */
-    /* #endif */
+int main()
+{
 
     char *args[] = {"/ksh", NULL};
 
