@@ -89,31 +89,35 @@ mkfifo "${SERIAL_PIPE}.out"
 $QEMU_COMMAND -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE &
 QEMU_PID=$!
 
+echo $SERIAL_PIPE.out
 
 
 FILE_NAME="$SERIAL_PIPE.out"
 
+
 TEST_OUTPUT=""
 
-while IFS= read -r -n1 char; do
+while IFS= read -r -N1 char; do
 
 	TEST_OUTPUT="${TEST_OUTPUT}$char"
-	
-  if [[ $char == $'\n' ]]; then
-	  echo "TEST"
-		break
-  fi
 
   if [[ $char == $'\x04' ]]; then
 		break
   fi
 done < $FILE_NAME
 
-TEST_OUTPUT="${TEST_OUTPUT%?}"
-
-printf "THIS IS THE OUTPUT %s" "$TEST_OUTPUT"
-
+# TEST_OUTPUT="${TEST_OUTPUT%?}"
 kill $QEMU_PID
+
+echo "\n"
+TEST_STRING=$(printf "%s" "$TEST_OUTPUT")
+
+
+printf "%s" "$TEST_STRING" | tappy 
+
+
+rm $SERIAL_PIPE.out
+rm $SERIAL_PIPE.in
 
 cd ..
 ./clean.sh
