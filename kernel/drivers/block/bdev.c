@@ -1,6 +1,7 @@
 #include <container_of.h>
 #include <drivers/block/bdev.h>
 #include <lib/refcount.h>
+#include <panic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,7 +38,57 @@ void drop_bdev(struct bdev *dev)
 
 int bdev_write(struct bdev *dev, u8 *buf, size_t num, u64 offset)
 {
-    return 12345;
+    size_t block_size = dev->block_size;
+    size_t bytes_written = 0;
+
+    if (offset % block_size != 0)
+    {
+        u8 *block = malloc(block_size);
+        dev->functions.read_blocks(dev, block, 1, offset / block_size);
+
+        size_t bytes_remaining = block_size - (offset % block_size);
+
+        if (num < bytes_remaining)
+        {
+            bytes_remaining = num;
+        }
+
+        memcpy(block + (offset % block_size), buf, bytes_remaining);
+        dev->functions.write_blocks(dev, block, 1, offset / block_size);
+
+        bytes_written += bytes_remaining;
+
+        free(block);
+    }
+
+    offset += bytes_written;
+    num -= bytes_written;
+
+    size_t num_blocks = (num) / block_size;
+    size_t block_num = (offset) / block_size;
+
+    printf("num_blocks:%d\n", num_blocks);
+    printf("block_num:%d\n", block_num);
+
+    dev->functions.write_blocks(dev, buf + bytes_written, num_blocks,
+                                block_num);
+    bytes_written += num_blocks * block_size;
+
+    if (num % block_size != 0)
+    {
+        u8 *block = malloc(block_size);
+        dev->functions.read_blocks(dev, block, 1, (offset + num) / block_size);
+
+        size_t bytes_remaining = block_size - (num % block_size);
+
+        memcpy(block, buf + bytes_written, bytes_remaining);
+
+        dev->functions.write_blocks(dev, block, 1, (offset + num) / block_size);
+
+        free(block);
+    }
+
+    return 1234;
 }
 
 /* TODO: fix return values */
@@ -72,11 +123,6 @@ int bdev_read(struct bdev *dev, u8 *buf, size_t num, u64 offset)
 
     size_t num_blocks = (num) / block_size;
     size_t block_num = (offset) / block_size;
-
-    if (num_blocks <= 0)
-    {
-        return 0;
-    }
 
     dev->functions.read_blocks(dev, buf + bytes_written, num_blocks, block_num);
     bytes_written += num_blocks * block_size;

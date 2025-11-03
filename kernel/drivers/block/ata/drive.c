@@ -110,7 +110,7 @@ int ata_write_bdev(struct bdev *dev, u8 *buffer, size_t buffer_size, u64 offset)
     /* if (!drive->is_dma) */
     /* { */
     write_ata_pio(drive->io_offset, drive->control_offset, offset, buffer,
-                  buffer_size);
+                  buffer_size * 512);
     /* } */
 
     /* TODO: return value */
