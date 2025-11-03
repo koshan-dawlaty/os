@@ -34,7 +34,6 @@ elf *parse_elf(int fd)
 struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
-    printf("entry:%p\n", elf->entry_point);
     struct task *t = new_task_user(elf->entry_point, 0xBFFEF000, argc, argv);
     struct pagedir *pgdir = t->pgdir;
     struct pagedir *temp_pgdir = get_current_pagedir();

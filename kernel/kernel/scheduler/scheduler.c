@@ -47,8 +47,6 @@ void new_task_usermode_start(int argc, char **argv, ptr addr)
     temp_regs->esp = 0xBFFEF000;
     scheduler_set_regs_argv(argc, argv, temp_regs);
 
-    printf("jumping to:%p\n", addr);
-
     jump_usermode_asm(addr, temp_regs);
 }
 
@@ -114,7 +112,6 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     load_pgdir(out->pgdir);
     char **args = create_user_args(argc, args_temp);
 
-    printf("address:%p\n", ip);
     scheduler_set_regs_arguments(argc, args, ip, &out->regs);
 
     load_pgdir(temp);
