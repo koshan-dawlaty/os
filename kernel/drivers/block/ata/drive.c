@@ -1,6 +1,7 @@
 #include "ata/ata.h"
 #include "ata_utils.h"
 #include "utils.h"
+#include <drivers/block/bdev.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,8 +89,47 @@ int send_identify(uint16_t io_offset, uint16_t control_offset,
     return 0;
 }
 
-ata_drive *get_ata_drive(uint8_t drive_num)
+int ata_read_bdev(struct bdev *dev, u8 *buffer, size_t amount, u64 offset)
 {
+    ata_drive *drive = ATA_DRIVE(dev);
+
+    /* if (!drive->is_dma) */
+    /* { */
+    read_ata_pio(buffer, drive->io_offset, drive->control_offset, amount,
+                 offset);
+    /* } */
+
+    /* TODO: return value */
+    return 1234;
+}
+
+int ata_write_bdev(struct bdev *dev, u8 *buffer, size_t buffer_size, u64 offset)
+{
+    ata_drive *drive = ATA_DRIVE(dev);
+
+    /* if (!drive->is_dma) */
+    /* { */
+    write_ata_pio(drive->io_offset, drive->control_offset, offset, buffer,
+                  buffer_size);
+    /* } */
+
+    /* TODO: return value */
+    return 1234;
+}
+
+void ata_free_bdev(struct bdev *dev)
+{
+    ata_drive *drive = ATA_DRIVE(dev);
+    free(drive);
+}
+
+struct bdev_functions ata_bdev_functions = {.write_blocks = ata_write_bdev,
+                                            .read_blocks = ata_read_bdev,
+                                            .free = ata_free_bdev};
+
+struct bdev *get_ata_drive(u8 drive_num)
+{
+
     ata_drive *drive = malloc(sizeof(ata_drive));
 
     if ((drive_num) % 2 == 0)
@@ -152,27 +192,7 @@ ata_drive *get_ata_drive(uint8_t drive_num)
     /*     drive->is_dma = 0; */
     /* } */
 
-    return drive;
-}
+    struct bdev *out = new_bdev(ata_bdev_functions, 512, drive);
 
-void read_drive(ata_drive *drive, uint8_t *buffer, uint32_t amount,
-                uint64_t lba)
-{
-
-    /* if (!drive->is_dma) */
-    /* { */
-    read_ata_pio(buffer, drive->io_offset, drive->control_offset, amount / 512,
-                 lba);
-    /* } */
-}
-
-void write_drive(ata_drive *drive, uint8_t *buffer, uint32_t buffer_size,
-                 uint64_t lba)
-{
-
-    /* if (!drive->is_dma) */
-    /* { */
-    write_ata_pio(drive->io_offset, drive->control_offset, lba, buffer,
-                  buffer_size);
-    /* } */
+    return out;
 }

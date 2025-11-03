@@ -2,6 +2,8 @@
 #define ATA_H
 
 // #include "interrupts/idt.h"
+#include "drivers/block/bdev.h"
+#include <kernel/types.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -79,16 +81,10 @@ typedef struct
  *
  * drive num of 3 is secondary bus drive 2
  *
- *
- *
  * can return NULL
  */
-ata_drive *get_ata_drive(uint8_t drive_num);
+struct bdev *get_ata_drive(u8 drive_num);
 
-void write_drive(ata_drive *drive, uint8_t *buffer, uint32_t buffer_size,
-                 uint64_t lba);
-
-void read_drive(ata_drive *drive, uint8_t *buffer, uint32_t amount,
-                uint64_t lba);
+extern struct bdev_functions ata_bdev_functions;
 
 #endif

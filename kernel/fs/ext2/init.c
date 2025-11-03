@@ -1,3 +1,4 @@
+#include "drivers/block/bdev.h"
 #include "ext2.h"
 #include "string.h"
 #include <ata/ata.h>
@@ -64,32 +65,33 @@ superblock *ext2_parse_superblock_vfs()
     return out;
 }
 
-ata_drive *ext2_drive = NULL;
+struct bdev *ext2_drive = NULL;
 
 void fs_read(uint8_t *buffer, size_t buffer_size, uint64_t addr)
 {
     // TODO: dynamically select drive or something
-    read_drive(ext2_drive, buffer, buffer_size, addr);
+    bdev_read(ext2_drive, buffer, buffer_size, addr);
 }
 
 void fs_write(uint8_t *buffer, size_t len, uint64_t addr)
 {
-    write_drive(ext2_drive, buffer, len, addr);
+    bdev_write(ext2_drive, buffer, len, addr);
 }
 
 uint8_t *ext2_read_block(size_t index, superblock *sb)
 {
-    uint8_t *buffer = malloc(EXT2_BLOCK_SIZE(sb));
-    uint64_t lba = (index * (EXT2_BLOCK_SIZE(sb) / 512));
-    fs_read(buffer, EXT2_BLOCK_SIZE(sb), lba);
+
+    u8 *buffer = malloc(EXT2_BLOCK_SIZE(sb));
+    u64 offset = index * EXT2_BLOCK_SIZE(sb);
+    fs_read(buffer, EXT2_BLOCK_SIZE(sb), offset);
 
     return buffer;
 }
 
 void ext2_write_block(uint8_t *buffer, size_t index, superblock *sb)
 {
-    uint64_t lba = (index * (EXT2_BLOCK_SIZE(sb) / 512));
-    fs_write(buffer, EXT2_BLOCK_SIZE(sb), lba);
+    uint64_t offset = (index * (EXT2_BLOCK_SIZE(sb)));
+    fs_write(buffer, EXT2_BLOCK_SIZE(sb), offset);
 }
 
 static inline uint32_t get_datablock_field(uint8_t *superblock, size_t index)
@@ -105,7 +107,8 @@ struct ext2_superblock *ext2_parse_superblock()
 {
     struct ext2_superblock *sb = malloc(sizeof(struct ext2_superblock));
     uint8_t *superblock_buffer = malloc(1024);
-    fs_read(superblock_buffer, 1024, 2);
+
+    fs_read(superblock_buffer, 1024, 1024);
 
     sb->total_inodes = get_datablock_field(superblock_buffer, 0);
     sb->total_blocks = get_datablock_field(superblock_buffer, 4);
@@ -135,8 +138,9 @@ struct ext2_superblock *ext2_parse_superblock()
         ((block_group_table_size * sb->block_size));
 
     uint8_t *buf = malloc(block_group_table_size_bytes);
+    /* printf("block group:%p\n", block_group_table_size_bytes); */
     /* lba may break with block sizes > 1024 */
-    fs_read(buf, block_group_table_size_bytes, 4);
+    fs_read(buf, block_group_table_size_bytes, 1024 * 2);
     sb->group_descriptor_table = (ext2_group_descriptor *)buf;
 
     return sb;

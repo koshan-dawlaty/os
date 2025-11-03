@@ -1,17 +1,17 @@
 #include "ata/ata.h"
+#include "drivers/block/bdev.h"
 #include "tests/tests.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-ata_drive *drive = NULL;
+struct bdev *pio_test_drive = NULL;
 
 void init_pio_tests()
 {
-    if (drive == NULL)
+    if (pio_test_drive == NULL)
     {
-        drive = get_ata_drive(0);
-        drive->is_dma = 0;
+        pio_test_drive = get_ata_drive(0);
     }
 }
 
@@ -59,7 +59,7 @@ TEST(pio_high_lba, {
 
     uint8_t *inital_content = malloc(sectors * 512);
 
-    read_drive(drive, inital_content, sectors * 512, lba);
+    bdev_read(pio_test_drive, inital_content, sectors * 512, lba * 512);
 
     uint8_t *buffer = malloc(sectors * 512);
 
@@ -68,17 +68,17 @@ TEST(pio_high_lba, {
         buffer[i] = (i % 10) + 0x30;
     }
 
-    write_drive(drive, buffer, sectors * 512, lba);
+    bdev_write(pio_test_drive, buffer, sectors * 512, lba * 512);
 
     uint8_t *result_buffer = malloc(sectors * 512);
-    read_drive(drive, result_buffer, sectors * 512, lba);
+    bdev_read(pio_test_drive, result_buffer, sectors * 512, lba * 512);
 
     for (size_t i = 0; i < sectors * 512; i++)
     {
         ASSERT_EQ(buffer[i], result_buffer[i]);
     }
 
-    write_drive(drive, inital_content, sectors * 512, lba);
+    bdev_write(pio_test_drive, inital_content, sectors * 512, lba * 512);
 
     free(buffer);
     free(result_buffer);

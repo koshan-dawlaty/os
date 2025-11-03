@@ -39,3 +39,5 @@ struct pagedir should maybe be architecture specific, and generic code should in
 
 
 many libc functions cast const char * to char *
+
+block device read might not work if it is not sector aligned

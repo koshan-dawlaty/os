@@ -64,11 +64,12 @@ fs/vfs/pathname.o \
 fs/vfs/vfs.o \
 fs/vfs/dcache.o \
 \
-kernel/drivers/block/ata/pio.o \
-kernel/drivers/block/ata/dma.o \
-kernel/drivers/block/ata/utils.o \
-kernel/drivers/block/ata/drive.o \
-kernel/drivers/block/ata/ata.o \
+drivers/block/ata/pio.o \
+drivers/block/ata/dma.o \
+drivers/block/ata/utils.o \
+drivers/block/ata/drive.o \
+drivers/block/ata/ata.o \
+drivers/block/bdev.o \
 
 
 OBJS=\
