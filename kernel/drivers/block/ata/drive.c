@@ -1,7 +1,7 @@
 #include "ata/ata.h"
 #include "ata_utils.h"
 #include "utils.h"
-#include <drivers/block/bdev.h>
+#include <bdev.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

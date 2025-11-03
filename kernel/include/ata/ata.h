@@ -2,7 +2,7 @@
 #define ATA_H
 
 // #include "interrupts/idt.h"
-#include "drivers/block/bdev.h"
+#include <bdev.h>
 #include <kernel/types.h>
 #include <stddef.h>
 #include <stdint.h>
