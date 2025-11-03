@@ -63,6 +63,12 @@ fs/vfs/file.o \
 fs/vfs/pathname.o \
 fs/vfs/vfs.o \
 fs/vfs/dcache.o \
+\
+kernel/drivers/block/ata/pio.o \
+kernel/drivers/block/ata/dma.o \
+kernel/drivers/block/ata/utils.o \
+kernel/drivers/block/ata/drive.o \
+kernel/drivers/block/ata/ata.o \
 
 
 OBJS=\

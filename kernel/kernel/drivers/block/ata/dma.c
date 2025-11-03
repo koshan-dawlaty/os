@@ -1,5 +1,5 @@
 #include "ata/ata.h"
-#include "ata/ata_utils.h"
+#include "ata_utils.h"
 #include <stdint.h>
 
 struct __attribute__((packed))
