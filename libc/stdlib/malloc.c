@@ -14,7 +14,6 @@
 // TODO: this is duplicated in kernel
 long align_long2(long in, long align)
 {
-
     return ((in / align) + 1) * align;
 
     if (in % align == 0)
@@ -50,7 +49,7 @@ void print_bin(heap_block **bin)
 
 static inline void *block_to_ptr(heap_block *block)
 {
-    return ((heap_block *)block + 1);
+    return (void *)((heap_block *)block + 1);
 }
 
 static inline heap_block *ptr_to_block(void *ptr)
@@ -86,7 +85,6 @@ heap_block *get_block(size_t size)
     if (current_page == NULL ||
         current_page_offset + size + sizeof(heap_block) >= PAGE_SIZE)
     {
-
         current_page = get_free_pages(1);
         current_page_offset = 0;
     }
@@ -187,6 +185,18 @@ void *malloc(size_t size)
     void *retval = NULL;
     int total_size = align_long2(size + sizeof(heap_block), ALIGN);
 
+#ifdef __is_libk
+    if (total_size >= PAGE_SIZE)
+    {
+        /* TODO: can result in some wasted memory */
+        heap_block *page = get_free_pages((total_size / PAGE_SIZE) + 1);
+        page->size = size;
+        page->next = NULL;
+
+        return (void *)(page) + sizeof(heap_block);
+    }
+#endif
+
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
 
@@ -205,6 +215,14 @@ void free(void *ptr)
 
     heap_block *block = ptr_to_block(ptr);
     int total_size = align_long2(block->size + sizeof(heap_block), ALIGN);
+
+#ifdef __is_libk
+    if (total_size >= PAGE_SIZE)
+    {
+        free_pages(block, (block->size / PAGE_SIZE) + 1);
+        return;
+    }
+#endif
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {

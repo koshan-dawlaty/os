@@ -5,12 +5,10 @@
 #include "memory/get_free_pages.h"
 #include <bdev.h>
 #include <errno.h>
+#include <panic.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-struct bdev_functions ramdisk_functions = {
-
-};
 
 struct ramdisk_block
 {
@@ -31,18 +29,6 @@ struct ramdisk_block *new_ramdisk_block(struct bdev *dev)
     return out;
 }
 
-struct bdev *new_ramdisk()
-{
-    struct ramdisk_block *head = malloc(sizeof(struct ramdisk_block));
-    head->data = get_free_pages(RAMDISK_BLOCK_PAGES);
-    head->l = LIST_INIT();
-
-    struct bdev *out =
-        new_bdev(ramdisk_functions, PAGE_SIZE * RAMDISK_BLOCK_PAGES, head);
-
-    return out;
-}
-
 int ramdisk_read_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
                         u64 offset)
 {
@@ -53,7 +39,7 @@ int ramdisk_read_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
 
     /* TODO: this is slow, maybe store pointers to some of the blocks in an
      * array? */
-    list *pos;
+    list *pos = NULL;
     list_for_each(pos, &head->l)
     {
         if (i == offset)
@@ -69,13 +55,16 @@ int ramdisk_read_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
         return -EINVAL;
     }
 
-    list *current;
-    for (size_t i = 0; i < num_blocks; i++)
+    size_t buf_offset = 0;
+    list *current = pos;
+    for (size_t j = 0; j < num_blocks; j++)
     {
+
         struct ramdisk_block *block =
             LIST_ENTRY(current, struct ramdisk_block, l);
 
-        memcpy(buf, block->data, dev->block_size);
+        memcpy(buf + buf_offset, block->data, dev->block_size);
+        buf_offset += dev->block_size;
 
         current = current->next;
     }
@@ -134,7 +123,7 @@ int ramdisk_write_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
         struct ramdisk_block *block =
             LIST_ENTRY(current, struct ramdisk_block, l);
 
-        memcpy(buf + buf_offset, block, dev->block_size);
+        memcpy(block->data, buf + buf_offset, dev->block_size);
 
         buf_offset += dev->block_size;
 
@@ -142,4 +131,37 @@ int ramdisk_write_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
     }
 
     return 0;
+}
+
+void free_ramdisk(struct bdev *dev)
+{
+    struct ramdisk_block *start_block = RAMDISK_BDEV(dev);
+    list *current = &start_block->l;
+    list *prev = current;
+
+    while (current != NULL)
+    {
+        prev = current;
+        current = current->next;
+
+        struct ramdisk_block *block = LIST_ENTRY(prev, struct ramdisk_block, l);
+        free_pages(block->data, dev->block_size / PAGE_SIZE);
+        free(block);
+    }
+}
+
+struct bdev_functions ramdisk_functions = {.read_blocks = ramdisk_read_blocks,
+                                           .write_blocks = ramdisk_write_blocks,
+                                           .free = free_ramdisk};
+
+struct bdev *new_ramdisk()
+{
+    struct ramdisk_block *head = malloc(sizeof(struct ramdisk_block));
+    head->data = get_free_pages(RAMDISK_BLOCK_PAGES);
+    head->l = LIST_INIT();
+
+    struct bdev *out =
+        new_bdev(ramdisk_functions, PAGE_SIZE * RAMDISK_BLOCK_PAGES, head);
+
+    return out;
 }

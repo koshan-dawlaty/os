@@ -70,6 +70,7 @@ drivers/block/ata/utils.o \
 drivers/block/ata/drive.o \
 drivers/block/ata/ata.o \
 drivers/block/bdev.o \
+drivers/block/ram/drive.o \
 
 
 OBJS=\

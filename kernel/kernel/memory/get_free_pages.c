@@ -80,8 +80,11 @@ void *get_free_pages_zone(size_t amount, const struct memory_zone *zone)
 
         map_page(physical_addr, virtual_addr, zone->pg_flags);
 
-        physical_addr += PAGE_SIZE * j;
-        virtual_addr += PAGE_SIZE * j;
+        /* physical_addr += PAGE_SIZE * j; */
+        /* virtual_addr += PAGE_SIZE * j; */
+
+        physical_addr += PAGE_SIZE;
+        virtual_addr += PAGE_SIZE;
     }
 
     void *address = (void *)((i * PAGE_SIZE) + zone->virtual);

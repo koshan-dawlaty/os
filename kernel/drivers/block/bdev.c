@@ -44,6 +44,7 @@ int bdev_write(struct bdev *dev, u8 *buf, size_t num, u64 offset)
     if (offset % block_size != 0)
     {
         u8 *block = malloc(block_size);
+
         dev->functions.read_blocks(dev, block, 1, offset / block_size);
 
         size_t bytes_remaining = block_size - (offset % block_size);
@@ -54,6 +55,7 @@ int bdev_write(struct bdev *dev, u8 *buf, size_t num, u64 offset)
         }
 
         memcpy(block + (offset % block_size), buf, bytes_remaining);
+
         dev->functions.write_blocks(dev, block, 1, offset / block_size);
 
         bytes_written += bytes_remaining;
@@ -66,9 +68,6 @@ int bdev_write(struct bdev *dev, u8 *buf, size_t num, u64 offset)
 
     size_t num_blocks = (num) / block_size;
     size_t block_num = (offset) / block_size;
-
-    printf("num_blocks:%d\n", num_blocks);
-    printf("block_num:%d\n", block_num);
 
     dev->functions.write_blocks(dev, buf + bytes_written, num_blocks,
                                 block_num);
@@ -95,7 +94,7 @@ int bdev_write(struct bdev *dev, u8 *buf, size_t num, u64 offset)
 int bdev_read(struct bdev *dev, u8 *buf, size_t num, u64 offset)
 {
     size_t block_size = dev->block_size;
-    size_t bytes_written = 0;
+    size_t bytes_read = 0;
 
     /* if not at the start of a block read part of the block into buf */
     if (offset % block_size != 0)
@@ -113,28 +112,28 @@ int bdev_read(struct bdev *dev, u8 *buf, size_t num, u64 offset)
         /* copy the partial block into the buffer */
         memcpy(buf, block + (offset % block_size), bytes_remaining);
 
-        bytes_written += bytes_remaining;
+        bytes_read += bytes_remaining;
 
         free(block);
     }
 
-    offset += bytes_written;
-    num -= bytes_written;
+    offset += bytes_read;
+    num -= bytes_read;
 
     size_t num_blocks = (num) / block_size;
     size_t block_num = (offset) / block_size;
 
-    dev->functions.read_blocks(dev, buf + bytes_written, num_blocks, block_num);
-    bytes_written += num_blocks * block_size;
+    dev->functions.read_blocks(dev, buf + bytes_read, num_blocks, block_num);
+    bytes_read += num_blocks * block_size;
 
     if (num % block_size != 0)
     {
         u8 *block = malloc(block_size);
         dev->functions.read_blocks(dev, block, 1, (offset + num) / block_size);
 
-        size_t bytes_remaining = block_size - (num % block_size);
+        size_t bytes_remaining = num % block_size;
 
-        memcpy(buf + bytes_written, block, bytes_remaining);
+        memcpy(buf + bytes_read, block, bytes_remaining);
 
         free(block);
     }

@@ -13,7 +13,5 @@ void *memcpy(void *dstptr, const void *srcptr, size_t size)
         dst[i] = src[i];
     }
 
-    /* printf("memcpy called\n"); */
-
     return dstptr;
 }

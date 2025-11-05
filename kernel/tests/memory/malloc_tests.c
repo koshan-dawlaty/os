@@ -62,25 +62,33 @@ TEST(malloc_test_diffrent_addrs, {
     free(two);
 })
 
-TEST(malloc_test_big, {
-    int *one = malloc(4096);
-    int *two = malloc(2048);
-    int *three = malloc(2049);
-
-    /* printf("1: %p, 2: %p, 3: %p\n", one, two, three); */
-
-    *one = 1;
-    *two = 2;
-    *three = 3;
-
-    ASSERT_EQ(*one, 1);
-    ASSERT_EQ(*two, 2);
-    ASSERT_EQ(*three, 3);
-
-    free(one);
-    free(two);
-    free(three);
-})
+test_result *malloc_test_big_test()
+{
+    {
+        int *one = malloc(4096);
+        int *two = malloc(2048);
+        int *three = malloc(2049);
+        *one = 1;
+        *two = 2;
+        *three = 3;
+        if (*one != 1)
+        {
+            return get_failed_test((int)0);
+        };
+        if (*two != 2)
+        {
+            return get_failed_test((int)0);
+        };
+        if (*three != 3)
+        {
+            return get_failed_test((int)0);
+        };
+        free(one);
+        free(two);
+        free(three);
+    }
+    return new_test_result(0, "");
+}
 
 TEST(malloc_test_big2, {
     int *one = malloc(4096);
@@ -90,8 +98,6 @@ TEST(malloc_test_big2, {
     free(one);
     int *two = malloc(4096);
 
-    /* TODO: this does not work */
-    // ASSERT_EQ((int)one, (int)two);
     int *three = malloc(2049);
 
     *two = 2;
