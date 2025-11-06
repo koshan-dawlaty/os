@@ -26,6 +26,8 @@ struct ramdisk_block *new_ramdisk_block(struct bdev *dev)
     out->l = LIST_INIT();
     out->data = get_free_pages(dev->block_size / PAGE_SIZE);
 
+    memset(out->data, 'b', dev->block_size);
+
     return out;
 }
 
@@ -40,6 +42,7 @@ int ramdisk_read_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
     /* TODO: this is slow, maybe store pointers to some of the blocks in an
      * array? */
     list *pos = NULL;
+    list *prev = &head->l;
     list_for_each(pos, &head->l)
     {
         if (i == offset)
@@ -47,12 +50,24 @@ int ramdisk_read_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
             break;
         }
 
+        prev = pos;
         i++;
     }
 
     if (pos == NULL)
     {
-        return -EINVAL;
+
+        list *current = prev;
+
+        for (size_t j = 0; j < num_blocks; j++)
+        {
+            struct ramdisk_block *new = new_ramdisk_block(dev);
+
+            current->next = &new->l;
+            current = current->next;
+        }
+
+        return 0;
     }
 
     size_t buf_offset = 0;
@@ -159,6 +174,7 @@ struct bdev *new_ramdisk()
     struct ramdisk_block *head = malloc(sizeof(struct ramdisk_block));
     head->data = get_free_pages(RAMDISK_BLOCK_PAGES);
     head->l = LIST_INIT();
+    memset(head->data, 'b', PAGE_SIZE * RAMDISK_BLOCK_PAGES);
 
     struct bdev *out =
         new_bdev(ramdisk_functions, PAGE_SIZE * RAMDISK_BLOCK_PAGES, head);

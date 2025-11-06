@@ -1,5 +1,6 @@
 #include <bdev.h>
 #include <container_of.h>
+#include <errno.h>
 #include <lib/refcount.h>
 #include <panic.h>
 #include <stdio.h>
@@ -66,23 +67,38 @@ int bdev_write(struct bdev *dev, u8 *buf, size_t num, u64 offset)
     offset += bytes_written;
     num -= bytes_written;
 
-    size_t num_blocks = (num) / block_size;
+    size_t num_blocks = ((num) / block_size);
     size_t block_num = (offset) / block_size;
 
-    dev->functions.write_blocks(dev, buf + bytes_written, num_blocks,
-                                block_num);
+    if (num_blocks > 0)
+    {
+        u8 *block = malloc(block_size * num_blocks);
+
+        dev->functions.read_blocks(dev, block, num_blocks, block_num);
+
+        memcpy(block, buf + bytes_written, block_size * num_blocks);
+
+        dev->functions.write_blocks(dev, block, num_blocks, block_num);
+    }
+
     bytes_written += num_blocks * block_size;
 
     if (num % block_size != 0)
     {
         u8 *block = malloc(block_size);
-        dev->functions.read_blocks(dev, block, 1, (offset + num) / block_size);
 
-        size_t bytes_remaining = block_size - (num % block_size);
+        int err;
+        if ((err = dev->functions.read_blocks(dev, block, 1,
+                                              (offset) / block_size)) < 0)
+        {
+            return err;
+        }
+
+        size_t bytes_remaining = (num % block_size);
 
         memcpy(block, buf + bytes_written, bytes_remaining);
 
-        dev->functions.write_blocks(dev, block, 1, (offset + num) / block_size);
+        dev->functions.write_blocks(dev, block, 1, (offset) / block_size);
 
         free(block);
     }

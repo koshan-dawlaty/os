@@ -154,35 +154,6 @@ void kernel_init()
 int main()
 {
 
-    struct bdev *test_ramdisk = new_ramdisk();
-    size_t size = 400;
-    size_t offset = 100;
-    u8 *buf = malloc(size);
-
-    for (size_t i = 0; i < size; i++)
-    {
-        buf[i] = i % 255;
-    }
-
-    bdev_write(test_ramdisk, buf, size, offset);
-
-    u8 *read_buf = malloc(size);
-    bdev_read(test_ramdisk, read_buf, size, offset);
-
-    for (size_t i = 0; i < size; i++)
-    {
-
-        if (buf[i] != read_buf[i])
-        {
-            printf("%d %d\n", buf[i], read_buf[i]);
-        }
-    }
-
-    free(buf);
-    free(read_buf);
-
-    return 1;
-
     char *args[] = {"/ksh", NULL};
 
     int f1 = open("/ksh", 0);

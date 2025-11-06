@@ -113,7 +113,7 @@ echo "\n"
 TEST_STRING=$(printf "%s" "$TEST_OUTPUT")
 
 
-printf "%s" "$TEST_STRING" | tappy 
+printf "%s" "$TEST_STRING" | tappy -v 
 
 
 rm $SERIAL_PIPE.out
