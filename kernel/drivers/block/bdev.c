@@ -79,9 +79,12 @@ int bdev_write(struct bdev *dev, u8 *buf, size_t num, u64 offset)
         memcpy(block, buf + bytes_written, block_size * num_blocks);
 
         dev->functions.write_blocks(dev, block, num_blocks, block_num);
-    }
 
-    bytes_written += num_blocks * block_size;
+        offset += block_size * num_blocks;
+
+        bytes_written += num_blocks * block_size;
+        num -= num_blocks * block_size;
+    }
 
     if (num % block_size != 0)
     {
