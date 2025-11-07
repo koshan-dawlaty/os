@@ -61,11 +61,11 @@ dentry **ext2_get_dentries(dentry *entry, superblock *sb)
         /* printf("%s\n", new_name); */
 
         ext2_inode *new_node = ext2_get_inode(node_num, sb);
-        inode *vfs_node = ext2_get_vfs_node(node_num, new_node);
+        inode *vfs_node = ext2_get_vfs_node(node_num, new_node, sb);
 
-        dentry *vfs =
-            new_dentry(new_name, entry, ext2_get_vfs_node(node_num, new_node),
-                       ext2_get_dentry_type(new_node));
+        dentry *vfs = new_dentry(new_name, entry,
+                                 ext2_get_vfs_node(node_num, new_node, sb),
+                                 ext2_get_dentry_type(new_node));
 
         out_len++;
         out = realloc(out, out_len * sizeof(dentry));

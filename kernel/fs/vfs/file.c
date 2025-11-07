@@ -43,8 +43,8 @@ int read_file(file *file, char *buf, size_t n, size_t off)
         read_size = node->size - off;
     }
 
-    current_superblock->type->inode_functions.read_inode(
-        node, (uint8_t *)buf, read_size, off, current_superblock);
+    current_superblock->type->inode_functions.read_inode(node, (uint8_t *)buf,
+                                                         read_size, off);
 
     /* if (off > 2000) */
     /* { */
@@ -64,8 +64,8 @@ int write_file(file *file, char *buf, size_t n, size_t off)
 
     size_t write_size = n;
 
-    current_superblock->type->inode_functions.write_inode(
-        node, (uint8_t *)buf, write_size, off, current_superblock);
+    current_superblock->type->inode_functions.write_inode(node, (uint8_t *)buf,
+                                                          write_size, off);
 
     add_file_offset(file, write_size);
     return write_size;

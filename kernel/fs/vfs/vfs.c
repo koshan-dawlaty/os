@@ -12,15 +12,11 @@ superblock *current_superblock = NULL;
 file **open_files = NULL;
 size_t open_files_len = 0;
 
+dentry *rootdir = NULL;
+
 dentry *get_root_dir()
 {
-    inode *node = current_superblock->type->inode_functions.get_inode(
-        2, current_superblock);
-
-    /* TODO: maybe dont make a new dentry? */
-    dentry *entry = new_dentry("/", NULL, node, DENTRY_DIR);
-
-    return entry;
+    return rootdir;
 }
 
 void init_vfs()
@@ -29,13 +25,12 @@ void init_vfs()
 
     struct bdev *dev = get_ata_drive(0);
 
-    // TODO: change this
-    ext2_fs_type.mount(dev);
+    rootdir = ext2_fs_type.mount(dev);
+
     current_superblock =
         ext2_fs_type.superblock_functions.parse_superblock(dev);
 
     init_dcache();
-    // printf("superblock:%p\n", current_superblock);
 }
 
 superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
@@ -78,7 +73,8 @@ file *new_file(dentry *entry)
     return out;
 }
 
-inode *new_inode(ino_t number, inode_size size, void *fs_private)
+inode *new_inode(ino_t number, inode_size size, void *fs_private,
+                 superblock *sb)
 {
     inode *out = malloc(sizeof(inode));
 
@@ -86,6 +82,8 @@ inode *new_inode(ino_t number, inode_size size, void *fs_private)
     out->size = size;
 
     out->fs_private = fs_private;
+
+    out->sb = sb;
 
     return out;
 }

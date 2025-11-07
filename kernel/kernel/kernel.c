@@ -156,6 +156,12 @@ int main()
     char *args[] = {"/ksh", NULL};
 
     int f1 = open("/ksh", 0);
+
+    if (f1 < 0)
+    {
+        panic("could not open shell");
+    }
+
     elf *elf = parse_elf(f1);
 
     struct task *task1 = load_elf(elf, 1, args);

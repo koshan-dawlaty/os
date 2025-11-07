@@ -9,23 +9,21 @@
 #include <stdlib.h>
 #include <vfs.h>
 
-void ext2_iread(inode *node, uint8_t *buf, size_t buf_len, size_t index,
-                superblock *sb)
+void ext2_iread(inode *node, uint8_t *buf, size_t buf_len, size_t index)
 {
-    ext2_read_inode(node->fs_private, buf, buf_len, index, sb);
+    ext2_read_inode(node->fs_private, buf, buf_len, index, node->sb);
 }
 
-void ext2_iwrite(inode *node, uint8_t *buf, size_t buf_len, size_t offset,
-                 superblock *sb)
+void ext2_iwrite(inode *node, uint8_t *buf, size_t buf_len, size_t offset)
 {
-    ext2_write_inode(node, buf, buf_len, offset, sb);
+    ext2_write_inode(node, buf, buf_len, offset, node->sb);
 }
 
 inode *ext2_iget(ino_t number, superblock *sb)
 {
 
     ext2_inode *ext2 = ext2_get_inode(number, sb);
-    inode *out = new_inode(number, ext2_get_inode_size(ext2), ext2);
+    inode *out = new_inode(number, ext2_get_inode_size(ext2), ext2, sb);
 
     return out;
 }
@@ -137,6 +135,6 @@ dentry *ext2_mount(struct bdev *dev)
     superblock *sb =
         new_superblock(ext2_sb->block_size, ext2_sb, dev, &ext2_fs_type);
 
-    /* TODO: fix */
-    return NULL;
+    inode *node = ext2_iget(2, sb);
+    return new_dentry(".", NULL, node, DENTRY_DIR);
 }

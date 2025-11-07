@@ -31,18 +31,19 @@ typedef struct
     ino_t number;
     inode_size size;
 
+    superblock *sb;
+
     void *fs_private;
 } inode;
 
-inode *new_inode(ino_t number, inode_size size, void *fs_private);
+inode *new_inode(ino_t number, inode_size size, void *fs_private,
+                 superblock *sb);
 
 typedef struct
 {
     inode *(*get_inode)(ino_t number, superblock *sb);
-    void (*read_inode)(inode *, uint8_t *buf, size_t n, size_t offset,
-                       superblock *sb);
-    void (*write_inode)(inode *, uint8_t *buf, size_t n, size_t offset,
-                        superblock *sb);
+    void (*read_inode)(inode *, uint8_t *buf, size_t n, size_t offset);
+    void (*write_inode)(inode *, uint8_t *buf, size_t n, size_t offset);
 
     inode *(*alloc_inode)(superblock *sb);
 

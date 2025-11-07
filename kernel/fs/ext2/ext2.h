@@ -121,7 +121,7 @@ uint32_t ext2_block_alloc(superblock *sb);
 void ext2_write_inode(inode *node, uint8_t *buf, size_t buf_len,
                       ext2_inode_index index, superblock *sb);
 
-inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node);
+inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node, superblock *sb);
 
 dentry **ext2_get_dentries(dentry *dir, superblock *sb);
 
