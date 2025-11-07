@@ -11,15 +11,17 @@ typedef struct
     size_t blocksize;
     void *fs_private;
     struct fs_type *type;
+
+    struct bdev *dev;
 } superblock;
 
 typedef struct
 {
     // TODO: this should have some way of determining what superblock is parsed
-    superblock *(*parse_superblock)();
+    superblock *(*parse_superblock)(struct bdev *dev);
 } superblock_functions;
 
-superblock *new_superblock(size_t blocksize, void *fs_private,
+superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
                            const struct fs_type *type);
 
 typedef size_t inode_size;
@@ -51,6 +53,7 @@ typedef enum
     DENTRY_FILE,
     DENTRY_DIR,
     DENTRY_INVALID,
+
     DENTRY_MOUNT_POINT,
 } dentry_type;
 
@@ -58,7 +61,12 @@ typedef struct dentry
 {
     char *name;
     struct dentry *parent;
-    inode *inode;
+
+    union
+    {
+        struct superblock *sb;
+        inode *inode; /* type == DENTRY_MOUNT_POINT */
+    };
 
     dentry_type type;
 } dentry;
@@ -119,7 +127,7 @@ struct fs_type
 {
     const char *name;
 
-    dentry *(*mount)();
+    dentry *(*mount)(struct bdev *dev);
 
     // bad names
     dentry_functions dentry_functions;

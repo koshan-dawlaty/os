@@ -1,3 +1,4 @@
+#include "ata/ata.h"
 #include "dcache.h"
 #include "vfs_internal.h"
 #include <stdio.h>
@@ -26,15 +27,18 @@ void init_vfs()
 {
     open_files = malloc(0);
 
+    struct bdev *dev = get_ata_drive(0);
+
     // TODO: change this
-    ext2_fs_type.mount();
-    current_superblock = ext2_fs_type.superblock_functions.parse_superblock();
+    ext2_fs_type.mount(dev);
+    current_superblock =
+        ext2_fs_type.superblock_functions.parse_superblock(dev);
 
     init_dcache();
     // printf("superblock:%p\n", current_superblock);
 }
 
-superblock *new_superblock(size_t blocksize, void *fs_private,
+superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
                            const struct fs_type *type)
 {
 
@@ -43,6 +47,7 @@ superblock *new_superblock(size_t blocksize, void *fs_private,
     out->blocksize = blocksize;
     out->fs_private = fs_private;
     out->type = (struct fs_type *)type;
+    out->dev = dev;
 
     return out;
 }
