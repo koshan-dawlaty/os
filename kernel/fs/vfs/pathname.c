@@ -97,16 +97,14 @@ size_t parse_component(const char *path, inode **current_node,
             if (flags.create && final_component)
             {
 
-                /* (*current_dir) */
-                /*     ->inode->sb->type->dentry_functions.append_dentry( */
-                /*         *current_dir, component, ); */
-                /* add_dcache(); */
+                dentry *new_dentry =
+                    (*current_dir)
+                        ->inode->sb->type->dentry_functions.append_dentry(
+                            *current_dir, component, (*current_dir)->inode->sb);
+                add_dcache(*current_dir, new_dentry);
             }
 
-            if (!final_component)
-            {
-                goto not_found;
-            }
+            goto not_found;
         }
         else if (flags.create)
         {
@@ -128,6 +126,10 @@ size_t parse_component(const char *path, inode **current_node,
     }
     else if (entry->type == DENTRY_FILE)
     {
+        if (!final_component)
+        {
+            goto notdir;
+        }
         *current_dir = entry;
     }
     else
@@ -144,6 +146,9 @@ not_found:
     goto out;
 already_exists:
     *current_dir = ERR_PTR(-EEXIST);
+    goto out;
+notdir:
+    *current_dir = ERR_PTR(-ENOTDIR);
     goto out;
 out:
 
