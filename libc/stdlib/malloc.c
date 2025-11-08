@@ -77,15 +77,32 @@ void insert_bin(heap_block **bin, heap_block *block)
 void *user_malloc_addr = (void *)0xA0000000;
 uint32_t user_malloc_offset = 4096;
 
+void *malloc_get_pages(size_t num)
+{
+#ifdef __is_libk
+    return get_free_pages(num);
+#else
+    return mmap(user_malloc_addr, num * 4096, 0, 0, 0, 0);
+#endif
+}
+
+void malloc_free_pages(void *addr, size_t num)
+{
+#ifdef __is_libk
+    free_pages(addr, num);
+#else
+    /* TODO: libc should probably be able to free pages */
+
+#endif
+}
+
 heap_block *get_block(size_t size)
 {
 
-#ifdef __is_libk
-    // bad
     if (current_page == NULL ||
-        current_page_offset + size + sizeof(heap_block) >= PAGE_SIZE)
+        current_page_offset + size + sizeof(heap_block) >= 4096)
     {
-        current_page = get_free_pages(1);
+        current_page = malloc_get_pages(1);
         current_page_offset = 0;
     }
 
@@ -97,26 +114,6 @@ heap_block *get_block(size_t size)
     current_page_offset += size + sizeof(heap_block);
 
     return block;
-
-#else
-
-    if (user_malloc_offset + size + sizeof(heap_block) >= 4096)
-    {
-        /* TODO: this is not the correct way to use mmap */
-        user_malloc_addr += 4096;
-        mmap(user_malloc_addr, 0, 0, 0, 0, 0);
-        user_malloc_offset = 0;
-    }
-
-    heap_block *block = (heap_block *)(user_malloc_addr + user_malloc_offset);
-    block->size = size;
-    block->next = NULL;
-    user_malloc_offset += size + sizeof(heap_block);
-    return block;
-
-    return (void *)0x123456;
-
-#endif
 }
 
 heap_block *get_block_from_bin_fast(heap_block **bin, int new_size)
@@ -185,17 +182,15 @@ void *malloc(size_t size)
     void *retval = NULL;
     int total_size = align_long2(size + sizeof(heap_block), ALIGN);
 
-#ifdef __is_libk
-    if (total_size >= PAGE_SIZE)
+    if (total_size >= 4096)
     {
         /* TODO: can result in some wasted memory */
-        heap_block *page = get_free_pages((total_size / PAGE_SIZE) + 1);
+        heap_block *page = malloc_get_pages((total_size / 4096) + 1);
         page->size = size;
         page->next = NULL;
 
         return (void *)(page) + sizeof(heap_block);
     }
-#endif
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
@@ -216,13 +211,11 @@ void free(void *ptr)
     heap_block *block = ptr_to_block(ptr);
     int total_size = align_long2(block->size + sizeof(heap_block), ALIGN);
 
-#ifdef __is_libk
-    if (total_size >= PAGE_SIZE)
+    if (total_size >= 4096)
     {
-        free_pages(block, (block->size / PAGE_SIZE) + 1);
+        malloc_free_pages(block, (block->size / 4096) + 1);
         return;
     }
-#endif
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
