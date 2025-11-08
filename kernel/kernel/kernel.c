@@ -153,6 +153,7 @@ void kernel_init()
 
 int main()
 {
+
     char *args[] = {"/ksh", NULL};
 
     int f1 = open("/ksh", 0);

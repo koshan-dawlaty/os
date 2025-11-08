@@ -169,7 +169,16 @@ dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
     if (*path != '/')
     {
 
-        current_dir = get_current_task()->working_dir;
+        struct task *current_task = get_current_task();
+        if (current_task != NULL)
+        {
+            current_dir = current_task->working_dir;
+        }
+        else
+        {
+            current_dir = NULL;
+        }
+
         if (current_dir == NULL)
         {
             current_node = pathname_get_root_dir();
