@@ -11,7 +11,7 @@ int chdir(const char *path)
 {
 #ifdef __is_libk
     struct task *current_task = get_current_task();
-    dentry *dir = lookup_path(path);
+    dentry *dir = lookup_path(path, PATHNAME_LOOKUP_FIND);
     printf("new dir is:%p\n", dir);
 
     if (IS_ERR(dir))

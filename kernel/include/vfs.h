@@ -1,5 +1,6 @@
 #ifndef VFS_H
 #define VFS_H
+#include "kernel/types.h"
 #include "sys/types.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -82,8 +83,7 @@ typedef struct
 {
     // dentry *(*find_dentry)(char *path, superblock *sb);
     dentry **(*get_dentries)(dentry *entry, superblock *sb);
-    dentry *(*append_dentry)(dentry *entry, char *name, ino_t number,
-                             superblock *sb);
+    dentry *(*append_dentry)(dentry *parent, char *name, superblock *sb);
 
     int (*remove_dentry)(dentry *, char *, superblock *);
 } dentry_functions;
@@ -140,7 +140,16 @@ void register_filesystem(struct fs_type *);
 
 void init_vfs();
 
-dentry *lookup_path(const char *path);
+/* pathname.c */
+struct pathname_lookup_flags
+{
+    u8 create : 1;
+};
+#define PATHNAME_LOOKUP_CREATE (struct pathname_lookup_flags){.create = 1}
+#define PATHNAME_LOOKUP_FIND (struct pathname_lookup_flags){.create = 0}
+
+dentry *lookup_path(const char *path, struct pathname_lookup_flags flags);
+
 file *create_file(char *path);
 
 dentry *get_root_dir();

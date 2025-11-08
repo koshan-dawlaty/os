@@ -10,7 +10,7 @@
 file *open_file(char *path)
 {
 
-    dentry *dentry = lookup_path(path);
+    dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
     if (IS_ERR(dentry))
     {
         return (void *)dentry;
@@ -79,11 +79,8 @@ file *lookup_descriptor(int fd)
 file *create_file(char *name)
 {
 
-    inode *new = current_superblock->type->inode_functions.alloc_inode(
-        current_superblock);
-
     dentry *out = current_superblock->type->dentry_functions.append_dentry(
-        get_root_dir(), name, new->number, current_superblock);
+        get_root_dir(), name, current_superblock);
 
     return new_file(out);
 }

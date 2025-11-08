@@ -1,6 +1,8 @@
+#include "alloca.h"
 #include "complex.h"
 #include "dcache.h"
 #include "err.h"
+#include "kernel/types.h"
 #include "scheduler.h"
 #include "vfs.h"
 #include "vfs_internal.h"
@@ -46,7 +48,7 @@ dentry *parse_dentries_component(dentry **dentries, char *component)
 }
 
 size_t parse_component(const char *path, inode **current_node,
-                       dentry **current_dir)
+                       dentry **current_dir, struct pathname_lookup_flags flags)
 {
     /* TODO: stupid */
     bool starts_with_slash = false;
@@ -61,6 +63,12 @@ size_t parse_component(const char *path, inode **current_node,
     while (path[component_len] != 0 && path[component_len] != '/')
     {
         component_len++;
+    }
+
+    bool final_component = false;
+    if (path[component_len] == 0)
+    {
+        final_component = true;
     }
 
     char *component = malloc(component_len + 1);
@@ -86,11 +94,30 @@ size_t parse_component(const char *path, inode **current_node,
         if (entry == NULL)
         {
 
-            *current_dir = ERR_PTR(-ENOENT);
-            goto end;
+            if (flags.create && final_component)
+            {
+
+                /* (*current_dir) */
+                /*     ->inode->sb->type->dentry_functions.append_dentry( */
+                /*         *current_dir, component, ); */
+                /* add_dcache(); */
+            }
+
+            if (!final_component)
+            {
+                goto not_found;
+            }
+        }
+        else if (flags.create)
+        {
+            goto already_exists;
         }
 
         add_dcache(*current_dir, entry);
+    }
+    else if (flags.create)
+    {
+        goto already_exists;
     }
 
     *current_dir = entry;
@@ -110,7 +137,15 @@ size_t parse_component(const char *path, inode **current_node,
 
     /* *current_dir = ERR_PTR(-ENOENT); */
 
-end:
+    goto out;
+
+not_found:
+    *current_dir = ERR_PTR(-ENOENT);
+    goto out;
+already_exists:
+    *current_dir = ERR_PTR(-EEXIST);
+    goto out;
+out:
 
     /* TODO stupid */
     if (starts_with_slash)
@@ -120,7 +155,7 @@ end:
     return component_len;
 }
 
-dentry *lookup_path(const char *path)
+dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
 {
     /* printf("looking up path:%s\n", path); */
     inode *current_node = NULL;
@@ -152,7 +187,7 @@ dentry *lookup_path(const char *path)
     {
 
         component_offset += parse_component(path + component_offset,
-                                            &current_node, &current_dir);
+                                            &current_node, &current_dir, flags);
 
         /* component_offset++; */
 

@@ -30,8 +30,7 @@ inode *ext2_iget(ino_t number, superblock *sb)
 
 inode *ext2_ialloc(superblock *sb)
 {
-    ino_t num = ext2_inode_alloc(sb);
-    return ext2_iget(num, sb);
+    return ext2_inode_alloc(sb);
 }
 
 struct ext2_superblock *ext2_parse_superblock(struct bdev *dev);
