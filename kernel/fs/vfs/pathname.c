@@ -113,7 +113,7 @@ size_t parse_component(const char *path, inode **current_node,
 
         add_dcache(*current_dir, entry);
     }
-    else if (flags.create)
+    else if (flags.create && final_component)
     {
         goto already_exists;
     }
@@ -128,7 +128,7 @@ size_t parse_component(const char *path, inode **current_node,
     {
         if (!final_component)
         {
-            goto notdir;
+            goto not_dir;
         }
         *current_dir = entry;
     }
@@ -139,17 +139,6 @@ size_t parse_component(const char *path, inode **current_node,
 
     /* *current_dir = ERR_PTR(-ENOENT); */
 
-    goto out;
-
-not_found:
-    *current_dir = ERR_PTR(-ENOENT);
-    goto out;
-already_exists:
-    *current_dir = ERR_PTR(-EEXIST);
-    goto out;
-notdir:
-    *current_dir = ERR_PTR(-ENOTDIR);
-    goto out;
 out:
 
     /* TODO stupid */
@@ -158,6 +147,16 @@ out:
         component_len++;
     }
     return component_len;
+
+not_found:
+    *current_dir = ERR_PTR(-ENOENT);
+    goto out;
+already_exists:
+    *current_dir = ERR_PTR(-EEXIST);
+    goto out;
+not_dir:
+    *current_dir = ERR_PTR(-ENOTDIR);
+    goto out;
 }
 
 dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)

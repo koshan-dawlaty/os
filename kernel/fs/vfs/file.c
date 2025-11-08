@@ -79,8 +79,12 @@ file *lookup_descriptor(int fd)
 file *create_file(char *name)
 {
 
-    dentry *out = current_superblock->type->dentry_functions.append_dentry(
-        get_root_dir(), name, current_superblock);
+    dentry *new = lookup_path(name, PATHNAME_LOOKUP_CREATE);
 
-    return new_file(out);
+    if (IS_ERR(new))
+    {
+        return ERR_PTR(new);
+    }
+
+    return new_file(new);
 }
