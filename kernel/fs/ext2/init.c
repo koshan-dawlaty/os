@@ -1,4 +1,5 @@
 #include "bdev.h"
+#include "err.h"
 #include "ext2.h"
 #include "string.h"
 #include <ata/ata.h>
@@ -22,8 +23,17 @@ void ext2_iwrite(inode *node, uint8_t *buf, size_t buf_len, size_t offset)
 inode *ext2_iget(ino_t number, superblock *sb)
 {
 
+    /* printf("very start of ext2 iget\n"); */
     ext2_inode *ext2 = ext2_get_inode(number, sb);
+    /* printf("got actual inode\n"); */
+
+    if (IS_ERR(ext2))
+    {
+    }
+
+    /* printf("creating a vfs inode\n"); */
     inode *out = new_inode(number, ext2_get_inode_size(ext2), ext2, sb);
+    /* printf("done creating a vfs inode\n"); */
 
     return out;
 }
@@ -121,6 +131,7 @@ struct ext2_superblock *ext2_parse_superblock(struct bdev *dev)
     uint8_t *buf = malloc(block_group_table_size_bytes);
     /* printf("block group:%p\n", block_group_table_size_bytes); */
     bdev_read(dev, buf, block_group_table_size_bytes, 1024 * 2);
+
     sb->group_descriptor_table = (ext2_group_descriptor *)buf;
 
     return sb;

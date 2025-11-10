@@ -50,20 +50,24 @@ int send_identify(uint16_t io_offset, uint16_t control_offset,
     do
     {
         status = inb(control_offset + ATA_ALT_STATUS);
-        /* status = inb(io_offset + ATA_STATUS); */
-
-        if (inb(io_offset + ATA_LBA_MID) != 0 ||
-            inb(io_offset + ATA_LBA_HI) != 0)
-        {
-            printf("not ata!!\n");
-            return 1;
-        }
     } while (status & (1 << 7) && !(status & (1 << 3)));
 
-    for (uint8_t i = 0; i < 255; i++)
+    /* status = inb(io_offset + ATA_STATUS); */
+
+    u8 mid = inb(io_offset + ATA_LBA_MID);
+    u8 hi = inb(io_offset + ATA_LBA_HI);
+
+    if (mid != 0 || hi != 0)
+    {
+        printf("not ata!! mid:%p, hi:%p\n", mid, hi);
+        return 1;
+    }
+    wait_for_bit(io_offset, control_offset, 3, 1);
+
+    for (size_t i = 0; i < 256; i++)
     {
 
-        uint16_t data = inb(io_offset + ATA_DATA);
+        uint16_t data = inw(io_offset + ATA_DATA);
         /* printf("%p", data); */
 
         if (i == 0 && data == 0)
@@ -71,8 +75,6 @@ int send_identify(uint16_t io_offset, uint16_t control_offset,
             return 1;
         }
 
-        // this is kinda slow, hopefully gcc will create 2 loops as an
-        // optimization
         if (info_buf != NULL)
         {
             info_buf[i] = data;
@@ -81,10 +83,10 @@ int send_identify(uint16_t io_offset, uint16_t control_offset,
 
     // no idea why, if this is not here, reading from the disk will always be
     // zero
-    for (int i = 0; i < 256; i++)
-    {
-        inw(io_offset + ATA_DATA);
-    }
+    /* for (int i = 0; i < 256; i++) */
+    /* { */
+    /*     inw(io_offset + ATA_DATA); */
+    /* } */
 
     return 0;
 }

@@ -38,22 +38,33 @@ void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
 
     wait_for_bit(io_offset, control_offset, 7, 0);
 
-    ata_drive_select(io_offset, control_offset,
-                     0xE0 | (0 << 4) | ((lba >> 24) & 0x0F));
+    outb(io_offset + 1, 0);
+
+    /* ata_drive_select(io_offset, control_offset, */
+    /*                  0xE0 | (0 << 4) | ((lba >> 24) & 0x0F)); */
 
     ata_send_command_24(io_offset, control_offset, sectors, lba, 0x20);
 
-    for (size_t i = 0; i < sectors * 512; i += 2)
+    /* printf("status:%p, error:%p\n", inb(io_offset + 7), inb(io_offset + 1));
+     */
+
+    for (size_t s = 0; s < sectors; s++)
     {
         wait_for_bit(io_offset, control_offset, 7, 0);
         wait_for_bit(io_offset, control_offset, 3, 1);
 
-        uint16_t data = inw(io_offset + ATA_DATA);
-        /* printf("%p", data); */
+        for (size_t i = 0; i < 256; i++)
+        {
 
-        buffer[i] = (uint8_t)(data) & 0xFF;
-        buffer[i + 1] = (uint8_t)(data >> 8);
+            uint16_t data = inw(io_offset + ATA_DATA);
+            /* printf("%p", data); */
+
+            buffer[s * 512 + i * 2] = (uint8_t)(data) & 0xFF;
+            buffer[s * 512 + i * 2 + 1] = (uint8_t)(data >> 8);
+        }
     }
+    wait_for_bit(io_offset, control_offset, 7, 0);
+    wait_for_bit(io_offset, control_offset, 3, 0);
 }
 
 /*

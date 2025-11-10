@@ -142,6 +142,7 @@ void kernel_init()
     init_pit();
     init_pci();
     init_ata();
+
     init_vfs();
 
     call_constructors();
@@ -153,6 +154,8 @@ void kernel_init()
 
 int main()
 {
+
+    printf("IN MAIN\n");
 
     char *args[] = {"/ksh", NULL};
 

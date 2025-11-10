@@ -12,7 +12,8 @@ set timeout=0
 
 menuentry "os" {
 	multiboot /boot/os.kernel
+	boot
 }
 EOF
 # grub-mkrescue -o os.iso isodir
-grub-mkrescue -o "$ISO" isodir
+grub-mkrescue --modules="multiboot normal iso9660 biosdisk" -o "$ISO" isodir 
