@@ -52,8 +52,6 @@ paging_page_table_addr:
 _start:
 
 
-
-
 	// physical addresses of boot_page_table1	
 	movl $(boot_page_table1 - 0xC0000000), %edi
 

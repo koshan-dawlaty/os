@@ -10,7 +10,7 @@
 file *open_file(char *path)
 {
 
-    dentry *dentry = lookup_path(path);
+    dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
     if (IS_ERR(dentry))
     {
         return (void *)dentry;
@@ -43,8 +43,8 @@ int read_file(file *file, char *buf, size_t n, size_t off)
         read_size = node->size - off;
     }
 
-    current_superblock->type->inode_functions.read_inode(
-        node, (uint8_t *)buf, read_size, off, current_superblock);
+    current_superblock->type->inode_functions.read_inode(node, (uint8_t *)buf,
+                                                         read_size, off);
 
     /* if (off > 2000) */
     /* { */
@@ -64,8 +64,8 @@ int write_file(file *file, char *buf, size_t n, size_t off)
 
     size_t write_size = n;
 
-    current_superblock->type->inode_functions.write_inode(
-        node, (uint8_t *)buf, write_size, off, current_superblock);
+    current_superblock->type->inode_functions.write_inode(node, (uint8_t *)buf,
+                                                          write_size, off);
 
     add_file_offset(file, write_size);
     return write_size;
@@ -79,11 +79,12 @@ file *lookup_descriptor(int fd)
 file *create_file(char *name)
 {
 
-    inode *new = current_superblock->type->inode_functions.alloc_inode(
-        current_superblock);
+    dentry *new = lookup_path(name, PATHNAME_LOOKUP_CREATE);
 
-    dentry *out = current_superblock->type->dentry_functions.append_dentry(
-        get_root_dir(), name, new->number, current_superblock);
+    if (IS_ERR(new))
+    {
+        return ERR_PTR(new);
+    }
 
-    return new_file(out);
+    return new_file(new);
 }

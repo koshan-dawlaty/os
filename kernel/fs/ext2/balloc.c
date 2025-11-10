@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-ext2_inode_addr ext2_inode_alloc(superblock *sb)
+inode *ext2_inode_alloc(superblock *sb)
 {
     for (size_t j = 0; j < EXT2_TOTAL_INODES(sb) / EXT2_INODES_PER_GROUP(sb);
          j++)
@@ -38,13 +38,13 @@ ext2_inode_addr ext2_inode_alloc(superblock *sb)
 
                 free(usage_bitmap);
 
-                return i;
+                return node;
             }
             free(usage_bitmap);
         }
     }
 
-    return 0;
+    return NULL;
 }
 
 uint32_t ext2_block_alloc(superblock *sb)
@@ -193,12 +193,11 @@ end:;
     }
 }
 
-dentry *ext2_append_dentry(dentry *entry, char *name, ino_t number,
-                           superblock *sb)
+dentry *ext2_append_dentry(dentry *parent, char *name, superblock *sb)
 {
 
     /* TODO: this will not work if the size goes beyond one block */
-    ext2_inode *ext2_entry = EXT2_INODE(entry->inode);
+    ext2_inode *ext2_entry = EXT2_INODE(parent->inode);
 
     u8 *buf = malloc(EXT2_BLOCK_SIZE(sb));
     ext2_read_inode(ext2_entry, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
@@ -225,25 +224,27 @@ dentry *ext2_append_dentry(dentry *entry, char *name, ino_t number,
         i += len;
     }
 
-    ext2_write_inode(entry->inode, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
+    ext2_write_inode(parent->inode, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
 
     size_t buf_len = align_long((strlen(name) + 9) + 4, 4);
     char *new_buf = malloc(buf_len);
 
+    inode *new_node = ext2_inode_alloc(sb);
+
     memcpy(new_buf + 8, name, strlen(name));
     new_buf[8 + strlen(name)] = 0;
-    *(u32 *)new_buf = number;
+    *(u32 *)new_buf = new_node->number;
     *(u16 *)(new_buf + 4) = EXT2_BLOCK_SIZE(sb) - i;
     *(u8 *)(new_buf + 6) = strlen(name);
 
     buf[6] = strlen(new_buf + 8);
 
-    ext2_write_inode(entry->inode, (uint8_t *)new_buf, buf_len, i, sb);
+    ext2_write_inode(parent->inode, (uint8_t *)new_buf, buf_len, i, sb);
 
     /* TODO: bad */
     ext2_entry->size_low = EXT2_BLOCK_SIZE(sb);
-    ext2_update_inode(entry->inode, sb);
+    ext2_update_inode(parent->inode, sb);
 
-    return new_dentry(name, entry, entry->inode,
-                      ext2_get_dentry_type(EXT2_INODE(entry->inode)));
+    return new_dentry(name, parent, new_node,
+                      ext2_get_dentry_type(EXT2_INODE(new_node)));
 }

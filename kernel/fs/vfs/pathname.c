@@ -1,6 +1,8 @@
+#include "alloca.h"
 #include "complex.h"
 #include "dcache.h"
 #include "err.h"
+#include "kernel/types.h"
 #include "scheduler.h"
 #include "vfs.h"
 #include "vfs_internal.h"
@@ -46,7 +48,7 @@ dentry *parse_dentries_component(dentry **dentries, char *component)
 }
 
 size_t parse_component(const char *path, inode **current_node,
-                       dentry **current_dir)
+                       dentry **current_dir, struct pathname_lookup_flags flags)
 {
     /* TODO: stupid */
     bool starts_with_slash = false;
@@ -61,6 +63,12 @@ size_t parse_component(const char *path, inode **current_node,
     while (path[component_len] != 0 && path[component_len] != '/')
     {
         component_len++;
+    }
+
+    bool final_component = false;
+    if (path[component_len] == 0)
+    {
+        final_component = true;
     }
 
     char *component = malloc(component_len + 1);
@@ -86,11 +94,28 @@ size_t parse_component(const char *path, inode **current_node,
         if (entry == NULL)
         {
 
-            *current_dir = ERR_PTR(-ENOENT);
-            goto end;
+            if (flags.create && final_component)
+            {
+
+                dentry *new_dentry =
+                    (*current_dir)
+                        ->inode->sb->type->dentry_functions.append_dentry(
+                            *current_dir, component, (*current_dir)->inode->sb);
+                add_dcache(*current_dir, new_dentry);
+            }
+
+            goto not_found;
+        }
+        else if (flags.create)
+        {
+            goto already_exists;
         }
 
         add_dcache(*current_dir, entry);
+    }
+    else if (flags.create && final_component)
+    {
+        goto already_exists;
     }
 
     *current_dir = entry;
@@ -101,6 +126,10 @@ size_t parse_component(const char *path, inode **current_node,
     }
     else if (entry->type == DENTRY_FILE)
     {
+        if (!final_component)
+        {
+            goto not_dir;
+        }
         *current_dir = entry;
     }
     else
@@ -110,7 +139,7 @@ size_t parse_component(const char *path, inode **current_node,
 
     /* *current_dir = ERR_PTR(-ENOENT); */
 
-end:
+out:
 
     /* TODO stupid */
     if (starts_with_slash)
@@ -118,9 +147,19 @@ end:
         component_len++;
     }
     return component_len;
+
+not_found:
+    *current_dir = ERR_PTR(-ENOENT);
+    goto out;
+already_exists:
+    *current_dir = ERR_PTR(-EEXIST);
+    goto out;
+not_dir:
+    *current_dir = ERR_PTR(-ENOTDIR);
+    goto out;
 }
 
-dentry *lookup_path(const char *path)
+dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
 {
     /* printf("looking up path:%s\n", path); */
     inode *current_node = NULL;
@@ -130,7 +169,16 @@ dentry *lookup_path(const char *path)
     if (*path != '/')
     {
 
-        current_dir = get_current_task()->working_dir;
+        struct task *current_task = get_current_task();
+        if (current_task != NULL)
+        {
+            current_dir = current_task->working_dir;
+        }
+        else
+        {
+            current_dir = NULL;
+        }
+
         if (current_dir == NULL)
         {
             current_node = pathname_get_root_dir();
@@ -152,7 +200,7 @@ dentry *lookup_path(const char *path)
     {
 
         component_offset += parse_component(path + component_offset,
-                                            &current_node, &current_dir);
+                                            &current_node, &current_dir, flags);
 
         /* component_offset++; */
 

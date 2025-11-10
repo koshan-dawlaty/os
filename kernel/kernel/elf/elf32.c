@@ -63,8 +63,6 @@ elf *parse_elf32(int fd)
         new_header->virtual_addr = raw_header->virutal_addr;
         new_header->physical_addr = raw_header->physical_addr;
 
-        printf("type!!:%p\n", raw_header->type);
-
         program_headers[i] = new_header;
     }
     out->program_headers = program_headers;

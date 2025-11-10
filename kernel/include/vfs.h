@@ -1,5 +1,6 @@
 #ifndef VFS_H
 #define VFS_H
+#include "kernel/types.h"
 #include "sys/types.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -11,15 +12,17 @@ typedef struct
     size_t blocksize;
     void *fs_private;
     struct fs_type *type;
+
+    struct bdev *dev;
 } superblock;
 
 typedef struct
 {
     // TODO: this should have some way of determining what superblock is parsed
-    superblock *(*parse_superblock)();
+    superblock *(*parse_superblock)(struct bdev *dev);
 } superblock_functions;
 
-superblock *new_superblock(size_t blocksize, void *fs_private,
+superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
                            const struct fs_type *type);
 
 typedef size_t inode_size;
@@ -29,18 +32,19 @@ typedef struct
     ino_t number;
     inode_size size;
 
+    superblock *sb;
+
     void *fs_private;
 } inode;
 
-inode *new_inode(ino_t number, inode_size size, void *fs_private);
+inode *new_inode(ino_t number, inode_size size, void *fs_private,
+                 superblock *sb);
 
 typedef struct
 {
     inode *(*get_inode)(ino_t number, superblock *sb);
-    void (*read_inode)(inode *, uint8_t *buf, size_t n, size_t offset,
-                       superblock *sb);
-    void (*write_inode)(inode *, uint8_t *buf, size_t n, size_t offset,
-                        superblock *sb);
+    void (*read_inode)(inode *, uint8_t *buf, size_t n, size_t offset);
+    void (*write_inode)(inode *, uint8_t *buf, size_t n, size_t offset);
 
     inode *(*alloc_inode)(superblock *sb);
 
@@ -51,6 +55,7 @@ typedef enum
     DENTRY_FILE,
     DENTRY_DIR,
     DENTRY_INVALID,
+
     DENTRY_MOUNT_POINT,
 } dentry_type;
 
@@ -58,7 +63,12 @@ typedef struct dentry
 {
     char *name;
     struct dentry *parent;
-    inode *inode;
+
+    union
+    {
+        struct superblock *sb;
+        inode *inode; /* type == DENTRY_MOUNT_POINT */
+    };
 
     dentry_type type;
 } dentry;
@@ -73,8 +83,7 @@ typedef struct
 {
     // dentry *(*find_dentry)(char *path, superblock *sb);
     dentry **(*get_dentries)(dentry *entry, superblock *sb);
-    dentry *(*append_dentry)(dentry *entry, char *name, ino_t number,
-                             superblock *sb);
+    dentry *(*append_dentry)(dentry *parent, char *name, superblock *sb);
 
     int (*remove_dentry)(dentry *, char *, superblock *);
 } dentry_functions;
@@ -119,7 +128,7 @@ struct fs_type
 {
     const char *name;
 
-    dentry *(*mount)();
+    dentry *(*mount)(struct bdev *dev);
 
     // bad names
     dentry_functions dentry_functions;
@@ -131,7 +140,16 @@ void register_filesystem(struct fs_type *);
 
 void init_vfs();
 
-dentry *lookup_path(const char *path);
+/* pathname.c */
+struct pathname_lookup_flags
+{
+    u8 create : 1;
+};
+#define PATHNAME_LOOKUP_CREATE (struct pathname_lookup_flags){.create = 1}
+#define PATHNAME_LOOKUP_FIND (struct pathname_lookup_flags){.create = 0}
+
+dentry *lookup_path(const char *path, struct pathname_lookup_flags flags);
+
 file *create_file(char *path);
 
 dentry *get_root_dir();

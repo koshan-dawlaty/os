@@ -17,9 +17,9 @@ struct ext2_inode_cache
     list l;
 };
 
-inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node)
+inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node, superblock *sb)
 {
-    return new_inode(num, ext2_get_inode_size(node), node);
+    return new_inode(num, ext2_get_inode_size(node), node, sb);
 }
 
 /* struct ext2_inode_cache ext2_inode_cache = {0, NULL, .l = LIST_INIT()}; */
@@ -49,13 +49,13 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
         return ERR_PTR(-ENOENT);
     }
 
-    uint32_t group_index = (inode_number - 1) / EXT2_INODES_PER_GROUP(sb);
+    u32 group_index = (inode_number - 1) / EXT2_INODES_PER_GROUP(sb);
     ext2_group_descriptor group = EXT2_GROUP_DESCRIPTOR_TABLE(sb)[group_index];
 
-    uint8_t *inode_usage = ext2_read_block(group.inode_usage, sb);
+    u8 *inode_usage = ext2_read_block(group.inode_usage, sb);
 
-    uint8_t node_exists = ((inode_usage[(inode_number - 1) / 8]) &
-                           (1 << (inode_number - 1) % 8)) != 0;
+    u8 node_exists = ((inode_usage[(inode_number - 1) / 8]) &
+                      (1 << (inode_number - 1) % 8)) != 0;
 
     if (!node_exists)
     {

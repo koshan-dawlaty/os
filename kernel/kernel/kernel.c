@@ -142,6 +142,7 @@ void kernel_init()
     init_pit();
     init_pci();
     init_ata();
+
     init_vfs();
 
     call_constructors();
@@ -154,41 +155,17 @@ void kernel_init()
 int main()
 {
 
-    struct bdev *test_ramdisk = new_ramdisk();
-
-    size_t size = 5096;
-    size_t offset = 8190;
-    u8 *buf = malloc(size);
-
-    for (size_t i = 0; i < size; i++)
-    {
-        buf[i] = 'a';
-    }
-
-    bdev_write(test_ramdisk, buf, size, offset);
-
-    u8 *read_buf = malloc(size);
-    bdev_read(test_ramdisk, read_buf, size, offset);
-
-    for (size_t i = 0; i < size; i++)
-    {
-
-        if (buf[i] != read_buf[i])
-        {
-            printf("data written %d not equal to data read %d at index %d",
-                   buf[i], read_buf[i], i);
-            break;
-        }
-    }
-
-    free(buf);
-    free(read_buf);
-
-    return 0;
+    printf("IN MAIN\n");
 
     char *args[] = {"/ksh", NULL};
 
     int f1 = open("/ksh", 0);
+
+    if (f1 < 0)
+    {
+        panic("could not open shell");
+    }
+
     elf *elf = parse_elf(f1);
 
     struct task *task1 = load_elf(elf, 1, args);

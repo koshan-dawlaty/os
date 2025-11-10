@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <stdbool.h>
 #include <utils.h>
 
 #ifdef __is_libk
@@ -8,7 +9,7 @@
 int unlink(const char *path)
 {
 #ifdef __is_libk
-    dentry *entry = lookup_path(path);
+    dentry *entry = lookup_path(path, PATHNAME_LOOKUP_FIND);
     return delete_dentry(entry);
 
 #else
