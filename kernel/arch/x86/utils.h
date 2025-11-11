@@ -1,5 +1,6 @@
 #ifndef I386_UTILS_H
 #define I386_UTILS_H
+#include "kernel/types.h"
 #include <stdint.h>
 
 extern uint32_t stack_top;
@@ -39,6 +40,15 @@ static inline uint32_t inl(uint16_t port)
     uint32_t ret;
     __asm__ volatile("inl %1, %0" : "=a"(ret) : "d"(port) : "memory");
     return ret;
+}
+
+static inline u64 rdtsc()
+{
+
+    uint32_t hi, lo;
+    __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi)::"memory");
+    __asm__ volatile("rdtsc");
+    return ((uint64_t)hi << 32) | lo;
 }
 
 static inline void io_wait(void)

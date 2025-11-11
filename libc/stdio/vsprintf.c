@@ -1,7 +1,9 @@
 #include "stdio.h"
-
+#include "sys/types.h"
 #include <limits.h>
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +12,60 @@
 #include <kernel/tty.h>
 
 // TODO: kinda slow
+char *int_to_string_unsigned(uintmax_t in, long base)
+{
+
+    if (in == 0)
+    {
+
+        char *buf = malloc(2);
+        buf[0] = '0';
+        buf[1] = '\0';
+
+        return buf;
+    }
+
+    size_t digits_len = 0;
+    intmax_t in_temp = in;
+    while (in_temp > 0)
+    {
+        digits_len++;
+        in_temp /= base;
+    }
+
+    size_t buf_size = digits_len * sizeof(char);
+
+    char *buf = malloc(buf_size);
+
+    size_t i = digits_len;
+
+    /* printf("%c\n", buf[0]); */
+    while (in > 0)
+    {
+        intmax_t digit = in % base;
+        /* printf("in:%p, digit:%p\n", (void *)in, (void *)digit); */
+        if (digit < 10)
+        {
+            buf[i - 1] = digit + 0x30;
+        }
+        else
+        {
+            buf[i - 1] = digit + 0x37;
+        }
+
+        /* printf("i: %d\n", i); */
+        /* printf("%d\n", in % 10); */
+        /* printf("%c\n", (in % 10) + 0x30); */
+        i--;
+        in /= base;
+    }
+
+    /* printf("%c\n", buf[0]); */
+    /* printf("test:%c\n", (buf[0] == '\0') + 0x30); */
+    buf[buf_size] = 0;
+    return buf;
+}
+
 char *int_to_string(intmax_t in, int base)
 {
     if (in == 0)
@@ -78,7 +134,6 @@ char *int_to_string(intmax_t in, int base)
     buf[buf_size] = 0;
     return buf;
 }
-
 const size_t buf_increment = 10;
 
 void increment_buf(char **buf, size_t *len, size_t *capacity, size_t add)
@@ -113,6 +168,8 @@ char *vrprintf(const char *format, va_list list)
     size_t out_len = 0;
     size_t capacity = 10;
 
+    bool is_unsigned = false;
+
     int next_is_format = 0;
 
     if (*format == 0)
@@ -146,32 +203,64 @@ that they will not work because the bootstrap has not initialized them
 
                 append_buf(&out, &out_len, &capacity, c);
             }
-            else if (*format == 'd')
+            else if (*format == 'u')
             {
-                int i = va_arg(list, int);
-                char *str = int_to_string(i, 10);
-
-                increment_buf(&out, &out_len, &capacity, strlen(str));
-
-                out_len += strlen(str);
-                memcpy(out + (out_len - strlen(str)), str, strlen(str));
+                is_unsigned = true;
+                next_is_format = true;
             }
-            else if (*format == 'x')
+            else
             {
-                int x = va_arg(list, int);
-                char *str = int_to_string(x, 16);
+                char *str;
+                if (is_unsigned)
+                {
+                    if (*format == 'd')
+                    {
+                        uint i = va_arg(list, uint);
+                        str = int_to_string_unsigned(i, 10);
+                    }
+                    else if (*format == 'x')
+                    {
+                        uint i = va_arg(list, uint);
+                        str = int_to_string_unsigned(i, 16);
+                    }
+                    else if (*format == 'L')
+                    {
+                        unsigned long long i = va_arg(list, unsigned long long);
+                        str = int_to_string_unsigned(i, 16);
+                    }
+                    else if (*format == 'l')
+                    {
+                        unsigned long long i = va_arg(list, unsigned long);
+                        str = int_to_string_unsigned(i, 10);
+                    }
+                    is_unsigned = false;
+                }
+                else
+                {
+                    if (*format == 'd')
+                    {
+                        int i = va_arg(list, int);
+                        str = int_to_string(i, 10);
+                    }
+                    else if (*format == 'x')
+                    {
+                        int x = va_arg(list, int);
+                        str = int_to_string(x, 16);
+                    }
+                    else if (*format == 'z')
+                    {
+                        size_t x = va_arg(list, size_t);
+                        str = int_to_string(x, 10);
+                    }
+                    else if (*format == 'p')
+                    {
+                        void *x = va_arg(list, void *);
+                        str = int_to_string((uintptr_t)x, 16);
+                    }
+                }
 
                 increment_buf(&out, &out_len, &capacity, strlen(str));
 
-                out_len += strlen(str);
-                memcpy(out + (out_len - strlen(str)), str, strlen(str));
-            }
-            else if (*format == 'p')
-            {
-                void *p = va_arg(list, void *);
-                char *str = int_to_string((uintptr_t)p, 16);
-
-                increment_buf(&out, &out_len, &capacity, strlen(str));
                 out_len += strlen(str);
                 memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int printf(const char *format, ...)
+int __attribute__((format(printf, 1, 2))) printf(const char *format, ...)
 {
     va_list parameters;
     va_start(parameters, format);

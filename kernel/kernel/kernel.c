@@ -29,6 +29,7 @@
 #include "../fs/ext2/ext2.h"
 #include "scheduler.h"
 #include "unistd.h"
+#include "utils.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -92,6 +93,7 @@ void kernel_task2()
         memcpy(shared, "two", 4);
 
         schedule();
+        schedule();
         if (strcmp(shared, "two"))
         {
             printf("task2: shared memory was corrupted to:%s\n", shared);
@@ -105,12 +107,49 @@ void kernel_task2()
 
 void kernel_task3()
 {
-    printf("3 is running\n");
-    sleep(3);
 
     printf("this is kernel task3\n");
     while (1)
     {
+        char *x = malloc(100);
+        schedule();
+
+        memcpy(x, "one", 4);
+
+        schedule();
+
+        if (strcmp(x, "one"))
+        {
+            printf("task1: shared memory was corrupted to:%s\n", shared);
+        }
+
+        schedule();
+        free(x);
+        schedule();
+        schedule();
+    }
+}
+
+void kernel_task4()
+{
+    printf("this is kernel task4\n");
+    while (1)
+    {
+
+        char *x = malloc(100);
+        schedule();
+
+        memcpy(x, "two", 4);
+        schedule();
+        if (strcmp(x, "two"))
+        {
+            printf("task2: shared memory was corrupted to:%s\n", shared);
+        }
+
+        schedule();
+        free(x);
+        schedule();
+        schedule();
     }
 }
 
@@ -155,6 +194,9 @@ void kernel_init()
 int main()
 {
 
+    /* printf("malloc:%d no:%d diff:%d\n", malloc_time, no_time, */
+    /*        malloc_time - no_time); */
+
     printf("IN MAIN\n");
 
     char *args[] = {"/ksh", NULL};
@@ -181,6 +223,21 @@ int main()
     shared_memory_semaphore = new_semaphore(1);
 
     add_task(task1);
+
+    ptr start = rdtsc();
+    malloc(100);
+    ptr end = rdtsc();
+    ptr malloc_time = end - start;
+
+    ptr start2 = rdtsc();
+    ptr end2 = rdtsc();
+
+    ptr no_time = end2 - start2;
+
+    printf("%ud, %ud\n", malloc_time, no_time);
+
+    /* add_task(new_task((ptr)kernel_task3)); */
+    /* add_task(new_task((ptr)kernel_task4)); */
 
     return 0;
 }
