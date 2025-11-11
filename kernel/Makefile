@@ -72,6 +72,9 @@ drivers/block/ata/drive.o \
 drivers/block/ata/ata.o \
 drivers/block/bdev.o \
 drivers/block/ram/drive.o \
+drivers/character/cdev.o \
+drivers/character/terminal/device.o \
+drivers/device.o \
 
 
 OBJS=\

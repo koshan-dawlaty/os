@@ -224,18 +224,6 @@ int main()
 
     add_task(task1);
 
-    ptr start = rdtsc();
-    malloc(100);
-    ptr end = rdtsc();
-    ptr malloc_time = end - start;
-
-    ptr start2 = rdtsc();
-    ptr end2 = rdtsc();
-
-    ptr no_time = end2 - start2;
-
-    printf("%ud, %ud\n", malloc_time, no_time);
-
     /* add_task(new_task((ptr)kernel_task3)); */
     /* add_task(new_task((ptr)kernel_task4)); */
 

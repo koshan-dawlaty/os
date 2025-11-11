@@ -1,6 +1,8 @@
 #include "ata/ata.h"
 #include "bdev.h"
+#include "cdev.h"
 #include "dcache.h"
+#include "device.h"
 #include "err.h"
 #include "kernel/types.h"
 #include "vfs_internal.h"
@@ -39,10 +41,17 @@ int read_file(file *file, char *buf, size_t n, size_t off)
 
     if (file->entry->type == DENTRY_DEVICE)
     {
+        struct device *dev = file->entry->dev;
         /* TODO: see if we should use a file offset for block devices */
-        /* TODO: this should work for other types of devices (and maybe be in
-         * another function */
-        return bdev_read(file->entry->dev, (u8 *)buf, n, off);
+
+        if (dev->type == DEV_BLOCK)
+        {
+            return bdev_read(dev->block, (u8 *)buf, n, off);
+        }
+        else if (dev->type == DEV_CHARACTER)
+        {
+            return cdev_read(dev->character, (u8 *)buf, n);
+        }
     }
 
     inode *node = file->entry->inode;

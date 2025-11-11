@@ -1,5 +1,6 @@
 #ifndef VFS_H
 #define VFS_H
+#include "device.h"
 #include "kernel/types.h"
 #include "sys/types.h"
 #include <stdint.h>
@@ -69,7 +70,7 @@ typedef struct dentry
     {
         inode *inode;
         struct superblock *sb; /* type == DENTRY_MOUNT_POINT */
-        struct bdev *dev;      /* type == DENTRY_DEVICE  */
+        struct device *dev;    /* type == DENTRY_DEVICE  */
     };
 
     dentry_type type;
@@ -157,5 +158,7 @@ file *create_file(char *path);
 dentry *get_root_dir();
 
 int delete_dentry(dentry *entry);
+
+dentry *new_dentry_dev(char *name, dentry *parent, struct device *dev);
 
 #endif
