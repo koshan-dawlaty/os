@@ -62,6 +62,7 @@ dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type)
 
     return out;
 }
+
 void free_dentry(dentry *entry)
 {
     free(entry->name);

@@ -57,6 +57,7 @@ typedef enum
     DENTRY_INVALID,
 
     DENTRY_MOUNT_POINT,
+    DENTRY_DEVICE,
 } dentry_type;
 
 typedef struct dentry
@@ -66,8 +67,9 @@ typedef struct dentry
 
     union
     {
-        struct superblock *sb;
-        inode *inode; /* type == DENTRY_MOUNT_POINT */
+        inode *inode;
+        struct superblock *sb; /* type == DENTRY_MOUNT_POINT */
+        struct bdev *dev;      /* type == DENTRY_DEVICE  */
     };
 
     dentry_type type;
