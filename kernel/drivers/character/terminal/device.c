@@ -27,8 +27,8 @@ int terminal_write2(struct cdev *dev, u8 *buf, size_t len)
 struct device *terminal_device = NULL;
 
 struct cdev_functions terminal_cdev_functions = {
-    .read = terminal_write2,
-    .write = terminal_read,
+    .read = terminal_read,
+    .write = terminal_write2,
 };
 
 struct device *get_terminal()

@@ -15,6 +15,11 @@ extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
 int main()
 {
 
+    int term_fd = open("/terminal", 0);
+    char *buf = malloc(10);
+    memcpy(buf, "abc", 4);
+    write(term_fd, buf, 10);
+
     char *input = malloc(0);
     size_t input_len = 0;
 

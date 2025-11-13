@@ -226,12 +226,12 @@ int main()
 
     add_task(task1);
 
-    create_device("/testdev", get_terminal());
-    int fd = open("/testdev", 0);
+    create_device("/terminal", get_terminal());
+    /* int fd = open("/terminal", 0); */
 
-    char *buf = malloc(10);
-    read(fd, buf, 10);
-    printf("%s\n", buf);
+    /* char *buf = malloc(10); */
+    /* read(fd, buf, 10); */
+    /* printf("%s\n", buf); */
 
     /* add_task(new_task((ptr)kernel_task3)); */
     /* add_task(new_task((ptr)kernel_task4)); */
