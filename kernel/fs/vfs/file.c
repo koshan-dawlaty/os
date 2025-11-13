@@ -41,6 +41,7 @@ int read_file(file *file, char *buf, size_t n, size_t off)
 
     if (file->entry->type == DENTRY_DEVICE)
     {
+        printf("%s\n", file->entry->name);
         struct device *dev = file->entry->dev;
         /* TODO: see if we should use a file offset for block devices */
 
@@ -50,6 +51,7 @@ int read_file(file *file, char *buf, size_t n, size_t off)
         }
         else if (dev->type == DEV_CHARACTER)
         {
+            printf("test\n");
             return cdev_read(dev->character, (u8 *)buf, n);
         }
     }

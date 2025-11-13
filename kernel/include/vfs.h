@@ -161,4 +161,9 @@ int delete_dentry(dentry *entry);
 
 dentry *new_dentry_dev(char *name, dentry *parent, struct device *dev);
 
+/*
+ * creates a device in the file system
+ */
+file *create_device(char *name, struct device *dev);
+
 #endif

@@ -14,6 +14,8 @@
 #include "scheduler/sleep.h"
 #include "serial.h"
 #include <drivers/block/ram/ramdisk.h>
+#include <drivers/character/terminal/terminal.h>
+#include <err.h>
 #include <fcntl.h>
 #include <kernel/tty.h>
 #include <memory/paging_flags.h>
@@ -223,6 +225,13 @@ int main()
     shared_memory_semaphore = new_semaphore(1);
 
     add_task(task1);
+
+    create_device("/testdev", get_terminal());
+    int fd = open("/testdev", 0);
+
+    char *buf = malloc(10);
+    read(fd, buf, 10);
+    printf("%s\n", buf);
 
     /* add_task(new_task((ptr)kernel_task3)); */
     /* add_task(new_task((ptr)kernel_task4)); */

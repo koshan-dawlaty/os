@@ -80,14 +80,6 @@ size_t parse_component(const char *path, inode **current_node,
     if (entry == NULL)
     {
         dentry **dentries = pathname_get_dentries(*current_dir);
-        /* printf("starting\n"); */
-        /* while (*dentries != NULL) */
-        /* { */
-        /*     printf("%s\n", (*dentries)->name); */
-        /*     dentries++; */
-        /* } */
-        /* printf("end\n"); */
-        /* dentries = pathname_get_dentries(*current_node); */
 
         entry = parse_dentries_component(dentries, component);
 
@@ -97,14 +89,15 @@ size_t parse_component(const char *path, inode **current_node,
             if (flags.create && final_component)
             {
 
-                dentry *new_dentry =
+                entry =
                     (*current_dir)
                         ->inode->sb->type->dentry_functions.append_dentry(
                             *current_dir, component, (*current_dir)->inode->sb);
-                add_dcache(*current_dir, new_dentry);
             }
-
-            goto not_found;
+            else
+            {
+                goto not_found;
+            }
         }
         else if (flags.create)
         {
@@ -130,6 +123,15 @@ size_t parse_component(const char *path, inode **current_node,
         {
             goto not_dir;
         }
+        *current_dir = entry;
+    }
+    else if (entry->type == DENTRY_DEVICE)
+    {
+        if (!final_component)
+        {
+            goto not_found;
+        }
+
         *current_dir = entry;
     }
     else
@@ -161,7 +163,6 @@ not_dir:
 
 dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
 {
-    /* printf("looking up path:%s\n", path); */
     inode *current_node = NULL;
     dentry *current_dir = NULL;
     size_t component_offset = 0;
@@ -204,7 +205,6 @@ dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
 
         /* component_offset++; */
 
-        /* printf("%d\n", current_node->number); */
         if (IS_ERR(current_dir))
         {
             return current_dir;
