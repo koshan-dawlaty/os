@@ -1,13 +1,11 @@
-#include "alloca.h"
-#include "complex.h"
 #include "dcache.h"
 #include "err.h"
-#include "kernel/types.h"
-#include "scheduler.h"
 #include "vfs.h"
 #include "vfs_internal.h"
 #include <errno.h>
+#include <kernel/types.h>
 #include <panic.h>
+#include <scheduler.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -99,7 +97,7 @@ size_t parse_component(const char *path, inode **current_node,
                 goto not_found;
             }
         }
-        else if (flags.create)
+        else if (flags.create && final_component)
         {
             goto already_exists;
         }

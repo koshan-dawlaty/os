@@ -38,7 +38,6 @@ TEST(vfs_create_basic, {
     }
 })
 
-/* seems to not work */
 TEST(vfs_create, {
     size_t name_len = 2;
     char *name = malloc(name_len);
@@ -60,17 +59,12 @@ TEST(vfs_create, {
         /* name[name_len - 2] = i + 0x60; */
         /* name[name_len - 1] = 0; */
 
-        printf("pathname is:%s\n", pathname);
-        printf("should be zero:%p\n", pathname[strlen(literal) + 1]);
-
         creat(pathname, 000);
 
         char *good_pathname = malloc(name_len + 1);
         memcpy(good_pathname + 1, pathname, strlen(pathname));
         good_pathname[strlen(pathname) + 1] = 0;
         good_pathname[0] = '/';
-
-        printf("reading:%s\n", good_pathname);
 
         int fd = open(pathname, 0);
 
@@ -81,4 +75,12 @@ TEST(vfs_create, {
 
         free(pathname);
     }
+})
+
+TEST(vfs_create_dir, {
+    char *path = "/dir/testfile";
+    creat(path, 0);
+    int fd1 = open(path, 0);
+
+    ASSERT_NE(fd1, -1, "invalid fd:%d", fd1);
 })
