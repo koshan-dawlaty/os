@@ -45,8 +45,8 @@ dentry *parse_dentries_component(dentry **dentries, char *component)
     return NULL;
 }
 
-size_t parse_component(const char *path, inode **current_node,
-                       dentry **current_dir, struct pathname_lookup_flags flags)
+size_t parse_component(const char *path, dentry **current_dir,
+                       struct pathname_lookup_flags flags)
 {
     /* TODO: stupid */
     bool starts_with_slash = false;
@@ -113,7 +113,6 @@ size_t parse_component(const char *path, inode **current_node,
 
     if (entry->type == DENTRY_DIR)
     {
-        *current_node = entry->inode;
     }
     else if (entry->type == DENTRY_FILE)
     {
@@ -121,7 +120,6 @@ size_t parse_component(const char *path, inode **current_node,
         {
             goto not_dir;
         }
-        *current_dir = entry;
     }
     else if (entry->type == DENTRY_DEVICE)
     {
@@ -129,8 +127,6 @@ size_t parse_component(const char *path, inode **current_node,
         {
             goto not_found;
         }
-
-        *current_dir = entry;
     }
     else
     {
@@ -161,7 +157,6 @@ not_dir:
 
 dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
 {
-    inode *current_node = NULL;
     dentry *current_dir = NULL;
     size_t component_offset = 0;
 
@@ -180,26 +175,20 @@ dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
 
         if (current_dir == NULL)
         {
-            current_node = pathname_get_root_dir();
             current_dir = get_root_dir();
-        }
-        else
-        {
-            current_node = current_dir->inode;
         }
     }
     else
     {
         component_offset++;
-        current_node = pathname_get_root_dir();
         current_dir = get_root_dir();
     }
 
     while (*(path + component_offset) != 0)
     {
 
-        component_offset += parse_component(path + component_offset,
-                                            &current_node, &current_dir, flags);
+        component_offset +=
+            parse_component(path + component_offset, &current_dir, flags);
 
         /* component_offset++; */
 
