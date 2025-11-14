@@ -139,6 +139,12 @@ struct fs_type
     superblock_functions superblock_functions;
 };
 
+static inline dentry **dir_get_dentries(dentry *entry)
+{
+    superblock *sb = entry->inode->sb;
+    return sb->type->dentry_functions.get_dentries(entry, sb);
+}
+
 void register_filesystem(struct fs_type *);
 
 void init_vfs();

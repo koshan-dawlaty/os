@@ -10,25 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-dentry **pathname_get_dentries(dentry *dir)
-{
-    return current_superblock->type->dentry_functions.get_dentries(
-        dir, current_superblock);
-}
-
-inode *pathname_get_inode(ino_t number)
-{
-    return current_superblock->type->inode_functions.get_inode(
-        number, current_superblock);
-}
-
-inode *pathname_get_root_dir()
-{
-    /* TODO: will break if root inode is not 2 */
-
-    return pathname_get_inode(2);
-}
-
 dentry *parse_dentries_component(dentry **dentries, char *component)
 {
     size_t i = 0;
@@ -77,7 +58,7 @@ size_t parse_component(const char *path, dentry **current_dir,
 
     if (entry == NULL)
     {
-        dentry **dentries = pathname_get_dentries(*current_dir);
+        dentry **dentries = dir_get_dentries(*current_dir);
 
         entry = parse_dentries_component(dentries, component);
 
