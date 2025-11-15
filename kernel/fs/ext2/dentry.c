@@ -12,19 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void free_dentries(ext2_dentry **entries)
-{
-    while (*entries != NULL)
-    {
-
-        free(*entries);
-
-        entries++;
-    }
-
-    // free(entries);
-}
-
 dentry **ext2_get_dentries(dentry *entry, superblock *sb)
 {
     ext2_inode *node = EXT2_INODE(entry->inode);

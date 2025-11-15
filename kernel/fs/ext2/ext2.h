@@ -113,7 +113,6 @@ void ext2_write_block(uint8_t *buffer, size_t block_number, superblock *sb);
 
 // name is taken from the linux kernel, it could be better
 inode *ext2_iget(ino_t inode_number, superblock *sb);
-ext2_dentry *ext2_find_dentry(char *path, superblock *sb);
 
 inode *ext2_inode_alloc(superblock *sb);
 uint32_t ext2_block_alloc(superblock *sb);
