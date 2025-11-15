@@ -196,21 +196,6 @@ void kernel_init()
 int main()
 {
 
-    /*     char *testfile = "/testfile1234"; */
-    /*     creat(testfile, 0); */
-    /*     printf("fd:%d\n", open(testfile, 0)); */
-    /*     unlink(testfile); */
-
-    /*     printf("removed:%d\n", open(testfile, 0)); */
-    /*     creat(testfile, 0); */
-
-    /*     printf("created again:%d\n", open(testfile, 0)); */
-
-    /*     return 1; */
-
-    /* printf("malloc:%d no:%d diff:%d\n", malloc_time, no_time, */
-    /*        malloc_time - no_time); */
-
     printf("IN MAIN\n");
 
     char *args[] = {"/ksh", NULL};

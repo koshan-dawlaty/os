@@ -84,3 +84,18 @@ TEST(vfs_create_dir, {
 
     ASSERT_NE(fd1, -1, "invalid fd:%d", fd1);
 })
+
+TEST(vfs_create_delete_dir, {
+    char *testfile = "/three";
+    creat(testfile, 0);
+    int fd1 = open(testfile, 0);
+    ASSERT_NE(fd1, -1, "opening newly created returns:%d", fd1);
+    unlink(testfile);
+
+    int fd2 = open(testfile, 0);
+    ASSERT_EQ(fd2, -1, "opening file after delete returns:%d", fd2);
+    creat(testfile, 0);
+
+    int fd3 = open(testfile, 0);
+    ASSERT_NE(fd3, -1, "opening file again returns:%d", fd3);
+})
