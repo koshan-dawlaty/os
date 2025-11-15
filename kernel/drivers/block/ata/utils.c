@@ -1,5 +1,7 @@
-#include "utils.h"
-#include "ata/ata.h"
+#include "ata_utils.h"
+#include <utils.h>
+
+#include <ata/ata.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -40,6 +42,31 @@ void wait_for_bit(uint16_t io_offset, uint16_t control_offset, uint8_t bit,
         else
         {
             if (!(status & (1 << bit)))
+            {
+                break;
+            }
+        }
+    }
+}
+
+void ata_wait_for_mask(u16 io, u8 mask, bool set)
+{
+
+    u8 status;
+    while (1)
+    {
+        status = inb(io + ATA_STATUS);
+
+        if (set)
+        {
+            if ((status & mask) == mask)
+            {
+                break;
+            }
+        }
+        else
+        {
+            if ((status & mask) == 0)
             {
                 break;
             }

@@ -63,8 +63,9 @@ void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
             buffer[s * 512 + i * 2 + 1] = (uint8_t)(data >> 8);
         }
     }
-    wait_for_bit(io_offset, control_offset, 7, 0);
-    wait_for_bit(io_offset, control_offset, 3, 0);
+    /* wait_for_bit(io_offset, control_offset, 7, 0); */
+    /* wait_for_bit(io_offset, control_offset, 3, 0); */
+    ata_wait_for_mask(io_offset, 7 | 3, 0);
 }
 
 /*

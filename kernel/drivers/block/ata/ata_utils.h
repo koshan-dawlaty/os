@@ -1,6 +1,7 @@
 #ifndef ATA_UTILS_H
 #define ATA_UTILS_H
 
+#include <kernel/types.h>
 #include <stdint.h>
 
 /*
@@ -24,6 +25,8 @@ void ata_send_command_24(uint16_t io_offset, uint16_t control_offset,
 
 void ata_send_command_48(uint16_t io_offset, uint16_t control_offset,
                          uint8_t sectors, uint64_t lba, uint8_t command);
+
+void ata_wait_for_mask(u16 io, u8 mask, bool set);
 
 #define ATA_DRIVE(bdev) bdev->bdev_private
 
