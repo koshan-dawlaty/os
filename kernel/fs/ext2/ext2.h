@@ -85,10 +85,10 @@ static inline ext2_inode *EXT2_INODE(inode *i)
 inode *ext2_inode_to_inode(ext2_inode node);
 
 typedef size_t ext2_inode_addr;
-// index of inode content in bytes
+/* index of inode content in bytes */
 typedef uint64_t ext2_inode_index;
 
-// this does not represent the actual dentry structure
+/* this does not represent the actual dentry structure */
 typedef struct
 {
     ext2_inode_addr inode;

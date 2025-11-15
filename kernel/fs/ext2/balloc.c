@@ -134,8 +134,8 @@ void ext2_write_inode(inode *vfs_node, uint8_t *buf, size_t buf_len,
         uint block_num = ext2_get_block_from_inode(vfs_node, block_index, sb);
 
         uint8_t *current_block = ext2_read_block(block_num, sb);
-
         int block_offset = index % EXT2_BLOCK_SIZE(sb);
+        printf("offset:%d\n", block_offset);
 
         if (buf_len <= EXT2_BLOCK_SIZE(sb))
         {
@@ -210,36 +210,38 @@ dentry *ext2_append_dentry(dentry *parent, char *name, superblock *sb)
 
         u16 len = *(u16 *)(raw_entry + 4);
 
-        if (i + len >= EXT2_BLOCK_SIZE(sb))
+        if (i + len == EXT2_BLOCK_SIZE(sb))
         {
 
-            size_t new_len = align_long(8 + (*(u8 *)(raw_entry + 6)) + 4, 4);
+            size_t new_len = align_long(8 + (*(u8 *)(raw_entry + 6)), 4);
 
+            printf("i:%d, new:%d\n", i, new_len);
             i += new_len;
             *(u16 *)(raw_entry + 4) = new_len;
 
             break;
         }
+        /* printf("name:%s\n", raw_entry + 8); */
 
         i += len;
     }
 
-    ext2_write_inode(parent->inode, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
+    /* TODO: this seems to be breaking it, no idea why, it might result in the
+     * new length being wrong  */
+    /* ext2_write_inode(parent->inode, buf, EXT2_BLOCK_SIZE(sb), 0, sb); */
 
-    size_t buf_len = align_long((strlen(name) + 9) + 4, 4);
+    size_t buf_len = align_long((strlen(name) + 8) + 4, 4);
     char *new_buf = malloc(buf_len);
 
     inode *new_node = ext2_inode_alloc(sb);
 
     memcpy(new_buf + 8, name, strlen(name));
-    new_buf[8 + strlen(name)] = 0;
     *(u32 *)new_buf = new_node->number;
     *(u16 *)(new_buf + 4) = EXT2_BLOCK_SIZE(sb) - i;
     *(u8 *)(new_buf + 6) = strlen(name);
 
-    buf[6] = strlen(new_buf + 8);
-
-    ext2_write_inode(parent->inode, (uint8_t *)new_buf, buf_len, i, sb);
+    printf("writing at:%d\n", i);
+    ext2_write_inode(parent->inode, (u8 *)new_buf, buf_len, i, sb);
 
     /* TODO: bad */
     ext2_entry->size_low = EXT2_BLOCK_SIZE(sb);
