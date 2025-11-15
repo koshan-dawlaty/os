@@ -1,3 +1,4 @@
+#include "bits/pthreadtypes.h"
 #include "ctype.h"
 #include "ext2.h"
 #include "kernel/paging.h"
@@ -165,6 +166,8 @@ int ext2_remove_dentry(dentry *entry, char *name, superblock *sb)
     u8 *buf = malloc(EXT2_BLOCK_SIZE(sb));
     ext2_read_inode(ext2_entry, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
     size_t i = 0;
+    size_t prev = 0;
+    bool is_last_entry = false;
     while (i < EXT2_BLOCK_SIZE(sb))
     {
         u8 *raw_entry = buf + i;
@@ -174,24 +177,41 @@ int ext2_remove_dentry(dentry *entry, char *name, superblock *sb)
 
         if (!strncmp((char *)(raw_entry + 8), name, name_len))
         {
+            if (i + len == EXT2_BLOCK_SIZE(sb))
+            {
+                is_last_entry = true;
+            }
             /* i += len; */
             break;
         }
 
         if (i + len >= EXT2_BLOCK_SIZE(sb))
         {
-            return ENOENT;
+            return -ENOENT;
         }
 
+        prev = i;
         i += len;
     }
 
     u8 *to_remove = buf + i;
+    /* u16 old_len = align_long(*(u8 *)(to_remove + 6) + 8, 4); */
     u16 old_len = *(u16 *)(to_remove + 4);
     size_t j = i + old_len;
 
+    if (is_last_entry)
+    {
+        u8 *last = buf + prev;
+        *(u16 *)(last + 4) = EXT2_BLOCK_SIZE(sb) - prev;
+        goto done;
+    }
+
+    size_t move_size = EXT2_BLOCK_SIZE(sb) - j;
+
+    char *copy_buf = malloc(move_size);
+    memcpy(copy_buf, buf + j, move_size);
     /* move entries back */
-    memcpy(buf + i, buf + j, j);
+    memcpy(buf + i, copy_buf, move_size);
 
     /* modify final dentry to point to the end of the block */
     while (i < EXT2_BLOCK_SIZE(sb))
@@ -200,7 +220,7 @@ int ext2_remove_dentry(dentry *entry, char *name, superblock *sb)
         u8 *raw_entry = buf + i;
         u16 len = *(u16 *)(raw_entry + 4);
 
-        if (i + len >= EXT2_BLOCK_SIZE(sb) - old_len)
+        if (i + len == EXT2_BLOCK_SIZE(sb))
         {
 
             *(u16 *)(raw_entry + 4) = EXT2_BLOCK_SIZE(sb) - i;
@@ -209,6 +229,8 @@ int ext2_remove_dentry(dentry *entry, char *name, superblock *sb)
 
         i += len;
     }
+
+done:
 
     ext2_write_inode(node, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
 

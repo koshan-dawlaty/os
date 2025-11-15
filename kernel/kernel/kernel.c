@@ -195,18 +195,7 @@ void kernel_init()
 
 int main()
 {
-
-    /*     char *testfile = "/testfile1234"; */
-    /*     creat(testfile, 0); */
-    /*     printf("fd:%d\n", open(testfile, 0)); */
-    /*     unlink(testfile); */
-
-    /*     printf("removed:%d\n", open(testfile, 0)); */
-    /*     creat(testfile, 0); */
-
-    /*     printf("created again:%d\n", open(testfile, 0)); */
-
-    /*     return 1; */
+    /* NEW_LEN IN EXT2_APPEND_DENTRY IS WRONG IN THE FIRST LOOP (maybe) */
 
     /* printf("malloc:%d no:%d diff:%d\n", malloc_time, no_time, */
     /*        malloc_time - no_time); */
