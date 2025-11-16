@@ -106,7 +106,7 @@ size_t parse_component(const char *path, dentry **current_dir,
     {
         if (!final_component)
         {
-            goto not_found;
+            goto not_dir;
         }
     }
     else

@@ -59,6 +59,7 @@ unistd/execv.o \
 unistd/sleep.o \
 unistd/chdir.o \
 sched/sched_yield.o \
+errno.o \
 
 
 HOSTEDOBJS=\

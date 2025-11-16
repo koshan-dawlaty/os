@@ -99,3 +99,8 @@ TEST(vfs_create_delete_dir, {
     int fd3 = open(testfile, 0);
     ASSERT_NE(fd3, -1, "opening file again returns:%d", fd3);
 })
+
+TEST(vfs_doesnot_exist, {
+    int fd = open("/doesnotexist", 0);
+    ASSERT_EQ(fd, -1, "fd for nonexistant file is %d", fd);
+});

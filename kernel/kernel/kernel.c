@@ -16,6 +16,7 @@
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/terminal/terminal.h>
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <kernel/tty.h>
 #include <memory/paging_flags.h>

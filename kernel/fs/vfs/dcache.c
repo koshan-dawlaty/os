@@ -172,6 +172,8 @@ void remove_dcache(dentry *entry)
     }
 
     list2_remove(&value->l, &dir->values_head);
+
+    dcache_free_value(value);
 }
 
 void init_dcache()

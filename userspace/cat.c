@@ -1,8 +1,10 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 int main(int argc, char **argv)
@@ -19,7 +21,7 @@ int main(int argc, char **argv)
 
     if (fd == -1)
     {
-        printf("not found\n");
+        printf("error:%s\n", strerror(errno));
         exit(1);
     }
 

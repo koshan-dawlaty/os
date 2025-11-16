@@ -17,4 +17,7 @@ char *strcat(char *dest, const char *src);
 char *strtok(char *s, char *sep);
 char *strtok_r(char *s, char *sep, char **state);
 
+/* errno.c */
+const char *strerror(int errnum);
+
 #endif
