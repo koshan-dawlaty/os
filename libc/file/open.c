@@ -15,7 +15,6 @@ int open(char *path, int flags)
     file *f = open_file(path);
     if (IS_ERR(f))
     {
-
         return -GET_ERR(f);
     }
 

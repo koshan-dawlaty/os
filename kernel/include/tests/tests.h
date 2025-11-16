@@ -58,6 +58,30 @@ void test_assert_true(int condition);
         FAIL_TEST(__VA_ARGS__);                                                \
     }
 
+#define ASSERT_LT(a, b, ...)                                                   \
+    if (a >= b)                                                                \
+    {                                                                          \
+        FAIL_TEST(__VA_ARGS__)                                                 \
+    }
+
+#define ASSERT_GT(a, b, ...)                                                   \
+    if (a <= b)                                                                \
+    {                                                                          \
+        FAIL_TEST(__VA_ARGS__)                                                 \
+    }
+
+#define ASSERT_GE(a, b, ...)                                                   \
+    if (a < b)                                                                 \
+    {                                                                          \
+        FAIL_TEST(__VA_ARGS__)                                                 \
+    }
+
+#define ASSERT_LE(a, b, ...)                                                   \
+    if (a > b)                                                                 \
+    {                                                                          \
+        FAIL_TEST(__VA_ARGS__)                                                 \
+    }
+
 #define FAIL_TEST(...)                                                         \
     return get_failed_test(__VA_OPT__(1, )(int) 0 __VA_OPT__(, ) __VA_ARGS__);
 
