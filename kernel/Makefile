@@ -15,7 +15,8 @@ EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas -fstack-protector-all
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas -fstack-protector-all \
+		-Iacpi/acpica/ # TODO: this is bad
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
@@ -74,6 +75,8 @@ drivers/block/ram/drive.o \
 drivers/character/cdev.o \
 drivers/character/terminal/device.o \
 drivers/device.o \
+\
+acpi/os_layer/os_layer.o \
 
 
 OBJS=\

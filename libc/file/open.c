@@ -15,6 +15,7 @@ int open(char *path, int flags)
     file *f = open_file(path);
     if (IS_ERR(f))
     {
+        /* TODO: we might want to set errno here */
         return -GET_ERR(f);
     }
 

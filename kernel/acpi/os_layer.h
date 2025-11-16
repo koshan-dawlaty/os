@@ -1,0 +1,15 @@
+#ifndef ACPICA_OS_LAYER
+#define ACPICA_OS_LAYER
+
+#ifdef CONFIG_x86_32
+#define ACPI_MACHINE_WIDTH 32
+#elif defined(CONFIG_x86_64)
+#define ACPI_MACHINE_WIDTH 64
+#endif
+
+#define ACPI_USE_SYSTEM_CLIBRARY 0
+#define ACPI_USE_LOCAL_CACHE
+#define ACPI_USE_DEFAULT_ENV
+#define ACPI_USE_DEFAULT_ALLOCATES
+
+#endif
