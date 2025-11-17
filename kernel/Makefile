@@ -97,7 +97,8 @@ $(TEST_OBJS) \
 $(LIBS) \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
 
-LINK_LIST_BIN = $(foreach obj,$(LINK_LIST),bin/$(obj))
+LINK_LIST_BIN = $(foreach obj,$(LINK_LIST),bin/$(obj)) \
+				# acpi/acpica.o \
 
 BIN=bin
 

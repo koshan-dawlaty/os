@@ -113,3 +113,56 @@ void init_gfp_zones()
 {
     gfp_user_zone.bitmap = malloc(gfp_user_zone.size / 8);
 }
+
+void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *zone)
+{
+
+    ptr i;
+    size_t consecutive = 0;
+    size_t consecutive_start = 0;
+    for (i = 0; i < zone->size; i++)
+    {
+        if (((zone->bitmap[i / 8] >> (i % 8)) & 1) == GFP_FREE)
+        {
+            /* printf("i is:%d\n", i); */
+            if (consecutive == 0)
+            {
+                consecutive_start = i;
+            }
+
+            consecutive++;
+        }
+        else
+        {
+            consecutive_start = 0;
+            consecutive = 0;
+        }
+
+        if (consecutive >= amount)
+        {
+            break;
+        }
+    }
+
+    /* printf("start:%d\n", consecutive_start); */
+
+    for (size_t j = consecutive_start; j < amount + i; j++)
+    {
+        /* printf("j is:%d\n", j); */
+
+        /* printf("virtual:%p\nphysical:%p\n", virtual_addr, physical_addr); */
+
+        zone->bitmap[j / 8] |= (1 << (j % 8));
+
+        /* map_page(physical_addr, virtual_addr, zone->pg_flags); */
+
+        /* physical_addr += PAGE_SIZE * j; */
+        /* virtual_addr += PAGE_SIZE * j; */
+    }
+
+    void *address = (void *)((i * PAGE_SIZE) + zone->virtual);
+
+    /* release_semaphore(get_free_pages_semaphore); */
+
+    return address;
+}

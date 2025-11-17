@@ -75,6 +75,54 @@ void *get_free_phys_page_dir(struct pagedir dir)
     return addr;
 }
 
+void *get_free_phys_pages(struct pagedir *dir, size_t amount)
+{
+    ptr i;
+    size_t consecutive = 0;
+    size_t consecutive_start = 0;
+    for (i = 0; i < NUM_PAGES; i++)
+    {
+        if (((phys_free_page_bitmap[i / 8] >> (i % 8)) & 1) == GFP_FREE)
+        {
+            /* printf("i is:%d\n", i); */
+            if (consecutive == 0)
+            {
+                consecutive_start = i;
+            }
+
+            consecutive++;
+        }
+        else
+        {
+            consecutive_start = 0;
+            consecutive = 0;
+        }
+
+        if (consecutive >= amount)
+        {
+            break;
+        }
+    }
+
+    /* printf("start:%d\n", consecutive_start); */
+
+    for (size_t j = consecutive_start; j < amount + i; j++)
+    {
+        /* printf("j is:%d\n", j); */
+
+        /* printf("virtual:%p\nphysical:%p\n", virtual_addr, physical_addr); */
+        dir->physical_pagetables[j] =
+            (PHYS_PAGE_START + (j * PAGE_SIZE)) | 0x03;
+        phys_free_page_bitmap[j / 8] |= (1 << (j % 8));
+    }
+
+    void *address = (void *)((i * PAGE_SIZE) + PHYS_PAGE_START);
+
+    /* release_semaphore(get_free_pages_semaphore); */
+
+    return address;
+}
+
 void *get_free_phys_page()
 {
     return get_free_phys_page_dir(*current_pagedir);

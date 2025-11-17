@@ -51,5 +51,6 @@ void write_kernel_page_tables(struct pagedir *pgdir);
 void create_userspace_stack(struct pagedir *pgdir);
 
 struct pagedir *get_current_pagedir();
+void *get_free_phys_pages(struct pagedir *dir, size_t amount);
 
 #endif

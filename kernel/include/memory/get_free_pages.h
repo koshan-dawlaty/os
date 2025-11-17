@@ -50,6 +50,11 @@ void free_pages_zone(void *addr, size_t amount, const struct memory_zone *zone);
  */
 void init_gfp_zones();
 
+/*
+ * gets free pages from the bitmap in @zone, but does not map them
+ */
+void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *zone);
+
 static inline void *get_free_pages(size_t amount)
 {
     return get_free_pages_zone(amount, &gfp_kernel_zone);
