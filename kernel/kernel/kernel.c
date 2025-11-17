@@ -12,6 +12,7 @@
 #include "pit/pit.h"
 #include "scheduler.h"
 #include "scheduler/sleep.h"
+#include "scheduler/spinlock.h"
 #include "serial.h"
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/terminal/terminal.h>
@@ -60,6 +61,7 @@ extern struct pagedir init_pgdir;
 extern semaphore *test_semaphore;
 
 semaphore *shared_memory_semaphore;
+spinlock *shared_memory_spinlock;
 char *shared;
 void kernel_task1()
 {
@@ -68,7 +70,7 @@ void kernel_task1()
     printf("this is kernel task1\n");
     while (1)
     {
-        wait_semaphore(shared_memory_semaphore);
+        lock_spinlock(shared_memory_spinlock);
         memcpy(shared, "one", 4);
 
         schedule();
@@ -77,7 +79,7 @@ void kernel_task1()
             printf("task1: shared memory was corrupted to:%s\n", shared);
         }
 
-        release_semaphore(shared_memory_semaphore);
+        release_spinlock(shared_memory_spinlock);
 
         schedule();
     }
@@ -91,7 +93,7 @@ void kernel_task2()
     while (1)
     {
 
-        wait_semaphore(shared_memory_semaphore);
+        lock_spinlock(shared_memory_spinlock);
 
         memcpy(shared, "two", 4);
 
@@ -102,7 +104,7 @@ void kernel_task2()
             printf("task2: shared memory was corrupted to:%s\n", shared);
         }
 
-        release_semaphore(shared_memory_semaphore);
+        release_spinlock(shared_memory_spinlock);
 
         schedule();
     }
@@ -199,40 +201,24 @@ int main()
 
     printf("IN MAIN\n");
 
-    char *args[] = {"/ksh", NULL};
+    shared = malloc(10);
+    shared_memory_semaphore = new_semaphore(1);
+    shared_memory_spinlock = new_spinlock();
 
-    int f1 = open("/ksh", 0);
-
-    if (f1 < 0)
-    {
-        panic("could not open shell");
-    }
-
-    elf *elf = parse_elf(f1);
-
-    struct task *task1 = load_elf(elf, 1, args);
-
-    free_elf(elf);
+    create_device("/terminal", get_terminal());
 
     enable_scheduler();
     add_task(create_kernel_task());
 
-    /* add_task(task1); */
+    int err = execv("/ksh", (char *[]){NULL});
 
-    shared = malloc(10);
-    shared_memory_semaphore = new_semaphore(1);
+    if (err < 0)
+    {
+        printf("error opening shell:%s\n", strerror(-err));
+    }
 
-    add_task(task1);
-
-    create_device("/terminal", get_terminal());
-    /* int fd = open("/terminal", 0); */
-
-    /* char *buf = malloc(10); */
-    /* read(fd, buf, 10); */
-    /* printf("%s\n", buf); */
-
-    /* add_task(new_task((ptr)kernel_task3)); */
-    /* add_task(new_task((ptr)kernel_task4)); */
+    /* add_task(new_task((ptr)kernel_task1)); */
+    /* add_task(new_task((ptr)kernel_task2)); */
 
     return 0;
 }
