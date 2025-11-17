@@ -52,3 +52,10 @@ void release_semaphore(semaphore *s)
 
     asm("sti");
 }
+
+void free_semaphore(semaphore *s)
+{
+    /* TODO: maybe free the task queue */
+
+    free(s);
+}

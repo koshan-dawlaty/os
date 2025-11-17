@@ -1,27 +1,21 @@
 #include "ata/ata.h"
-#include "elf.h"
 #include "gdt.h"
 #include "interrupts/idt.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
-#include "kernel/utils.h"
-#include "lib/list.h"
 #include "memory/get_free_pages.h"
 #include "panic.h"
 #include "pit/pit.h"
 #include "scheduler.h"
-#include "scheduler/sleep.h"
-#include "scheduler/spinlock.h"
-#include "serial.h"
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/terminal/terminal.h>
 #include <err.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <kernel/tty.h>
 #include <memory/paging_flags.h>
 #include <pci/pci.h>
+#include <spinlock.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -29,11 +23,8 @@
 #include <string.h>
 #include <vfs.h>
 
-// TODO: bad
-#include "../fs/ext2/ext2.h"
-#include "scheduler.h"
-#include "unistd.h"
-#include "utils.h"
+#include <scheduler.h>
+#include <unistd.h>
 
 #include <stdint.h>
 #include <stdlib.h>
