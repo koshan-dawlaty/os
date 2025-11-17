@@ -139,6 +139,18 @@ struct task *new_task(ptr ip)
     return out;
 }*/
 
+void run_task(void (*task)(void *), void *args)
+{
+    add_task(new_task_args((ptr)task, args));
+}
+
+struct task *new_task_args(ptr ip, void *args)
+{
+    struct task *out = new_task(ip);
+    scheduler_set_first_arg(args, &out->regs);
+    return out;
+}
+
 struct task *new_task(ptr ip)
 {
     struct task *out = malloc(sizeof(struct task));

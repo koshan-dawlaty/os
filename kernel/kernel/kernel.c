@@ -63,8 +63,10 @@ extern semaphore *test_semaphore;
 semaphore *shared_memory_semaphore;
 spinlock *shared_memory_spinlock;
 char *shared;
-void kernel_task1()
+void kernel_task1(void *args)
+
 {
+    printf("got:%s\n", args);
     printf("1 is running\n");
     sleep(1);
     printf("this is kernel task1\n");
@@ -85,7 +87,7 @@ void kernel_task1()
     }
 }
 
-void kernel_task2()
+void kernel_task2(void *args)
 {
     printf("2 is running\n");
     sleep(2);
@@ -110,7 +112,7 @@ void kernel_task2()
     }
 }
 
-void kernel_task3()
+void kernel_task3(void *args)
 {
 
     printf("this is kernel task3\n");
@@ -135,7 +137,7 @@ void kernel_task3()
     }
 }
 
-void kernel_task4()
+void kernel_task4(void *args)
 {
     printf("this is kernel task4\n");
     while (1)
@@ -209,16 +211,13 @@ int main()
 
     enable_scheduler();
     add_task(create_kernel_task());
+    /* run_task(kernel_task1, "abc"); */
 
     int err = execv("/ksh", (char *[]){NULL});
-
     if (err < 0)
     {
         printf("error opening shell:%s\n", strerror(-err));
     }
-
-    /* add_task(new_task((ptr)kernel_task1)); */
-    /* add_task(new_task((ptr)kernel_task2)); */
 
     return 0;
 }

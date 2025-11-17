@@ -17,3 +17,8 @@ void scheduler_set_regs_argv(int argc, char **argv, struct registers *regs)
     regs->edi = argc;
     regs->esi = (u64)argv;
 }
+
+void scheduler_set_first_arg(void *first_arg, struct registers *regs)
+{
+    regs->edi = (ptr)first_arg;
+}

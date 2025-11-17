@@ -19,3 +19,9 @@ void scheduler_set_regs_argv(int argc, char **argv, struct registers *regs)
     stack[0] = argc;
     stack[1] = (ptr)argv;
 }
+
+void scheduler_set_first_arg(void *first_arg, struct registers *regs)
+{
+    ptr *stack = (void *)regs->esp;
+    stack[2] = (ptr)first_arg;
+}
