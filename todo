@@ -45,8 +45,10 @@ many ext2 functions are just wrappers around the ext2 version of the structures 
 	(like ext2_parse_superblock and ext2_parse_superblock_vfs)
 
 
-it seems like stuff cant block in the init kernel task (create_kernel_task())
+it seems like the initial kernel task cant be removed from the scheduler queue (cant lock semaphores)
 	when i run a loop that is just
-		printf
+		lock & unlock the malloc semaphore (printf)
 		schedule
-	it eventually page faults or stack protector faults
+while other threads are calling malloc
+
+it eventually page faults or stack protector faults maybe because of jumping to an invalid task or reading an invalid task
