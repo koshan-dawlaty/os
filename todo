@@ -43,3 +43,10 @@ ramdisk might not work at really high sizes
 
 many ext2 functions are just wrappers around the ext2 version of the structures to return vfs structures 
 	(like ext2_parse_superblock and ext2_parse_superblock_vfs)
+
+
+it seems like stuff cant block in the init kernel task (create_kernel_task())
+	when i run a loop that is just
+		printf
+		schedule
+	it eventually page faults or stack protector faults
