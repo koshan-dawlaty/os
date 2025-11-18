@@ -11,4 +11,6 @@ void *realloc(void *ptr, size_t new_size);
 
 void exit(int status);
 
+void init_heap();
+
 #endif

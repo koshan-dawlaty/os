@@ -1,4 +1,5 @@
 #include "sys/mman.h"
+#include <sched.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -176,8 +177,19 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
     return get_block(new_size);
 }
 
+#ifdef __is_libk
+semaphore *heap_mutex = NULL;
+#endif
+
 void *malloc(size_t size)
 {
+
+#ifdef __is_libk
+    if (heap_mutex != NULL)
+    {
+        wait_semaphore(heap_mutex);
+    }
+#endif
 
     void *retval = NULL;
     int total_size = align_long2(size + sizeof(heap_block), ALIGN);
@@ -189,7 +201,8 @@ void *malloc(size_t size)
         page->size = size;
         page->next = NULL;
 
-        return (void *)(page) + sizeof(heap_block);
+        retval = (void *)(page) + sizeof(heap_block);
+        goto end;
     }
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
@@ -202,11 +215,27 @@ void *malloc(size_t size)
     {
         retval = block_to_ptr(get_block_from_bin(&unsorted_bin, size));
     }
+
+end:
+#ifdef __is_libk
+    if (heap_mutex != NULL)
+    {
+        release_semaphore(heap_mutex);
+    }
+#endif
+
     return retval;
 }
 
 void free(void *ptr)
 {
+
+#ifdef __is_libk
+    if (heap_mutex != NULL)
+    {
+        wait_semaphore(heap_mutex);
+    }
+#endif
 
     heap_block *block = ptr_to_block(ptr);
     int total_size = align_long2(block->size + sizeof(heap_block), ALIGN);
@@ -214,7 +243,7 @@ void free(void *ptr)
     if (total_size >= 4096)
     {
         malloc_free_pages(block, (block->size / 4096) + 1);
-        return;
+        goto end;
     }
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
@@ -225,6 +254,14 @@ void free(void *ptr)
     {
         insert_bin(&unsorted_bin, block);
     }
+
+end:
+#ifdef __is_libk
+    if (heap_mutex != NULL)
+    {
+        release_semaphore(heap_mutex);
+    }
+#endif
 }
 
 // TODO: VERY BAD!!!!
@@ -246,4 +283,11 @@ void *realloc(void *ptr, size_t new_size)
     }
 
     return new_ptr;
+}
+
+void init_heap()
+{
+#ifdef __is_libk
+    heap_mutex = new_semaphore(1);
+#endif
 }

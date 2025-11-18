@@ -169,6 +169,7 @@ void kernel_init()
     terminal_initialize();
     init_paging();
     init_gfp_zones();
+    init_heap();
 
     init_gdt();
     init_idt();
@@ -202,13 +203,14 @@ int main()
 
     enable_scheduler();
     add_task(create_kernel_task());
-    /* run_task(kernel_task1, "abc"); */
+    run_task(kernel_task3, NULL);
+    run_task(kernel_task4, NULL);
 
-    int err = execv("/ksh", (char *[]){NULL});
-    if (err < 0)
-    {
-        printf("error opening shell:%s\n", strerror(-err));
-    }
+    /* while (1) */
+    /* { */
+    /*     printf("help me\n"); */
+    /*     schedule(); */
+    /* } */
 
     return 0;
 }

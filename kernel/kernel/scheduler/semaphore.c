@@ -9,8 +9,7 @@
 semaphore *new_semaphore(int max_value)
 {
     semaphore *out = malloc(sizeof(semaphore));
-    out->value = 1;
-    out->max_value = max_value;
+    out->value = max_value;
     out->queue = NULL;
 
     return out;

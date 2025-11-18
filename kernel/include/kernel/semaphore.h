@@ -1,10 +1,10 @@
 #ifndef SEMAPHORE
 #define SEMAPHORE
 
+#include "spinlock.h"
 typedef struct
 {
     int value;
-    int max_value;
 
     struct task *queue;
 } semaphore;
