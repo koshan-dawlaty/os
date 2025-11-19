@@ -47,15 +47,6 @@ typedef struct __attribute__((packed)) Block
     struct Block *next;
 } heap_block;
 
-/* ensures that a block is correct and the heap has not been corrupted */
-void check_block(heap_block *block)
-{
-    if (block->size % ALIGN != 0)
-    {
-        malloc_error("unaligned heap block");
-    }
-}
-
 void print_bin(heap_block **bin)
 {
     heap_block *current = *bin;
@@ -81,6 +72,7 @@ static inline heap_block *ptr_to_block(void *ptr)
 }
 
 void *current_page = NULL;
+void *initial_page = NULL;
 size_t current_page_offset = 0;
 
 #define SMALL_BIN_AMOUNT 60
@@ -119,14 +111,34 @@ void malloc_free_pages(void *addr, size_t num)
 #endif
 }
 
+/* ensures that a block is correct and the heap has not been corrupted */
+void check_block(heap_block *block)
+{
+    if (((void *)block->next < initial_page ||
+         (void *)block->next > current_page + 4096) &&
+        block->next != NULL)
+    {
+        malloc_error("invalid addr");
+    }
+}
+
 heap_block *get_block(size_t size)
 {
 
     if (current_page == NULL ||
         current_page_offset + size + sizeof(heap_block) >= 4096)
     {
-        current_page = malloc_get_pages(1);
-        current_page_offset = 0;
+
+        if (current_page == NULL)
+        {
+            initial_page = malloc_get_pages(1);
+            current_page = initial_page;
+        }
+        else
+        {
+            current_page = malloc_get_pages(1);
+            current_page_offset = 0;
+        }
     }
 
     heap_block *block = (heap_block *)(current_page + current_page_offset);
@@ -259,6 +271,8 @@ void free(void *ptr)
 #endif
 
     heap_block *block = ptr_to_block(ptr);
+
+    check_block(block);
 
     int total_size = align_long2(block->size + sizeof(heap_block), ALIGN);
 
