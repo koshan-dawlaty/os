@@ -109,7 +109,8 @@ void kernel_task3(void *args)
     printf("this is kernel task3\n");
     while (1)
     {
-        /* printf("in kernel_task3\n"); */
+
+        printf("in kernel_task3\n");
         char *x = malloc(100);
         schedule();
 
@@ -119,7 +120,7 @@ void kernel_task3(void *args)
 
         if (strcmp(x, "one"))
         {
-            printf("task1: shared memory was corrupted to:%s\n", shared);
+            printf("task1: shared memory was corrupted to:%s\n", x);
         }
 
         schedule();
@@ -133,7 +134,7 @@ void kernel_task4(void *args)
     printf("this is kernel task4\n");
     while (1)
     {
-        /* printf("in kernel_task4\n"); */
+        printf("in kernel_task4\n");
 
         char *x = malloc(100);
         schedule();
@@ -141,7 +142,7 @@ void kernel_task4(void *args)
         schedule();
         if (strcmp(x, "two"))
         {
-            printf("task2: shared memory was corrupted to:%s\n", shared);
+            printf("task2: shared memory was corrupted to:%s\n", x);
         }
 
         schedule();
@@ -156,7 +157,7 @@ void kernel_task5(void *args)
     while (1)
     {
 
-        /* printf("in kernel_task5\n"); */
+        printf("in kernel_task5\n");
         schedule();
 
         char *x = malloc(100);
@@ -192,7 +193,6 @@ void kernel_init()
     terminal_initialize();
     init_paging();
     init_gfp_zones();
-    init_heap();
 
     init_gdt();
     init_idt();
@@ -219,17 +219,20 @@ int main()
     /* printf("IN MAIN\n"); */
 
     /* shared = malloc(10); */
-    /* shared_memory_semaphore = new_semaphore(1); */
-    /* shared_memory_spinlock = new_spinlock(); */
+    shared_memory_semaphore = new_semaphore(1);
+    shared_memory_spinlock = new_spinlock();
 
     /* create_device("/terminal", get_terminal()); */
-    enable_scheduler();
-    add_task(create_kernel_task());
-    /* run_task(kernel_task3, NULL); */
-    /* run_task(kernel_task4, NULL); */
-    /* run_task(kernel_task5, NULL); */
 
-    execv("/ksh", (char *[]){NULL});
+    add_task(create_kernel_task());
+
+    run_task(kernel_task3, NULL);
+    run_task(kernel_task4, NULL);
+    run_task(kernel_task5, NULL);
+    init_heap();
+    enable_scheduler();
+
+    /* execv("/ksh", (char *[]){NULL}); */
 
     return 0;
 }

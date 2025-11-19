@@ -28,14 +28,14 @@ void malloc_error(const char *message)
 // TODO: this is duplicated in kernel
 long align_long2(long in, long align)
 {
-    return ((in / align) + 1) * align;
+    /* return ((in / align) + 1) * align; */
 
-    if (in % align == 0)
-    {
-        return in;
-    }
+    /* if (in % align == 0) */
+    /* { */
+    /*     return in; */
+    /* } */
 
-    return (in + align) - (in + 1 % align);
+    return (in + align - 1) & ~(align - 1);
 }
 
 // would be 8 on 64 bit
@@ -161,7 +161,13 @@ heap_block *get_block_from_bin_fast(heap_block **bin, int new_size)
     }
 
     heap_block *output = *bin;
-    *bin = (*bin)->next;
+    asm("hlt");
+
+    puts("here\n");
+
+    *bin = output->next;
+
+    output->next = NULL;
 
     return output;
 }
@@ -208,6 +214,31 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
     }
 
     return get_block(new_size);
+}
+
+void free_unlocked(void *ptr)
+{
+
+    heap_block *block = ptr_to_block(ptr);
+
+    check_block(block);
+
+    int total_size = align_long2(block->size + sizeof(heap_block), ALIGN);
+
+    if (total_size >= 4096)
+    {
+        malloc_free_pages(block, (block->size / 4096) + 1);
+        return;
+    }
+
+    if (total_size < SMALL_BIN_AMOUNT * ALIGN)
+    {
+        insert_bin(&(small_bins[total_size / ALIGN]), block);
+    }
+    else
+    {
+        insert_bin(&unsorted_bin, block);
+    }
 }
 
 #ifdef __is_libk
@@ -269,29 +300,7 @@ void free(void *ptr)
         wait_semaphore(heap_mutex);
     }
 #endif
-
-    heap_block *block = ptr_to_block(ptr);
-
-    check_block(block);
-
-    int total_size = align_long2(block->size + sizeof(heap_block), ALIGN);
-
-    if (total_size >= 4096)
-    {
-        malloc_free_pages(block, (block->size / 4096) + 1);
-        goto end;
-    }
-
-    if (total_size < SMALL_BIN_AMOUNT * ALIGN)
-    {
-        insert_bin(&(small_bins[total_size / ALIGN]), block);
-    }
-    else
-    {
-        insert_bin(&unsorted_bin, block);
-    }
-
-end:
+    free_unlocked(ptr);
 #ifdef __is_libk
     if (heap_mutex != NULL)
     {
@@ -300,7 +309,6 @@ end:
 #endif
 }
 
-// TODO: VERY BAD!!!!
 void *realloc(void *ptr, size_t new_size)
 {
 
@@ -309,16 +317,31 @@ void *realloc(void *ptr, size_t new_size)
         return malloc(new_size);
     }
 
-    heap_block *block = ptr_to_block(ptr);
     void *new_ptr = malloc(new_size);
-    memcpy(new_ptr, ptr, block->size);
 
-    if (ptr != new_ptr)
+#ifdef __is_libk
+    if (heap_mutex != NULL)
     {
-        /* free(ptr); */
+        wait_semaphore(heap_mutex);
     }
+#endif
 
-    return new_ptr;
+    heap_block *block = ptr_to_block(ptr);
+    size_t copy_size = block->size < new_size ? block->size : new_size;
+    memcpy(new_ptr, ptr, copy_size);
+
+    void *retval = new_ptr;
+
+    free_unlocked(ptr);
+
+#ifdef __is_libk
+    if (heap_mutex != NULL)
+    {
+        release_semaphore(heap_mutex);
+    }
+#endif
+
+    return retval;
 }
 
 void init_heap()

@@ -29,9 +29,10 @@ void wait_semaphore(semaphore *s)
         remove_task(current);
         struct task *temp = s->queue;
         s->queue = current;
-        s->queue->next = current;
+        s->queue->next = temp;
         /* add_task_queue(&s->queue, current); */
 
+        asm("sti");
         sched_yield();
     }
 
@@ -50,7 +51,6 @@ void release_semaphore(semaphore *s)
 
         struct task *temp = s->queue;
         s->queue = temp->next;
-        temp->next = NULL;
 
         /* remove_task_queue(&s->queue, task); */
 
