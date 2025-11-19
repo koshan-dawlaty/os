@@ -1,5 +1,6 @@
 #include "sys/mman.h"
 #include <sched.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +12,18 @@
 #include <panic.h>
 
 #endif
+
+/* used for heap corruptions */
+void malloc_error(const char *message)
+{
+#ifdef __is_libk
+    panic_no_malloc(message);
+#else
+    printf("heap error\n");
+    printf(message);
+    exit(1);
+#endif
+}
 
 // TODO: this is duplicated in kernel
 long align_long2(long in, long align)
@@ -33,6 +46,15 @@ typedef struct __attribute__((packed)) Block
     size_t size;
     struct Block *next;
 } heap_block;
+
+/* ensures that a block is correct and the heap has not been corrupted */
+void check_block(heap_block *block)
+{
+    if (block->size % ALIGN != 0)
+    {
+        malloc_error("unaligned heap block");
+    }
+}
 
 void print_bin(heap_block **bin)
 {
@@ -162,7 +184,6 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
             return current_block->next;
         }
 
-        // may break
         if ((current_block)->size == (size_t)align_long2(new_size, ALIGN))
         {
             (*prev_block) = current_block->next;
@@ -238,6 +259,7 @@ void free(void *ptr)
 #endif
 
     heap_block *block = ptr_to_block(ptr);
+
     int total_size = align_long2(block->size + sizeof(heap_block), ALIGN);
 
     if (total_size >= 4096)

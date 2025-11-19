@@ -52,3 +52,9 @@ it seems like the initial kernel task cant be removed from the scheduler queue (
 while other threads are calling malloc
 
 it eventually page faults or stack protector faults maybe because of jumping to an invalid task or reading an invalid task
+
+malloc error handing / heap corruption:
+	check if pointers are valid
+	check if size is aligned
+	check if size is equal to next in get_block_from_bin_fast
+	

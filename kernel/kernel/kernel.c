@@ -216,13 +216,28 @@ void kernel_init()
 int main()
 {
 
-    printf("IN MAIN\n");
+    /* printf("IN MAIN\n"); */
 
-    shared = malloc(10);
-    shared_memory_semaphore = new_semaphore(1);
-    shared_memory_spinlock = new_spinlock();
+    /* shared = malloc(10); */
+    /* shared_memory_semaphore = new_semaphore(1); */
+    /* shared_memory_spinlock = new_spinlock(); */
 
-    create_device("/terminal", get_terminal());
+    /* create_device("/terminal", get_terminal()); */
+
+    char *x = malloc(5);
+
+    char *y = malloc(5);
+    memset(x - 15, 255, 100);
+    memset(y - 15, 255, 100);
+    free(y);
+    free(x);
+
+    malloc(8);
+    malloc(8);
+    malloc(8);
+    malloc(8);
+
+    return 1;
 
     enable_scheduler();
     add_task(create_kernel_task());
