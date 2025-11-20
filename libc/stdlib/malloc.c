@@ -1,5 +1,6 @@
 #include "sys/mman.h"
 #include <sched.h>
+#include <spinlock.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -7,9 +8,9 @@
 #include <string.h>
 
 #ifdef __is_libk
-#include <kernel/semaphore.h>
 #include <memory/get_free_pages.h>
 #include <panic.h>
+#include <spinlock.h>
 
 #endif
 
@@ -84,7 +85,6 @@ void insert_bin(heap_block **bin, heap_block *block)
 {
     heap_block *old = *bin;
     *bin = block;
-
     (*bin)->next = old;
 }
 
@@ -141,7 +141,8 @@ heap_block *get_block(size_t size)
         }
     }
 
-    heap_block *block = (heap_block *)(current_page + current_page_offset);
+    heap_block *block =
+        (heap_block *)((uintptr_t)current_page + current_page_offset);
 
     block->size = size;
     block->next = NULL;
@@ -161,6 +162,7 @@ heap_block *get_block_from_bin_fast(heap_block **bin, int new_size)
     }
 
     heap_block *output = *bin;
+
     asm("hlt");
 
     puts("here\n");
@@ -186,21 +188,21 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
     while (current_block != NULL)
     {
 
-        if (current_block->next != NULL &&
-            (current_block->size + sizeof(heap_block)) +
-                    (current_block->next->size + sizeof(heap_block)) ==
-                new_size)
-        {
+        /* if (current_block->next != NULL && */
+        /*     (current_block->size + sizeof(heap_block)) + */
+        /*             (current_block->next->size + sizeof(heap_block)) == */
+        /*         new_size) */
+        /* { */
 
-            // remove next two blocks
-            *prev_block = current_block->next->next;
+        /*     // remove next two blocks */
+        /*     *prev_block = current_block->next->next; */
 
-            current_block->next->size =
-                ((current_block->size + sizeof(heap_block)) +
-                 (current_block->next->size + sizeof(heap_block)));
+        /*     current_block->next->size = */
+        /*         ((current_block->size + sizeof(heap_block)) + */
+        /*          (current_block->next->size + sizeof(heap_block))); */
 
-            return current_block->next;
-        }
+        /*     return current_block->next; */
+        /* } */
 
         if ((current_block)->size == (size_t)align_long2(new_size, ALIGN))
         {
@@ -220,6 +222,11 @@ void free_unlocked(void *ptr)
 {
 
     heap_block *block = ptr_to_block(ptr);
+
+    /* if (block->next != NULL) */
+    /* { */
+    /*     malloc_error("double free\n"); */
+    /* } */
 
     check_block(block);
 
@@ -241,19 +248,8 @@ void free_unlocked(void *ptr)
     }
 }
 
-#ifdef __is_libk
-semaphore *heap_mutex = NULL;
-#endif
-
-void *malloc(size_t size)
+void *malloc_unlocked(size_t size)
 {
-
-#ifdef __is_libk
-    if (heap_mutex != NULL)
-    {
-        wait_semaphore(heap_mutex);
-    }
-#endif
 
     void *retval = NULL;
     int total_size = align_long2(size + sizeof(heap_block), ALIGN);
@@ -269,22 +265,47 @@ void *malloc(size_t size)
         goto end;
     }
 
+    heap_block *block = NULL;
+
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
 
-        retval = block_to_ptr(
-            get_block_from_bin_fast(&(small_bins[total_size / ALIGN]), size));
+        block =
+            get_block_from_bin_fast(&(small_bins[total_size / ALIGN]), size);
     }
     else
     {
-        retval = block_to_ptr(get_block_from_bin(&unsorted_bin, size));
+        block = get_block_from_bin(&unsorted_bin, size);
     }
 
+    block->next = NULL;
+
+    retval = block_to_ptr(block);
+
 end:
+    return retval;
+}
+
+#ifdef __is_libk
+spinlock *heap_mutex = NULL;
+#endif
+
+void *malloc(size_t size)
+{
+
 #ifdef __is_libk
     if (heap_mutex != NULL)
     {
-        release_semaphore(heap_mutex);
+        lock_spinlock(heap_mutex);
+    }
+#endif
+
+    void *retval = malloc_unlocked(size);
+
+#ifdef __is_libk
+    if (heap_mutex != NULL)
+    {
+        release_spinlock(heap_mutex);
     }
 #endif
 
@@ -297,14 +318,14 @@ void free(void *ptr)
 #ifdef __is_libk
     if (heap_mutex != NULL)
     {
-        wait_semaphore(heap_mutex);
+        lock_spinlock(heap_mutex);
     }
 #endif
     free_unlocked(ptr);
 #ifdef __is_libk
     if (heap_mutex != NULL)
     {
-        release_semaphore(heap_mutex);
+        release_spinlock(heap_mutex);
     }
 #endif
 }
@@ -317,16 +338,17 @@ void *realloc(void *ptr, size_t new_size)
         return malloc(new_size);
     }
 
-    void *new_ptr = malloc(new_size);
-
 #ifdef __is_libk
     if (heap_mutex != NULL)
     {
-        wait_semaphore(heap_mutex);
+        lock_spinlock(heap_mutex);
     }
 #endif
 
+    void *new_ptr = malloc_unlocked(new_size);
+
     heap_block *block = ptr_to_block(ptr);
+
     size_t copy_size = block->size < new_size ? block->size : new_size;
     memcpy(new_ptr, ptr, copy_size);
 
@@ -337,7 +359,7 @@ void *realloc(void *ptr, size_t new_size)
 #ifdef __is_libk
     if (heap_mutex != NULL)
     {
-        release_semaphore(heap_mutex);
+        release_spinlock(heap_mutex);
     }
 #endif
 
@@ -347,6 +369,6 @@ void *realloc(void *ptr, size_t new_size)
 void init_heap()
 {
 #ifdef __is_libk
-    heap_mutex = new_semaphore(1);
+    heap_mutex = new_spinlock(1);
 #endif
 }

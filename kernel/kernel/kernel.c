@@ -111,7 +111,7 @@ void kernel_task3(void *args)
     {
 
         printf("in kernel_task3\n");
-        char *x = malloc(100);
+        char *x = malloc(10);
         schedule();
 
         memcpy(x, "one", 4);
@@ -136,7 +136,7 @@ void kernel_task4(void *args)
     {
         printf("in kernel_task4\n");
 
-        char *x = malloc(100);
+        char *x = malloc(10);
         schedule();
         memcpy(x, "two", 4);
         schedule();
@@ -160,7 +160,7 @@ void kernel_task5(void *args)
         printf("in kernel_task5\n");
         schedule();
 
-        char *x = malloc(100);
+        char *x = malloc(10);
         schedule();
         memcpy(x, "333", 4);
         schedule();

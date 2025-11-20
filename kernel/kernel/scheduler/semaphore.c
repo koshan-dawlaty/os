@@ -32,7 +32,6 @@ void wait_semaphore(semaphore *s)
         s->queue->next = temp;
         /* add_task_queue(&s->queue, current); */
 
-        asm("sti");
         sched_yield();
     }
 
