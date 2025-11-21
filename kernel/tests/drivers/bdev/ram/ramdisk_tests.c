@@ -1,4 +1,5 @@
 #include "bdev.h"
+#include "panic.h"
 #include <compiler.h>
 #include <drivers/block/ram/ramdisk.h>
 #include <stdlib.h>

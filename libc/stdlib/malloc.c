@@ -163,9 +163,9 @@ heap_block *get_block_from_bin_fast(heap_block **bin, int new_size)
 
     heap_block *output = *bin;
 
-    asm("hlt");
+    /* asm("hlt"); */
 
-    puts("here\n");
+    /* puts("here\n"); */
 
     *bin = output->next;
 
@@ -230,7 +230,10 @@ void free_unlocked(void *ptr)
 
     check_block(block);
 
-    int total_size = align_long2(block->size + sizeof(heap_block), ALIGN);
+    /* this seemed to be causing problems where some allocations (maybe above
+     * 4096 or SMALL_BIN_AMOUNT * ALIGN?) were getting overwritten */
+    /* int total_size = align_long2(block->size + sizeof(heap_block), ALIGN); */
+    int total_size = block->size;
 
     if (total_size >= 4096)
     {
@@ -369,6 +372,6 @@ void *realloc(void *ptr, size_t new_size)
 void init_heap()
 {
 #ifdef __is_libk
-    heap_mutex = new_spinlock(1);
+    heap_mutex = new_spinlock();
 #endif
 }

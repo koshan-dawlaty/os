@@ -88,7 +88,7 @@ char *format_test_results_tap(test **tests, test_result **results,
         /* printf(output); */
     }
 
-    /* printf("%s\n", output); */
+    printf("%s\n", output);
 
     return output;
 }

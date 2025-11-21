@@ -193,6 +193,9 @@ void kernel_init()
     terminal_initialize();
     init_paging();
     init_gfp_zones();
+    init_heap();
+
+    free(malloc(200));
 
     init_gdt();
     init_idt();
@@ -226,13 +229,12 @@ int main()
 
     add_task(create_kernel_task());
 
-    run_task(kernel_task3, NULL);
-    run_task(kernel_task4, NULL);
-    run_task(kernel_task5, NULL);
-    init_heap();
+    /* run_task(kernel_task3, NULL); */
+    /* run_task(kernel_task4, NULL); */
+    /* run_task(kernel_task5, NULL); */
     enable_scheduler();
 
-    /* execv("/ksh", (char *[]){NULL}); */
+    execv("/ksh", (char *[]){NULL});
 
     return 0;
 }
