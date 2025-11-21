@@ -86,38 +86,26 @@ mkfifo "${SERIAL_PIPE}.out"
 # 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
 # 	-ex "target remote | $QEMU_COMMAND -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")" \
 # 	-ex ""
-$QEMU_COMMAND -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE &
+
+# redirect stderr to stop message when qemu is killed
+$QEMU_COMMAND -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE  2>/dev/null &  
 QEMU_PID=$!
+
+
 
 echo $SERIAL_PIPE.out
 
-
+echo "test"
 FILE_NAME="$SERIAL_PIPE.out"
+while [[ ! -p "$FILE_NAME" ]]; do
+    sleep 0.05
+done
+cat "$FILE_NAME" 2>/dev/null | python3 tap.py -v
 
-
-TEST_OUTPUT=""
-
-while IFS= read -r -N1 char; do
-
-	TEST_OUTPUT="${TEST_OUTPUT}$char"
-
-  if [[ $char == $'\x04' ]]; then
-		break
-  fi
-done < $FILE_NAME
-
-# TEST_OUTPUT="${TEST_OUTPUT%?}"
-kill $QEMU_PID
-
-echo "\n"
-TEST_STRING=$(printf "%s" "$TEST_OUTPUT")
-
-
-printf "%s" "$TEST_STRING" | tappy -v 
-
+kill $QEMU_PID 2>/dev/null
 
 rm $SERIAL_PIPE.out
 rm $SERIAL_PIPE.in
 
 cd ..
-./clean.sh
+./clean.sh > /dev/null

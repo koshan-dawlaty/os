@@ -1,3 +1,4 @@
+#include "kernel/tty.h"
 #include "serial.h"
 #include "tap.h"
 #include "tests/tests.h"
@@ -124,6 +125,10 @@ void run_all_tests()
     /* printf("this is:%p\n", failed_indexes); */
     size_t failed_indexes_len = 0;
 
+    char *tap_header = tap_get_header(tests_size);
+    serial_writestring(tap_header, strlen(tap_header), TEST_OUTPUT_SERIAL_PORT);
+    free(tap_header);
+
     for (size_t i = 0; i < tests_size; i++)
     {
         /* if ((uint32_t)tests[i] < 100) */
@@ -139,6 +144,16 @@ void run_all_tests()
             failed_indexes[failed_indexes_len] = i;
             failed_indexes_len++;
         }
+
+        char *tap = tap_format_test_result(tests[i], result, i);
+        serial_writestring(tap, strlen(tap), TEST_OUTPUT_SERIAL_PORT);
+
+        for (size_t i = 0; i < 1000000; i++)
+        {
+            asm("pause");
+        }
+
+        free(tap);
 
         results[i] = result;
     }
@@ -157,17 +172,19 @@ void run_all_tests()
 
     free(failed_indexes);
 
-    char *tap = format_test_results_tap(tests, results, tests_size);
+    /* char *tap = format_test_results_tap(tests, results, tests_size); */
 
     for (size_t i = 0; i < tests_size; i++)
     {
         free(results[i]);
     }
 
-    serial_writestring(tap, strlen(tap), TEST_OUTPUT_SERIAL_PORT);
+    /* serial_writestring(tap, strlen(tap), TEST_OUTPUT_SERIAL_PORT); */
 
     /* printf("%s\n", tap); */
 
     /* end of input */
-    serial_write(TEST_OUTPUT_SERIAL_PORT, 4);
+
+    serial_write(TEST_OUTPUT_SERIAL_PORT, '\n');
+    /* serial_write(TEST_OUTPUT_SERIAL_PORT, 4); */
 }

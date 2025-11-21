@@ -3,7 +3,6 @@ make it more platform independent
 actually test keyboard driver led/keymatic functions
 modular kernel
 better tests
-hal
 physical page allocation that uses grub memory map 
 
 malloc seems to break when the size is too large (it may be if the size is greater than 2 times the page size)
@@ -52,9 +51,3 @@ it seems like the initial kernel task cant be removed from the scheduler queue (
 while other threads are calling malloc
 
 it eventually page faults or stack protector faults maybe because of jumping to an invalid task or reading an invalid task
-
-malloc error handing / heap corruption:
-	check if pointers are valid
-	check if size is aligned
-	check if size is equal to next in get_block_from_bin_fast
-	
