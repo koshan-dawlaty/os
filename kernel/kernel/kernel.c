@@ -229,9 +229,9 @@ int main()
 
     add_task(create_kernel_task());
 
-    /* run_task(kernel_task3, NULL); */
-    /* run_task(kernel_task4, NULL); */
-    /* run_task(kernel_task5, NULL); */
+    run_task(kernel_task3, NULL);
+    run_task(kernel_task4, NULL);
+    run_task(kernel_task5, NULL);
     enable_scheduler();
 
     execv("/ksh", (char *[]){NULL});

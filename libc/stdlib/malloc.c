@@ -163,12 +163,7 @@ heap_block *get_block_from_bin_fast(heap_block **bin, int new_size)
 
     heap_block *output = *bin;
 
-    /* asm("hlt"); */
-
-    /* puts("here\n"); */
-
     *bin = output->next;
-
     output->next = NULL;
 
     return output;
@@ -223,10 +218,10 @@ void free_unlocked(void *ptr)
 
     heap_block *block = ptr_to_block(ptr);
 
-    /* if (block->next != NULL) */
-    /* { */
-    /*     malloc_error("double free\n"); */
-    /* } */
+    if (block->next != NULL)
+    {
+        malloc_error("double free\n");
+    }
 
     check_block(block);
 
@@ -282,7 +277,6 @@ void *malloc_unlocked(size_t size)
     }
 
     block->next = NULL;
-
     retval = block_to_ptr(block);
 
 end:
