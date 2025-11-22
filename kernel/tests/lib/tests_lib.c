@@ -11,6 +11,13 @@
 
 #define TEST_OUTPUT_SERIAL_PORT 0x3F8
 
+#ifdef TESTS_EXTRA_TESTS
+/* defined in test.sh */
+const char *extra_tests[] = {TESTS_EXTRA_TESTS};
+#else
+const char *extra_tests[] = {};
+#endif
+
 test **tests = NULL;
 size_t tests_size = 0;
 
@@ -85,7 +92,7 @@ void run_all_tests()
 
     int *failed_indexes = malloc(sizeof(size_t) * tests_size);
     test_result **results = malloc(sizeof(test_result) * tests_size);
-    /* printf("this is:%p\n", failed_indexes); */
+
     size_t failed_indexes_len = 0;
 
     char *tap_header = tap_get_header(tests_size);
@@ -94,10 +101,6 @@ void run_all_tests()
 
     for (size_t i = 0; i < tests_size; i++)
     {
-        /* if ((uint32_t)tests[i] < 100) */
-        /* { */
-        /*     printf("addr: %p\n", tests[i]); */
-        /* } */
 
         printf("running: %s\n", tests[i]->name);
         test_result *result = run_test(tests[i]);
@@ -121,37 +124,56 @@ void run_all_tests()
         results[i] = result;
     }
 
-    /* serial_write(TEST_OUTPUT_SERIAL_PORT, failed_indexes_len + 0x30); */
-    /* for (size_t i = 0; i < failed_indexes_len; i++) */
-    /* { */
-    /*     test *t = tests[failed_indexes[i]]; */
-    /*     /1* test_result *r = results[i]; *1/ */
-    /*     printf("test %s failed!\n", t->name); */
-    /*     /1* if (r->message != NULL) *1/ */
-    /*     /1* { *1/ */
-    /*     /1*     printf("reason:%s\n", r->message); *1/ */
-    /*     /1* } *1/ */
-    /* } */
-
     free(failed_indexes);
-
-    /* char *tap = format_test_results_tap(tests, results, tests_size); */
 
     for (size_t i = 0; i < tests_size; i++)
     {
         free(results[i]);
     }
 
-    /* serial_writestring(tap, strlen(tap), TEST_OUTPUT_SERIAL_PORT); */
-
-    /* printf("%s\n", tap); */
-
     /* end of input */
-
     serial_write(TEST_OUTPUT_SERIAL_PORT, '\n');
-    /* serial_write(TEST_OUTPUT_SERIAL_PORT, 4); */
+    serial_write(TEST_OUTPUT_SERIAL_PORT, 4);
 }
 
-void only_run_tests(char *tests)
+/* runs all of the tests matching names in extra_tests */
+void run_all_tests_only()
 {
+    const size_t num_extra = sizeof(extra_tests) / sizeof(const char *);
+
+    char *tap_header = tap_get_header(num_extra);
+    serial_writestring(tap_header, strlen(tap_header), TEST_OUTPUT_SERIAL_PORT);
+    free(tap_header);
+
+    for (size_t i = 0; i < num_extra; i++)
+    {
+        const char *name = extra_tests[i];
+        for (size_t j = 0; j < tests_size; j++)
+        {
+            test *t = tests[j];
+
+            if (!strcmp(t->name, name))
+            {
+                printf("running:%s\n", t->name);
+                test_result *r = run_test(t);
+                char *tap = tap_format_test_result(tests[j], r, i);
+                serial_writestring(tap, strlen(tap), TEST_OUTPUT_SERIAL_PORT);
+
+                free(tap);
+            }
+        }
+    }
+
+    serial_write(TEST_OUTPUT_SERIAL_PORT, '\n');
+    serial_write(TEST_OUTPUT_SERIAL_PORT, 4);
+}
+
+void run_tests()
+{
+    serial_init(TEST_OUTPUT_SERIAL_PORT);
+#ifdef TESTS_ONLY
+    run_all_tests_only();
+#else
+    run_all_tests();
+#endif
 }

@@ -125,6 +125,7 @@ def read_stdin():
 
         if i == plan[1] + 1:
             display_final(failed, format_time(time.time() - total_start))
+            print("exit")
             exit(0)
 
 

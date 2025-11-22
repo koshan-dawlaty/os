@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void run_all_tests();
+void run_tests();
 
 typedef struct
 {

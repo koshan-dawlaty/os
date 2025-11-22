@@ -15,6 +15,23 @@ if [[  $# -ge 1  ]] && [[ $1 == "debug"  ]] ; then
 	CFLAGS="${CFLAGS} -DTEST_DEBUG"
 fi
 
+
+TEST_EXTRA_TESTS=( "vfs_basic" "vfs_create_basic" )
+TESTS_EXCLUDE=true
+TESTS_EXTRA_TESTS_CFLAGS="-DTESTS_EXTRA_TESTS=\""
+
+for item in "${TEST_EXTRA_TESTS[@]}"; do
+	echo "Processing: $item"
+	TESTS_EXTRA_TESTS_CFLAGS+="\\\"$item\\\", "
+
+done
+TESTS_EXTRA_TESTS_CFLAGS+="\""
+
+echo $TESTS_EXTRA_TESTS_CFLAGS
+
+CFLAGS="${CFLAGS} -DTESTS $TESTS_EXTRA_TESTS_CFLAGS -DTESTS_ONLY"
+# CFLAGS="${CFLAGS} -DTESTS $TESTS_EXTRA_TESTS_CFLAGS "
+
 CFLAGS="${CFLAGS} -DTESTS"
 ISO="test.iso"
 
@@ -44,32 +61,6 @@ QEMU_FLAGS=" -cdrom ${ISO}
 # echo "\x12" | dd of=test.img bs=512 count=2048
 # echo -ne '\x55\xAA' | dd of=test.img bs=1 seek=510 conv=notrunc
 
-    # -device piix3-ide \
-if [[  $# -ge 1  ]] && [[ $1 == "terminal"  ]] ; then
-qemu-system-$(./target-triplet-to-arch.sh $HOST)  -nographic  -display curses $QEMU_FLAGS
-exit 0
-fi
-
-if [[  $# -ge 1  ]] && [[ $1 == "num_failed"  ]] ; then
-qemu-system-$(./target-triplet-to-arch.sh "$HOST") -serial stdio $QEMU_FLAGS  &
-
-# qemu-system-$(./target-triplet-to-arch.sh $HOST) -serial pty $QEMU_FLAGS &
-echo "test"
-cat /proc/$!/fd/1  > "test.txt"
-exit 1
-tail -f /proc/$!/fd/1 | while IFS= read -r -n1 char; do
-	echo $char
-    if [[ $char == "e" ]]; then
-        echo "test"
-		exit 1
-        break
-    fi
-done
-
-kill $!
-
-exit 0
-fi
 
 SERIAL_PIPE=$(mktemp /tmp/QEMU_SERIAL_PIPE_XXXXXXX)
 
