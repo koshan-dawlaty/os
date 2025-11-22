@@ -33,12 +33,6 @@ test_result *new_test_result(bool failed, char *message);
 test *new_test(char *name, callback);
 void add_test(test *);
 
-void fail_test();
-
-void test_assert_eq(int a, int b);
-void test_assert_ne(int a, int b);
-void test_assert_true(int condition);
-
 // TODO: make these macros type independent
 #define ASSERT_EQ(a, b, ...)                                                   \
     if (a != b)                                                                \

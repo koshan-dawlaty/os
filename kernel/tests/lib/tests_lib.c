@@ -53,40 +53,6 @@ test_result *get_failed_test(intmax_t num, ...)
     return out;
 }
 
-// TODO: could improve this and test_assert_eq later
-void fail_test()
-{
-    printf("test failed\n");
-    failed = 1;
-}
-
-void test_assert_eq(int a, int b)
-{
-    if (a != b)
-    {
-        fail_test();
-        printf("%d != %d\n", a, b);
-    }
-}
-
-void test_assert_ne(int a, int b)
-{
-    if (a == b)
-    {
-        fail_test();
-        printf("%d == %d\n", a, b);
-    }
-}
-
-void test_assert_true(int condition)
-{
-    if (!condition)
-    {
-        fail_test();
-        printf("condition was false\n");
-    }
-}
-
 test *new_test(char *name, callback func)
 {
     /* printf("calling malloc!!\n"); */
@@ -105,7 +71,6 @@ void add_test(test *t)
     tests = realloc(tests, tests_size * sizeof(test));
     tests[tests_size - 1] = t;
 }
-
 
 test_result *run_test(test *test)
 {
