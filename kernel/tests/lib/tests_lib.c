@@ -151,3 +151,7 @@ void run_all_tests()
     serial_write(TEST_OUTPUT_SERIAL_PORT, '\n');
     /* serial_write(TEST_OUTPUT_SERIAL_PORT, 4); */
 }
+
+void only_run_tests(char *tests)
+{
+}
