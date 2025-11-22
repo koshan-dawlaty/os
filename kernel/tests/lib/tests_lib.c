@@ -106,9 +106,7 @@ void add_test(test *t)
     tests[tests_size - 1] = t;
 }
 
-/*
- * returns true if the test failed
- */
+
 test_result *run_test(test *test)
 {
     test_result *result = test->func();
