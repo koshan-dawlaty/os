@@ -1,4 +1,5 @@
 import re
+import time
 import argparse
 import sys
 import typing
@@ -32,7 +33,9 @@ def parse_result(s: str) -> TestResult:
         print(s)
         exit(1)
 
-    message = s[: s.index("-")]
+    message = s[s.index("-") + 1 : -1]
+    if message[0] == " ":
+        message = message[1:]
 
     return TestResult(failed, message)
 
@@ -59,6 +62,31 @@ def parse_plan(s: str) -> typing.Tuple[int, int]:
     return (min, max)
 
 
+def format_time(time: float) -> str:
+    hours = int(time // 3600)
+    minutes = int((time % 3600) // 60)
+    seconds = int(time % 60)
+    miliseconds = int((time % 1) * 1000)
+
+    output = ""
+
+    if hours > 0:
+        output += str(hours) + " h "
+
+    if minutes > 0:
+        output += str(minutes) + " m "
+
+    if seconds > 0:
+        output += str(seconds) + " s "
+
+    if miliseconds > 0:
+        output += str(miliseconds) + " ms"
+    elif output == "":
+        return "0 ms"
+
+    return output
+
+
 def read_stdin():
 
     i = 0
@@ -66,12 +94,16 @@ def read_stdin():
     plan = None
     failed = []
 
+    start = time.time()
+    total_start = time.time()
+
     for line in sys.stdin:
 
         # line = line_bytes.decode()
 
         if i == 0:
             plan = parse_plan(line)
+            start = time.time()
             if plan[0] != 1:
                 print("the first value in the plan was not 1")
                 exit(1)
@@ -80,36 +112,46 @@ def read_stdin():
 
             result = parse_result(line)
 
-            display_result(result)
+            elapsed = format_time(time.time() - start)
+
+            display_result(result, elapsed)
 
             if result.failed:
                 failed.append(result)
 
+            start = time.time()
+
         i += 1
 
         if i == plan[1] + 1:
-            display_final(failed)
+            display_final(failed, format_time(time.time() - total_start))
             exit(0)
 
 
-def display_result(r: TestResult):
+def display_result(r: TestResult, time: str):
+
+    if not r.failed and not args.verbose:
+        return
+
+    message = "test " + r.message + " "
 
     if r.failed:
-        print("test " + r.message + " failed")
+        message += "failed"
     elif args.verbose:
-        print("test " + r.message + " did not fail")
+        message += "did not fail"
+
+    message += ", ran in " + time
+    print(message)
 
 
-def display_final(failed: typing.List[TestResult]):
+def display_final(failed: typing.List[TestResult], time: str):
 
     if len(failed) == 0:
         print("all tests passed")
-        return
     else:
-        print("all tests failed")
+        print(str(len(failed)) + " tests failed")
 
-    # for test in failed:
-    #     display_result(test)
+    print("tests ran in " + time)
 
 
 read_stdin()
