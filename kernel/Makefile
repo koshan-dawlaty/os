@@ -33,10 +33,15 @@ CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
+
 TEST_OBJS=\
-		  tests/tests_main.o \
 		  tests/lib/tests_lib.o \
-		  tests/lib/tap.o \
+		  tests/lib/tap.o 
+
+include tests/Makefile
+
+$(info $(TEST_OBJS))
+
 
 KERNEL_OBJS= \
 $(KERNEL_ARCH_OBJS) \
@@ -130,6 +135,9 @@ $(BIN)/%.o: %.c
 
 clean:
 	$(RM) -r bin/*
+
+clean_tests:
+	$(RM) $(TEST_OBJS)
 
 install: install-headers install-kernel
 

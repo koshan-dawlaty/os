@@ -114,11 +114,6 @@ void run_all_tests()
         char *tap = tap_format_test_result(tests[i], result, i);
         serial_writestring(tap, strlen(tap), TEST_OUTPUT_SERIAL_PORT);
 
-        for (size_t i = 0; i < 1000000; i++)
-        {
-            asm("pause");
-        }
-
         free(tap);
 
         results[i] = result;

@@ -18,9 +18,10 @@ TEST(malloc_test_basic, {
     ASSERT_EQ(*two, 67890);
     free(two);
 
-    ASSERT_EQ(
-        (uintptr_t)one, (uintptr_t)two,
-        "malloc should return the same pointer after an allocation and a free");
+    ASSERT_EQ((uintptr_t)one, (uintptr_t)two,
+              "malloc should return the same pointer after an allocation and a "
+              "free %p, %p",
+              one, two);
 })
 
 test_result *malloc_test_multiple(size_t size, int amount)
