@@ -5,6 +5,7 @@
 #include "kernel/types.h"
 #include "memory/paging_flags.h"
 #include "scheduler.h"
+#include "sys/types.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <panic.h>
@@ -135,6 +136,10 @@ int syscall_handler(struct syscall_regs *regs)
     else if (regs->eax == 14)
     {
         return unlink((char *)regs->ebx);
+    }
+    else if (regs->eax == 15)
+    {
+        /* return lseek(regs->ebx, regs->ecx, regs->edx); */
     }
 
     printf("no syscall found\n");

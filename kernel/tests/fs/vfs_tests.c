@@ -104,3 +104,13 @@ TEST(vfs_doesnot_exist, {
     int fd = open("/doesnotexist", 0);
     ASSERT_LT(fd, 0, "fd for nonexistant file is %d", fd);
 });
+
+TEST(stdlib_FILE, {
+    char *testfile = "/FILEtest";
+    creat(testfile, 0);
+
+    FILE *f = fopen(testfile, "");
+
+    char *buf = malloc(100);
+    fread(buf, 1, 100, f);
+})

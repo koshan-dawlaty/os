@@ -117,3 +117,23 @@ file *create_file(char *name)
 
     return new_file(new);
 }
+
+int seek_file(file *f, off_t offset, int whence)
+{
+
+    switch (whence)
+    {
+    case SEEK_CUR:
+        f->offset += offset;
+        break;
+    case SEEK_END:
+        f->offset = FILE_SIZE(f) + offset;
+        break;
+
+    case SEEK_SET:
+        f->offset = offset;
+        break;
+    }
+
+    return f->offset;
+}

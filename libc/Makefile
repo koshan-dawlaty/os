@@ -47,6 +47,7 @@ stdio/printf.o \
 stdio/vsprintf.o \
 stdio/puts.o \
 stdio/getchar.o \
+stdio/fopen.o \
 stdio/vprintf.o \
 file/open.o \
 file/creat.o \

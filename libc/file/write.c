@@ -2,12 +2,13 @@
 #include "utils.h"
 #include <errno.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <unistd.h>
 #ifdef __is_libk
 #include <vfs.h>
 #endif
 
-int write(int fd, void *buf, size_t n)
+int write(int fd, const void *buf, size_t n)
 {
     if (fd < 0)
     {
@@ -16,13 +17,13 @@ int write(int fd, void *buf, size_t n)
 
 #ifdef __is_libk
     file *f = lookup_descriptor(fd);
-    return write_file(f, buf, n, f->offset);
+    return write_file(f, /* TODO: dont cast */ (void *)buf, n, f->offset);
 #endif
 
     return syscall_wrapper_asm(10, fd, (uintptr_t)buf, n, 0, 0);
 }
 
-int pwrite(int fd, void *buf, size_t n, off_t off)
+int pwrite(int fd, const void *buf, size_t n, off_t off)
 {
     if (fd < 0)
     {
@@ -31,7 +32,7 @@ int pwrite(int fd, void *buf, size_t n, off_t off)
 
 #ifdef __is_libk
     file *f = lookup_descriptor(fd);
-    return write_file(f, buf, n, off);
+    return write_file(f, (void *)buf, n, off);
 #endif
 
     return syscall_wrapper_asm(11, fd, (uintptr_t)buf, n, off, 0);
