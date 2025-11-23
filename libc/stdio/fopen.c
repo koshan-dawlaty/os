@@ -19,10 +19,9 @@ size_t fread(void *restrict buf, size_t size, size_t number, FILE *restrict f)
     size_t readsize = read(fd, buf, size);
     offset += size;
 
-    printf("buf:%s\n", buf);
     while (readsize >= size && (offset / size) < number)
     {
-        printf("%d\n", size);
+
         readsize = read(fd, buf + offset, size);
         offset += readsize;
     }
@@ -45,4 +44,9 @@ size_t fwrite(const void *restrict buf, size_t size, size_t number, FILE *f)
     }
 
     return offset;
+}
+
+void rewind(FILE *f)
+{
+    lseek(f->fd, 0, SEEK_SET);
 }

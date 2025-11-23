@@ -106,11 +106,32 @@ TEST(vfs_doesnot_exist, {
 });
 
 TEST(stdlib_FILE, {
-    char *testfile = "/FILEtest";
+    char *testfile = "/testfile12345678";
     creat(testfile, 0);
+
+    size_t len = 100;
 
     FILE *f = fopen(testfile, "");
 
-    char *buf = malloc(100);
-    fread(buf, 1, 100, f);
+    char *write_buf = malloc(len);
+    for (size_t i = 0; i < len; i++)
+    {
+        write_buf[i] = ((i % 26) + 'a');
+    }
+
+    fwrite(write_buf, 10, 10, f);
+
+    rewind(f);
+
+    char *buf = malloc(len);
+    fread(buf, len, 1, f);
+
+    for (size_t i = 0; i < len; i++)
+    {
+        if (buf[i] != write_buf[i])
+        {
+            FAIL_TEST("file at index:%d is not equal, %d != %d", i, buf[i],
+                      write_buf[i]);
+        }
+    }
 })

@@ -172,7 +172,10 @@ dentry *new_dentry_dev(char *name, dentry *parent, struct device *dev);
  */
 file *create_device(char *name, struct device *dev);
 
-/* TODO: this might not work if entry->type != DENTRY_FILE */
+/* TODO: this might not work if entry->type != DENTRY_FILE, however it will
+ * probably always be */
 #define FILE_SIZE(f) f->entry->inode->size
+
+int seek_file(file *f, off_t offset, int whence);
 
 #endif

@@ -218,23 +218,6 @@ void kernel_init()
 
 int main()
 {
-    char *testfile = "/testfile12345678";
-    creat(testfile, 0);
-
-    FILE *f = fopen(testfile, "");
-
-    char *write_buf = malloc(100);
-    for (size_t i = 0; i < 100; i++)
-    {
-        write_buf[i] = ((i % 26) + 'a');
-    }
-
-    fwrite(write_buf, 10, 3, f);
-
-    char *buf = malloc(100);
-    fread(buf, 100, 1, f);
-    printf("buf:%s\n", buf);
-    printf("0?:%d\n", buf[0] == 0);
 
     return 1;
 
