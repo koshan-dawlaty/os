@@ -30,14 +30,20 @@ TEST(vfs_basic, {
 
     free(read_buf);
     free(buf);
+
+    close(fd);
 })
 
 TEST(vfs_create_basic, {
-    creat("testfile1234", 0);
-    if (open("/testfile1234", 0) == -1)
+    char *pathname = "/testfile1234";
+    creat(pathname, 0);
+    int fd = open(pathname, 0);
+    if (fd < 0)
     {
         FAIL_TEST("could not open /testfile1234");
     }
+
+    close(fd);
 })
 
 TEST(vfs_create, {
@@ -76,6 +82,8 @@ TEST(vfs_create, {
         }
 
         free(pathname);
+
+        close(fd);
     }
 })
 
@@ -85,6 +93,8 @@ TEST(vfs_create_dir, {
     int fd1 = open(path, 0);
 
     ASSERT_GE(fd1, 0, "invalid fd:%d", fd1);
+
+    close(fd1);
 })
 
 TEST(vfs_create_delete_dir, {
@@ -100,6 +110,9 @@ TEST(vfs_create_delete_dir, {
 
     int fd3 = open(testfile, 0);
     ASSERT_GE(fd3, 0, "opening file again returns:%d", fd3);
+
+    close(fd1);
+    close(fd3);
 })
 
 TEST(vfs_doesnot_exist, {

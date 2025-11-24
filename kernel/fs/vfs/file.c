@@ -38,6 +38,43 @@ file *fdlist_lookup(struct fdlist *list, int fd)
     return list->files[fd];
 }
 
+int fdlist_close(struct fdlist *list, int fd)
+{
+    if (fd < 0)
+    {
+        return -EBADF;
+    }
+
+    if ((size_t)fd > list->len)
+    {
+        return -EBADF;
+    }
+
+    list->files[fd] = NULL;
+    return 0;
+}
+
+/* helper function to get the current list of file descriptors */
+static inline struct fdlist *get_current_fdlist()
+{
+    struct task *task = get_current_task();
+    if (task == NULL)
+    {
+        return basic_open_files;
+    }
+    else
+    {
+        /* TODO: add assert task->descriptors != NULL here */
+        return task->descriptors;
+    }
+}
+
+int close_file(file *f)
+{
+    struct fdlist *list = get_current_fdlist();
+    return fdlist_close(list, f->descriptor);
+}
+
 file *open_file(char *path)
 {
     dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
@@ -48,35 +85,16 @@ file *open_file(char *path)
 
     file *out = new_file(dentry);
 
-    struct task *task = get_current_task();
-    if (task == NULL)
-    {
-        out->descriptor = fdlist_add(basic_open_files, out);
-    }
-    else
-    {
-        /* TODO: add an assert task->descriptors != NULL here */
-
-        out->descriptor = fdlist_add(task->descriptors, out);
-    }
+    struct fdlist *list = get_current_fdlist();
+    out->descriptor = fdlist_add(list, out);
 
     return out;
 }
 
 file *lookup_descriptor(int fd)
 {
-
-    struct task *task = get_current_task();
-    if (task == NULL)
-    {
-        return fdlist_lookup(basic_open_files, fd);
-    }
-    else
-    {
-        /* TODO: add an assert task->descriptors != NULL here */
-
-        return fdlist_lookup(task->descriptors, fd);
-    }
+    struct fdlist *list = get_current_fdlist();
+    return fdlist_lookup(list, fd);
 }
 
 int read_file(file *file, char *buf, size_t n, size_t off)

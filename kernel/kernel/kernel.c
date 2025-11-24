@@ -219,6 +219,13 @@ void kernel_init()
 int main()
 {
 
+    /* int f1 = open("/one", 0); */
+    /* int f2 = open("/one", 0); */
+
+    /* close(f1); */
+    /* close(f2); */
+
+    /* return 1; */
     /* printf("IN MAIN\n"); */
 
     /* shared = malloc(10); */

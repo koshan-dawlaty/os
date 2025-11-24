@@ -40,6 +40,8 @@ int execv(const char *path, char *const argv[])
         return -ENOEXEC;
     }
 
+    close(f);
+
     return 0;
 #endif
 }

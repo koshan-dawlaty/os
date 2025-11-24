@@ -11,6 +11,7 @@ int unlink(const char *name);
 int write(int fd, const void *buf, size_t n);
 int pwrite(int fd, const void *buf, size_t n, off_t off);
 int chdir(const char *path);
+int close(int fd);
 off_t lseek(int fd, off_t offset, int whence);
 unsigned sleep(unsigned int seconds);
 

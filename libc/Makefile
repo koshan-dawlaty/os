@@ -59,6 +59,7 @@ file/pread.o \
 sys/mman/mmap.o \
 unistd/execv.o \
 unistd/sleep.o \
+unistd/close.o \
 unistd/chdir.o \
 sched/sched_yield.o \
 errno.o \
