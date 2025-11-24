@@ -16,6 +16,8 @@ TEST(vfs_basic, {
 
     int fd = open("/testdir/testfile", 0);
 
+    ASSERT_GE(fd, 0, "fd for existing file should be valid");
+
     pwrite(fd, buf, size, 0);
 
     char *read_buf = malloc(size);
@@ -97,7 +99,7 @@ TEST(vfs_create_delete_dir, {
     creat(testfile, 0);
 
     int fd3 = open(testfile, 0);
-    ASSERT_GT(fd3, 0, "opening file again returns:%d", fd3);
+    ASSERT_GE(fd3, 0, "opening file again returns:%d", fd3);
 })
 
 TEST(vfs_doesnot_exist, {

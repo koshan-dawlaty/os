@@ -30,7 +30,7 @@ int fdlist_add(struct fdlist *list, file *f)
     list->files = realloc(list->files, list->len * sizeof(file *));
     list->files[list->len - 1] = f;
 
-    return list->len;
+    return list->len - 1;
 }
 
 file *fdlist_lookup(struct fdlist *list, int fd)
@@ -51,13 +51,13 @@ file *open_file(char *path)
     struct task *task = get_current_task();
     if (task == NULL)
     {
-        fdlist_add(basic_open_files, out);
+        out->descriptor = fdlist_add(basic_open_files, out);
     }
     else
     {
         /* TODO: add an assert task->descriptors != NULL here */
 
-        fdlist_add(task->descriptors, out);
+        out->descriptor = fdlist_add(task->descriptors, out);
     }
 
     return out;
