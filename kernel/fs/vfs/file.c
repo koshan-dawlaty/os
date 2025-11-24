@@ -35,6 +35,10 @@ int fdlist_add(struct fdlist *list, file *f)
 
 file *fdlist_lookup(struct fdlist *list, int fd)
 {
+    if (fd < 0 || (size_t)fd > list->len)
+    {
+        return NULL;
+    }
     return list->files[fd];
 }
 
@@ -72,7 +76,14 @@ static inline struct fdlist *get_current_fdlist()
 int close_file(file *f)
 {
     struct fdlist *list = get_current_fdlist();
-    return fdlist_close(list, f->descriptor);
+    if (f != NULL)
+    {
+        return fdlist_close(list, f->descriptor);
+    }
+    else
+    {
+        return -EBADF;
+    }
 }
 
 file *open_file(char *path)

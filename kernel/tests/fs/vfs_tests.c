@@ -112,6 +112,7 @@ TEST(vfs_create_delete_dir, {
     ASSERT_GE(fd3, 0, "opening file again returns:%d", fd3);
 
     close(fd1);
+    close(fd2);
     close(fd3);
 })
 
