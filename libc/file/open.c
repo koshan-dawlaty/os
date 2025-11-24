@@ -9,7 +9,7 @@
 #include <vfs.h>
 #endif
 
-int open(char *path, int flags)
+int open(const char *path, int flags)
 {
 #ifdef __is_libk
     file *f = open_file(path);

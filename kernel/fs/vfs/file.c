@@ -89,12 +89,12 @@ int close_file(file *f)
     }
 }
 
-file *open_file(char *path)
+file *open_file(const char *path)
 {
     dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
     if (IS_ERR(dentry))
     {
-        return (void *)dentry;
+        return ERR_PTR(dentry);
     }
 
     file *out = new_file(dentry);
@@ -145,7 +145,7 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     return read_size;
 }
 
-int write_file(file *file, char *buf, size_t n, size_t off)
+int write_file(file *file, const char *buf, size_t n, size_t off)
 {
     if (file->entry->type == DENTRY_DEVICE)
     {
@@ -166,7 +166,7 @@ int write_file(file *file, char *buf, size_t n, size_t off)
 
     size_t write_size = n;
 
-    current_superblock->type->inode_functions.write_inode(node, (uint8_t *)buf,
+    current_superblock->type->inode_functions.write_inode(node, (const u8 *)buf,
                                                           write_size, off);
 
     add_file_offset(file, write_size);

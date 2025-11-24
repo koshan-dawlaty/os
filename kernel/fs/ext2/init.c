@@ -15,7 +15,7 @@ void ext2_iread(inode *node, uint8_t *buf, size_t buf_len, size_t index)
     ext2_read_inode(node->fs_private, buf, buf_len, index, node->sb);
 }
 
-void ext2_iwrite(inode *node, uint8_t *buf, size_t buf_len, size_t offset)
+void ext2_iwrite(inode *node, const uint8_t *buf, size_t buf_len, size_t offset)
 {
     ext2_write_inode(node, buf, buf_len, offset, node->sb);
 }

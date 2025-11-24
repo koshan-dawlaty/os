@@ -122,7 +122,7 @@ ext2_get_block_from_inode(inode *vfs_node, uint8_t block_index, superblock *sb)
     return node->direct_blocks[block_index];
 }
 
-void ext2_write_inode(inode *vfs_node, uint8_t *buf, size_t buf_len,
+void ext2_write_inode(inode *vfs_node, const uint8_t *buf, size_t buf_len,
                       ext2_inode_index index, superblock *sb)
 {
 
