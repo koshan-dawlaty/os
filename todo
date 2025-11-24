@@ -51,3 +51,5 @@ it seems like the initial kernel task cant be removed from the scheduler queue (
 while other threads are calling malloc
 
 it eventually page faults or stack protector faults maybe because of jumping to an invalid task or reading an invalid task
+
+need to set errno for usermode when errno is set in kernel

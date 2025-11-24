@@ -13,6 +13,7 @@ FILE *fopen(const char *path, const char *flags);
 size_t fread(void *restrict, size_t, size_t, FILE *restrict);
 size_t fwrite(const void *restrict buf, size_t size, size_t number, FILE *f);
 void rewind(FILE *f);
+int putc(int c, FILE *stream);
 
 int putchar(int ic);
 int puts(char *c);
@@ -25,5 +26,9 @@ char getchar();
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
+
+FILE *stdin;
+FILE *stdout;
+FILE *stderr;
 
 #endif

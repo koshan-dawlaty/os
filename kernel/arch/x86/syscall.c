@@ -139,7 +139,7 @@ int syscall_handler(struct syscall_regs *regs)
     }
     else if (regs->eax == 15)
     {
-        /* return lseek(regs->ebx, regs->ecx, regs->edx); */
+        return lseek(regs->ebx, regs->ecx, regs->edx);
     }
 
     printf("no syscall found\n");

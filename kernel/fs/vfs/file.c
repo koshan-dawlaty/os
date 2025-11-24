@@ -6,6 +6,7 @@
 #include "err.h"
 #include "kernel/types.h"
 #include "vfs_internal.h"
+#include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -120,6 +121,12 @@ file *create_file(char *name)
 
 int seek_file(file *f, off_t offset, int whence)
 {
+
+    if (f->entry->type != DENTRY_FILE)
+    {
+        errno = ESPIPE;
+        return -1;
+    }
 
     switch (whence)
     {
