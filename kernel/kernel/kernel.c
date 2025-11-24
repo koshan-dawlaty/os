@@ -219,8 +219,6 @@ void kernel_init()
 int main()
 {
 
-    return 1;
-
     /* printf("IN MAIN\n"); */
 
     /* shared = malloc(10); */

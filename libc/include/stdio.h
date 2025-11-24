@@ -27,8 +27,8 @@ char getchar();
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-FILE *stdin;
-FILE *stdout;
-FILE *stderr;
+// FILE *stdin;
+// FILE *stdout;
+// FILE *stderr;
 
 #endif

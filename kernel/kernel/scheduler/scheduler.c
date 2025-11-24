@@ -164,8 +164,7 @@ struct task *new_task(ptr ip)
     out->regs.eflags = 1 << 9;
 
     *(ptr *)(out->stack) = ip;
-    out->pgdir = new_pagedir();
-    write_kernel_page_tables(out->pgdir);
+    out->pgdir = NULL;
 
     return out;
 }
@@ -304,7 +303,10 @@ void schedule()
     /* printf("%p\n", current_task->pgdir->pgdir); */
     /* printf("%p\n", current_task->pgdir->pgdir_virtual); */
 
-    load_pgdir(current_task->pgdir);
+    if (current_task->pgdir != NULL)
+    {
+        load_pgdir(current_task->pgdir);
+    }
 
     set_kernel_stack((ptr)current_task->stack);
 
