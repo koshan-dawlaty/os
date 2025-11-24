@@ -178,4 +178,18 @@ file *create_device(char *name, struct device *dev);
 
 int seek_file(file *f, off_t offset, int whence);
 
+struct fdlist
+{
+    file **files;
+    size_t len;
+};
+struct fdlist *new_fdlist();
+
+/*
+ * adds the file to the list
+ * returns the file descriptor for the file
+ */
+int add_fdlist(struct fdlist *list, file *f);
+file *fdlist_lookup(struct fdlist *list, int fd);
+
 #endif

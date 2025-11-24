@@ -8,7 +8,8 @@
 
 /* TODO: mabye do the architecture specific part of this architecture
  * independent */
-/* the stack pointer is the member of this struct that is guaranteed to exist */
+/* the stack pointer is the only member of this struct that is guaranteed to
+ * exist */
 struct registers
 {
 
@@ -38,6 +39,7 @@ struct task
     struct registers regs;
     ptr bp;
     dentry *working_dir;
+    struct fdlist *descriptors;
 };
 
 void switch_tasks();

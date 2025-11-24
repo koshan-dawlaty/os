@@ -9,8 +9,7 @@
 
 superblock *current_superblock = NULL;
 
-file **open_files = NULL;
-size_t open_files_len = 0;
+struct fdlist *basic_open_files = NULL;
 
 dentry *rootdir = NULL;
 
@@ -21,7 +20,7 @@ dentry *get_root_dir()
 
 void init_vfs()
 {
-    open_files = malloc(0);
+    basic_open_files = new_fdlist();
 
     struct bdev *dev = get_ata_drive(0);
 

@@ -1,21 +1,45 @@
-#include "ata/ata.h"
-#include "bdev.h"
-#include "cdev.h"
 #include "dcache.h"
-#include "device.h"
-#include "err.h"
-#include "kernel/types.h"
+#include "scheduler.h"
 #include "vfs_internal.h"
+#include <ata/ata.h>
+#include <bdev.h>
+#include <cdev.h>
+#include <device.h>
+#include <err.h>
 #include <errno.h>
+#include <kernel/types.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <vfs.h>
 
+struct fdlist *new_fdlist()
+{
+    struct fdlist *out = malloc(sizeof(struct fdlist));
+
+    out->len = 0;
+    out->files = malloc(0);
+
+    return out;
+}
+
+int fdlist_add(struct fdlist *list, file *f)
+{
+    list->len++;
+    list->files = realloc(list->files, list->len * sizeof(file *));
+    list->files[list->len - 1] = f;
+
+    return list->len;
+}
+
+file *fdlist_lookup(struct fdlist *list, int fd)
+{
+    return list->files[fd];
+}
+
 file *open_file(char *path)
 {
-
     dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
     if (IS_ERR(dentry))
     {
@@ -24,22 +48,39 @@ file *open_file(char *path)
 
     file *out = new_file(dentry);
 
-    open_files_len++;
-    /* TODO: this will result in open_files fragmenting when files are closed */
-    open_files = realloc(open_files, (open_files_len) * sizeof(file *));
+    struct task *task = get_current_task();
+    if (task == NULL)
+    {
+        fdlist_add(basic_open_files, out);
+    }
+    else
+    {
+        /* TODO: add an assert task->descriptors != NULL here */
 
-    /* printf("open_files:%p\n", open_files); */
-
-    open_files[open_files_len - 1] = out;
-    out->descriptor = open_files_len - 1;
-    /* printf("number:%d, name:%s\n", out->descriptor, out->entry->name); */
+        fdlist_add(task->descriptors, out);
+    }
 
     return out;
 }
 
-int read_file(file *file, char *buf, size_t n, size_t off)
+file *lookup_descriptor(int fd)
 {
 
+    struct task *task = get_current_task();
+    if (task == NULL)
+    {
+        return fdlist_lookup(basic_open_files, fd);
+    }
+    else
+    {
+        /* TODO: add an assert task->descriptors != NULL here */
+
+        return fdlist_lookup(task->descriptors, fd);
+    }
+}
+
+int read_file(file *file, char *buf, size_t n, size_t off)
+{
     if (file->entry->type == DENTRY_DEVICE)
     {
         struct device *dev = file->entry->dev;
@@ -74,7 +115,6 @@ int read_file(file *file, char *buf, size_t n, size_t off)
 
 int write_file(file *file, char *buf, size_t n, size_t off)
 {
-
     if (file->entry->type == DENTRY_DEVICE)
     {
         struct device *dev = file->entry->dev;
@@ -101,14 +141,8 @@ int write_file(file *file, char *buf, size_t n, size_t off)
     return write_size;
 }
 
-file *lookup_descriptor(int fd)
-{
-    return open_files[fd];
-}
-
 file *create_file(char *name)
 {
-
     dentry *new = lookup_path(name, PATHNAME_LOOKUP_CREATE);
 
     if (IS_ERR(new))
@@ -121,7 +155,6 @@ file *create_file(char *name)
 
 int seek_file(file *f, off_t offset, int whence)
 {
-
     if (f->entry->type != DENTRY_FILE)
     {
         errno = ESPIPE;

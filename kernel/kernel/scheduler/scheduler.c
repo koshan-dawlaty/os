@@ -79,6 +79,7 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 
     out->next = NULL;
     out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
+    out->descriptors = new_fdlist();
 
     out->regs = (struct registers){
         .esp = (ptr)out->stack,
@@ -156,6 +157,7 @@ struct task *new_task(ptr ip)
     struct task *out = malloc(sizeof(struct task));
 
     out->next = NULL;
+    out->descriptors = new_fdlist();
 
     out->stack = get_free_pages(1) + (PAGE_SIZE - 0xc);
     out->working_dir = NULL;

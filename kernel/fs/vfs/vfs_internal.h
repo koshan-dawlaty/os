@@ -6,7 +6,8 @@
 
 extern superblock *current_superblock;
 
-extern file **open_files;
-extern size_t open_files_len;
+/* this is only here so the file functions will still work when the scheduler
+ * is off (need task->descriptors for lookup_descriptor) */
+extern struct fdlist *basic_open_files;
 
 #endif
