@@ -53,3 +53,6 @@ while other threads are calling malloc
 it eventually page faults or stack protector faults maybe because of jumping to an invalid task or reading an invalid task
 
 need to set errno for usermode when errno is set in kernel
+
+
+the stdlib FILE test always takes ~60ms to run, it might be because it does not buffer anything in userspace yet

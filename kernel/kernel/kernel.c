@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "ata/ata.h"
 #include "gdt.h"
 #include "interrupts/idt.h"
@@ -194,8 +195,6 @@ void kernel_init()
     init_paging();
     init_gfp_zones();
     init_heap();
-
-    free(malloc(200));
 
     init_gdt();
     init_idt();

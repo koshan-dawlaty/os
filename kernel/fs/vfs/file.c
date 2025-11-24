@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "dcache.h"
 #include "scheduler.h"
 #include "vfs_internal.h"
@@ -68,7 +69,9 @@ static inline struct fdlist *get_current_fdlist()
     }
     else
     {
-        /* TODO: add assert task->descriptors != NULL here */
+
+        NOT_NULL(task->descriptors,
+                 "task file descriptor list was uninitalized");
         return task->descriptors;
     }
 }
