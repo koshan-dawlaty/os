@@ -3,12 +3,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-FILE *fopen(const char *path, const char *flags)
+FILE *fdopen(int fd, const char *flags)
 {
     FILE *out = malloc(sizeof(FILE));
-    out->fd = open((char *)path, 0);
+    out->fd = fd;
 
     return out;
+}
+
+FILE *fopen(const char *path, const char *flags)
+{
+    return fdopen(open(path, 0), flags);
 }
 
 size_t fread(void *restrict buf, size_t size, size_t number, FILE *restrict f)

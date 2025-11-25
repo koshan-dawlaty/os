@@ -9,6 +9,7 @@
 #include "panic.h"
 #include "pit/pit.h"
 #include "scheduler.h"
+#include "utils.h"
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/terminal/terminal.h>
 #include <err.h>

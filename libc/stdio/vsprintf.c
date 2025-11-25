@@ -26,7 +26,7 @@ char *int_to_string_unsigned(uintmax_t in, long base)
     }
 
     size_t digits_len = 0;
-    intmax_t in_temp = in;
+    uintmax_t in_temp = in;
     while (in_temp > 0)
     {
         digits_len++;
@@ -255,7 +255,7 @@ that they will not work because the bootstrap has not initialized them
                     else if (*format == 'p')
                     {
                         void *x = va_arg(list, void *);
-                        str = int_to_string((uintptr_t)x, 16);
+                        str = int_to_string_unsigned((uintptr_t)x, 16);
                     }
                 }
 

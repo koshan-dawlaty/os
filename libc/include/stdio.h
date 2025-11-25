@@ -6,10 +6,12 @@
 
 typedef struct
 {
+
     int fd;
 } FILE;
 
 FILE *fopen(const char *path, const char *flags);
+FILE *fdopen(int fd, const char *flags);
 size_t fread(void *restrict, size_t, size_t, FILE *restrict);
 size_t fwrite(const void *restrict buf, size_t size, size_t number, FILE *f);
 void rewind(FILE *f);
