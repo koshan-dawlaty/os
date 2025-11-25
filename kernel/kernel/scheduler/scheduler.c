@@ -324,5 +324,7 @@ struct task *get_current_task()
 void free_task(struct task *t)
 {
     /* TODO: free the pagedir */
+    fdlist_free(t->descriptors);
+
     free(t);
 }

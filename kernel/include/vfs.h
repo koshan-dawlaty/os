@@ -160,6 +160,7 @@ struct pathname_lookup_flags
 dentry *lookup_path(const char *path, struct pathname_lookup_flags flags);
 
 file *create_file(char *path);
+void file_free(file *f);
 
 dentry *get_root_dir();
 
@@ -191,5 +192,7 @@ struct fdlist *new_fdlist();
  */
 int fdlist_add(struct fdlist *list, file *f);
 file *fdlist_lookup(struct fdlist *list, int fd);
+
+void fdlist_free(struct fdlist *list);
 
 #endif

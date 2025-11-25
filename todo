@@ -56,3 +56,7 @@ need to set errno for usermode when errno is set in kernel
 
 
 the stdlib FILE test always takes ~60ms to run, it might be because it does not buffer anything in userspace yet
+
+
+it seems like scrolling the terminal is very bad and likes to crash
+shell might have a double free

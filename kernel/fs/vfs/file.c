@@ -25,6 +25,20 @@ struct fdlist *new_fdlist()
     return out;
 }
 
+void fdlist_free(struct fdlist *list)
+{
+
+    for (size_t i = 0; i < list->len; i++)
+    {
+        if (list->files[i] != NULL)
+        {
+            free(list->files[i]);
+        }
+    }
+    free(list->files);
+    free(list);
+}
+
 int fdlist_add(struct fdlist *list, file *f)
 {
     list->len++;
@@ -183,6 +197,13 @@ file *create_file(char *name)
     }
 
     return new_file(new);
+}
+
+void file_free(file *f)
+{
+    /* TODO: drop dentry */
+
+    free(f);
 }
 
 int seek_file(file *f, off_t offset, int whence)

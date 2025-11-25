@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         buf_offset += read_size;
         buf = realloc(buf, buf_len);
     }
-    printf("%s", buf);
+    printf("%s\n", buf);
 
     close(fd);
 
