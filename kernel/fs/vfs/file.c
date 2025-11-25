@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <vfs.h>
 
 struct fdlist *new_fdlist()
@@ -125,6 +126,12 @@ file *lookup_descriptor(int fd)
     return fdlist_lookup(list, fd);
 }
 
+struct libc_dirent
+{
+    ino_t ino;
+    char name[];
+};
+
 int read_file(file *file, char *buf, size_t n, size_t off)
 {
     if (file->entry->type == DENTRY_DEVICE)
@@ -140,6 +147,41 @@ int read_file(file *file, char *buf, size_t n, size_t off)
         {
             return cdev_read(dev->character, (u8 *)buf, n);
         }
+    }
+    else if (file->entry->type == DENTRY_DIR)
+    {
+        /* assume buf has space for  n * sizeof(libc_dirent) */
+        struct libc_dirent *dir_buf = (struct libc_dirent *)buf;
+
+        dentry **entries = dir_get_dentries(file->entry);
+        size_t len = 0;
+        while (entries[len] != NULL)
+        {
+            len++;
+        }
+
+        if (off > len)
+        {
+            return -EINVAL;
+        }
+
+        /* this will go out of bounds */
+        dentry *current = entries[off];
+
+        size_t i = off;
+        size_t j = 0;
+        while (current != NULL && i < n && i < len)
+        {
+
+            /* need to allocate space in userspace for this */
+            /* dir_buf[j].name; */
+
+            i++;
+            j++;
+            current = entries[i];
+        }
+
+        return j;
     }
 
     inode *node = file->entry->inode;
