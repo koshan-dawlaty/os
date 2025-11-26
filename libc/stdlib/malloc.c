@@ -1,4 +1,5 @@
 #include "sys/mman.h"
+#include <malloc_internal.h>
 #include <sched.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -39,35 +40,6 @@ long align_long2(long in, long align)
 
 // would be 8 on 64 bit
 #define ALIGN 4
-
-typedef struct __attribute__((packed)) block
-{
-    size_t size;
-    struct block *next;
-} heap_block;
-
-#define SMALL_BIN_AMOUNT 60
-struct malloc_zone
-{
-    const struct memory_zone *zone;
-    void *current_page;
-    void *initial_page;
-    size_t page_offset;
-
-    heap_block *small_bins[SMALL_BIN_AMOUNT];
-
-    heap_block *unsorted_bin;
-};
-
-#define INIT_MALLOC_ZONE(_zone)                                                \
-    (struct malloc_zone){                                                      \
-        .zone = _zone,                                                         \
-        .current_page = NULL,                                                  \
-        .initial_page = NULL,                                                  \
-        .page_offset = 0,                                                      \
-        .small_bins = {NULL},                                                  \
-        .unsorted_bin = NULL,                                                  \
-    };
 
 #ifdef __is_libk
 struct malloc_zone kernel_malloc_zone = INIT_MALLOC_ZONE(&gfp_kernel_zone)

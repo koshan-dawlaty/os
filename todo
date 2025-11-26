@@ -63,3 +63,5 @@ shell might have a double free
 
 
 maybe make dir_get_dentries work incrementally, like where you would give it a size and it would only return that much dentries and maybe have an offset or something, but this could also not work if the filesystem is weird or maybe ext2 is the only filesystem that would work with something like that
+
+malloc/kmalloc is very weird
