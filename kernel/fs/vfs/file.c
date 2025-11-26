@@ -1,5 +1,6 @@
 #include "assert.h"
 #include "dcache.h"
+#include "memory/get_free_pages.h"
 #include "scheduler.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
@@ -126,12 +127,6 @@ file *lookup_descriptor(int fd)
     return fdlist_lookup(list, fd);
 }
 
-struct libc_dirent
-{
-    ino_t ino;
-    char name[];
-};
-
 int read_file(file *file, char *buf, size_t n, size_t off)
 {
     if (file->entry->type == DENTRY_DEVICE)
@@ -165,7 +160,6 @@ int read_file(file *file, char *buf, size_t n, size_t off)
             return -EINVAL;
         }
 
-        /* this will go out of bounds */
         dentry *current = entries[off];
 
         size_t i = off;
@@ -173,8 +167,14 @@ int read_file(file *file, char *buf, size_t n, size_t off)
         while (current != NULL && i < n && i < len)
         {
 
-            /* need to allocate space in userspace for this */
-            /* dir_buf[j].name; */
+            /* TODO: not a user pointer */
+            char *new_name = strdup(current->name);
+            printf("%s\n", new_name);
+            printf("%p\n", new_name);
+            dir_buf[j].name = new_name;
+
+            /* TODO: this might be invalid if current->type != DENTRY_FILE */
+            dir_buf[j].ino = current->inode->number;
 
             i++;
             j++;
