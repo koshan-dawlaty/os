@@ -120,19 +120,21 @@ void insert_bin(heap_block **bin, heap_block *block)
 void *user_malloc_addr = (void *)0xA0000000;
 uint32_t user_malloc_offset = 4096;
 
-void *malloc_get_pages(size_t num)
+void *malloc_get_pages(size_t num, struct malloc_zone *zone)
 {
+
 #ifdef __is_libk
-    return get_free_pages(num);
+
+    return get_free_pages_zone(num, zone->zone);
 #else
     return mmap(user_malloc_addr, num * 4096, 0, 0, 0, 0);
 #endif
 }
 
-void malloc_free_pages(void *addr, size_t num)
+void malloc_free_pages(void *addr, size_t num, struct malloc_zone *zone)
 {
 #ifdef __is_libk
-    free_pages(addr, num);
+    free_pages_zone(addr, num, zone->zone);
 #else
     /* TODO: libc should probably be able to free pages */
 
@@ -150,7 +152,7 @@ void check_block(heap_block *block)
     }
 }
 
-heap_block *get_block(size_t size)
+heap_block *get_block(size_t size, struct malloc_zone *zone)
 {
 
     if (current_page == NULL ||
@@ -159,12 +161,12 @@ heap_block *get_block(size_t size)
 
         if (current_page == NULL)
         {
-            initial_page = malloc_get_pages(1);
+            initial_page = malloc_get_pages(1, zone);
             current_page = initial_page;
         }
         else
         {
-            current_page = malloc_get_pages(1);
+            current_page = malloc_get_pages(1, zone);
             current_page_offset = 0;
         }
     }
@@ -180,11 +182,12 @@ heap_block *get_block(size_t size)
     return block;
 }
 
-heap_block *get_block_from_bin_fast(heap_block **bin, int new_size)
+heap_block *get_block_from_bin_fast(heap_block **bin, int new_size,
+                                    struct malloc_zone *zone)
 {
     if (*bin == NULL)
     {
-        heap_block *b = get_block(new_size);
+        heap_block *b = get_block(new_size, zone);
 
         return b;
     }
@@ -197,12 +200,13 @@ heap_block *get_block_from_bin_fast(heap_block **bin, int new_size)
     return output;
 }
 
-heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
+heap_block *get_block_from_bin(heap_block **bin, size_t new_size,
+                               struct malloc_zone *zone)
 {
 
     if (bin == NULL)
     {
-        return get_block(new_size);
+        return get_block(new_size, zone);
     }
 
     heap_block *current_block = *bin;
@@ -238,10 +242,10 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size)
         current_block = current_block->next;
     }
 
-    return get_block(new_size);
+    return get_block(new_size, zone);
 }
 
-void free_unlocked(void *ptr)
+void free_zone(void *ptr, struct malloc_zone *zone)
 {
 
     heap_block *block = ptr_to_block(ptr);
@@ -260,21 +264,21 @@ void free_unlocked(void *ptr)
 
     if (total_size >= 4096)
     {
-        malloc_free_pages(block, (block->size / 4096) + 1);
+        malloc_free_pages(block, (block->size / 4096) + 1, zone);
         return;
     }
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
-        insert_bin(&(small_bins[total_size / ALIGN]), block);
+        insert_bin(&(zone->small_bins[total_size / ALIGN]), block);
     }
     else
     {
-        insert_bin(&unsorted_bin, block);
+        insert_bin(&zone->unsorted_bin, block);
     }
 }
 
-void *malloc_unlocked(size_t size)
+void *malloc_zone(size_t size, struct malloc_zone *zone)
 {
 
     void *retval = NULL;
@@ -283,7 +287,7 @@ void *malloc_unlocked(size_t size)
     if (total_size >= 4096)
     {
         /* TODO: can result in some wasted memory */
-        heap_block *page = malloc_get_pages((total_size / 4096) + 1);
+        heap_block *page = malloc_get_pages((total_size / 4096) + 1, zone);
         page->size = size;
         page->next = NULL;
 
@@ -296,12 +300,12 @@ void *malloc_unlocked(size_t size)
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
 
-        block =
-            get_block_from_bin_fast(&(small_bins[total_size / ALIGN]), size);
+        block = get_block_from_bin_fast(&(zone->small_bins[total_size / ALIGN]),
+                                        size, zone);
     }
     else
     {
-        block = get_block_from_bin(&unsorted_bin, size);
+        block = get_block_from_bin(&zone->unsorted_bin, size, zone);
     }
 
     block->next = NULL;
@@ -325,7 +329,11 @@ void *malloc(size_t size)
     }
 #endif
 
-    void *retval = malloc_unlocked(size);
+#ifdef __is_libk
+    void *retval = malloc_zone(size, &kernel_malloc_zone);
+#else
+    void *retval = malloc_zone(size, &user_malloc_zone);
+#endif
 
 #ifdef __is_libk
     if (heap_mutex != NULL)
@@ -346,7 +354,14 @@ void free(void *ptr)
         lock_spinlock(heap_mutex);
     }
 #endif
-    free_unlocked(ptr);
+
+#ifdef __is_libk
+
+    free_zone(ptr, &kernel_malloc_zone);
+#else
+
+    free_zone(ptr, &user_malloc_zone);
+#endif
 #ifdef __is_libk
     if (heap_mutex != NULL)
     {
@@ -355,7 +370,7 @@ void free(void *ptr)
 #endif
 }
 
-void *realloc(void *ptr, size_t new_size)
+void *realloc_zone(void *ptr, size_t new_size, struct malloc_zone *zone)
 {
 
     if (ptr == NULL)
@@ -370,7 +385,7 @@ void *realloc(void *ptr, size_t new_size)
     }
 #endif
 
-    void *new_ptr = malloc_unlocked(new_size);
+    void *new_ptr = malloc_zone(new_size, zone);
 
     heap_block *block = ptr_to_block(ptr);
 
@@ -379,7 +394,7 @@ void *realloc(void *ptr, size_t new_size)
 
     void *retval = new_ptr;
 
-    free_unlocked(ptr);
+    free_zone(ptr, zone);
 
 #ifdef __is_libk
     if (heap_mutex != NULL)
@@ -389,6 +404,15 @@ void *realloc(void *ptr, size_t new_size)
 #endif
 
     return retval;
+}
+
+void *realloc(void *ptr, size_t new_size)
+{
+#ifdef __is_libk
+    return realloc_zone(ptr, new_size, &kernel_malloc_zone);
+#else
+    return realloc_zone(ptr, new_size, &user_malloc_zone);
+#endif
 }
 
 void init_heap()
