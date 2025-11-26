@@ -9,6 +9,7 @@
 #include "panic.h"
 #include "pit/pit.h"
 #include "scheduler.h"
+#include <dirent.h>
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/terminal/terminal.h>
 #include <err.h>
@@ -235,13 +236,13 @@ int main()
     shared_memory_spinlock = new_spinlock();
 
     int fd = open("dir", 0);
-    struct libc_dirent *buf = malloc(sizeof(struct libc_dirent) * 4);
+    struct dirent *buf = malloc(sizeof(struct dirent) * 4);
     int amount = read(fd, buf, 100);
 
     for (int i = 0; i < amount; i++)
     {
         /* printf("num:%d\n", buf[i].ino); */
-        printf("name:%s\n", buf[i].name);
+        printf("name:%s\n", buf[i].d_name);
         /* printf("name:%p\n", buf[i].name); */
     }
 

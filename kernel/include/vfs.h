@@ -201,14 +201,4 @@ file *fdlist_lookup(struct fdlist *list, int fd);
 
 void fdlist_free(struct fdlist *list);
 
-/*
- * structure representing a directory entry
- * format of entries read into buf when reading from a directory
- */
-struct libc_dirent
-{
-    ino_t ino;
-    char *name;
-};
-
 #endif

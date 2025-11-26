@@ -1,5 +1,6 @@
 #include "assert.h"
 #include "dcache.h"
+#include "dirent.h"
 #include "memory/get_free_pages.h"
 #include "scheduler.h"
 #include "vfs_internal.h"
@@ -145,8 +146,8 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     }
     else if (file->entry->type == DENTRY_DIR)
     {
-        /* assume buf has space for  n * sizeof(libc_dirent) */
-        struct libc_dirent *dir_buf = (struct libc_dirent *)buf;
+        /* assume buf has space for  n * sizeof(dirent) */
+        struct dirent *dir_buf = (struct dirent *)buf;
 
         dentry **entries = dir_get_dentries(file->entry);
         size_t len = 0;
@@ -169,14 +170,14 @@ int read_file(file *file, char *buf, size_t n, size_t off)
 
             /* TODO: not a user pointer */
             char *new_name = strdup(current->name);
-            dir_buf[j].name = new_name;
+            memcpy(dir_buf[j].d_name, new_name, strlen(new_name) + 1);
 
             /* TODO: it seems that the inode is invalid if current->type ==
              * DENTRY_DIR might be a bug?
              * it seems to overwrite dir_buf[j].name in some cases */
             if (current->type == DENTRY_FILE)
             {
-                dir_buf[j].ino = current->inode->number;
+                dir_buf[j].d_ino = current->inode->number;
             }
             else
             {
