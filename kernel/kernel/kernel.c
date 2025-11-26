@@ -235,13 +235,12 @@ int main()
     int fd = open("dir", 0);
     struct libc_dirent *buf = malloc(sizeof(struct libc_dirent) * 4);
     int amount = read(fd, buf, 100);
-    printf("read:%d entries\n", amount);
 
     for (int i = 0; i < amount; i++)
     {
         /* printf("num:%d\n", buf[i].ino); */
         printf("name:%s\n", buf[i].name);
-        printf("name:%p\n", buf[i].name);
+        /* printf("name:%p\n", buf[i].name); */
     }
 
     /* create_device("/terminal", get_terminal()); */

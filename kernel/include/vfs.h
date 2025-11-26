@@ -61,6 +61,12 @@ typedef enum
     DENTRY_DEVICE,
 } dentry_type;
 
+/*
+ * true if entry->inode is accessible
+ */
+#define DENTRY_HAS_INODE(entry)                                                \
+    entry->type == DENTRY_FILE || entry->type == DENTRY_DIR
+
 typedef struct dentry
 {
     char *name;

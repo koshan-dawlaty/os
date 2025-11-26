@@ -169,17 +169,26 @@ int read_file(file *file, char *buf, size_t n, size_t off)
 
             /* TODO: not a user pointer */
             char *new_name = strdup(current->name);
-            printf("%s\n", new_name);
-            printf("%p\n", new_name);
             dir_buf[j].name = new_name;
 
-            /* TODO: this might be invalid if current->type != DENTRY_FILE */
-            dir_buf[j].ino = current->inode->number;
+            /* TODO: it seems that the inode is invalid if current->type ==
+             * DENTRY_DIR might be a bug?
+             * it seems to overwrite dir_buf[j].name in some cases */
+            if (current->type == DENTRY_FILE)
+            {
+                dir_buf[j].ino = current->inode->number;
+            }
+            else
+            {
+                /* TODO */
+            }
 
             i++;
             j++;
             current = entries[i];
         }
+
+        printf("%s\n", dir_buf[4].name);
 
         return j;
     }
