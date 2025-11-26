@@ -188,8 +188,6 @@ int read_file(file *file, char *buf, size_t n, size_t off)
             current = entries[i];
         }
 
-        printf("%s\n", dir_buf[4].name);
-
         return j;
     }
 
