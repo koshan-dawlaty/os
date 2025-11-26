@@ -1,20 +1,20 @@
-#include "assert.h"
 #include "ata/ata.h"
 #include "gdt.h"
 #include "interrupts/idt.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
+#include "kmalloc.h"
 #include "memory/get_free_pages.h"
 #include "panic.h"
 #include "pit/pit.h"
 #include "scheduler.h"
-#include "utils.h"
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/terminal/terminal.h>
 #include <err.h>
 #include <fcntl.h>
 #include <kernel/tty.h>
+#include <malloc_internal.h>
 #include <memory/paging_flags.h>
 #include <pci/pci.h>
 #include <spinlock.h>
@@ -224,6 +224,8 @@ int main()
 
     /* close(f1); */
     /* close(f2); */
+
+    printf("%p\n", kmalloc(100, KMALLOC_USER));
 
     /* return 1; */
     /* printf("IN MAIN\n"); */

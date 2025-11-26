@@ -37,8 +37,9 @@ void free_zone(void *ptr, struct malloc_zone *zone);
 
 #ifdef __is_libk
 extern struct malloc_zone kernel_malloc_zone;
-#else
 extern struct malloc_zone user_malloc_zone;
+#else
+extern struct malloc_zone libc_malloc_zone;
 #endif
 
 #endif

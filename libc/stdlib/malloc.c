@@ -42,13 +42,13 @@ long align_long2(long in, long align)
 #define ALIGN 4
 
 #ifdef __is_libk
-struct malloc_zone kernel_malloc_zone = INIT_MALLOC_ZONE(&gfp_kernel_zone)
+struct malloc_zone kernel_malloc_zone = INIT_MALLOC_ZONE(&gfp_kernel_zone);
+struct malloc_zone user_malloc_zone = INIT_MALLOC_ZONE(&gfp_user_zone);
 #else
-struct malloc_zone user_malloc_zone = INIT_MALLOC_ZONE(NULL)
+struct malloc_zone libc_malloc_zone = INIT_MALLOC_ZONE(NULL)
 #endif
 
-    void
-    print_bin(heap_block * *bin)
+void print_bin(heap_block **bin)
 {
     heap_block *current = *bin;
     while (current != NULL)
@@ -71,15 +71,6 @@ static inline heap_block *ptr_to_block(void *ptr)
 {
     return ((heap_block *)ptr) - 1;
 }
-
-void *current_page = NULL;
-void *initial_page = NULL;
-size_t current_page_offset = 0;
-
-#define SMALL_BIN_AMOUNT 60
-heap_block *small_bins[60] = {NULL};
-
-heap_block *unsorted_bin = NULL;
 
 void insert_bin(heap_block **bin, heap_block *block)
 {
@@ -116,40 +107,40 @@ void malloc_free_pages(void *addr, size_t num, struct malloc_zone *zone)
 /* ensures that a block is correct and the heap has not been corrupted */
 void check_block(heap_block *block)
 {
-    if (((void *)block->next < initial_page ||
-         (void *)block->next > current_page + 4096) &&
-        block->next != NULL)
-    {
-        malloc_error("invalid addr");
-    }
+    /* if (((void *)block->next < initial_page || */
+    /*      (void *)block->next > current_page + 4096) && */
+    /*     block->next != NULL) */
+    /* { */
+    /*     malloc_error("invalid addr"); */
+    /* } */
 }
 
 heap_block *get_block(size_t size, struct malloc_zone *zone)
 {
 
-    if (current_page == NULL ||
-        current_page_offset + size + sizeof(heap_block) >= 4096)
+    if (zone->current_page == NULL ||
+        zone->page_offset + size + sizeof(heap_block) >= 4096)
     {
 
-        if (current_page == NULL)
+        if (zone->current_page == NULL)
         {
-            initial_page = malloc_get_pages(1, zone);
-            current_page = initial_page;
+            zone->initial_page = malloc_get_pages(1, zone);
+            zone->current_page = zone->initial_page;
         }
         else
         {
-            current_page = malloc_get_pages(1, zone);
-            current_page_offset = 0;
+            zone->current_page = malloc_get_pages(1, zone);
+            zone->page_offset = 0;
         }
     }
 
     heap_block *block =
-        (heap_block *)((uintptr_t)current_page + current_page_offset);
+        (heap_block *)((uintptr_t)zone->current_page + zone->page_offset);
 
     block->size = size;
     block->next = NULL;
 
-    current_page_offset += size + sizeof(heap_block);
+    zone->page_offset += size + sizeof(heap_block);
 
     return block;
 }
@@ -304,7 +295,7 @@ void *malloc(size_t size)
 #ifdef __is_libk
     void *retval = malloc_zone(size, &kernel_malloc_zone);
 #else
-    void *retval = malloc_zone(size, &user_malloc_zone);
+    void *retval = malloc_zone(size, &libc_malloc_zone);
 #endif
 
 #ifdef __is_libk
@@ -332,7 +323,7 @@ void free(void *ptr)
     free_zone(ptr, &kernel_malloc_zone);
 #else
 
-    free_zone(ptr, &user_malloc_zone);
+    free_zone(ptr, &libc_malloc_zone);
 #endif
 #ifdef __is_libk
     if (heap_mutex != NULL)
@@ -383,7 +374,7 @@ void *realloc(void *ptr, size_t new_size)
 #ifdef __is_libk
     return realloc_zone(ptr, new_size, &kernel_malloc_zone);
 #else
-    return realloc_zone(ptr, new_size, &user_malloc_zone);
+    return realloc_zone(ptr, new_size, &libc_malloc_zone);
 #endif
 }
 
