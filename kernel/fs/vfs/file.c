@@ -131,7 +131,10 @@ file *lookup_descriptor(int fd)
 int read_dir(file *dir, struct dirent *buf, size_t number)
 {
 
-    /* TODO: this should maybe be an error code */
+    /* TODO: this should maybe be an error code as this is called by a syscall
+     */
+    NOT_NULL(dir, "directory should not be null");
+
     ASSERT(dir->entry->type == DENTRY_DIR,
            "the directory entry should represent a directory");
 
@@ -158,20 +161,32 @@ int read_dir(file *dir, struct dirent *buf, size_t number)
     while (current != NULL && j < number && i < len)
     {
 
-        /* TODO: not a user pointer */
-        char *new_name = strdup(current->name);
-        memcpy(dir_buf[j].d_name, new_name, strlen(new_name) + 1);
+        memcpy(dir_buf[j].d_name, current->name, strlen(current->name) + 1);
+
+        /* printf("writing to:%p\n", dir_buf[j]); */
 
         /* TODO: it seems that the inode is invalid if current->type ==
          * DENTRY_DIR might be a bug?
          * it seems to overwrite dir_buf[j].name in some cases */
         if (current->type == DENTRY_FILE)
         {
+            /* printf("%p\n", current->name); */
+            /* printf("%d\n", current->inode->number); */
+            /* printf("WRITING TO:%p\n", &dir_buf[j].d_ino); */
+            /* printf("WRITING TO:%p\n", &dir_buf[j]); */
+
+            /* for (size_t i = 0; i < 10; i++) */
+            /* { */
+            /*     printf("%p ", *(uint8_t *)(0xa0000010 + i)); */
+            /* } */
+            /* printf("\n"); */
+
             dir_buf[j].d_ino = current->inode->number;
         }
         else
         {
             /* TODO */
+            dir_buf[j].d_ino = 0;
         }
 
         i++;

@@ -237,13 +237,13 @@ int main()
 
     /* create_device("/terminal", get_terminal()); */
 
-    DIR *d = opendir("/");
-    struct dirent *e = readdir(d);
-    while (e != NULL)
-    {
-        printf("%s\n", e->d_name);
-        e = readdir(d);
-    }
+    /* DIR *d = opendir("/"); */
+    /* struct dirent *e = readdir(d); */
+    /* while (e != NULL) */
+    /* { */
+    /*     printf("%s\n", e->d_name); */
+    /*     e = readdir(d); */
+    /* } */
 
     add_task(create_kernel_task());
 
@@ -252,7 +252,7 @@ int main()
     /* run_task(kernel_task5, NULL); */
     enable_scheduler();
 
-    execv("/ksh", (char *[]){NULL});
+    execv("/ls", (char *[]){NULL});
 
     return 0;
 }

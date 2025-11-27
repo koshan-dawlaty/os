@@ -81,15 +81,14 @@ void insert_bin(heap_block **bin, heap_block *block)
 
 /* TODO: bad */
 void *user_malloc_addr = (void *)0xA0000000;
-uint32_t user_malloc_offset = 4096;
+uint64_t user_malloc_offset = 4096;
 
 void *malloc_get_pages(size_t num, struct malloc_zone *zone)
 {
-
 #ifdef __is_libk
-
     return get_free_pages_zone(num, zone->zone);
 #else
+    user_malloc_addr += 4096;
     return mmap(user_malloc_addr, num * 4096, 0, 0, 0, 0);
 #endif
 }

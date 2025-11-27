@@ -14,6 +14,8 @@ long get_dents(int fd, struct dirent *buf, size_t num)
 {
 #ifdef __is_libk
     file *f = lookup_descriptor(fd);
+    /* printf("file:%p\n", f); */
+    /* printf("fd:%d\n", fd); */
     long retval = read_dir(f, buf, num);
     return retval;
 #else
@@ -32,7 +34,9 @@ DIR *opendir(const char *name)
 struct dirent *readdir(DIR *d)
 {
     struct dirent *out = malloc(sizeof(struct dirent));
+
     int err = get_dents(d->fd, out, 1);
+
     if (err < 0)
     {
         if (-err == EINVAL)

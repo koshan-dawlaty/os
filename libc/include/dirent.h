@@ -7,15 +7,14 @@
 typedef struct
 {
     int fd;
-    size_t offset;
     /* TODO: put buffer here or something */
-} DIR;
+} __attribute__((packed)) DIR;
 
 struct dirent
 {
-    ino_t d_ino;
     char d_name[256];
-};
+    ino_t d_ino;
+} __attribute__((packed));
 
 int closedir(DIR *);
 DIR *opendir(const char *);
