@@ -10,14 +10,22 @@
 #include <vfs.h>
 #endif
 
-size_t get_dents(int fd, struct dirent *buf, size_t num)
+long get_dents(int fd, struct dirent *buf, size_t num)
 {
+    long retval;
 #ifdef __is_libk
     file *f = lookup_descriptor(fd);
-    return read_dir(f, buf, num);
+    retval = read_dir(f, buf, num);
 #else
-    return syscall_wrapper_asm(fd, (uintptr_t)buf, num, 0, 0, 0);
+    retval = syscall_wrapper_asm(17, fd, (uintptr_t)buf, num, 0, 0);
 #endif
+
+    if (retval < 0)
+    {
+        errno = -retval;
+        return -1;
+    }
+    return retval;
 }
 
 DIR *opendir(const char *name)
@@ -30,9 +38,17 @@ DIR *opendir(const char *name)
 struct dirent *readdir(DIR *d)
 {
     struct dirent *out = malloc(sizeof(struct dirent));
-    if (get_dents(d->fd, out, 1) == E2BIG)
+    if (get_dents(d->fd, out, 1) == -1)
     {
-        return NULL;
+        if (errno == EINVAL)
+        {
+            /* should be done reading dirs */
+            return NULL;
+        }
+        else
+        {
+            /* TODO: error */
+        }
     }
 
     return out;

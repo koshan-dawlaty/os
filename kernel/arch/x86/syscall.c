@@ -147,7 +147,9 @@ int syscall_handler(struct syscall_regs *regs)
     }
     else if (regs->eax == 17)
     {
-        return get_dents(regs->ebx, (void *)regs->ecx, regs->edx);
+        int retval = get_dents(regs->ebx, (void *)regs->ecx, regs->edx);
+
+        return retval;
     }
 
     printf("no syscall found\n");

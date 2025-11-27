@@ -28,6 +28,6 @@ long int telldir(DIR *);
 /*
  * my version of a linux syscall (not standard)
  */
-size_t get_dents(int fd, struct dirent *buf, size_t num);
+long get_dents(int fd, struct dirent *buf, size_t num);
 
 #endif

@@ -145,16 +145,17 @@ int read_dir(file *dir, struct dirent *buf, size_t number)
         len++;
     }
 
-    if (dir->offset > len)
+    if (dir->offset >= len)
     {
-        return -E2BIG;
+        dir->offset = len;
+        return -EINVAL;
     }
 
     dentry *current = entries[dir->offset];
 
     size_t i = dir->offset;
     size_t j = 0;
-    while (current != NULL && i < number && i < len)
+    while (current != NULL && j < number && i < len)
     {
 
         /* TODO: not a user pointer */
@@ -177,6 +178,8 @@ int read_dir(file *dir, struct dirent *buf, size_t number)
         j++;
         current = entries[i];
     }
+
+    dir->offset += number;
 
     return j;
 }
