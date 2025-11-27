@@ -145,7 +145,7 @@ int read_dir(file *dir, struct dirent *buf, size_t number)
         len++;
     }
 
-    if (dir->offset >= len)
+    if (dir->offset + number > len)
     {
         dir->offset = len;
         return -EINVAL;

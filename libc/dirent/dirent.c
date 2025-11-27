@@ -12,20 +12,14 @@
 
 long get_dents(int fd, struct dirent *buf, size_t num)
 {
-    long retval;
 #ifdef __is_libk
     file *f = lookup_descriptor(fd);
-    retval = read_dir(f, buf, num);
-#else
-    retval = syscall_wrapper_asm(17, fd, (uintptr_t)buf, num, 0, 0);
-#endif
-
-    if (retval < 0)
-    {
-        errno = -retval;
-        return -1;
-    }
+    long retval = read_dir(f, buf, num);
     return retval;
+#else
+    long retval = syscall_wrapper_asm(17, fd, (uintptr_t)buf, num, 0, 0);
+    return retval;
+#endif
 }
 
 DIR *opendir(const char *name)
@@ -38,9 +32,10 @@ DIR *opendir(const char *name)
 struct dirent *readdir(DIR *d)
 {
     struct dirent *out = malloc(sizeof(struct dirent));
-    if (get_dents(d->fd, out, 1) == -1)
+    int err = get_dents(d->fd, out, 1);
+    if (err < 0)
     {
-        if (errno == EINVAL)
+        if (-err == EINVAL)
         {
             /* should be done reading dirs */
             return NULL;
