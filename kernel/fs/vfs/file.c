@@ -128,6 +128,59 @@ file *lookup_descriptor(int fd)
     return fdlist_lookup(list, fd);
 }
 
+int read_dir(file *dir, struct dirent *buf, size_t number)
+{
+
+    /* TODO: this should maybe be an error code */
+    ASSERT(dir->entry->type == DENTRY_DIR,
+           "the directory entry should represent a directory");
+
+    /* assume buf has space for  n * sizeof(dirent) */
+    struct dirent *dir_buf = (struct dirent *)buf;
+
+    dentry **entries = dir_get_dentries(dir->entry);
+    size_t len = 0;
+    while (entries[len] != NULL)
+    {
+        len++;
+    }
+
+    if (dir->offset > len)
+    {
+        return -E2BIG;
+    }
+
+    dentry *current = entries[dir->offset];
+
+    size_t i = dir->offset;
+    size_t j = 0;
+    while (current != NULL && i < number && i < len)
+    {
+
+        /* TODO: not a user pointer */
+        char *new_name = strdup(current->name);
+        memcpy(dir_buf[j].d_name, new_name, strlen(new_name) + 1);
+
+        /* TODO: it seems that the inode is invalid if current->type ==
+         * DENTRY_DIR might be a bug?
+         * it seems to overwrite dir_buf[j].name in some cases */
+        if (current->type == DENTRY_FILE)
+        {
+            dir_buf[j].d_ino = current->inode->number;
+        }
+        else
+        {
+            /* TODO */
+        }
+
+        i++;
+        j++;
+        current = entries[i];
+    }
+
+    return j;
+}
+
 int read_file(file *file, char *buf, size_t n, size_t off)
 {
     if (file->entry->type == DENTRY_DEVICE)
@@ -144,52 +197,8 @@ int read_file(file *file, char *buf, size_t n, size_t off)
             return cdev_read(dev->character, (u8 *)buf, n);
         }
     }
-    else if (file->entry->type == DENTRY_DIR)
+    else
     {
-        /* assume buf has space for  n * sizeof(dirent) */
-        struct dirent *dir_buf = (struct dirent *)buf;
-
-        dentry **entries = dir_get_dentries(file->entry);
-        size_t len = 0;
-        while (entries[len] != NULL)
-        {
-            len++;
-        }
-
-        if (off > len)
-        {
-            return -EINVAL;
-        }
-
-        dentry *current = entries[off];
-
-        size_t i = off;
-        size_t j = 0;
-        while (current != NULL && i < n && i < len)
-        {
-
-            /* TODO: not a user pointer */
-            char *new_name = strdup(current->name);
-            memcpy(dir_buf[j].d_name, new_name, strlen(new_name) + 1);
-
-            /* TODO: it seems that the inode is invalid if current->type ==
-             * DENTRY_DIR might be a bug?
-             * it seems to overwrite dir_buf[j].name in some cases */
-            if (current->type == DENTRY_FILE)
-            {
-                dir_buf[j].d_ino = current->inode->number;
-            }
-            else
-            {
-                /* TODO */
-            }
-
-            i++;
-            j++;
-            current = entries[i];
-        }
-
-        return j;
     }
 
     inode *node = file->entry->inode;

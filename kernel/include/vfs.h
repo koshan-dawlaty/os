@@ -3,6 +3,7 @@
 #include "device.h"
 #include "kernel/types.h"
 #include "sys/types.h"
+#include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -200,5 +201,8 @@ int fdlist_add(struct fdlist *list, file *f);
 file *fdlist_lookup(struct fdlist *list, int fd);
 
 void fdlist_free(struct fdlist *list);
+
+/* TODO: this name is very similar to the standard readdir() function */
+int read_dir(file *dir, struct dirent *buf, size_t number);
 
 #endif
