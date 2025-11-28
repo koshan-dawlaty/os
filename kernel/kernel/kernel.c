@@ -244,7 +244,7 @@ int main()
     /* run_task(kernel_task5, NULL); */
     enable_scheduler();
 
-    execv("/ksh", (char *[]){NULL});
+    execv("/ls", (char *[]){NULL});
 
     return 0;
 }

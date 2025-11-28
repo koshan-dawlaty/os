@@ -1,6 +1,8 @@
+#include "strings.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 FILE *stdout;
@@ -50,19 +52,31 @@ size_t fread(void *restrict buf, size_t size, size_t number, FILE *restrict f)
 
 size_t fwrite(const void *restrict buf, size_t size, size_t number, FILE *f)
 {
-    int fd = f->fd;
+    size_t total_size = size * number;
+    size_t write_size = total_size;
 
-    size_t offset = 0;
-    size_t writesize = write(fd, buf, size);
-    offset += size;
-
-    while (writesize >= size && (offset / size) < number)
+    if (write_size > f->buffer_max - f->buffer_size)
     {
-        writesize = write(fd, buf + offset, size);
-        offset += writesize;
+        write_size = f->buffer_max - f->buffer_size;
     }
 
-    return offset;
+    memcpy(f->buffer + f->buffer_size, buf, write_size);
+
+    if (total_size + f->buffer_size < f->buffer_max)
+    {
+        f->buffer_size += total_size;
+        return total_size;
+    }
+
+    f->buffer_size = 0;
+    write(f->fd, f->buffer, f->buffer_max);
+
+    size_t bytes_remaining = total_size - write_size;
+
+    write(f->fd, buf + write_size, bytes_remaining);
+    memset(f->buffer, 0, f->buffer_max);
+
+    return total_size;
 }
 
 void rewind(FILE *f)
