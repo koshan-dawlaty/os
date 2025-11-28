@@ -1,3 +1,4 @@
+#include <stdatomic.h>
 #include <stdio.h>
 #include <utils.h>
 
@@ -11,7 +12,8 @@ int putchar(int ic)
     char c = (char)ic;
     terminal_write(&c, sizeof(c));
 #else
-    syscall_wrapper_asm(0, ic, 0, 0, 0, 0);
+    fputc(ic, stdout);
+    /* syscall_wrapper_asm(0, ic, 0, 0, 0, 0); */
 #endif
     return ic;
 }

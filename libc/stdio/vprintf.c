@@ -25,18 +25,10 @@ double pow(double x, double y)
     return x;
 } */
 
-void print(const char *str)
-{
-    for (size_t i = 0; i < strlen(str); i++)
-    {
-        putchar(str[i]);
-    }
-}
-
 int vprintf(const char *format, va_list list)
 {
     char *str = vrprintf(format, list);
-    print(str);
+    puts(str);
     free(str);
 
     /* TODO: make return value standard compliant */

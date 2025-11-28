@@ -59,3 +59,14 @@ void rewind(FILE *f)
 {
     lseek(f->fd, 0, SEEK_SET);
 }
+
+int fputc(int c, FILE *stream)
+{
+    /* TODO */
+    char *buf = malloc(1);
+    *buf = c;
+    fwrite(buf, 1, 1, stream);
+    free(buf);
+
+    return c;
+}

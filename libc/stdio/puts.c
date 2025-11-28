@@ -9,5 +9,5 @@ int puts(char *str)
         putchar(str[i]);
         i++;
     }
-    return 0x12345;
+    return 0;
 }
