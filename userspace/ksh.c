@@ -15,15 +15,16 @@ extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
 void init_stdio()
 {
     /* TODO: maybe make these not writeable */
-    /* stdin = fdopen(0, ""); */
-    /* stdout = fdopen(1, ""); */
-    /* stderr = fdopen(2, ""); */
+    stdin = fdopen(0, "");
+    stdout = fdopen(1, "");
+    stderr = fdopen(2, "");
 }
 
 int main()
 {
+    init_stdio();
 
-    /* fwrite("abc", 3, 1, stdout); */
+    fwrite("abc", 3, 1, stdout);
 
     exit(0);
 

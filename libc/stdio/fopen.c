@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+FILE *stdout;
+FILE *stdin;
+FILE *stderr;
+
 FILE *fdopen(int fd, const char *flags)
 {
     FILE *out = malloc(sizeof(FILE));

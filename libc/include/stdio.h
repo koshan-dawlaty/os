@@ -31,6 +31,6 @@ char getchar();
 
 extern FILE *stdin;
 extern FILE *stdout;
-// extern FILE *stderr;
+extern FILE *stderr;
 
 #endif
