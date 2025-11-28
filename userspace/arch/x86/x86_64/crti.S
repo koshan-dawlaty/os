@@ -4,6 +4,7 @@
 _init:
 	push %rbp
 	mov %rsp, %rbp
+
 	/* gcc will nicely put the contents of crtbegin.o's .init section here. */
 
 .section .fini

@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <init.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -9,6 +10,9 @@
 
 int main(int argc, char **argv)
 {
+
+    init_libc();
+
     if (argc <= 1)
     {
         printf("need more arguments\n");

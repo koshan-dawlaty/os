@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <init.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -12,21 +13,12 @@
 typedef uintptr_t ptr;
 extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
 
-void init_stdio()
-{
-    /* TODO: maybe make these not writeable */
-    stdin = fdopen(0, "");
-    stdout = fdopen(1, "");
-    stderr = fdopen(2, "");
-}
-
 int main()
 {
-    init_stdio();
+
+    init_libc();
 
     fwrite("abc", 3, 1, stdout);
-
-    exit(0);
 
     /* int term_fd = open("/terminal", 0); */
     /* char *buf = malloc(10); */
