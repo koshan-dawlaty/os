@@ -35,7 +35,7 @@ void fdlist_free(struct fdlist *list)
     {
         if (list->files[i] != NULL)
         {
-            free(list->files[i]);
+            file_free(list->files[i]);
         }
     }
     free(list->files);
@@ -306,4 +306,12 @@ int seek_file(file *f, off_t offset, int whence)
     }
 
     return f->offset;
+}
+
+file *open_device(const char *devname)
+{
+    dentry *ent = lookup_path(devname, PATHNAME_LOOKUP_FIND);
+
+    file *out = new_file(ent);
+    return out;
 }

@@ -179,6 +179,7 @@ dentry *new_dentry_dev(char *name, dentry *parent, struct device *dev);
  * creates a device in the file system
  */
 file *create_device(char *name, struct device *dev);
+file *open_device(const char *name);
 
 /* TODO: this might not work if entry->type != DENTRY_FILE, however it will
  * probably always be */

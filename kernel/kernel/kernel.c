@@ -235,15 +235,7 @@ int main()
     shared_memory_semaphore = new_semaphore(1);
     shared_memory_spinlock = new_spinlock();
 
-    /* create_device("/terminal", get_terminal()); */
-
-    /* DIR *d = opendir("/"); */
-    /* struct dirent *e = readdir(d); */
-    /* while (e != NULL) */
-    /* { */
-    /*     printf("%s\n", e->d_name); */
-    /*     e = readdir(d); */
-    /* } */
+    create_device("/terminal", get_terminal());
 
     add_task(create_kernel_task());
 
@@ -252,7 +244,7 @@ int main()
     /* run_task(kernel_task5, NULL); */
     enable_scheduler();
 
-    execv("/ls", (char *[]){NULL});
+    execv("/ksh", (char *[]){NULL});
 
     return 0;
 }

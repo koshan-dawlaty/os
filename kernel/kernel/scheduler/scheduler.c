@@ -6,6 +6,7 @@
 #include "unistd.h"
 #include "utils.h"
 #include "vfs.h"
+#include <drivers/character/terminal/terminal.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
 #include <memory/get_free_pages.h>
@@ -116,6 +117,14 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     scheduler_set_regs_arguments(argc, args, ip, &out->regs);
 
     load_pgdir(temp);
+
+    file *terminal_device = open_device("/terminal");
+
+    /* TODO: maybe have a function to index into the fdlist, like dup2() */
+    /* TODO: maybe make stdin/out not readable/writeable in the kernel */
+    fdlist_add(out->descriptors, terminal_device); /* 0, stdin */
+    fdlist_add(out->descriptors, terminal_device); /* 1, stdout */
+    fdlist_add(out->descriptors, terminal_device); /* 2, stderr */
 
     return out;
 }
