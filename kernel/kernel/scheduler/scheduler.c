@@ -118,13 +118,12 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 
     load_pgdir(temp);
 
-    file *terminal_device = open_device("/terminal");
-
+    const char *term_path = "/terminal";
     /* TODO: maybe have a function to index into the fdlist, like dup2() */
     /* TODO: maybe make stdin/out not readable/writeable in the kernel */
-    fdlist_add(out->descriptors, terminal_device); /* 0, stdin */
-    fdlist_add(out->descriptors, terminal_device); /* 1, stdout */
-    fdlist_add(out->descriptors, terminal_device); /* 2, stderr */
+    fdlist_add(out->descriptors, open_device(term_path)); /* 0, stdin */
+    fdlist_add(out->descriptors, open_device(term_path)); /* 1, stdout */
+    fdlist_add(out->descriptors, open_device(term_path)); /* 2, stderr */
 
     return out;
 }

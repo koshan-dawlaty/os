@@ -308,6 +308,7 @@ int seek_file(file *f, off_t offset, int whence)
     return f->offset;
 }
 
+/* TODO: bad name, does not actually add the device to the fdlist */
 file *open_device(const char *devname)
 {
     dentry *ent = lookup_path(devname, PATHNAME_LOOKUP_FIND);
