@@ -18,8 +18,6 @@ int main()
 
     init_libc();
 
-    fwrite("abc", 3, 1, stdout);
-
     /* int term_fd = open("/terminal", 0); */
     /* char *buf = malloc(10); */
     /* memcpy(buf, "abc", 4); */
