@@ -7,12 +7,22 @@ FILE *stdout;
 FILE *stdin;
 FILE *stderr;
 
-FILE *fdopen(int fd, const char *flags)
+static FILE *new_stream(int fd, const char *flags, size_t buffer_max)
 {
     FILE *out = malloc(sizeof(FILE));
+
     out->fd = fd;
 
+    out->buffer_max = buffer_max;
+    out->buffer_size = 0;
+    out->buffer = malloc(buffer_max);
+
     return out;
+}
+
+FILE *fdopen(int fd, const char *flags)
+{
+    return new_stream(fd, flags, 10);
 }
 
 FILE *fopen(const char *path, const char *flags)

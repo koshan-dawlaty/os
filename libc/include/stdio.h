@@ -6,7 +6,9 @@
 
 typedef struct
 {
-
+    char *buffer;
+    size_t buffer_max;  /* buffer capacity */
+    size_t buffer_size; /* how many bytes are in the buffer */
     int fd;
 } FILE;
 
