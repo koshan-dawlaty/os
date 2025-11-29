@@ -6,6 +6,7 @@
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
 #include "kmalloc.h"
+#include "lib/list.h"
 #include "lib/lru.h"
 #include "memory/get_free_pages.h"
 #include "panic.h"
@@ -238,6 +239,7 @@ struct lru_test *new_lru_test(int d)
 bool compare_test_lru(struct lru_entry *entry, void *parameter)
 {
     struct lru_test *test = containerof(entry, struct lru_test, lru);
+    /* printf("%d, %d\n", test->data, (int)(ptr)parameter); */
     return test->data == (int)(ptr)parameter;
 }
 
@@ -247,26 +249,32 @@ int main()
     struct lru_test *one = new_lru_test(1);
     struct lru_test *two = new_lru_test(2);
     struct lru_test *three = new_lru_test(3);
+    struct lru_test *four = new_lru_test(4);
 
-    struct lru_head *head = new_lru_head(10);
+    struct lru_head *head = new_lru_head(2);
 
-    lru_add(head, &one->lru);
-    lru_add(head, &two->lru);
-    lru_add(head, &three->lru);
+    printf("one:%p\n", lru_add(head, &one->lru));
+    printf("two:%p\n", lru_add(head, &two->lru));
 
-    printf("%p\n", head->head->list.next);
+    printf("three:%p\n", lru_add(head, &three->lru));
+    printf("four:%p\n", lru_add(head, &four->lru));
 
-    struct lru_entry *value = lru_get(head, compare_test_lru, (void *)0);
-    struct lru_test *value2 = containerof(value, struct lru_test, lru);
+    struct lru_test *value1 = containerof(
+        lru_get(head, compare_test_lru, (void *)1), struct lru_test, lru);
+    struct lru_test *value2 = containerof(
+        lru_get(head, compare_test_lru, (void *)2), struct lru_test, lru);
+    struct lru_test *value3 = containerof(
+        lru_get(head, compare_test_lru, (void *)3), struct lru_test, lru);
+    struct lru_test *value4 = containerof(
+        lru_get(head, compare_test_lru, (void *)4), struct lru_test, lru);
 
-    if (value != NULL)
-    {
-        printf("%d\n", value2->data);
-    }
-    else
-    {
-        printf("value was null\n");
-    }
+    printf("%d, %d\n", value4->data, 4);
+    printf("%d, %d\n", value3->data, 3);
+
+    printf("%d, %d\n", value1->data, 1);
+    printf("%d, %d\n", value2->data, 2);
+
+    printf("%d %d\n", lru_get(head, compare_test_lru, (void *)0), NULL);
 
     return 1;
 
@@ -290,9 +298,9 @@ int main()
     add_task(create_kernel_task());
 
     /*
-run_task(kernel_task3, NULL);
-run_task(kernel_task4, NULL);
-run_task(kernel_task5, NULL);
+    run_task(kernel_task3, NULL);
+    run_task(kernel_task4, NULL);
+    run_task(kernel_task5, NULL);
     */
     enable_scheduler();
 
