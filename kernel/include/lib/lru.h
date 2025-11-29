@@ -2,6 +2,7 @@
 #define LRU_H
 
 #include <lib/list.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 struct lru_entry
@@ -23,7 +24,10 @@ struct lru_head
     }
 
 struct lru_head *new_lru_head(size_t max);
-
 struct lru_entry *lru_add(struct lru_head *head, struct lru_entry *new);
+
+struct lru_entry *lru_get(struct lru_head *head,
+                          bool (*compare)(struct lru_entry *, void *),
+                          void *parameter);
 
 #endif

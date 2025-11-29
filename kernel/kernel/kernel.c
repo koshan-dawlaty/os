@@ -235,6 +235,12 @@ struct lru_test *new_lru_test(int d)
     return out;
 }
 
+bool compare_test_lru(struct lru_entry *entry, void *parameter)
+{
+    struct lru_test *test = containerof(entry, struct lru_test, lru);
+    return test->data == (int)(ptr)parameter;
+}
+
 int main()
 {
 
@@ -250,10 +256,17 @@ int main()
 
     printf("%p\n", head->head->list.next);
 
-    struct lru_test *value =
-        containerof(head->head->list.next, struct lru_test, lru);
+    struct lru_entry *value = lru_get(head, compare_test_lru, (void *)0);
+    struct lru_test *value2 = containerof(value, struct lru_test, lru);
 
-    printf("%d\n", value->data);
+    if (value != NULL)
+    {
+        printf("%d\n", value2->data);
+    }
+    else
+    {
+        printf("value was null\n");
+    }
 
     return 1;
 
