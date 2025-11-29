@@ -1,10 +1,12 @@
 #include "ata/ata.h"
+#include "container_of.h"
 #include "gdt.h"
 #include "interrupts/idt.h"
 #include "kernel/keyboard.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
 #include "kmalloc.h"
+#include "lib/lru.h"
 #include "memory/get_free_pages.h"
 #include "panic.h"
 #include "pit/pit.h"
@@ -217,8 +219,43 @@ void kernel_init()
 #endif
 }
 
+struct lru_test
+{
+    int data;
+    struct lru_entry lru;
+};
+
+struct lru_test *new_lru_test(int d)
+{
+    struct lru_test *out = malloc(sizeof(struct lru_test));
+
+    out->data = d;
+    out->lru = LRU_ENTRY_INIT();
+
+    return out;
+}
+
 int main()
 {
+
+    struct lru_test *one = new_lru_test(1);
+    struct lru_test *two = new_lru_test(2);
+    struct lru_test *three = new_lru_test(3);
+
+    struct lru_head *head = new_lru_head(10);
+
+    lru_add(head, &one->lru);
+    lru_add(head, &two->lru);
+    lru_add(head, &three->lru);
+
+    printf("%p\n", head->head->list.next);
+
+    struct lru_test *value =
+        containerof(head->head->list.next, struct lru_test, lru);
+
+    printf("%d\n", value->data);
+
+    return 1;
 
     /* int f1 = open("/one", 0); */
     /* int f2 = open("/one", 0); */

@@ -1,10 +1,19 @@
 #include <container_of.h>
 #include <lib/list.h>
 #include <lib/lru.h>
+#include <stdlib.h>
 
-struct lru_entry *add_lru(struct lru_head *head, struct lru_entry *new)
+struct lru_entry *lru_add(struct lru_head *head, struct lru_entry *new)
 {
-    list2_add(&new->list, &head->head->list);
+    if (head->head == NULL)
+    {
+        head->head = new;
+        return NULL;
+    }
+
+    struct lru_entry *temp_head = head->head;
+    head->head = new;
+    head->head->list.next = &temp_head->list;
 
     list2 *pos;
 
@@ -27,7 +36,22 @@ struct lru_entry *add_lru(struct lru_head *head, struct lru_entry *new)
         head->end = temp_entry;
     }
 
-    list2_add(&new->list, &head->head->list);
+    /* list2_add(&new->list, &head->head->list); */
 
     return retval;
 }
+
+struct lru_head *new_lru_head(size_t max)
+{
+    struct lru_head *out = malloc(sizeof(struct lru_head));
+    out->max = max;
+
+    out->head = NULL;
+    out->end = NULL;
+
+    return out;
+}
+
+/* struct lru_entry *lru_get() */
+/* { */
+/* } */

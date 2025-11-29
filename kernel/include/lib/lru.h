@@ -16,18 +16,14 @@ struct lru_head
     size_t max;
 };
 
-#define LRU_HEAD_INIT(_max)                                                    \
-    (struct lru_head)                                                          \
-    {                                                                          \
-        .head = NULL, .end = NULL, .max = _max                                 \
-    }
-
 #define LRU_ENTRY_INIT(...)                                                    \
     (struct lru_entry)                                                         \
     {                                                                          \
         .list = LIST2_INIT()                                                   \
     }
 
-struct lru_entry *add_lru(struct lru_head *head, struct lru_entry *new);
+struct lru_head *new_lru_head(size_t max);
+
+struct lru_entry *lru_add(struct lru_head *head, struct lru_entry *new);
 
 #endif
