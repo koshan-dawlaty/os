@@ -33,21 +33,18 @@ DIR *opendir(const char *name)
 
 struct dirent *readdir(DIR *d)
 {
+    errno = 0;
     struct dirent *out = malloc(sizeof(struct dirent));
 
     int err = get_dents(d->fd, out, 1);
 
     if (err < 0)
     {
-        if (-err == EINVAL)
+        if (-err != EINVAL)
         {
-            /* should be done reading dirs */
-            return NULL;
+            errno = -err;
         }
-        else
-        {
-            /* TODO: error */
-        }
+        return NULL;
     }
 
     return out;
