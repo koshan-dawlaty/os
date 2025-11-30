@@ -225,8 +225,6 @@ void kernel_init()
 int main()
 {
 
-    return 1;
-
     /* int f1 = open("/one", 0); */
     /* int f2 = open("/one", 0); */
 
@@ -252,7 +250,11 @@ int main()
     */
     enable_scheduler();
 
-    execv("/ksh", (char *[]){NULL});
+    int err = execv("/ksh", (char *[]){NULL});
+    if (err < 0)
+    {
+        printf("did not find shell\n");
+    }
 
     return 0;
 }

@@ -127,13 +127,31 @@ struct ext2_superblock *ext2_parse_superblock(struct bdev *dev)
 
     size_t block_group_table_size_bytes =
         ((block_group_table_size * sb->block_size));
+    printf("BLOCKSIZE:%d\n", sb->block_size);
+
+    printf("this is what is in the super block\n");
+    for (size_t i = 0; i < 100; i++)
+    {
+        /* printf("%p ", superblock_buffer[i]); */
+    }
+    printf("\n");
 
     uint8_t *buf = malloc(block_group_table_size_bytes);
     /* printf("block group:%p\n", block_group_table_size_bytes); */
+
+    printf("second block\n");
     bdev_read(dev, buf, block_group_table_size_bytes, 1024 * 2);
+
+    printf("this is what is in the %d block\n", 2);
+    for (size_t i = 0; i < 100; i++)
+    {
+        /* printf("%p ", buf[i]); */
+    }
+    printf("\n");
 
     sb->group_descriptor_table = (ext2_group_descriptor *)buf;
 
+    printf("ext2_mount done\n");
     return sb;
 }
 
