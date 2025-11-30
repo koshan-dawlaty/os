@@ -1,3 +1,4 @@
+#include "kernel/types.h"
 #include <assert.h>
 #include <container_of.h>
 #include <lib/list.h>
@@ -93,17 +94,27 @@ struct lru_entry *lru_get(struct lru_head *head,
             break;
         }
     }
+
     if (value == NULL)
     {
         return NULL;
     }
+
+    printf("value:%p, %d\n", value, (int)(ptr)parameter);
 
     /* check if it is already the head */
     if (value->list.prev == NULL)
     {
         return value;
     }
-    value->list.prev->next = value->list.next;
+
+    value->list.prev->next = value->list.next; /* A */
+
+    struct list2 *temp = &head->head->list;
+    head->head = containerof(value, struct lru_entry, list); /* B */
+    head->head->list.next = temp;                            /* C */
+    head->head->list.prev = NULL;
+    head->head->list.next->prev = &head->head->list; /* D */
 
     return value;
 }

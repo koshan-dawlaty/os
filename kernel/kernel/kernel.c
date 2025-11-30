@@ -259,12 +259,32 @@ int main()
     printf("three:%p\n", lru_add(head, &three->lru));
     printf("four:%p\n", lru_add(head, &four->lru));
 
+    list2 *pos;
+    list2_for_each(pos, &head->head->list)
+    {
+        struct lru_test *entry = containerof(
+            containerof(pos, struct lru_entry, list), struct lru_test, lru);
+        printf("%d ", entry->data);
+    }
+    printf("\n");
+
     struct lru_test *value1 = containerof(
         lru_get(head, compare_test_lru, (void *)1), struct lru_test, lru);
     struct lru_test *value2 = containerof(
         lru_get(head, compare_test_lru, (void *)2), struct lru_test, lru);
+
     struct lru_test *value3 = containerof(
         lru_get(head, compare_test_lru, (void *)3), struct lru_test, lru);
+
+    list2 *pos2;
+    list2_for_each(pos2, &head->head->list)
+    {
+        struct lru_test *entry = containerof(
+            containerof(pos2, struct lru_entry, list), struct lru_test, lru);
+        printf("%d ", entry->data);
+    }
+    printf("\n");
+
     struct lru_test *value4 = containerof(
         lru_get(head, compare_test_lru, (void *)4), struct lru_test, lru);
 
