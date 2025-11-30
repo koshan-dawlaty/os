@@ -1,4 +1,5 @@
 #include "assert.h"
+#include "lib/list.h"
 #include <container_of.h>
 #include <lib/lru.h>
 #include <stdio.h>
@@ -98,4 +99,26 @@ TEST(lru_test2, {
     struct lru_test *value6 = containerof(
         lru_get(head, compare_test_lru, (void *)6), struct lru_test, lru);
     ASSERT_EQ(value6->data, 6)
+
+    struct list2 *pos;
+    size_t i = 0;
+    list2_for_each(pos, &head->head->list)
+    {
+        struct lru_test *t = LRU_LIST_ENTRY(pos, struct lru_test, lru);
+
+        switch (i)
+        {
+        case 0:
+            ASSERT_EQ(t->data, 6, "most recent entry should be at head")
+            break;
+        case 1:
+            ASSERT_EQ(t->data, 5, "least recent entry should be at tail")
+            break;
+        default:
+            FAIL_TEST("list is too long")
+            break;
+        }
+
+        i++;
+    }
 })
