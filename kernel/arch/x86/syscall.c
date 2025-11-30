@@ -49,25 +49,23 @@ int syscall_handler(struct syscall_regs *regs)
      */
     /*        regs->ebp); */
 
-    if (regs->eax == 0)
+    switch (regs->eax)
     {
-        /* printf("test\n"); */
+    case 0:
         putchar(regs->ebx);
-        /* *(char *)(0xC03FF100) = regs->ebx; */
         return 0;
-    }
-    else if (regs->eax == 1)
+    case 1:
     {
         /* asm("sti"); */
         char c = getchar();
         /* printf("in syscall:%c\n", c); */
         return c;
     }
-    else if (regs->eax == 2)
+    case 2:
     {
         return execv((void *)regs->ebx, (void *)regs->ecx);
     }
-    else if (regs->eax == 3)
+    case 3:
     {
         /* void *ip_address; */
         /* asm("lea (%%eip), %0" : "=r"(ip_address)); */
@@ -85,71 +83,72 @@ int syscall_handler(struct syscall_regs *regs)
         /* switch_tasks(r); */
         return 1;
     }
-    else if (regs->eax == 4)
+    case 4:
     {
         map_page(get_free_phys_page(), (void *)regs->ebx,
                  PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
 
         return 1234;
     }
-    else if (regs->eax == 5)
+    case 5:
     {
         wait_semaphore(test_semaphore);
         getchar();
         release_semaphore(test_semaphore);
         return 1234;
     }
-    else if (regs->eax == 6)
+    case 6:
     {
         return pread(regs->ebx, (void *)regs->ecx, regs->edx, regs->edi);
     }
-    else if (regs->eax == 7)
+    case 7:
     {
         return open((void *)regs->ebx, 0);
     }
-    else if (regs->eax == 8)
+    case 8:
     {
         return read(regs->ebx, (void *)regs->ecx, regs->edx);
     }
-    else if (regs->eax == 9)
+    case 9:
     {
         exit(regs->ebx);
         return 1234;
     }
-    else if (regs->eax == 10)
+    case 10:
     {
         return write(regs->ebx, (void *)regs->ecx, regs->edx);
     }
-    else if (regs->eax == 11)
+    case 11:
     {
         return pwrite(regs->ebx, (void *)regs->ecx, regs->edx, regs->esi);
     }
-    else if (regs->eax == 12)
+    case 12:
     {
         /* TODO: this should be implemented with an open flag instead */
         return creat((void *)regs->ebx, regs->ecx);
     }
-    else if (regs->eax == 13)
+    case 13:
     {
         return chdir((void *)regs->ebx);
     }
-    else if (regs->eax == 14)
+    case 14:
     {
         return unlink((char *)regs->ebx);
     }
-    else if (regs->eax == 15)
+    case 15:
     {
         return lseek(regs->ebx, regs->ecx, regs->edx);
     }
-    else if (regs->eax == 16)
+    case 16:
     {
         return close(regs->ebx);
     }
-    else if (regs->eax == 17)
+    case 17:
     {
         int retval = get_dents(regs->ebx, (void *)regs->ecx, regs->edx);
 
         return retval;
+    }
     }
 
     printf("no syscall found\n");

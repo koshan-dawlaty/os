@@ -36,7 +36,7 @@ void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
                   uint32_t sectors, uint32_t lba)
 {
 
-    /* wait_for_bit(io_offset, control_offset, 7, 0); */
+    wait_for_bit(io_offset, control_offset, 7, 0);
 
     outb(io_offset + 1, 0);
 
