@@ -201,6 +201,8 @@ void kernel_init()
     init_gfp_zones();
     init_heap();
 
+    printf("change\n");
+
     init_gdt();
     init_idt();
 
@@ -222,6 +224,8 @@ void kernel_init()
 
 int main()
 {
+
+    return 1;
 
     /* int f1 = open("/one", 0); */
     /* int f2 = open("/one", 0); */
