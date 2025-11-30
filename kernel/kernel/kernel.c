@@ -223,8 +223,6 @@ void kernel_init()
 int main()
 {
 
-    return 1;
-
     /* int f1 = open("/one", 0); */
     /* int f2 = open("/one", 0); */
 
@@ -241,7 +239,6 @@ int main()
     shared_memory_spinlock = new_spinlock();
 
     create_device("/terminal", get_terminal());
-
     add_task(create_kernel_task());
 
     /*
