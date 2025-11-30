@@ -1,10 +1,10 @@
+#include "assert.h"
 #include <container_of.h>
 #include <lib/lru.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <tests/tests.h>
 
-/*
 struct lru_test
 {
     int data;
@@ -24,6 +24,7 @@ struct lru_test *new_lru_test(int d)
 bool compare_test_lru(struct lru_entry *entry, void *parameter)
 {
     struct lru_test *test = containerof(entry, struct lru_test, lru);
+    /* printf("%d, %d\n", test->data, (int)(ptr)parameter); */
     return test->data == (int)(ptr)parameter;
 }
 
@@ -38,8 +39,9 @@ TEST(lru_test_basic, {
     lru_add(head, &two->lru);
     lru_add(head, &three->lru);
 
-    struct lru_test *value1 = containerof(
-        lru_get(head, compare_test_lru, (void *)1), struct lru_test, lru);
+    void *not_exist = lru_get(head, compare_test_lru, (void *)1);
+    ASSERT_EQ(not_exist, NULL, "value not in list should be null, was %p",
+              not_exist);
 
     struct lru_test *value2 = containerof(
         lru_get(head, compare_test_lru, (void *)2), struct lru_test, lru);
@@ -47,11 +49,12 @@ TEST(lru_test_basic, {
     struct lru_test *value3 = containerof(
         lru_get(head, compare_test_lru, (void *)3), struct lru_test, lru);
 
-    ASSERT_EQ(value1->data, 1)
+    /* ASSERT_EQ(value1, NULL, "value not in list should be null, was %p",
+     */
+    /*           value1) */
     ASSERT_EQ(value2->data, 2)
     ASSERT_EQ(value3->data, 3)
 
     ASSERT_EQ(lru_get(head, compare_test_lru, (void *)0), NULL,
               "non existant value should return null");
 })
-*/

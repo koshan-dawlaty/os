@@ -220,81 +220,8 @@ void kernel_init()
 #endif
 }
 
-struct lru_test
-{
-    int data;
-    struct lru_entry lru;
-};
-
-struct lru_test *new_lru_test(int d)
-{
-    struct lru_test *out = malloc(sizeof(struct lru_test));
-
-    out->data = d;
-    out->lru = LRU_ENTRY_INIT();
-
-    return out;
-}
-
-bool compare_test_lru(struct lru_entry *entry, void *parameter)
-{
-    struct lru_test *test = containerof(entry, struct lru_test, lru);
-    /* printf("%d, %d\n", test->data, (int)(ptr)parameter); */
-    return test->data == (int)(ptr)parameter;
-}
-
 int main()
 {
-
-    struct lru_test *one = new_lru_test(1);
-    struct lru_test *two = new_lru_test(2);
-    struct lru_test *three = new_lru_test(3);
-    struct lru_test *four = new_lru_test(4);
-
-    struct lru_head *head = new_lru_head(2);
-
-    printf("one:%p\n", lru_add(head, &one->lru));
-    printf("two:%p\n", lru_add(head, &two->lru));
-
-    printf("three:%p\n", lru_add(head, &three->lru));
-    printf("four:%p\n", lru_add(head, &four->lru));
-
-    list2 *pos;
-    list2_for_each(pos, &head->head->list)
-    {
-        struct lru_test *entry = containerof(
-            containerof(pos, struct lru_entry, list), struct lru_test, lru);
-        printf("%d ", entry->data);
-    }
-    printf("\n");
-
-    struct lru_test *value1 = containerof(
-        lru_get(head, compare_test_lru, (void *)1), struct lru_test, lru);
-    struct lru_test *value2 = containerof(
-        lru_get(head, compare_test_lru, (void *)2), struct lru_test, lru);
-
-    struct lru_test *value3 = containerof(
-        lru_get(head, compare_test_lru, (void *)3), struct lru_test, lru);
-
-    list2 *pos2;
-    list2_for_each(pos2, &head->head->list)
-    {
-        struct lru_test *entry = containerof(
-            containerof(pos2, struct lru_entry, list), struct lru_test, lru);
-        printf("%d ", entry->data);
-    }
-    printf("\n");
-
-    struct lru_test *value4 = containerof(
-        lru_get(head, compare_test_lru, (void *)4), struct lru_test, lru);
-
-    printf("%d, %d\n", value4->data, 4);
-    printf("%d, %d\n", value3->data, 3);
-
-    printf("%d, %d\n", value1->data, 1);
-    printf("%d, %d\n", value2->data, 2);
-
-    printf("%d %d\n", lru_get(head, compare_test_lru, (void *)0), NULL);
 
     return 1;
 
