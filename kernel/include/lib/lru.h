@@ -38,4 +38,6 @@ struct lru_entry *lru_get(struct lru_head *head,
 #define LRU_LIST_ENTRY(ptr, type, member)                                      \
     containerof(containerof(ptr, struct lru_entry, list), type, member)
 
+/* TODO: maybe lru for each macro? */
+
 #endif

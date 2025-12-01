@@ -1,7 +1,7 @@
 #ifndef DCACHE_H
 #define DCACHE_H
 
-#include "vfs.h"
+#include <vfs.h>
 
 /*
  * gets a dentry from the dcache

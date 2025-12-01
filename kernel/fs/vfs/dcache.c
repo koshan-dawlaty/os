@@ -2,24 +2,27 @@
 #include "err.h"
 #include "kernel/utils.h"
 #include "lib/list.h"
+#include "lib/lru.h"
 #include "lib/refcount.h"
 #include <panic.h>
 #include <stdlib.h>
 #include <string.h>
 #include <vfs.h>
 
+#define DCACHE_LRU_MAX 10
+
 struct dcache_dir
 {
     /* parent directory, NULL is root */
     dentry *dir;
-    list2 *values_head;
+    struct lru_head *values_head;
     list l;
 };
 
 struct dcache_value
 {
     dentry *entry;
-    list2 l;
+    struct lru_entry lru;
 
     refcount *rc;
 };
@@ -40,7 +43,7 @@ struct dcache_value *new_dcache_value(dentry *entry)
     struct dcache_value *out = malloc(sizeof(struct dcache_value));
 
     out->entry = entry;
-    out->l = LIST2_INIT();
+    out->lru = LRU_ENTRY_INIT();
     out->rc = new_refcount();
 
     return out;
@@ -80,9 +83,10 @@ struct dcache_value *get_dcache_value(char *component, struct dcache_dir *dir)
 {
 
     list2 *pos;
-    list2_for_each(pos, dir->values_head)
+    list2_for_each(pos, &dir->values_head->head->list)
     {
-        struct dcache_value *value = containerof(pos, struct dcache_value, l);
+        struct dcache_value *value =
+            LRU_LIST_ENTRY(pos, struct dcache_value, lru);
 
         if (!strcmp(value->entry->name, component))
         {
@@ -138,17 +142,18 @@ void add_dcache(dentry *parent, dentry *new_entry)
 
     if (dir->values_head == NULL)
     {
-        dir->values_head = &new_value->l;
+        dir->values_head = new_lru_head(DCACHE_LRU_MAX);
     }
     else
     {
-        list2_add(&new_value->l, dir->values_head);
+        lru_add(dir->values_head, &new_value->lru);
     }
 
     list2 *pos;
-    list2_for_each(pos, dir->values_head)
+    list2_for_each(pos, &dir->values_head->head->list)
     {
-        struct dcache_value *value = containerof(pos, struct dcache_value, l);
+        struct dcache_value *value =
+            LRU_LIST_ENTRY(pos, struct dcache_value, lru);
     }
 }
 
@@ -171,7 +176,8 @@ void remove_dcache(dentry *entry)
         return;
     }
 
-    list2_remove(&value->l, &dir->values_head);
+    /* DOES NOT WORK!!! */
+    /* list2_remove(&value->lru.list, &dir->values_head->head->list); */
 
     dcache_free_value(value);
 }
