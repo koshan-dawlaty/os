@@ -22,13 +22,13 @@ void print_all_regs(uint16_t offset)
 }
 
 ISR(ata_isr_1, {
-    /* printf("ata isr 1\n"); */
+    printf("ata isr 1\n");
 
     PIC_sendEOI(14);
 })
 
 ISR(ata_isr_2, {
-    /* printf("ata isr 2\n"); */
+    printf("ata isr 2\n");
     PIC_sendEOI(15);
 })
 
@@ -48,6 +48,9 @@ void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
     /* printf("status:%p, error:%p\n", inb(io_offset + 7), inb(io_offset + 1));
      */
 
+    /* printf("starting read\n"); */
+
+    /* printf("GOING TO READ %d sectors\n", sectors); */
     for (size_t s = 0; s < sectors; s++)
     {
         wait_for_bit(io_offset, control_offset, 7, 0);
@@ -61,11 +64,21 @@ void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
 
             buffer[s * 512 + i * 2] = (uint8_t)(data) & 0xFF;
             buffer[s * 512 + i * 2 + 1] = (uint8_t)(data >> 8);
+
+            /* if (i < 50 && s < 1) */
+            /* { */
+            /*     printf("%p ", data); */
+            /* } */
         }
+        /* printf("sector %d done\n", s); */
     }
+    /* printf("\n"); */
+
     /* wait_for_bit(io_offset, control_offset, 7, 0); */
     /* wait_for_bit(io_offset, control_offset, 3, 0); */
+    /* printf("waiting\n"); */
     ata_wait_for_mask(io_offset, 7 | 3, 0);
+    /* printf("done\n"); */
 }
 
 /*
@@ -99,5 +112,6 @@ void write_ata_pio(uint16_t io_offset, uint16_t control_offset, uint32_t lba,
 
         /* outb(io_offset + ATA_COMMAND, 0xE7); */
     }
+
     outb(io_offset + ATA_COMMAND, 0xE7);
 }

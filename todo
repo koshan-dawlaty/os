@@ -68,3 +68,6 @@ malloc/kmalloc is very weird
 
 maybe read_dir() vfs function should put null values (or maybe just one null value) if the read is past the end of the dentry. it would help when implementing readdir() (libc) beacuse it is null terminated
 errno might not be thread local
+
+
+ext2 (probably just the block group descriptor code) does not work with block size != 1024

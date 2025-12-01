@@ -52,6 +52,7 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
     u32 group_index = (inode_number - 1) / EXT2_INODES_PER_GROUP(sb);
     ext2_group_descriptor group = EXT2_GROUP_DESCRIPTOR_TABLE(sb)[group_index];
 
+    /* printf("reading first block\n"); */
     u8 *inode_usage = ext2_read_block(group.inode_usage, sb);
 
     u8 node_exists = ((inode_usage[(inode_number - 1) / 8]) &

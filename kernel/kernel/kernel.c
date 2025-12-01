@@ -201,6 +201,8 @@ void kernel_init()
     init_gfp_zones();
     init_heap();
 
+    printf("change\n");
+
     init_gdt();
     init_idt();
 
@@ -248,7 +250,11 @@ int main()
     */
     enable_scheduler();
 
-    execv("/ksh", (char *[]){NULL});
+    int err = execv("/ksh", (char *[]){NULL});
+    if (err < 0)
+    {
+        printf("did not find shell\n");
+    }
 
     return 0;
 }
