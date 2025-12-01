@@ -177,7 +177,7 @@ void remove_dcache(dentry *entry)
     }
 
     /* DOES NOT WORK, this is incorrect!!! */
-    /* list2_remove(&value->lru.list, &dir->values_head->head->list); */
+    lru_remove(&value->lru, dir->values_head);
 
     dcache_free_value(value);
 }

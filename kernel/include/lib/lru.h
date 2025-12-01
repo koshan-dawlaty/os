@@ -38,6 +38,11 @@ struct lru_entry *lru_get(struct lru_head *head,
 #define LRU_LIST_ENTRY(ptr, type, member)                                      \
     containerof(containerof(ptr, struct lru_entry, list), type, member)
 
+/*
+ * returns true if the value was present and removed
+ */
+bool lru_remove(struct lru_entry *key, struct lru_head *head);
+
 /* TODO: maybe lru for each macro? */
 
 #endif

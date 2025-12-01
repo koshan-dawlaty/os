@@ -118,3 +118,37 @@ struct lru_entry *lru_get(struct lru_head *head,
 
     return value;
 }
+
+bool lru_remove(struct lru_entry *key, struct lru_head *head)
+{
+
+    list2 *pos;
+    list2_for_each(pos, &head->head->list) /* this would be a place where
+                                              lru_for_each could be used */
+    {
+        struct lru_entry *current = containerof(pos, struct lru_entry, list);
+
+        if (current == key) /* TODO: might not be what the caller wants */
+        {
+
+            /* is it at the head of the list? */
+            if (current->list.prev == NULL)
+            {
+
+                list2 *next = head->head->list.next;
+                struct lru_entry *new_head =
+                    containerof(next, struct lru_entry, list);
+
+                head->head = new_head;
+            }
+            else
+            {
+                current->list.prev->next = current->list.next;
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
