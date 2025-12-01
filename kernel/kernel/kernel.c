@@ -240,7 +240,7 @@ int main()
     shared_memory_semaphore = new_semaphore(1);
     shared_memory_spinlock = new_spinlock();
 
-    create_device("/terminal", get_terminal());
+    printf("%p\n", create_device("/terminal", get_terminal()));
     add_task(create_kernel_task());
 
     /*
