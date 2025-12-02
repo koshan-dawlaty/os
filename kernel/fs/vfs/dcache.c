@@ -88,18 +88,39 @@ struct dcache_dir *get_dcache_dir(dentry *entry)
 struct dcache_value *get_dcache_value(char *component, struct dcache_dir *dir)
 {
 
-    list2 *pos;
-    list2_for_each(pos, &dir->values_head->head->list)
+    if (dir->values_head != NULL)
     {
-        struct dcache_value *value =
-            LRU_LIST_ENTRY(pos, struct dcache_value, lru);
 
-        if (!strcmp(value->entry->name, component))
+        list2 *pos2;
+        list2_for_each(pos2, &dir->values_head->head->list)
         {
-            /* refcount_get(value->rc); */
-            return value;
+            struct dcache_value *value =
+                LRU_LIST_ENTRY(pos2, struct dcache_value, lru);
+
+            if (!strcmp(value->entry->name, component))
+            {
+                /* refcount_get(value->rc); */
+                return value;
+            }
         }
     }
+
+    if (dir->permanent_values != NULL)
+    {
+
+        list *pos;
+        list_for_each(pos, dir->permanent_values)
+        {
+            struct dcache_value *value =
+                LIST_ENTRY(pos, struct dcache_value, list);
+
+            if (!strcmp(value->entry->name, component))
+            {
+                return value;
+            }
+        }
+    }
+
     return NULL;
 }
 
@@ -132,8 +153,36 @@ struct dcache_dir *add_dcache_dir(dentry *dir)
     return new_dir;
 }
 
+void add_dcache_permanent(dentry *parent, dentry *new_entry)
+{
+    printf("test\n");
+    struct dcache_dir *dir = get_dcache_dir(parent);
+
+    if (dir == NULL)
+    {
+        dir = add_dcache_dir(parent);
+    }
+    struct dcache_value *new_value = new_dcache_value(new_entry);
+
+    if (dir->permanent_values == NULL)
+    {
+        new_value->list = LIST_INIT();
+        dir->permanent_values = &new_value->list;
+    }
+    else
+    {
+        list_add(&new_value->list, dir->permanent_values);
+    }
+}
+
 void add_dcache(dentry *parent, dentry *new_entry)
 {
+
+    if (new_entry->type == DENTRY_DEVICE)
+    {
+        add_dcache_permanent(parent, new_entry);
+        return;
+    }
 
     /* printf("adding %p to cache\n", parent); */
 
@@ -158,27 +207,6 @@ void add_dcache(dentry *parent, dentry *new_entry)
     {
         struct dcache_value *value =
             LRU_LIST_ENTRY(pos, struct dcache_value, lru);
-    }
-}
-
-void add_dcache_permanent(dentry *parent, dentry *new_entry)
-{
-    struct dcache_dir *dir = get_dcache_dir(parent);
-
-    if (dir == NULL)
-    {
-        dir = add_dcache_dir(parent);
-    }
-    struct dcache_value *new_value = new_dcache_value(new_entry);
-
-    if (dir->permanent_values == NULL)
-    {
-        new_value->list = LIST_INIT();
-        dir->permanent_values = &new_value->list;
-    }
-    else
-    {
-        list_add(&new_value->list, dir->permanent_values);
     }
 }
 

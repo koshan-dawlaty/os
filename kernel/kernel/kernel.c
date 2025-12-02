@@ -225,6 +225,14 @@ void kernel_init()
 int main()
 {
 
+    /* /1* file->entry->type is not updated correctly for files *1/ */
+    /* create_device("/term", get_terminal()); */
+    /* file *d = open_device("/term"); */
+
+    /* write_file(d, "abc", 4, 0); */
+
+    /* return 1; */
+
     /* int f1 = open("/one", 0); */
     /* int f2 = open("/one", 0); */
 
