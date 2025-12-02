@@ -70,15 +70,7 @@ int main()
                 int err = execv(args[0], args);
                 if (err < 0)
                 {
-                    printf("could not execute, ");
-                    if (err == -ENOENT)
-                    {
-                        printf("file not found");
-                    }
-                    else if (err == -ENOEXEC)
-                    {
-                        printf("file not executable");
-                    }
+                    printf("could not execute\nerror:%s", strerror(err));
                     printf("\n");
                 }
             }

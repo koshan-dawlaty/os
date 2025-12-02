@@ -9,7 +9,6 @@
 
 struct lru_entry *lru_add(struct lru_head *head, struct lru_entry *new)
 {
-    printf("lru add\n");
     if (head->head == NULL)
     {
         head->head = new;

@@ -225,7 +225,6 @@ void kernel_init()
 int main()
 {
 
-    /* /1* file->entry->type is not updated correctly for files *1/ */
     /* create_device("/term", get_terminal()); */
     /* file *d = open_device("/term"); */
 
@@ -238,8 +237,6 @@ int main()
 
     /* close(f1); */
     /* close(f2); */
-
-    printf("%p\n", kmalloc(100, KMALLOC_USER));
 
     /* return 1; */
     /* printf("IN MAIN\n"); */
