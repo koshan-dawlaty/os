@@ -20,7 +20,7 @@ dentry *new_dentry_dev(char *name, dentry *parent, struct device *dev)
 file *create_device(char *name, struct device *dev)
 {
     /* TODO: maybe not PATHNAME_LOOKUP_CREATE? */
-    dentry *entry = lookup_path(name, PATHNAME_LOOKUP_CREATE_DEV);
+    dentry *entry = lookup_path(name, PATHNAME_LOOKUP_CREATE_DEV(dev));
 
     if (IS_ERR(entry))
     {

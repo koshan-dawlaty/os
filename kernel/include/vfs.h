@@ -160,16 +160,20 @@ struct pathname_lookup_flags
 {
     u8 create : 1;
     dentry_type type;
+    union
+    {
+        struct device *dev;
+    };
 };
 #define PATHNAME_LOOKUP_CREATE                                                 \
     (struct pathname_lookup_flags)                                             \
     {                                                                          \
         .create = 1, .type = DENTRY_FILE                                       \
     }
-#define PATHNAME_LOOKUP_CREATE_DEV                                             \
+#define PATHNAME_LOOKUP_CREATE_DEV(device)                                     \
     (struct pathname_lookup_flags)                                             \
     {                                                                          \
-        .create = 1, .type = DENTRY_DEVICE                                     \
+        .create = 1, .type = DENTRY_DEVICE, .dev = device                      \
     }
 #define PATHNAME_LOOKUP_FIND (struct pathname_lookup_flags){.create = 0}
 

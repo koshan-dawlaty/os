@@ -313,6 +313,11 @@ file *open_device(const char *devname)
 {
     dentry *ent = lookup_path(devname, PATHNAME_LOOKUP_FIND);
 
+    if (IS_ERR(ent))
+    {
+        return (void *)GET_ERR(ent);
+    }
+
     file *out = new_file(ent);
     return out;
 }

@@ -142,12 +142,10 @@ void add_dcache(dentry *parent, dentry *new_entry)
 
     if (dir->values_head == NULL)
     {
+
         dir->values_head = new_lru_head(DCACHE_LRU_MAX);
     }
-    else
-    {
-        lru_add(dir->values_head, &new_value->lru);
-    }
+    lru_add(dir->values_head, &new_value->lru);
 
     list2 *pos;
     list2_for_each(pos, &dir->values_head->head->list)
