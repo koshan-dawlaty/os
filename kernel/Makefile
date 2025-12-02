@@ -81,6 +81,7 @@ drivers/block/bdev.o \
 drivers/block/ram/drive.o \
 drivers/character/cdev.o \
 drivers/character/terminal/device.o \
+drivers/character/keyboard/device.o \
 drivers/device.o \
 \
 acpi/os_layer/os_layer.o \

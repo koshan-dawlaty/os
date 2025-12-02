@@ -1,26 +1,23 @@
-#include "ata/ata.h"
-#include "container_of.h"
-#include "gdt.h"
-#include "interrupts/idt.h"
-#include "kernel/keyboard.h"
-#include "kernel/paging.h"
-#include "kernel/semaphore.h"
-#include "kmalloc.h"
-#include "lib/list.h"
-#include "lib/lru.h"
-#include "memory/get_free_pages.h"
-#include "panic.h"
-#include "pit/pit.h"
-#include "scheduler.h"
+#include <ata/ata.h>
 #include <dirent.h>
 #include <drivers/block/ram/ramdisk.h>
-#include <drivers/character/terminal/terminal.h>
+#include <drivers/character/keyboard.h>
+#include <drivers/character/terminal.h>
 #include <err.h>
 #include <fcntl.h>
+#include <gdt.h>
+#include <interrupts/idt.h>
+#include <kernel/keyboard.h>
+#include <kernel/paging.h>
+#include <kernel/semaphore.h>
 #include <kernel/tty.h>
 #include <malloc_internal.h>
+#include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>
+#include <panic.h>
 #include <pci/pci.h>
+#include <pit/pit.h>
+#include <scheduler.h>
 #include <spinlock.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -246,6 +243,7 @@ int main()
     shared_memory_spinlock = new_spinlock();
 
     create_device("/terminal", get_terminal());
+    create_device("/keyboard", get_keyboard());
     add_task(create_kernel_task());
 
     /*

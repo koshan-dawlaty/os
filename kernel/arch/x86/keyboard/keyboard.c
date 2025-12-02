@@ -1,7 +1,7 @@
-#include "kernel/keyboard.h"
 #include "interrupts/idt.h"
 #include "keyboard_map.h"
 #include "x86_keyboard.h"
+#include <kernel/keyboard.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

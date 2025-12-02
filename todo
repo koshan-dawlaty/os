@@ -71,3 +71,5 @@ errno might not be thread local
 
 
 ext2 (probably just the block group descriptor code) does not work with block size != 1024
+
+generic read/write functions for devices that cannot be read from / written to, functions should return error code 

@@ -1,15 +1,12 @@
 #include <cdev.h>
+#include <errno.h>
 #include <kernel/types.h>
 #include <stdio.h>
 
 int terminal_read(struct cdev *dev, u8 *buf, size_t len)
 {
-    for (size_t i = 0; i < len; i++)
-    {
-        buf[i] = getchar();
-    }
-
-    return len;
+    /* cant write to terminal */
+    return -EINVAL;
 }
 
 /* TODO: there is another function called this */
