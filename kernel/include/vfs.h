@@ -65,8 +65,7 @@ typedef enum
 /*
  * true if entry->inode is accessible
  */
-#define DENTRY_HAS_INODE(entry)                                                \
-    entry->type == DENTRY_FILE || entry->type == DENTRY_DIR
+#define DENTRY_TYPE_HAS_INODE(type) type == DENTRY_FILE || type == DENTRY_DIR
 
 typedef struct dentry
 {
@@ -160,8 +159,18 @@ void init_vfs();
 struct pathname_lookup_flags
 {
     u8 create : 1;
+    dentry_type type;
 };
-#define PATHNAME_LOOKUP_CREATE (struct pathname_lookup_flags){.create = 1}
+#define PATHNAME_LOOKUP_CREATE                                                 \
+    (struct pathname_lookup_flags)                                             \
+    {                                                                          \
+        .create = 1, .type = DENTRY_FILE                                       \
+    }
+#define PATHNAME_LOOKUP_CREATE_DEV                                             \
+    (struct pathname_lookup_flags)                                             \
+    {                                                                          \
+        .create = 1, .type = DENTRY_DEVICE                                     \
+    }
 #define PATHNAME_LOOKUP_FIND (struct pathname_lookup_flags){.create = 0}
 
 dentry *lookup_path(const char *path, struct pathname_lookup_flags flags);

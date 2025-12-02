@@ -225,6 +225,14 @@ void kernel_init()
 int main()
 {
 
+    /* file->entry->type is not updated correctly for files */
+    create_device("/term", get_terminal());
+    file *d = open_device("/term");
+
+    write_file(d, "abc", 4, 0);
+
+    return 1;
+
     /* int f1 = open("/one", 0); */
     /* int f2 = open("/one", 0); */
 
@@ -240,7 +248,7 @@ int main()
     shared_memory_semaphore = new_semaphore(1);
     shared_memory_spinlock = new_spinlock();
 
-    printf("%p\n", create_device("/terminal", get_terminal()));
+    create_device("/terminal", get_terminal());
     add_task(create_kernel_task());
 
     /*

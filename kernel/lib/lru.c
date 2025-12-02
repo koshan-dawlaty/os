@@ -26,7 +26,7 @@ struct lru_entry *lru_add(struct lru_head *head, struct lru_entry *new)
         i++;
     }
 
-    printf("i:%d\n", i);
+    /* printf("i:%d\n", i); */
     ASSERT(i <= head->max + 1, "length should always be less than capacity");
 
     struct lru_entry *retval = NULL;
@@ -99,8 +99,6 @@ struct lru_entry *lru_get(struct lru_head *head,
     {
         return NULL;
     }
-
-    printf("value:%p, %d\n", value, (int)(ptr)parameter);
 
     /* check if it is already the head */
     if (value->list.prev == NULL)

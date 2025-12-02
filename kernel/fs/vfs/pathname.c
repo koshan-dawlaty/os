@@ -68,10 +68,20 @@ size_t parse_component(const char *path, dentry **current_dir,
             if (flags.create && final_component)
             {
 
-                entry =
-                    (*current_dir)
-                        ->inode->sb->type->dentry_functions.append_dentry(
-                            *current_dir, component, (*current_dir)->inode->sb);
+                if (DENTRY_TYPE_HAS_INODE(flags.type))
+                {
+                    entry =
+                        (*current_dir)
+                            ->inode->sb->type->dentry_functions.append_dentry(
+                                *current_dir, component,
+                                (*current_dir)->inode->sb);
+
+                    entry->type = DENTRY_DEVICE;
+                }
+                else
+                {
+                    printf("device\n");
+                }
             }
             else
             {
