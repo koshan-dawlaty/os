@@ -200,7 +200,15 @@ void add_dcache(dentry *parent, dentry *new_entry)
 
         dir->values_head = new_lru_head(DCACHE_LRU_MAX);
     }
-    lru_add(dir->values_head, &new_value->lru);
+
+    struct lru_entry *removed = lru_add(dir->values_head, &new_value->lru);
+    if (removed != NULL)
+    {
+        struct dcache_value *value =
+            containerof(removed, struct dcache_value, lru);
+
+        refcount_drop(value->rc, dcache_rc_value_release);
+    }
 
     struct list2 *pos;
     list2_for_each(pos, &dir->values_head->head->list)
