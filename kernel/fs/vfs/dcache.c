@@ -16,13 +16,18 @@ struct dcache_dir
     /* parent directory, NULL is root */
     dentry *dir;
     struct lru_head *values_head;
+    struct list *permanent_values;
     list l;
 };
 
 struct dcache_value
 {
     dentry *entry;
-    struct lru_entry lru;
+    union
+    {
+        struct lru_entry lru;
+        struct list list;
+    };
 
     refcount *rc;
 };
@@ -54,6 +59,7 @@ struct dcache_dir *new_dcache_dir(dentry *dir)
     struct dcache_dir *out = malloc(sizeof(struct dcache_dir));
     out->dir = dir;
     out->values_head = NULL;
+    out->permanent_values = NULL;
     out->l = LIST_INIT();
 
     return out;
@@ -147,11 +153,32 @@ void add_dcache(dentry *parent, dentry *new_entry)
     }
     lru_add(dir->values_head, &new_value->lru);
 
-    list2 *pos;
+    struct list2 *pos;
     list2_for_each(pos, &dir->values_head->head->list)
     {
         struct dcache_value *value =
             LRU_LIST_ENTRY(pos, struct dcache_value, lru);
+    }
+}
+
+void add_dcache_permanent(dentry *parent, dentry *new_entry)
+{
+    struct dcache_dir *dir = get_dcache_dir(parent);
+
+    if (dir == NULL)
+    {
+        dir = add_dcache_dir(parent);
+    }
+    struct dcache_value *new_value = new_dcache_value(new_entry);
+
+    if (dir->permanent_values == NULL)
+    {
+        new_value->list = LIST_INIT();
+        dir->permanent_values = &new_value->list;
+    }
+    else
+    {
+        list_add(&new_value->list, dir->permanent_values);
     }
 }
 
