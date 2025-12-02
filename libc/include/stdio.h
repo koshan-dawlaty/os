@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <stdio.h>
 
 typedef struct
 {
@@ -17,6 +18,7 @@ FILE *fdopen(int fd, const char *flags);
 size_t fread(void *restrict, size_t, size_t, FILE *restrict);
 size_t fwrite(const void *restrict buf, size_t size, size_t number, FILE *f);
 int fputc(int c, FILE *stream);
+int fgetc(FILE *stream);
 void rewind(FILE *f);
 
 int putchar(int ic);

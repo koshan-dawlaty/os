@@ -1,6 +1,6 @@
-#include "stdio.h"
 #include "utils.h"
 #include <kernel/keyboard.h>
+#include <stdio.h>
 #include <unistd.h>
 
 char getchar()
@@ -24,13 +24,13 @@ char getchar()
     return c;
 
 #else
-    char c = syscall_wrapper_asm(1, 0, 0, 0, 0, 0);
 
-    /* TODO: this will make a lot of interrupts */
+    char c = fgetc(stdin);
     while (c == 0)
     {
-        c = syscall_wrapper_asm(1, 0, 0, 0, 0, 0);
+        c = fgetc(stdin);
     }
+
     return c;
 
 #endif

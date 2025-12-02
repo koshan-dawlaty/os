@@ -94,3 +94,14 @@ int fputc(int c, FILE *stream)
 
     return c;
 }
+
+int fgetc(FILE *stream)
+{
+    /* TODO */
+    char *buf = malloc(1);
+    fread(buf, 1, 1, stream);
+    char retval = *buf;
+    free(buf);
+
+    return retval;
+}
