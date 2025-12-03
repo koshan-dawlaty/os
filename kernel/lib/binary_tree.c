@@ -56,20 +56,23 @@ void bintree_add(struct bintree_head *head, struct bintree_node *new)
 struct bintree_node *bintree_get(struct bintree_head *head, long val)
 {
     struct bintree_node *current = head->root;
-    struct bintree_node *prev = current;
 
     while (current != NULL)
     {
-        prev = current;
+
         if (current->value < val)
         {
             current = current->l;
         }
-        else if (current->value >= val)
+        else if (current->value > val)
         {
             current = current->r;
         }
+        else if (current->value == val)
+        {
+            return current;
+        }
     }
 
-    return prev;
+    return NULL;
 }

@@ -1,3 +1,4 @@
+#include "lib/binary_tree.h"
 #include <ata/ata.h>
 #include <dirent.h>
 #include <drivers/block/ram/ramdisk.h>
