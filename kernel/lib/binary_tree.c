@@ -1,19 +1,31 @@
+#include <lib/binary_tree.h>
 #include <stddef.h>
+#include <stdlib.h>
 
-struct bintree_node
+struct bintree_head *bintree_head_init()
 {
-    struct bintree_node *l;
-    struct bintree_node *r;
-    long value;
-};
+    struct bintree_head *out = malloc(sizeof(struct bintree_head));
+    out->root = NULL;
+    return out;
+}
 
-struct bintree_head
+struct bintree_node *bintree_node_init(long value)
 {
-    struct bintree_node *root;
-};
+    struct bintree_node *out = malloc(sizeof(struct bintree_node));
+    out->l = NULL;
+    out->r = NULL;
+    out->value = value;
+    return out;
+}
 
 void bintree_add(struct bintree_head *head, struct bintree_node *new)
 {
+    if (head->root == NULL)
+    {
+        head->root = new;
+        return;
+    }
+
     long val = new->value;
     struct bintree_node *current = head->root;
     struct bintree_node *prev = current;

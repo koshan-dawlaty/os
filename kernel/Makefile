@@ -59,6 +59,7 @@ kernel/scheduler/semaphore.o \
 kernel/scheduler/spinlock.o \
 kernel/memory/get_free_pages.o \
 lib/list.o \
+lib/binary_tree.o \
 lib/lru.o \
 lib/rc.o \
 fs/ext2/dentry.o \
