@@ -1,6 +1,8 @@
 #include "memory/paging_flags.h"
+#include <container_of.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <lib/binary_tree.h>
 #include <lib/list.h>
 #include <memory/get_free_pages.h>
 #include <stddef.h>
@@ -165,4 +167,56 @@ void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *zone)
     /* release_semaphore(get_free_pages_semaphore); */
 
     return address;
+}
+
+struct gfp_tree_zone
+{
+    struct bintree_head *head;
+};
+
+/* structure representing an free memory zone in the gfp tree */
+struct gfp_tree_value
+{
+    void *addr;
+    struct list list;
+};
+
+struct gfp_tree_node
+{
+    struct bintree_node bintree;
+    struct list *values;
+};
+
+struct gfp_tree_node *gfp_tree_node_init(long value)
+{
+    struct gfp_tree_node *out = malloc(sizeof(struct gfp_tree_node));
+
+    out->values = NULL;
+    out->bintree = BINTREE_NODE_INIT(value);
+
+    return out;
+}
+
+void *get_free_pages_tree(size_t amount, struct gfp_tree_zone *zone)
+{
+
+    struct bintree_node *node = bintree_get(zone->head, amount);
+
+    if (node == NULL)
+    {
+        node = &gfp_tree_node_init(amount)->bintree;
+        bintree_add(zone->head, &gfp_tree_node_init(amount)->bintree);
+    }
+
+    struct gfp_tree_node *gfp_node =
+        containerof(node, struct gfp_tree_node, bintree);
+
+    if (gfp_node->values == NULL)
+    {
+        /* allocate */
+    }
+    else
+    {
+    }
+    return NULL;
 }

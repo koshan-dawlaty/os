@@ -9,15 +9,6 @@ struct bintree_head *bintree_head_init()
     return out;
 }
 
-struct bintree_node *bintree_node_init(long value)
-{
-    struct bintree_node *out = malloc(sizeof(struct bintree_node));
-    out->l = NULL;
-    out->r = NULL;
-    out->value = value;
-    return out;
-}
-
 void bintree_add(struct bintree_head *head, struct bintree_node *new)
 {
     if (head->root == NULL)
