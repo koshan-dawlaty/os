@@ -280,7 +280,7 @@ void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z)
 
     if (root == NULL)
     {
-        /* invalid */
+        /* invalid, the nodes in the tree are not removed in get_free_pages_tree, only the values from the list */
         printf("possible double free_pages_tree\n");
         return;
     }
