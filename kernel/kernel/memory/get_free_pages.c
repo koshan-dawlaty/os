@@ -12,7 +12,7 @@
 #define DEFAULT_BITMAP_SIZE 1024 /* size in pages */
 u8 gfp_kernel_bitmap[DEFAULT_BITMAP_SIZE / 8] = {GFP_FREE};
 
-const struct memory_zone gfp_kernel_zone = {
+struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
 #ifdef CONFIG_x86_64
     .virtual = 0xffffD00000000000,
 #elif defined(CONFIG_x86_32)
@@ -24,11 +24,19 @@ const struct memory_zone gfp_kernel_zone = {
     .pg_flags = PAGING_WRITEABLE,
 };
 
-struct memory_zone gfp_user_zone = {.virtual = 0x90000000,
-                                    .physical = 0xC00000,
-                                    .size = DEFAULT_BITMAP_SIZE,
-                                    .bitmap = NULL,
-                                    .pg_flags = PAGING_WRITEABLE | PAGING_USER};
+const struct memory_zone gfp_kernel_zone =
+    BITMAP_TO_GFP_ZONE(&gfp_bitmap_kernel_zone);
+
+struct bitmap_memory_zone gfp_bitmap_user_zone = {.virtual = 0x90000000,
+                                                  .physical = 0xC00000,
+                                                  .size = DEFAULT_BITMAP_SIZE,
+                                                  .bitmap = NULL,
+                                                  .pg_flags = PAGING_WRITEABLE |
+                                                              PAGING_USER};
+
+struct memory_zone gfp_user_zone = {
+    .zone_private = &gfp_bitmap_user_zone,
+};
 
 /*
  * @amount: the number of pages to allocate
@@ -36,8 +44,10 @@ struct memory_zone gfp_user_zone = {.virtual = 0x90000000,
  *
  * returns address of allocated memory
  */
-void *get_free_pages_zone(size_t amount, const struct memory_zone *zone)
+void *get_free_pages_bitmap(size_t amount, const struct memory_zone *z)
 {
+
+    struct bitmap_memory_zone *zone = z->zone_private;
 
     ptr i;
     size_t consecutive = 0;
@@ -97,8 +107,9 @@ void *get_free_pages_zone(size_t amount, const struct memory_zone *zone)
     return address;
 }
 
-void free_pages_zone(void *addr, size_t amount, const struct memory_zone *zone)
+void free_pages_bitmap(void *addr, size_t amount, const struct memory_zone *z)
 {
+    struct bitmap_memory_zone *zone = z->zone_private;
 
     size_t index = (((size_t)addr - zone->virtual)) / 4096;
 
@@ -114,11 +125,14 @@ void free_pages_zone(void *addr, size_t amount, const struct memory_zone *zone)
  */
 void init_gfp_zones()
 {
-    gfp_user_zone.bitmap = malloc(gfp_user_zone.size / 8);
+    struct bitmap_memory_zone *user_bitmap = gfp_user_zone.zone_private;
+
+    user_bitmap->bitmap = malloc(user_bitmap->size / 8);
 }
 
-void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *zone)
+void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *z)
 {
+    struct bitmap_memory_zone *zone = z->zone_private;
 
     ptr i;
     size_t consecutive = 0;
@@ -169,13 +183,6 @@ void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *zone)
 
     return address;
 }
-
-struct gfp_tree_zone
-{
-    struct bintree_head *head;
-    void *base;
-    size_t offset; /* offset, in pages from base */
-};
 
 /* structure representing an free memory zone in the gfp tree */
 struct gfp_tree_value
