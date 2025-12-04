@@ -6,6 +6,7 @@
 #include <lib/list.h>
 #include <memory/get_free_pages.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #define DEFAULT_BITMAP_SIZE 1024 /* size in pages */
@@ -245,6 +246,28 @@ void *get_free_pages_tree(size_t amount, struct gfp_tree_zone *zone)
     }
 }
 
-/* void free_pages_tree(void *addr, size_t amount) */
-/* { */
-/* } */
+void free_pages_tree(void *addr, size_t amount, struct gfp_tree_zone *zone)
+{
+    struct bintree_node *root = bintree_get(zone->head, amount);
+
+    if (root == NULL)
+    {
+        /* invalid */
+        printf("possible double free_pages_tree\n");
+        return;
+    }
+
+    struct gfp_tree_node *gfp_node =
+        containerof(root, struct gfp_tree_node, bintree);
+
+    if (gfp_node->values == NULL)
+    {
+        /* invalid */
+        printf("possible double free_pages_tree\n");
+        return;
+    }
+
+    struct gfp_tree_value *value = gfp_tree_value_init(addr);
+
+    list_add(&value->list, gfp_node->values);
+}
