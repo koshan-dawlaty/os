@@ -199,8 +199,6 @@ void kernel_init()
     init_gfp_zones();
     init_heap();
 
-    printf("change\n");
-
     init_gdt();
     init_idt();
 

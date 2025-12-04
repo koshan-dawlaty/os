@@ -35,6 +35,7 @@ struct bitmap_memory_zone
 };
 
 extern const struct memory_zone gfp_kernel_zone;
+extern struct memory_zone gfp_kernel_tree_zone;
 extern struct memory_zone gfp_user_zone;
 
 /*
@@ -84,8 +85,8 @@ struct gfp_tree_zone
     void *base;
     size_t offset; /* offset, in pages from base */
 };
-void *get_free_pages_tree(size_t amount, struct gfp_tree_zone *zone);
-void free_pages_tree(void *addr, size_t amount, struct gfp_tree_zone *zone);
+void *get_free_pages_tree(size_t amount, const struct memory_zone *z);
+void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z);
 
 #define TREE_ZONE_TO_GFP_ZONE(zone)                                            \
     (struct memory_zone){.zone_private = (void *)zone,                         \

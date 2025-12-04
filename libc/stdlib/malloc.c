@@ -43,6 +43,8 @@ long align_long2(long in, long align)
 
 #ifdef __is_libk
 struct malloc_zone kernel_malloc_zone = INIT_MALLOC_ZONE(&gfp_kernel_zone);
+struct malloc_zone kernel_tree_malloc_zone =
+    INIT_MALLOC_ZONE(&gfp_kernel_tree_zone);
 struct malloc_zone user_malloc_zone = INIT_MALLOC_ZONE(&gfp_user_zone);
 #else
 struct malloc_zone libc_malloc_zone = INIT_MALLOC_ZONE(NULL)
