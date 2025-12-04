@@ -172,6 +172,8 @@ void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *zone)
 struct gfp_tree_zone
 {
     struct bintree_head *head;
+    void *base;
+    size_t offset; /* offset, in pages from base */
 };
 
 /* structure representing an free memory zone in the gfp tree */
@@ -197,6 +199,15 @@ struct gfp_tree_node *gfp_tree_node_init(long value)
     return out;
 }
 
+struct gfp_tree_value *gfp_tree_value_init(void *addr)
+{
+    struct gfp_tree_value *out = malloc(sizeof(struct gfp_tree_value));
+
+    out->addr = addr;
+    out->list = LIST_INIT();
+    return out;
+}
+
 void *get_free_pages_tree(size_t amount, struct gfp_tree_zone *zone)
 {
 
@@ -213,10 +224,27 @@ void *get_free_pages_tree(size_t amount, struct gfp_tree_zone *zone)
 
     if (gfp_node->values == NULL)
     {
-        /* allocate */
+        /* TODO: dont use zone->base */
+        map_page(get_free_phys_page(), zone->base + (zone->offset * 4096),
+                 PAGING_PRESENT | PAGING_WRITEABLE);
+
+        struct gfp_tree_value *value =
+            gfp_tree_value_init(zone->base + (zone->offset * 4096));
+        zone->offset++;
+
+        gfp_node->values = &value->list;
+        return value->addr;
     }
     else
     {
+        list *l = list_pop(gfp_node->values);
+        struct gfp_tree_value *out =
+            containerof(l, struct gfp_tree_value, list);
+
+        return out->addr;
     }
-    return NULL;
 }
+
+/* void free_pages_tree(void *addr, size_t amount) */
+/* { */
+/* } */

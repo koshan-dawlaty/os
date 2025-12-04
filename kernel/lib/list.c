@@ -12,6 +12,13 @@ list new_list()
     return out;
 }
 
+list *list_pop(list *head)
+{
+    list *retval = head;
+    head = head->next;
+    return retval;
+}
+
 void list_add(list *new, list *head)
 {
     list *temp = head->next;
