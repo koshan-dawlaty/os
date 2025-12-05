@@ -270,9 +270,9 @@ void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z)
 {
     struct tree_memory_zone *zone = z->zone_private;
 
-    struct bintree_node *root = bintree_get(&zone->head, amount);
+    struct bintree_node *node = bintree_get(&zone->head, amount);
 
-    if (root == NULL)
+    if (node == NULL)
     {
         /* invalid */
         printf("possible double free_pages_tree\n");
@@ -280,7 +280,7 @@ void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z)
     }
 
     struct gfp_tree_node *gfp_node =
-        containerof(root, struct gfp_tree_node, bintree);
+        containerof(node, struct gfp_tree_node, bintree);
 
     struct gfp_tree_value *value = gfp_tree_value_init(addr);
     if (gfp_node->values == NULL)
