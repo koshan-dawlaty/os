@@ -12,10 +12,10 @@ list new_list()
     return out;
 }
 
-list *list_pop(list *head)
+list *list_pop(list **head)
 {
     list *retval = head;
-    head = head->next;
+    *head = (*head)->next;
     return retval;
 }
 

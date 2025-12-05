@@ -252,7 +252,7 @@ void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
     }
     else
     {
-        list *l = list_pop(gfp_node->values);
+        list *l = list_pop(&gfp_node->values);
         struct gfp_tree_value *out =
             containerof(l, struct gfp_tree_value, list);
 
