@@ -236,9 +236,16 @@ void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
         map_page(get_free_phys_page(), zone->base + (zone->offset * 4096),
                  PAGING_PRESENT | PAGING_WRITEABLE);
 
+        for (size_t i = 0; i < amount; i++)
+        {
+            map_page(get_free_phys_page(),
+                     zone->base + (zone->offset * 4096 * i),
+                     PAGING_PRESENT | PAGING_WRITEABLE);
+        }
+
         struct gfp_tree_value *value =
-            gfp_tree_value_init(zone->base + (zone->offset * 4096));
-        zone->offset++;
+            gfp_tree_value_init(zone->base + (zone->offset * 4096 * amount));
+        zone->offset += amount;
 
         gfp_node->values = &value->list;
         return value->addr;
@@ -261,7 +268,7 @@ void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z)
 
     if (root == NULL)
     {
-        /* invalid, the nodes in the tree are not removed in get_free_pages_tree, only the values from the list */
+        /* invalid */
         printf("possible double free_pages_tree\n");
         return;
     }
@@ -304,7 +311,7 @@ void init_gfp_zones()
              PAGING_PRESENT | PAGING_WRITEABLE);
     struct gfp_tree_value *value =
         gfp_tree_value_init(tree_zone->base + (tree_zone->offset * 4096));
-    tree_zone->offset += 4096;
+    tree_zone->offset++;
 
     struct gfp_tree_node *node = gfp_tree_node_init(1);
     node->values = &value->list;
