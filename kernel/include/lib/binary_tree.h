@@ -22,6 +22,6 @@ struct bintree_head
 void bintree_add(struct bintree_head *head, struct bintree_node *new);
 struct bintree_node *bintree_get(struct bintree_head *head, long val);
 
-struct bintree_head *bintree_head_init();
+struct bintree_head bintree_head_init();
 
 #endif

@@ -2,10 +2,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-struct bintree_head *bintree_head_init()
+struct bintree_head bintree_head_init()
 {
-    struct bintree_head *out = malloc(sizeof(struct bintree_head));
-    out->root = NULL;
+    struct bintree_head out = {.root = NULL};
     return out;
 }
 

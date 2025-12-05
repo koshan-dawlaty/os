@@ -1,7 +1,9 @@
 #include "memory/paging_flags.h"
+#include "panic.h"
 #include <container_of.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <kmalloc.h>
 #include <lib/binary_tree.h>
 #include <lib/list.h>
 #include <memory/get_free_pages.h>
@@ -197,7 +199,8 @@ struct memory_zone gfp_kernel_tree_zone = {
 
 struct gfp_tree_node *gfp_tree_node_init(long value)
 {
-    struct gfp_tree_node *out = malloc(sizeof(struct gfp_tree_node));
+    struct gfp_tree_node *out =
+        kmalloc(sizeof(struct gfp_tree_node), KMALLOC_BASIC);
 
     out->values = NULL;
     out->bintree = BINTREE_NODE_INIT(value);
@@ -207,7 +210,8 @@ struct gfp_tree_node *gfp_tree_node_init(long value)
 
 struct gfp_tree_value *gfp_tree_value_init(void *addr)
 {
-    struct gfp_tree_value *out = malloc(sizeof(struct gfp_tree_value));
+    struct gfp_tree_value *out =
+        kmalloc(sizeof(struct gfp_tree_value), KMALLOC_BASIC);
 
     out->addr = addr;
     out->list = LIST_INIT();
@@ -219,12 +223,12 @@ void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
 
     struct gfp_tree_zone *zone = z->zone_private;
 
-    struct bintree_node *node = bintree_get(zone->head, amount);
+    struct bintree_node *node = bintree_get(&zone->head, amount);
 
     if (node == NULL)
     {
         node = &gfp_tree_node_init(amount)->bintree;
-        bintree_add(zone->head, &gfp_tree_node_init(amount)->bintree);
+        bintree_add(&zone->head, node);
     }
 
     struct gfp_tree_node *gfp_node =
@@ -233,18 +237,18 @@ void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
     if (gfp_node->values == NULL)
     {
         /* TODO: dont use zone->base */
-        map_page(get_free_phys_page(), zone->base + (zone->offset * 4096),
-                 PAGING_PRESENT | PAGING_WRITEABLE);
+        /* map_page(get_free_phys_page(), zone->base + (zone->offset * 4096), */
+        /*          PAGING_PRESENT | PAGING_WRITEABLE); */
 
         for (size_t i = 0; i < amount; i++)
         {
             map_page(get_free_phys_page(),
-                     zone->base + (zone->offset * 4096 * i),
+                     zone->base + ((zone->offset + i) * 4096),
                      PAGING_PRESENT | PAGING_WRITEABLE);
         }
 
         struct gfp_tree_value *value =
-            gfp_tree_value_init(zone->base + (zone->offset * 4096 * amount));
+            gfp_tree_value_init(zone->base + (zone->offset * 4096));
         zone->offset += amount;
 
         gfp_node->values = &value->list;
@@ -262,9 +266,10 @@ void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
 
 void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z)
 {
+    panic_no_malloc("this was called");
     struct gfp_tree_zone *zone = z->zone_private;
 
-    struct bintree_node *root = bintree_get(zone->head, amount);
+    struct bintree_node *root = bintree_get(&zone->head, amount);
 
     if (root == NULL)
     {
@@ -276,14 +281,12 @@ void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z)
     struct gfp_tree_node *gfp_node =
         containerof(root, struct gfp_tree_node, bintree);
 
+    struct gfp_tree_value *value = gfp_tree_value_init(addr);
     if (gfp_node->values == NULL)
     {
-        /* invalid */
-        printf("possible double free_pages_tree\n");
+        gfp_node->values = &value->list;
         return;
     }
-
-    struct gfp_tree_value *value = gfp_tree_value_init(addr);
 
     list_add(&value->list, gfp_node->values);
 }
@@ -316,7 +319,7 @@ void init_gfp_zones()
     struct gfp_tree_node *node = gfp_tree_node_init(1);
     node->values = &value->list;
 
-    bintree_add(tree_zone->head, &node->bintree);
+    bintree_add(&tree_zone->head, &node->bintree);
 
     gfp_kernel_tree_zone.zone_private = tree_zone;
 

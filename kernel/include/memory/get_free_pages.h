@@ -1,6 +1,7 @@
 #ifndef GET_FREE_PAGES_H
 #define GET_FREE_PAGES_H
 
+#include "lib/binary_tree.h"
 #include <kernel/types.h>
 #include <lib/list.h>
 #include <memory/paging_flags.h>
@@ -83,7 +84,7 @@ bitmap_to_gfp_zone(const struct bitmap_memory_zone *zone)
 
 struct gfp_tree_zone
 {
-    struct bintree_head *head;
+    struct bintree_head head;
     void *base;
     size_t offset; /* offset, in pages from base */
 };

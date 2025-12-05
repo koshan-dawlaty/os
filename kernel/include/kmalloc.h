@@ -4,11 +4,13 @@
 #include <malloc_internal.h>
 
 #ifdef __is_libk
-#define KMALLOC_KERNEL &kernel_malloc_zone
+#define KMALLOC_BASIC &kernel_malloc_zone
+#define KMALLOC_KERNEL &kernel_tree_malloc_zone
 #define KMALLOC_USER &user_malloc_zone
 #else
 #define KMALLOC_KERNEL NULL
 #define KMALLOC_USER NULL
+#define KMALLOC_BASIC NULL
 #endif
 
 /* this is just here to not have lsp errors when calling malloc_zone because it
