@@ -176,6 +176,8 @@ void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *z)
     return address;
 }
 
+/* TODO: maybe move the gfp_tree stuff to a separate file? */
+
 /* structure representing an free memory zone in the gfp tree */
 struct gfp_tree_value
 {
