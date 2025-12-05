@@ -73,3 +73,6 @@ errno might not be thread local
 ext2 (probably just the block group descriptor code) does not work with block size != 1024
 
 generic read/write functions for devices that cannot be read from / written to, functions should return error code 
+
+
+	malloc could fall back to bitmap allocator by checking if the allocation would go beyond sizeof(all of the structues used in a tree allocation) + page size
