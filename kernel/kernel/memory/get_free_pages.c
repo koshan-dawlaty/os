@@ -189,7 +189,7 @@ struct gfp_tree_node
     struct list *values;
 };
 
-struct gfp_tree_zone kernel_tree_zone = {};
+struct tree_memory_zone kernel_tree_zone = {};
 
 struct memory_zone gfp_kernel_tree_zone = {
     .get_pages = get_free_pages_tree,
@@ -221,7 +221,7 @@ struct gfp_tree_value *gfp_tree_value_init(void *addr)
 void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
 {
 
-    struct gfp_tree_zone *zone = z->zone_private;
+    struct tree_memory_zone *zone = z->zone_private;
 
     struct bintree_node *node = bintree_get(&zone->head, amount);
 
@@ -266,7 +266,7 @@ void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
 
 void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z)
 {
-    struct gfp_tree_zone *zone = z->zone_private;
+    struct tree_memory_zone *zone = z->zone_private;
 
     struct bintree_node *root = bintree_get(&zone->head, amount);
 
@@ -299,7 +299,8 @@ void init_gfp_zones()
 
     user_bitmap->bitmap = malloc(user_bitmap->size / 8);
 
-    struct gfp_tree_zone *tree_zone = malloc(sizeof(struct gfp_tree_zone));
+    struct tree_memory_zone *tree_zone =
+        malloc(sizeof(struct tree_memory_zone));
 
 #ifdef CONFIG_x86_64
     tree_zone->base = (void *)0xffffE00000000000;

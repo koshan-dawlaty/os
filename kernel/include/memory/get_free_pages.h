@@ -82,7 +82,7 @@ bitmap_to_gfp_zone(const struct bitmap_memory_zone *zone)
                                 .free_pages = free_pages_bitmap};
 }
 
-struct gfp_tree_zone
+struct tree_memory_zone
 {
     struct bintree_head head;
     void *base;
