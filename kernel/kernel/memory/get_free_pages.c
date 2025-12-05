@@ -251,7 +251,7 @@ void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
             gfp_tree_value_init(zone->base + (zone->offset * 4096));
         zone->offset += amount;
 
-        gfp_node->values = &value->list;
+        /* gfp_node->values = &value->list; */
         return value->addr;
     }
     else
@@ -266,7 +266,6 @@ void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
 
 void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z)
 {
-    panic_no_malloc("this was called");
     struct gfp_tree_zone *zone = z->zone_private;
 
     struct bintree_node *root = bintree_get(&zone->head, amount);
