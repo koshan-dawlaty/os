@@ -294,7 +294,15 @@ void *malloc(size_t size)
 #endif
 
 #ifdef __is_libk
-    void *retval = malloc_zone(size, &kernel_malloc_zone);
+    void *retval;
+    if (gfp_zones_initialized)
+    {
+        retval = malloc_zone(size, &kernel_tree_malloc_zone);
+    }
+    else
+    {
+        retval = malloc_zone(size, &kernel_malloc_zone);
+    }
 #else
     void *retval = malloc_zone(size, &libc_malloc_zone);
 #endif
@@ -321,7 +329,14 @@ void free(void *ptr)
 
 #ifdef __is_libk
 
-    free_zone(ptr, &kernel_malloc_zone);
+    if (gfp_zones_initialized)
+    {
+        free_zone(ptr, &kernel_tree_malloc_zone);
+    }
+    else
+    {
+        free_zone(ptr, &kernel_malloc_zone);
+    }
 #else
 
     free_zone(ptr, &libc_malloc_zone);
@@ -373,7 +388,14 @@ void *realloc_zone(void *ptr, size_t new_size, struct malloc_zone *zone)
 void *realloc(void *ptr, size_t new_size)
 {
 #ifdef __is_libk
-    return realloc_zone(ptr, new_size, &kernel_malloc_zone);
+    if (gfp_zones_initialized)
+    {
+        return realloc_zone(ptr, new_size, &kernel_tree_malloc_zone);
+    }
+    else
+    {
+        return realloc_zone(ptr, new_size, &kernel_malloc_zone);
+    }
 #else
     return realloc_zone(ptr, new_size, &libc_malloc_zone);
 #endif

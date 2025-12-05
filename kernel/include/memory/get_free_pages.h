@@ -38,6 +38,8 @@ extern const struct memory_zone gfp_kernel_zone;
 extern struct memory_zone gfp_kernel_tree_zone;
 extern struct memory_zone gfp_user_zone;
 
+extern bool gfp_zones_initialized;
+
 /*
  * @amount: the number of pages to allocate
  * @zone: the zone to allocated the pages from

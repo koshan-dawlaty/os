@@ -196,8 +196,10 @@ void kernel_init()
 
     terminal_initialize();
     init_paging();
-    init_gfp_zones();
     init_heap();
+    init_gfp_zones();
+
+    malloc(10);
 
     init_gdt();
     init_idt();

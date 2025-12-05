@@ -118,26 +118,7 @@ void free_pages_bitmap(void *addr, size_t amount, const struct memory_zone *z)
     }
 }
 
-/*
- * initalizes all of the zones that dont use a bitmap in the kernel binary
- */
-void init_gfp_zones()
-{
-    struct bitmap_memory_zone *user_bitmap = gfp_user_zone.zone_private;
-
-    user_bitmap->bitmap = malloc(user_bitmap->size / 8);
-
-    struct gfp_tree_zone *tree_zone = malloc(sizeof(struct gfp_tree_zone));
-
-    tree_zone->head = bintree_head_init();
-#ifdef CONFIG_x86_64
-    tree_zone->base = (void *)0xffffE00000000000;
-#elif defined(CONFIG_x86_32)
-    tree_zone->base = (void *)0xD0000000;
-#endif
-
-    gfp_kernel_tree_zone.zone_private = tree_zone;
-}
+bool gfp_zones_initialized = false;
 
 void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *z)
 {
@@ -298,4 +279,39 @@ void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z)
     struct gfp_tree_value *value = gfp_tree_value_init(addr);
 
     list_add(&value->list, gfp_node->values);
+}
+
+/*
+ * initalizes all of the zones that dont use a bitmap in the kernel binary
+ */
+void init_gfp_zones()
+{
+    struct bitmap_memory_zone *user_bitmap = gfp_user_zone.zone_private;
+
+    user_bitmap->bitmap = malloc(user_bitmap->size / 8);
+
+    struct gfp_tree_zone *tree_zone = malloc(sizeof(struct gfp_tree_zone));
+
+#ifdef CONFIG_x86_64
+    tree_zone->base = (void *)0xffffE00000000000;
+#elif defined(CONFIG_x86_32)
+    tree_zone->base = (void *)0xE0000000;
+#endif
+
+    tree_zone->head = bintree_head_init();
+
+    map_page(get_free_phys_page(), tree_zone->base,
+             PAGING_PRESENT | PAGING_WRITEABLE);
+    struct gfp_tree_value *value =
+        gfp_tree_value_init(tree_zone->base + (tree_zone->offset * 4096));
+    tree_zone->offset += 4096;
+
+    struct gfp_tree_node *node = gfp_tree_node_init(1);
+    node->values = &value->list;
+
+    bintree_add(tree_zone->head, &node->bintree);
+
+    gfp_kernel_tree_zone.zone_private = tree_zone;
+
+    gfp_zones_initialized = true;
 }
