@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEFAULT_BITMAP_SIZE 1024 /* size in pages */
+#define DEFAULT_BITMAP_SIZE 4096 /* size in pages */
 u8 gfp_kernel_bitmap[DEFAULT_BITMAP_SIZE / 8] = {GFP_FREE};
 
 struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
@@ -20,7 +20,7 @@ struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
 #elif defined(CONFIG_x86_32)
     .virtual = 0xD0000000,
 #endif
-    .physical = 0x6000000,
+    .physical = 0x7000000,
     .size = DEFAULT_BITMAP_SIZE,
     .bitmap = gfp_kernel_bitmap,
     .pg_flags = PAGING_WRITEABLE,
@@ -29,8 +29,8 @@ struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
 const struct memory_zone gfp_kernel_zone =
     BITMAP_TO_GFP_ZONE(&gfp_bitmap_kernel_zone);
 
-struct bitmap_memory_zone gfp_bitmap_user_zone = {.virtual = 0x90000000,
-                                                  .physical = 0xC00000,
+struct bitmap_memory_zone gfp_bitmap_user_zone = {.virtual = 0x80000000,
+                                                  .physical = 0xC000000,
                                                   .size = DEFAULT_BITMAP_SIZE,
                                                   .bitmap = NULL,
                                                   .pg_flags = PAGING_WRITEABLE |

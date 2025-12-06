@@ -1,3 +1,4 @@
+#include "kernel/graphics.h"
 #include "kernel/types.h"
 #include "lib/binary_tree.h"
 #include "multiboot.h"
@@ -193,6 +194,9 @@ void call_constructors(void)
     }
 }
 
+struct framebuffer *f;
+extern struct framebuffer *tty_framebuffer;
+
 void kernel_init()
 {
 
@@ -217,138 +221,34 @@ void kernel_init()
 
     call_constructors();
 
+    f = multiboot_init();
+    tty_framebuffer = f;
+    graphics_init();
+
 #ifdef TESTS
     run_tests();
 #endif
 }
 
-/* we can assume these are next to each other, struct then magic */
-extern u32 multiboot_struct_physical;
-extern u32 multiboot_magic_physical;
-
-struct framebuffer
-{
-    size_t width;
-    size_t height;
-    size_t pitch;
-    size_t depth;
-    size_t pixel_width; /* bytes */
-    void *buffer;
-};
-
-void framebuffer_put_pixel(struct framebuffer *f, int color, int x, int y)
-{
-
-    size_t location = y * f->pitch + x * f->pixel_width;
-
-    u8 *pixel = f->buffer + location;
-
-    pixel[0] = color & 255;         // BLUE
-    pixel[1] = (color >> 8) & 255;  // GREEN
-    pixel[2] = (color >> 16) & 255; // RED
-}
-
-/* static void putpixel(unsigned char *screen, int x, int y, int color) */
-/* { */
-/*     /1* unsigned where = x * 3 + y * pitch; *1/ */
-/*     /1* screen[where] = color & 255;             // BLUE *1/ */
-/*     /1* screen[where + 1] = (color >> 8) & 255;  // GREEN *1/ */
-/*     /1* screen[where + 2] = (color >> 16) & 255; // RED *1/ */
-/* } */
-
-void multiboot_init()
-{
-    void *virtual = get_free_pages_unmmaped(1, &gfp_kernel_zone);
-    map_page(&multiboot_struct_physical, virtual,
-             PAGING_PRESENT | PAGING_WRITEABLE);
-
-    u32 multiboot_struct_addr = *(u32 *)(virtual);
-    u32 multiboot_magic = *((u32 *)(virtual) + 1);
-
-    printf("magic:%ux\n", multiboot_magic);
-
-    struct multiboot_info *info_physical = (void *)(ptr)multiboot_struct_addr;
-
-    printf("info addr:%p\n", info_physical);
-
-    struct multiboot_info *info = get_free_pages_unmmaped(1, &gfp_kernel_zone);
-    map_page((void *)(ptr)multiboot_struct_addr, info,
-             PAGING_PRESENT | PAGING_WRITEABLE);
-
-    printf("%d\n", offsetof(struct multiboot_info, framebuffer_height));
-
-    if (info->flags & (1 << 12))
-    {
-        printf("good\n");
-        printf("framebuffer addr: %p\n", info->framebuffer_addr);
-        /* printf("width x height: %u x %u\n", info->framebuffer_width, */
-        /*        info->framebuffer_height); */
-        /* printf("bpp: %u\n", info->framebuffer_bpp); */
-    }
-    if (info->framebuffer_type != 1)
-    {
-
-        return;
-    }
-
-    printf("framebuffer:%p\n", info->framebuffer_addr);
-
-    /* size_t total_size = info->framebuffer_width * (info->framebuffer_bpp / 8)
-     * * */
-    /*                     info->framebuffer_height * info->framebuffer_pitch;
-     */
-    size_t total_size = info->framebuffer_pitch * info->framebuffer_height;
-
-    size_t num_pages = (total_size / 4096) + 1;
-    void *framebuffer = get_free_pages_unmmaped(num_pages, &gfp_kernel_zone);
-
-    for (size_t i = 0; i < num_pages; i++)
-    {
-        map_page((void *)(ptr)info->framebuffer_addr + (i * PAGE_SIZE),
-                 framebuffer + (i * PAGE_SIZE),
-                 PAGING_PRESENT | PAGING_WRITEABLE);
-    }
-
-    printf("pitch:%p\n", info->framebuffer_pitch);
-    int y = 0;
-    int x = 10;
-    /* unsigned char *pixel = */
-    /*     framebuffer + y * info->framebuffer_pitch + x *
-     * info->framebuffer_bpp; */
-
-    size_t location =
-        y * info->framebuffer_pitch + x * (info->framebuffer_bpp / 8);
-
-    for (size_t i = 0; i < 100; i++)
-    {
-        int color = 0xff00ff;
-        unsigned char *screen = framebuffer;
-        /* screen[location] = color & 255;             // BLUE */
-        /* screen[location + 1] = (color >> 8) & 255;  // GREEN */
-        /* screen[location + 2] = (color >> 16) & 255; // RED */
-        location += info->framebuffer_bpp / 8;
-    }
-
-    struct framebuffer *f = malloc(sizeof(struct framebuffer));
-    f->buffer = framebuffer;
-    f->depth = 24;
-    f->height = info->framebuffer_height;
-    f->width = info->framebuffer_width;
-    f->pitch = info->framebuffer_pitch;
-    f->pixel_width = (info->framebuffer_bpp / 8);
-
-    for (size_t i = 0; i < 100; i++)
-    {
-        framebuffer_put_pixel(f, 0xffffff, i, 0);
-        framebuffer_put_pixel(f, 0x00ffff, i, f->height - 1);
-    }
-    /* memset(framebuffer, 'a', 100); */
-}
-
 int main()
 {
 
-    multiboot_init();
+    for (size_t y = 100; y < 200; y++)
+    {
+        for (size_t x = 300; x < 400; x++)
+        {
+            framebuffer_put_pixel(f, 0x00ff00, x, y);
+        }
+    }
+
+    framebuffer_draw_rect(f, 350, 150, 100, 100, 0xff0000);
+
+    printf("test\ntest\n");
+
+    /* for (size_t i = 0; i < 255; i++) */
+    /* { */
+    /*     framebuffer_draw_char(f, i, 10 + (8 * i), 10); */
+    /* } */
 
     /* create_device("/term", get_terminal()); */
     /* file *d = open_device("/term"); */

@@ -31,7 +31,7 @@ extern long paging_page_table_addr;
 #define DIRECTORY_ADDR ((directory_entry *)0xFFFFF000)
 #endif
 
-#define NUM_PAGES 1024
+#define NUM_PAGES 4096
 
 #define FREE 0
 #define IN_USE 1
