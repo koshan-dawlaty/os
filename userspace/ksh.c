@@ -18,6 +18,10 @@ int main()
 
     init_libc();
 
+    execv("/cat", (char *[]){"/one", NULL});
+
+    exit(0);
+
     /* int term_fd = open("/terminal", 0); */
     /* char *buf = malloc(10); */
     /* memcpy(buf, "abc", 4); */

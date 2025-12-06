@@ -58,6 +58,8 @@ kernel/scheduler/sleep.o \
 kernel/scheduler/semaphore.o \
 kernel/scheduler/spinlock.o \
 kernel/memory/get_free_pages.o \
+kernel/graphics/graphics.o \
+kernel/multiboot.o \
 lib/list.o \
 lib/binary_tree.o \
 lib/lru.o \
@@ -86,6 +88,7 @@ drivers/character/keyboard/device.o \
 drivers/device.o \
 \
 acpi/os_layer/os_layer.o \
+
 
 
 OBJS=\
