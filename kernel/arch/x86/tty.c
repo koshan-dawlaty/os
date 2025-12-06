@@ -70,8 +70,8 @@ void terminal_putchar(char c)
     if (c == '\b')
     {
 
-        terminal_buffer[terminal_column * VGA_WIDTH + terminal_row] =
-            vga_entry(TERMINAL_EMPTY_CHAR, terminal_color);
+        /* terminal_buffer[terminal_column * VGA_WIDTH + terminal_row] = */
+        /*     vga_entry(TERMINAL_EMPTY_CHAR, terminal_color); */
         if (terminal_row > 0)
         {
             terminal_row--;
@@ -97,8 +97,8 @@ void terminal_putchar(char c)
         terminal_row++;
     }
 
-    terminal_buffer[terminal_column * VGA_WIDTH + terminal_row] =
-        vga_entry(c, terminal_color);
+    /* terminal_buffer[terminal_column * VGA_WIDTH + terminal_row] = */
+    /*     vga_entry(c, terminal_color); */
 }
 
 void terminal_write(const char *data, size_t size)

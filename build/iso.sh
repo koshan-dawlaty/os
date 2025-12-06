@@ -11,15 +11,24 @@ cat > isodir/boot/grub/grub.cfg << EOF
 set timeout=0
 
 menuentry "os" {
-	insmod part_msdos
-	  insmod vbe          # for BIOS/VESA (on UEFI GRUB will use GOP)
-	  set gfxmode=1024x768x32
-	  set gfxpayload=keep
-	multiboot /boot/os.kernel
+    insmod vbe
+    insmod gfxterm
 
+    # Set graphics mode for GRUB menu
+    set gfxmode=1024x768x24
 
-	boot
+    # Pass graphics mode to the kernel
+    set gfxpayload=1024x768x24
+
+	set gfxpayload=keep
+
+    # This must come after gfxpayload
+    terminal_output gfxterm
+
+    # Boot the Multiboot1 kernel
+    multiboot /boot/os.kernel
+    boot
 }
 EOF
 # grub-mkrescue -o os.iso isodir
-grub-mkrescue --modules="multiboot normal iso9660 biosdisk" -o "$ISO" isodir 
+grub-mkrescue --modules="vbe gfxterm multiboot normal iso9660 biosdisk" -o "$ISO" isodir 

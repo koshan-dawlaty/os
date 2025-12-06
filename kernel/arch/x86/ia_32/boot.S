@@ -42,6 +42,14 @@ paging_page_table_addr:
 # .equ MULTIBOOT_INFO_ADDR, 0x00100000
 
 
+# the kernel assumes these are next to eachother
+.align 4096
+.globl multiboot_struct_physical 
+multiboot_struct_physical:
+    .space 4 
+.globl multiboot_struct_physical 
+multiboot_magic_physical:
+    .space 4 
 
 
 
@@ -51,6 +59,8 @@ paging_page_table_addr:
 .type _start, @function
 _start:
 
+	mov %ebx, multiboot_struct_physical	
+	mov %eax, multiboot_magic_physical	
 
 	// physical addresses of boot_page_table1	
 	movl $(boot_page_table1 - 0xC0000000), %edi

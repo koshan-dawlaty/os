@@ -43,6 +43,7 @@ QEMU_FLAGS=" -cdrom os.iso
 -d int
 -D log.txt
 -boot d 
+-vga std
 -drive file=qemu.img,format=raw,if=ide,index=0"
 
 # if [ $HOST =  "x86_64" ]; then

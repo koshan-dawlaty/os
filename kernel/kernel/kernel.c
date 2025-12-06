@@ -226,6 +226,14 @@ void kernel_init()
 extern u32 multiboot_struct_physical;
 extern u32 multiboot_magic_physical;
 
+/* static void putpixel(unsigned char *screen, int x, int y, int color) */
+/* { */
+/*     /1* unsigned where = x * 3 + y * pitch; *1/ */
+/*     /1* screen[where] = color & 255;             // BLUE *1/ */
+/*     /1* screen[where + 1] = (color >> 8) & 255;  // GREEN *1/ */
+/*     /1* screen[where + 2] = (color >> 16) & 255; // RED *1/ */
+/* } */
+
 void multiboot_init()
 {
     void *virtual = get_free_pages_unmmaped(1, &gfp_kernel_zone);
@@ -235,16 +243,66 @@ void multiboot_init()
     u32 multiboot_struct_addr = *(u32 *)(virtual);
     u32 multiboot_magic = *((u32 *)(virtual) + 1);
 
-    printf("%ux\n", multiboot_magic);
+    printf("magic:%ux\n", multiboot_magic);
 
     struct multiboot_info *info_physical = (void *)(ptr)multiboot_struct_addr;
 
     printf("info addr:%p\n", info_physical);
 
     struct multiboot_info *info = get_free_pages_unmmaped(1, &gfp_kernel_zone);
-    map_page(info_physical, info, PAGING_PRESENT | PAGING_WRITEABLE);
+    map_page((void *)(ptr)multiboot_struct_addr, info,
+             PAGING_PRESENT | PAGING_WRITEABLE);
 
-    printf("%p\n", info->framebuffer_addr);
+    printf("%d\n", offsetof(struct multiboot_info, framebuffer_height));
+
+    if (info->flags & (1 << 12))
+    {
+        printf("good\n");
+        printf("framebuffer addr: %p\n", info->framebuffer_addr);
+        /* printf("width x height: %u x %u\n", info->framebuffer_width, */
+        /*        info->framebuffer_height); */
+        /* printf("bpp: %u\n", info->framebuffer_bpp); */
+    }
+    if (info->framebuffer_type != 1)
+    {
+
+        return;
+    }
+
+    printf("framebuffer:%p\n", info->framebuffer_addr);
+
+    /* size_t total_size = info->framebuffer_width * (info->framebuffer_bpp / 8)
+     * * */
+    /*                     info->framebuffer_height * info->framebuffer_pitch;
+     */
+    size_t total_size = info->framebuffer_pitch * info->framebuffer_height;
+
+    void *framebuffer =
+        get_free_pages_unmmaped((total_size / 4096) + 1, &gfp_kernel_zone);
+
+    map_page((void *)(ptr)info->framebuffer_addr, framebuffer,
+             PAGING_PRESENT | PAGING_WRITEABLE);
+
+    printf("pitch:%p\n", info->framebuffer_pitch);
+    int y = 0;
+    int x = 10;
+    /* unsigned char *pixel = */
+    /*     framebuffer + y * info->framebuffer_pitch + x *
+     * info->framebuffer_bpp; */
+
+    size_t location =
+        y * info->framebuffer_pitch + x * (info->framebuffer_bpp / 8);
+
+    for (size_t i = 0; i < 100; i++)
+    {
+        int color = 0xff00ff;
+        unsigned char *screen = framebuffer;
+        screen[location] = color & 255;             // BLUE
+        screen[location + 1] = (color >> 8) & 255;  // GREEN
+        screen[location + 2] = (color >> 16) & 255; // RED
+        location += info->framebuffer_bpp / 8;
+    }
+    /* memset(framebuffer, 'a', 100); */
 }
 
 int main()
