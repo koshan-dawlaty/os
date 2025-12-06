@@ -11,7 +11,13 @@ cat > isodir/boot/grub/grub.cfg << EOF
 set timeout=0
 
 menuentry "os" {
+	insmod part_msdos
+	  insmod vbe          # for BIOS/VESA (on UEFI GRUB will use GOP)
+	  set gfxmode=1024x768x32
+	  set gfxpayload=keep
 	multiboot /boot/os.kernel
+
+
 	boot
 }
 EOF

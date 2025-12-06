@@ -1,4 +1,6 @@
+#include "kernel/types.h"
 #include "lib/binary_tree.h"
+#include "multiboot.h"
 #include <ata/ata.h>
 #include <dirent.h>
 #include <drivers/block/ram/ramdisk.h>
@@ -220,8 +222,35 @@ void kernel_init()
 #endif
 }
 
+/* we can assume these are next to each other, struct then magic */
+extern u32 multiboot_struct_physical;
+extern u32 multiboot_magic_physical;
+
+void multiboot_init()
+{
+    void *virtual = get_free_pages_unmmaped(1, &gfp_kernel_zone);
+    map_page(&multiboot_struct_physical, virtual,
+             PAGING_PRESENT | PAGING_WRITEABLE);
+
+    u32 multiboot_struct_addr = *(u32 *)(virtual);
+    u32 multiboot_magic = *((u32 *)(virtual) + 1);
+
+    printf("%ux\n", multiboot_magic);
+
+    struct multiboot_info *info_physical = (void *)(ptr)multiboot_struct_addr;
+
+    printf("info addr:%p\n", info_physical);
+
+    struct multiboot_info *info = get_free_pages_unmmaped(1, &gfp_kernel_zone);
+    map_page(info_physical, info, PAGING_PRESENT | PAGING_WRITEABLE);
+
+    printf("%p\n", info->framebuffer_addr);
+}
+
 int main()
 {
+
+    multiboot_init();
 
     /* create_device("/term", get_terminal()); */
     /* file *d = open_device("/term"); */

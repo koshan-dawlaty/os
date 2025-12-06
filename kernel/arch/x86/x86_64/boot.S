@@ -48,11 +48,26 @@
 
 # .extern KERNEL_PHYSADDR
 
+# the kernel assumes these are next to eachother
+.align 4096
+.globl multiboot_struct_physical 
+multiboot_struct_physical:
+    .space 4 
+.globl multiboot_struct_physical 
+multiboot_magic_physical:
+    .space 4 
+
+
+
 .section .multiboot.text, "a"
 .code32
 .global _start
 .type _start, @function
 _start:
+
+	mov %ebx, multiboot_struct_physical	
+	mov %eax, multiboot_magic_physical	
+	
 
 	# TODO: maybe use a macro for things like this?
 	movl $(PDPT_ID | PAGING_PRESENT | PAGING_READABLE), PML4_ADDR_PHYSICAL + (((KERNEL_PHYSADDR >> 39) & 0x1FF) * 8)
