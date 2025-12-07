@@ -1,3 +1,5 @@
+#include "kernel/graphics.h"
+#include "memory/get_free_pages.h"
 #include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -151,6 +153,8 @@ int syscall_handler(struct syscall_regs *regs)
     }
     case 18:
         /* TODO: this should probably be in a device file, not a syscall */
+        *(struct framebuffer **)regs->ebx =
+            framebuffer_alloc_user(get_current_framebuffer());
 
         return 0;
     }

@@ -30,7 +30,7 @@ const struct memory_zone gfp_kernel_zone =
     BITMAP_TO_GFP_ZONE(&gfp_bitmap_kernel_zone);
 
 struct bitmap_memory_zone gfp_bitmap_user_zone = {.virtual = 0x80000000,
-                                                  .physical = 0xC000000,
+                                                  .physical = 0xC00000,
                                                   .size = DEFAULT_BITMAP_SIZE,
                                                   .bitmap = NULL,
                                                   .pg_flags = PAGING_WRITEABLE |
@@ -122,6 +122,7 @@ void free_pages_bitmap(void *addr, size_t amount, const struct memory_zone *z)
 
 bool gfp_zones_initialized = false;
 
+/* TODO: only works on bitmap zones */
 void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *z)
 {
     struct bitmap_memory_zone *zone = z->zone_private;

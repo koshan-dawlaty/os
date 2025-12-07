@@ -73,6 +73,7 @@ BINARIES=\
 	cat \
 	rm \
 	ls \
+	wm \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -107,6 +108,10 @@ $(BIN)/rm : $(OBJS_START_BIN) $(BIN)/rm.o ../libc/libc.a $(START_OBJ)  $(OBJS_EN
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/touch : $(OBJS_START_BIN) $(BIN)/touch.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+
+$(BIN)/wm : $(OBJS_START_BIN) $(BIN)/wm.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 

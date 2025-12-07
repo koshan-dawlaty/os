@@ -24,7 +24,7 @@ static FILE *new_stream(int fd, const char *flags, size_t buffer_max)
 
 FILE *fdopen(int fd, const char *flags)
 {
-    return new_stream(fd, flags, 10);
+    return new_stream(fd, flags, 2);
 }
 
 FILE *fopen(const char *path, const char *flags)

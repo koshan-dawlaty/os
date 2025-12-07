@@ -20,22 +20,22 @@ struct framebuffer *multiboot_init()
     u32 multiboot_struct_addr = *(u32 *)(virtual);
     u32 multiboot_magic = *((u32 *)(virtual) + 1);
 
-    printf("magic:%ux\n", multiboot_magic);
+    /* printf("magic:%ux\n", multiboot_magic); */
 
     struct multiboot_info *info_physical = (void *)(ptr)multiboot_struct_addr;
 
-    printf("info addr:%p\n", info_physical);
+    /* printf("info addr:%p\n", info_physical); */
 
     struct multiboot_info *info = get_free_pages_unmmaped(1, &gfp_kernel_zone);
     map_page((void *)(ptr)multiboot_struct_addr, info,
              PAGING_PRESENT | PAGING_WRITEABLE);
 
-    printf("%d\n", offsetof(struct multiboot_info, framebuffer_height));
+    /* printf("%d\n", offsetof(struct multiboot_info, framebuffer_height)); */
 
     if (info->flags & (1 << 12))
     {
-        printf("good\n");
-        printf("framebuffer addr: %p\n", info->framebuffer_addr);
+        /* printf("good\n"); */
+        /* printf("framebuffer addr: %p\n", info->framebuffer_addr); */
         /* printf("width x height: %u x %u\n", info->framebuffer_width, */
         /*        info->framebuffer_height); */
         /* printf("bpp: %u\n", info->framebuffer_bpp); */
@@ -50,14 +50,13 @@ struct framebuffer *multiboot_init()
         return NULL;
     }
 
-    printf("framebuffer:%p\n", info->framebuffer_addr);
+    /* printf("framebuffer:%p\n", info->framebuffer_addr); */
 
     /* size_t total_size = info->framebuffer_width * (info->framebuffer_bpp / 8)
      * * */
     /*                     info->framebuffer_height * info->framebuffer_pitch;
      */
     size_t total_size = info->framebuffer_pitch * info->framebuffer_height;
-
     size_t num_pages = (total_size / 4096) + 1;
     void *framebuffer = get_free_pages_unmmaped(num_pages, &gfp_kernel_zone);
 
@@ -70,7 +69,7 @@ struct framebuffer *multiboot_init()
 
     /* memset(framebuffer, 'a', total_size) */
 
-    printf("pitch:%p\n", info->framebuffer_pitch);
+    /* printf("pitch:%p\n", info->framebuffer_pitch); */
     struct framebuffer *f = malloc(sizeof(struct framebuffer));
     f->buffer = framebuffer;
     f->depth = 24;
