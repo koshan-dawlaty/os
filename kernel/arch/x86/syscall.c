@@ -1,17 +1,17 @@
-#include "elf.h"
-#include "interrupts/idt.h"
-#include "kernel/paging.h"
-#include "kernel/semaphore.h"
-#include "kernel/types.h"
-#include "memory/paging_flags.h"
-#include "scheduler.h"
-#include "sys/types.h"
+#include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <interrupts/idt.h>
+#include <kernel/paging.h>
+#include <kernel/semaphore.h>
+#include <kernel/types.h>
+#include <memory/paging_flags.h>
 #include <panic.h>
+#include <scheduler.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <utils.h>
 
@@ -149,6 +149,10 @@ int syscall_handler(struct syscall_regs *regs)
 
         return retval;
     }
+    case 18:
+        /* TODO: this should probably be in a device file, not a syscall */
+
+        return 0;
     }
 
     printf("no syscall found\n");

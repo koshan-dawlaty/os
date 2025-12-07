@@ -205,6 +205,10 @@ void kernel_init()
     init_heap();
     init_gfp_zones();
 
+    f = multiboot_init();
+    tty_framebuffer = f;
+    graphics_init(f);
+
     malloc(10);
 
     init_gdt();
@@ -220,10 +224,6 @@ void kernel_init()
     init_vfs();
 
     call_constructors();
-
-    f = multiboot_init();
-    tty_framebuffer = f;
-    graphics_init();
 
 #ifdef TESTS
     run_tests();

@@ -1,3 +1,4 @@
+#include "memory/get_free_pages.h"
 #include "psu_font.h"
 #include <compiler.h>
 #include <kernel/graphics.h>
@@ -39,9 +40,11 @@ struct PSF_font parse_font(u8 *font_buf)
 }
 
 struct PSF_font default_font;
-void graphics_init()
+struct framebuffer *current_framebuffer;
+void graphics_init(struct framebuffer *f)
 {
     default_font = parse_font(_psfu_font);
+    current_framebuffer = f;
 }
 
 void framebuffer_draw_char(struct framebuffer *f, char c, size_t x, size_t y)
@@ -95,4 +98,10 @@ void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
         }
         location = y_pos * f->pitch + x * f->pixel_width;
     }
+}
+
+/* TODO: should be inline */
+struct framebuffer *get_current_framebuffer()
+{
+    return current_framebuffer;
 }
