@@ -20,10 +20,22 @@ static uint16_t *terminal_buffer;
 
 void move_line(int dest_column, int source_column)
 {
-    uint16_t *source = (terminal_buffer + source_column * VGA_WIDTH);
-    uint16_t *dest = (terminal_buffer + dest_column * VGA_WIDTH);
 
-    memcpy(dest, source, VGA_WIDTH);
+    if (tty_framebuffer == NULL)
+    {
+        uint16_t *source = (terminal_buffer + source_column * VGA_WIDTH);
+        uint16_t *dest = (terminal_buffer + dest_column * VGA_WIDTH);
+        memcpy(dest, source, VGA_WIDTH);
+    }
+    else
+    {
+        u8 *source =
+            tty_framebuffer->buffer + source_column * tty_framebuffer->pitch;
+        u8 *dest =
+            tty_framebuffer->buffer + dest_column * tty_framebuffer->pitch;
+
+        memcpy(dest, source, tty_framebuffer->pitch);
+    }
 }
 
 void terminal_initialize()
@@ -90,7 +102,8 @@ void terminal_putchar(char c)
 
         /* terminal_buffer[terminal_column * VGA_WIDTH + terminal_row] = */
         /*     vga_entry(TERMINAL_EMPTY_CHAR, terminal_color); */
-        terminal_putcharat(TERMINAL_EMPTY_CHAR, terminal_row, terminal_column);
+        /* terminal_putcharat(TERMINAL_EMPTY_CHAR, terminal_row,
+         * terminal_column); */
         if (terminal_row > 0)
         {
             terminal_row--;

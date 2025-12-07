@@ -18,9 +18,9 @@ int main()
 
     init_libc();
 
-    execv("/cat", (char *[]){"/one", NULL});
+    /* execv("/cat", (char *[]){"/cat", "/one", NULL}); */
 
-    exit(0);
+    /* exit(0); */
 
     /* int term_fd = open("/terminal", 0); */
     /* char *buf = malloc(10); */
@@ -36,6 +36,7 @@ int main()
 
         if (c == '\n')
         {
+            putchar('\n');
 
             input_len++;
             input = realloc(input, input_len);

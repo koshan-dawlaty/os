@@ -28,7 +28,7 @@ int execv(const char *path, char *const argv[])
     {
 
         int argc = 0;
-        printf("%p\n", argv[0]);
+        /* printf("%p\n", argv[0]); */
         while (argv[argc] != NULL)
         {
             argc++;
