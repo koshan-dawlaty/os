@@ -206,7 +206,7 @@ void kernel_init()
     init_gfp_zones();
 
     f = multiboot_init();
-    tty_framebuffer = f;
+    terminal_init_graphics(f);
     graphics_init(f);
 
     malloc(10);

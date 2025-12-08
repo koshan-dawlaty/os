@@ -1,6 +1,7 @@
 #ifndef _KERNEL_TTY_H
 #define _KERNEL_TTY_H
 
+#include <kernel/graphics.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -11,5 +12,7 @@ void terminal_writestring(const char *data);
 
 void terminal_scroll_up();
 void terminal_clear();
+
+void terminal_init_graphics(struct framebuffer *buffer);
 
 #endif

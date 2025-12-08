@@ -11,8 +11,8 @@
 
 struct framebuffer *tty_framebuffer;
 
-static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 25;
+static size_t VGA_WIDTH = 80;
+static size_t VGA_HEIGHT = 25;
 
 static size_t terminal_row;
 static size_t terminal_column;
@@ -31,9 +31,9 @@ void move_line(int dest_column, int source_column)
     else
     {
         u8 *source = tty_framebuffer->buffer +
-                     source_column * 8 * tty_framebuffer->pitch;
+                     source_column * 16 * tty_framebuffer->pitch;
         u8 *dest =
-            tty_framebuffer->buffer + dest_column * 8 * tty_framebuffer->pitch;
+            tty_framebuffer->buffer + dest_column * 16 * tty_framebuffer->pitch;
 
         memcpy(dest, source, tty_framebuffer->pitch * 16);
     }
@@ -56,6 +56,13 @@ void terminal_initialize()
                 vga_entry(TERMINAL_EMPTY_CHAR, terminal_color);
         }
     }
+}
+
+void terminal_init_graphics(struct framebuffer *buffer)
+{
+    tty_framebuffer = buffer;
+    VGA_HEIGHT = (buffer->height / 16) - 1;
+    VGA_WIDTH = (buffer->width / 8) - 1;
 }
 
 void terminal_putcharat(char c, size_t x, size_t y)
@@ -124,7 +131,7 @@ void terminal_putchar(char c)
 
     if ((tty_framebuffer == NULL && terminal_column == VGA_HEIGHT) ||
         (tty_framebuffer != NULL &&
-         terminal_column * 2 >= (tty_framebuffer->height / 16) - 1))
+         terminal_column >= (tty_framebuffer->height / 16) - 1))
     {
         terminal_scroll_up();
     }
@@ -157,7 +164,7 @@ void terminal_scroll_up()
     /*     move_line(i, i - 1); */
     /* } */
 
-    for (size_t i = 0; i < (tty_framebuffer->height / 16) - 1; i++)
+    for (size_t i = 1; i < (tty_framebuffer->height / 16) - 1; i++)
     {
         move_line(i, i + 1);
     }
