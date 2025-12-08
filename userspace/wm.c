@@ -50,6 +50,26 @@ void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
     }
 }
 
+struct window {
+size_t x;
+size_t y;
+size_t w;
+size_t h;
+
+void * buffer;
+};
+
+struct window * new_window(size_t x, size_t y, size_t w, size_t h) {
+    struct window * out = malloc(sizeof(struct window));
+    out->x = x;
+    out->y = y;
+    out->w = w;
+    out->h = h;
+    
+    return out;
+}
+
+
 int main()
 {
     init_libc();
