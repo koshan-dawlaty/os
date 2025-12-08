@@ -66,6 +66,9 @@ struct window * new_window(size_t x, size_t y, size_t w, size_t h) {
     out->w = w;
     out->h = h;
     
+    /* TODO: this assumes 3 bytes per pixel */
+    out->buffer = malloc(w*h*3);
+    
     return out;
 }
 
