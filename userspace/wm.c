@@ -72,8 +72,18 @@ struct window * new_window(size_t x, size_t y, size_t w, size_t h) {
     return out;
 }
 
+void draw_window(struct framebuffer * b, struct window * win) {
+    
+    for (size_t y = 0; y < win->h; y++) {
+        /* TODO: assumes 3 bytes per pixel */
+        memcpy(b->buffer, win->buffer, win->w* 3);
+    }
+    
+    
+}
 
-int main()
+
+ int main()
 {
     init_libc();
 
