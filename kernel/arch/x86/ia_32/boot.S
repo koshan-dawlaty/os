@@ -1,8 +1,9 @@
 # Declare constants for the multiboot header.
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
-.set FLAGS,    ALIGN | MEMINFO  # this is the Multiboot 'flag' field
-.set MAGIC,    0x1BADB002       # 'magic number' lets bootloader find the header
+.set VIDEO,    1<<2     # request VESA/VGA mode
+.set FLAGS,    ALIGN | MEMINFO | VIDEO # this is the Multiboot flag field
+.set MAGIC,    0x1BADB002       # magic number lets bootloader find the header
 .set CHECKSUM, -(MAGIC + FLAGS) # checksum of above, to prove we are multiboot
 
 # Declare a multiboot header that marks the program as a kernel.
@@ -20,7 +21,7 @@ stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
 
-# Preallocate pages used for paging. Don't hard-code addresses and assume they
+# Preallocate pages used for paging. Dont hard-code addresses and assume they
 # are available, as the bootloader might have loaded its multiboot structures or
 # modules there. This lets the bootloader know it must avoid the addresses.
 .section .bss, "aw", @nobits
@@ -42,25 +43,26 @@ paging_page_table_addr:
 # .equ MULTIBOOT_INFO_ADDR, 0x00100000
 
 
+.section .multiboot.data
 # the kernel assumes these are next to eachother
 .align 4096
 .globl multiboot_struct_physical 
 multiboot_struct_physical:
-    .space 4 
-.globl multiboot_struct_physical 
+    .skip 4 
+.globl multiboot_magic_physical 
 multiboot_magic_physical:
-    .space 4 
+    .skip 4 
 
 
 
-# The kernel entry point.
+# the kernel entry point.
 .section .multiboot.text, "a"
 .global _start
 .type _start, @function
 _start:
 
-	mov %ebx, multiboot_struct_physical	
-	mov %eax, multiboot_magic_physical	
+	movl %ebx, multiboot_struct_physical	
+	movl %eax, multiboot_magic_physical	
 
 	// physical addresses of boot_page_table1	
 	movl $(boot_page_table1 - 0xC0000000), %edi
@@ -91,7 +93,7 @@ _start:
 	addl $4096, %esi
 	# Size of entries in boot_page_table1 is 4 bytes.
 	addl $4, %edi
-	# Loop to the next entry if we haven't finished.
+	# Loop to the next entry if we havent finished.
 	loop 1b
 	
 3:

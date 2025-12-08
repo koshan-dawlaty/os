@@ -49,6 +49,7 @@
 
 # .extern KERNEL_PHYSADDR
 
+.section .multiboot.data
 # the kernel assumes these are next to eachother
 .align 4096
 .globl multiboot_struct_physical 
