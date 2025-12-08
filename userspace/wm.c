@@ -76,7 +76,7 @@ void draw_window(struct framebuffer * b, struct window * win) {
     
     for (size_t y = 0; y < win->h; y++) {
         /* TODO: assumes 3 bytes per pixel */
-        memcpy(b->buffer, win->buffer, win->w* 3);
+        memcpy(b->buffer+y*b->pitch+win->x*b->pixel_width, win->buffer+y*win->w, win->w* 3);
     }
     
     
