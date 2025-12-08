@@ -300,7 +300,7 @@ int main()
     */
     enable_scheduler();
 
-    int err = execv("/wm", (char *[]){NULL});
+    int err = execv("/ksh", (char *[]){NULL});
     if (err < 0)
     {
         printf("did not find shell\n");

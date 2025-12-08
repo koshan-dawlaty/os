@@ -1,6 +1,7 @@
 #include "kernel/tty.h"
 #include "ansi.h"
 #include "kernel/graphics.h"
+#include "panic.h"
 #include "vga.h"
 #include <stdbool.h>
 #include <stdio.h>
@@ -29,12 +30,12 @@ void move_line(int dest_column, int source_column)
     }
     else
     {
-        u8 *source =
-            tty_framebuffer->buffer + source_column * tty_framebuffer->pitch;
+        u8 *source = tty_framebuffer->buffer +
+                     source_column * 8 * tty_framebuffer->pitch;
         u8 *dest =
-            tty_framebuffer->buffer + dest_column * tty_framebuffer->pitch;
+            tty_framebuffer->buffer + dest_column * 8 * tty_framebuffer->pitch;
 
-        memcpy(dest, source, tty_framebuffer->pitch);
+        memcpy(dest, source, tty_framebuffer->pitch * 16);
     }
 }
 
@@ -120,7 +121,10 @@ void terminal_putchar(char c)
         terminal_row = 0;
         terminal_column++;
     }
-    if (terminal_column == VGA_HEIGHT)
+
+    if ((tty_framebuffer == NULL && terminal_column == VGA_HEIGHT) ||
+        (tty_framebuffer != NULL &&
+         terminal_column * 2 >= (tty_framebuffer->height / 16) - 1))
     {
         terminal_scroll_up();
     }
@@ -153,7 +157,7 @@ void terminal_scroll_up()
     /*     move_line(i, i - 1); */
     /* } */
 
-    for (size_t i = 0; i < VGA_HEIGHT; i++)
+    for (size_t i = 0; i < (tty_framebuffer->height / 16) - 1; i++)
     {
         move_line(i, i + 1);
     }

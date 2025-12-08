@@ -36,7 +36,6 @@ int main()
 
         if (c == '\n')
         {
-            putchar('\n');
 
             input_len++;
             input = realloc(input, input_len);
