@@ -76,3 +76,5 @@ generic read/write functions for devices that cannot be read from / written to, 
 
 
 	malloc could fall back to bitmap allocator by checking if the allocation would go beyond sizeof(all of the structues used in a tree allocation) + page size
+
+printing stuff is really expensive in graphics mode, it reads from video memory

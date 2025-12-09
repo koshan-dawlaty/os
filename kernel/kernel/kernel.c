@@ -209,6 +209,23 @@ void kernel_init()
     terminal_init_graphics(f);
     graphics_init(f);
 
+    for (size_t y = 0; y < f->height; y++)
+    {
+        for (size_t x = 0; x < f->width; x++)
+        {
+            /* u8 r = x; */
+            /* u8 g = y; */
+            /* u8 b = x * y; */
+
+            u8 r = (x & y) ^ 43;
+            u8 g = 0;
+            u8 b = x * y;
+
+            int color = r | (g << 8) | (b << 16);
+            framebuffer_put_pixel(f, color, x, y);
+        }
+    }
+
     malloc(10);
 
     init_gdt();
@@ -233,36 +250,12 @@ void kernel_init()
 int main()
 {
 
-    for (size_t y = 100; y < 200; y++)
-    {
-        for (size_t x = 300; x < 400; x++)
-        {
-            framebuffer_put_pixel(f, 0x0000ff, x, y);
-        }
-    }
-
-    for (size_t y = 0; y < f->height; y++)
-    {
-
-        for (size_t x = 0; x < f->width; x++)
-        {
-            /* u8 r = x; */
-            /* u8 g = y; */
-            /* u8 b = x * y; */
-
-            u8 r = (x & y) ^ 43;
-            u8 g = 0;
-            u8 b = x * y;
-
-            int color = r | (g << 8) | (b << 16);
-            framebuffer_put_pixel(f, color, x, y);
-        }
-    }
-
-    framebuffer_draw_rect(f, 650, 250, 100, 100, 0xff0000);
-    framebuffer_draw_rect(f, 600, 200, 100, 100, 0x0000ff);
+    printf("abc\n");
 
     printf("test\ntest\n");
+    framebuffer_draw_rect(f, 600, 200, 100, 100, 0xff0000);
+    framebuffer_draw_rect(f, 650, 250, 100, 100, 0x00ff00);
+    framebuffer_draw_rect(f, 700, 300, 100, 100, 0x0000ff);
 
     /* for (size_t i = 0; i < 255; i++) */
     /* { */
