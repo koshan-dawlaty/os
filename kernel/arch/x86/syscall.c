@@ -87,8 +87,11 @@ int syscall_handler(struct syscall_regs *regs)
     }
     case 4:
     {
-        map_page(get_free_phys_page(), (void *)regs->ebx,
-                 PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+        for (size_t i = 0; i < regs->ecx / 4096; i++)
+        {
+            map_page(get_free_phys_page(), (void *)regs->ebx + (i * 4096),
+                     PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+        }
 
         return 1234;
     }
