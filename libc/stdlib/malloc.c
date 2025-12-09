@@ -94,6 +94,7 @@ void *malloc_get_pages(size_t num, struct malloc_zone *zone)
 #else
     user_malloc_addr += 4096;
     return mmap(user_malloc_addr, num * 4096, 0, 0, 0, 0);
+    user_malloc_addr += num * 4096;
 #endif
 }
 

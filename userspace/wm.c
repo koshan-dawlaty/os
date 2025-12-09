@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* this is copied from the kernel definition, it might change and break
  * everything and that would be bad */
@@ -50,40 +51,45 @@ void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
     }
 }
 
-struct window {
-size_t x;
-size_t y;
-size_t w;
-size_t h;
+struct window
+{
+    size_t x;
+    size_t y;
+    size_t w;
+    size_t h;
 
-void * buffer;
+    void *buffer;
 };
 
-struct window * new_window(size_t x, size_t y, size_t w, size_t h) {
-    struct window * out = malloc(sizeof(struct window));
+struct window *new_window(size_t x, size_t y, size_t w, size_t h)
+{
+    struct window *out = malloc(sizeof(struct window));
     out->x = x;
     out->y = y;
     out->w = w;
     out->h = h;
-    
+
     /* TODO: this assumes 3 bytes per pixel */
-    out->buffer = malloc(w*h*3);
-    
+
+    out->buffer = malloc(w * h * 4);
+
     return out;
 }
 
-void draw_window(struct framebuffer * b, struct window * win) {
-    
-    for (size_t y = 0; y < win->h; y++) {
+void draw_window(struct framebuffer *b, struct window *win)
+{
+
+    for (size_t y = 0; y < win->h; y++)
+    {
         /* TODO: assumes 3 bytes per pixel */
-        memcpy(b->buffer+((y+win->y)*b->pitch)+(win->x*b->pixel_width), win->buffer+y*win->w, win->w* 3);
+        /* printf("%p ", win->buffer + (y * win->w)); */
+        memcpy(b->buffer +
+                   (((y + win->y) * b->pitch) + (win->x * b->pixel_width)),
+               win->buffer + (y * win->w), win->w * b->pixel_width);
     }
-    
-    
 }
 
-
- int main()
+int main()
 {
     init_libc();
 
@@ -94,6 +100,10 @@ void draw_window(struct framebuffer * b, struct window * win) {
     printf("%p\n", buffer->buffer);
     /* printf("%p\n", buffer->pitch); */
     framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000);
+
+    struct window *w = new_window(400, 10, 100, 100);
+
+    draw_window(buffer, w);
 
     exit(0);
 }
