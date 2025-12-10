@@ -206,23 +206,26 @@ void kernel_init()
     init_gfp_zones();
 
     f = multiboot_init();
-    terminal_init_graphics(f);
-    graphics_init(f);
-
-    for (size_t y = 0; y < f->height; y++)
+    if (f != NULL)
     {
-        for (size_t x = 0; x < f->width; x++)
+        terminal_init_graphics(f);
+        graphics_init(f);
+
+        for (size_t y = 0; y < f->height; y++)
         {
-            /* u8 r = x; */
-            /* u8 g = y; */
-            /* u8 b = x * y; */
+            for (size_t x = 0; x < f->width; x++)
+            {
+                /* u8 r = x; */
+                /* u8 g = y; */
+                /* u8 b = x * y; */
 
-            u8 r = (x & y) ^ 43;
-            u8 g = 0;
-            u8 b = x * y;
+                u8 r = (x & y) ^ 43;
+                u8 g = 0;
+                u8 b = x * y;
 
-            int color = r | (g << 8) | (b << 16);
-            framebuffer_put_pixel(f, color, x, y);
+                int color = r | (g << 8) | (b << 16);
+                framebuffer_put_pixel(f, color, x, y);
+            }
         }
     }
 
@@ -253,9 +256,13 @@ int main()
     printf("abc\n");
 
     printf("test\ntest\n");
-    framebuffer_draw_rect(f, 600, 200, 100, 100, 0xff0000);
-    framebuffer_draw_rect(f, 650, 250, 100, 100, 0x00ff00);
-    framebuffer_draw_rect(f, 700, 300, 100, 100, 0x0000ff);
+
+    if (f != NULL)
+    {
+        framebuffer_draw_rect(f, 600, 200, 100, 100, 0xff0000);
+        framebuffer_draw_rect(f, 650, 250, 100, 100, 0x00ff00);
+        framebuffer_draw_rect(f, 700, 300, 100, 100, 0x0000ff);
+    }
 
     /* for (size_t i = 0; i < 255; i++) */
     /* { */
@@ -293,7 +300,7 @@ int main()
     */
     enable_scheduler();
 
-    int err = execv("/wm", (char *[]){NULL});
+    int err = execv("/ksh", (char *[]){NULL});
     if (err < 0)
     {
         printf("did not find shell\n");

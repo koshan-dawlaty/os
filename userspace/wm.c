@@ -99,9 +99,11 @@ int main()
 
     printf("%p\n", buffer->buffer);
     /* printf("%p\n", buffer->pitch); */
-    framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000);
+    /* framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000); */
 
-    struct window *w = new_window(400, 10, 100, 100);
+    struct window *w = new_window(400, 600, 100, 100);
+
+    memset(w->buffer, 0, w->h * w->w * 3);
 
     draw_window(buffer, w);
 
