@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 #ifdef __is_libk
 #include <vfs.h>
@@ -20,10 +21,11 @@ int write(int fd, const void *buf, size_t n)
     return write_file(f, buf, n, f->offset);
 #endif
 
-    return syscall_wrapper_asm(10, fd, (uintptr_t)buf, n, 0, 0);
+    return syscall_wrapper_asm(SYS_write, fd, (uintptr_t)buf, n, 0, 0);
 }
 
 int pwrite(int fd, const void *buf, size_t n, off_t off)
+
 {
     if (fd < 0)
     {
@@ -35,5 +37,5 @@ int pwrite(int fd, const void *buf, size_t n, off_t off)
     return write_file(f, (void *)buf, n, off);
 #endif
 
-    return syscall_wrapper_asm(11, fd, (uintptr_t)buf, n, off, 0);
+    return syscall_wrapper_asm(SYS_pwrite, fd, (uintptr_t)buf, n, off, 0);
 }

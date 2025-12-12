@@ -1,5 +1,6 @@
 #include "sys/types.h"
 #include <fcntl.h>
+#include <sys/syscall.h>
 
 #include <utils.h>
 
@@ -21,6 +22,6 @@ int creat(const char *path, mode_t mode)
 
     return f->descriptor;
 #else
-    return syscall_wrapper_asm(12, (uintptr_t)path, mode, 0, 0, 0);
+    return syscall_wrapper_asm(SYS_creat, (uintptr_t)path, mode, 0, 0, 0);
 #endif
 }

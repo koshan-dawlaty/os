@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 
 #ifdef __is_libk
@@ -19,7 +20,8 @@ long get_dents(int fd, struct dirent *buf, size_t num)
     long retval = read_dir(f, buf, num);
     return retval;
 #else
-    long retval = syscall_wrapper_asm(17, fd, (uintptr_t)buf, num, 0, 0);
+    long retval =
+        syscall_wrapper_asm(SYS_getdents, fd, (uintptr_t)buf, num, 0, 0);
     return retval;
 #endif
 }

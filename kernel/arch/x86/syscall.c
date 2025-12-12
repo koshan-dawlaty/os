@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <utils.h>
@@ -102,7 +103,7 @@ int syscall_handler(struct syscall_regs *regs)
         release_semaphore(test_semaphore);
         return 1234;
     }
-    case 6:
+    case SYS_pread:
     {
         return pread(regs->ebx, (void *)regs->ecx, regs->edx, regs->edi);
     }
@@ -110,24 +111,24 @@ int syscall_handler(struct syscall_regs *regs)
     {
         return open((void *)regs->ebx, 0);
     }
-    case 8:
+    case SYS_read:
     {
         return read(regs->ebx, (void *)regs->ecx, regs->edx);
     }
-    case 9:
+    case SYS_exit:
     {
         exit(regs->ebx);
         return 1234;
     }
-    case 10:
+    case SYS_write:
     {
         return write(regs->ebx, (void *)regs->ecx, regs->edx);
     }
-    case 11:
+    case SYS_pwrite:
     {
         return pwrite(regs->ebx, (void *)regs->ecx, regs->edx, regs->esi);
     }
-    case 12:
+    case SYS_creat:
     {
         /* TODO: this should be implemented with an open flag instead */
         return creat((void *)regs->ebx, regs->ecx);
@@ -136,19 +137,19 @@ int syscall_handler(struct syscall_regs *regs)
     {
         return chdir((void *)regs->ebx);
     }
-    case 14:
+    case SYS_unlink:
     {
         return unlink((char *)regs->ebx);
     }
-    case 15:
+    case SYS_lseek:
     {
         return lseek(regs->ebx, regs->ecx, regs->edx);
     }
-    case 16:
+    case SYS_close:
     {
         return close(regs->ebx);
     }
-    case 17:
+    case SYS_getdents:
     {
         int retval = get_dents(regs->ebx, (void *)regs->ecx, regs->edx);
 

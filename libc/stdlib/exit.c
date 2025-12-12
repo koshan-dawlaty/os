@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <sys/syscall.h>
 #include <utils.h>
 
 #ifdef __is_libk
@@ -14,6 +15,6 @@ void exit(int status)
     free_task(t);
     schedule();
 #else
-    syscall_wrapper_asm(9, status, 0, 0, 0, 0);
+    syscall_wrapper_asm(SYS_exit, status, 0, 0, 0, 0);
 #endif
 }

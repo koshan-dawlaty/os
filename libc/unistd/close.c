@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <sys/syscall.h>
 #include <unistd.h>
 
 #ifdef __is_libk
@@ -13,7 +14,7 @@ int close(int fd)
 
 #else
 
-    int retval = syscall_wrapper_asm(16, fd, 0, 0, 0, 0);
+    int retval = syscall_wrapper_asm(SYS_close, fd, 0, 0, 0, 0);
 
     return retval;
 #endif
