@@ -26,7 +26,7 @@ export ISO
 
 
 export ARCH=$(./default-host.sh)
-CFLAGS="-DMYOS1234 ${CFLAGS} -Werror -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(./arch-flags.sh $ARCH) -DCONFIG_$ARCH -DCONFIG_GRAPHICS " 
+CFLAGS="-DMYOS1234 ${CFLAGS} -Werror -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(./arch-flags.sh $ARCH) -DCONFIG_$ARCH " 
 export CFLAGS
 export CPPFLAGS=''
 

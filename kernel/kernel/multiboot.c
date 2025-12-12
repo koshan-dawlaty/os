@@ -1,6 +1,8 @@
+#include "multiboot.h"
 #include "kernel/graphics.h"
 #include "memory/get_free_pages.h"
 #include "memory/paging_flags.h"
+#include "panic.h"
 #include <kernel/paging.h>
 #include <kernel/types.h>
 #include <stdio.h>
@@ -10,6 +12,31 @@
 /* we can assume these are next to each other, struct then magic */
 extern u32 multiboot_struct_physical;
 extern u32 multiboot_magic_physical;
+
+/*
+ * @info needs to be mapped
+ */
+void multiboot_parse_memory_map(struct multiboot_info *info)
+{
+    void *memory_map = get_free_pages_unmmaped(
+        ((info->mmap_length * sizeof(multiboot_memory_map_t)) / 4096) + 1,
+        &gfp_kernel_zone);
+    map_page((void *)(ptr)info->mmap_addr, memory_map,
+             PAGING_PRESENT | PAGING_WRITEABLE);
+
+    for (size_t i = 0; i < info->mmap_length;
+         i += sizeof(multiboot_memory_map_t))
+    {
+        multiboot_memory_map_t *mmmt =
+            (multiboot_memory_map_t *)(memory_map + i);
+
+        printf("Start Addr: %p | Length: %p | Size: %p | Type: %d\n",
+               mmmt->addr, mmmt->len, mmmt->size, mmmt->type);
+        if (mmmt->type == MULTIBOOT_MEMORY_AVAILABLE)
+        {
+        }
+    }
+}
 
 struct framebuffer *multiboot_init()
 {
@@ -29,7 +56,14 @@ struct framebuffer *multiboot_init()
     struct multiboot_info *info = get_free_pages_unmmaped(1, &gfp_kernel_zone);
     map_page((void *)(ptr)multiboot_struct_addr, info,
              PAGING_PRESENT | PAGING_WRITEABLE);
-
+    if ((info->flags >> 6 & 0x1))
+    {
+        multiboot_parse_memory_map(info);
+    }
+    else
+    {
+        panic("invalid grub memory map");
+    }
     /* printf("%d\n", offsetof(struct multiboot_info, framebuffer_height)); */
 
     if (info->flags & (1 << 12))

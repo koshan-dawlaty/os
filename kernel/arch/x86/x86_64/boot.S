@@ -66,6 +66,9 @@ multiboot_magic_physical:
 
 
 
+
+
+
 .section .multiboot.text, "a"
 .code32
 .global _start
@@ -74,6 +77,12 @@ _start:
 
 	mov %ebx, multiboot_struct_physical	
 	mov %eax, multiboot_magic_physical	
+
+	mov %eax, %esi
+	mov %ebx, %edi
+	
+
+
 	
 
 	# TODO: maybe use a macro for things like this?
@@ -185,11 +194,23 @@ GDT:
 .set PT_ADDR, 0x7000
 
 
+multiboot_init_stack_bottom:
+.zero 4096
+multiboot_init_stack_top:
 
 .code64
 .global entry_64
 .type entry_64, @function
 entry_64:
+
+	# mov $(multiboot_init_stack_top), %esp
+
+	# mov $(1204), %rdi
+	# mov %rsi, %rdi
+	# mov $(1204), %rdi
+	# mov multiboot_magic_physical, %rdi	
+	# call multiboot_test
+	mov $0, %rdi
 
 	mov $0x10, %ax
 	# mov $8, %ax

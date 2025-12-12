@@ -1,3 +1,4 @@
+#include "compiler.h"
 #include "kernel/graphics.h"
 #include "kernel/types.h"
 #include "lib/binary_tree.h"
@@ -235,6 +236,7 @@ void kernel_init()
         graphics_init(f);
         draw_background(f);
     }
+    return;
 
     malloc(10);
 
@@ -257,8 +259,39 @@ void kernel_init()
 #endif
 }
 
+void __section(".multiboot.text") __no_ssp
+    multiboot_test(struct multiboot_info *info, ptr magic)
+{
+    if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
+    {
+        panic_no_malloc("invalid grub magic number");
+        return;
+    }
+
+    if (!(info->flags >> 6 & 0x1))
+    {
+        panic_no_malloc("invalid memory map given by grub");
+        return;
+    }
+
+    for (size_t i = 0; i < info->mmap_length;
+         i += sizeof(multiboot_memory_map_t))
+    {
+        multiboot_memory_map_t *mmmt =
+            (multiboot_memory_map_t *)(info->mmap_addr + i);
+
+        /* printf("Start Addr: %x | Length: %x | Size: %x | Type: %d\n", */
+        /*        mmmt->addr, mmmt->len, mmmt->size, mmmt->type); */
+
+        if (mmmt->type == MULTIBOOT_MEMORY_AVAILABLE)
+        {
+        }
+    }
+}
+
 int main()
 {
+    return 1;
 
     printf("abc\n");
 
