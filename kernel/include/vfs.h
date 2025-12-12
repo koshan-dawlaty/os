@@ -9,7 +9,7 @@
 
 struct fs_type;
 
-typedef struct
+typedef struct superblock
 {
     size_t blocksize;
     void *fs_private;
@@ -21,7 +21,7 @@ typedef struct
 typedef struct
 {
     // TODO: this should have some way of determining what superblock is parsed
-    superblock *(*parse_superblock)(struct bdev *dev);
+    struct superblock *(*parse_superblock)(struct bdev *dev);
 } superblock_functions;
 
 superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
@@ -29,7 +29,7 @@ superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
 
 typedef size_t inode_size;
 
-typedef struct
+typedef struct inode
 {
     ino_t number;
     inode_size size;
