@@ -4,6 +4,9 @@
 #include "scheduler.h"
 #include <stdint.h>
 
+#define MACRO_STR2(x) #x
+#define MACRO_STR(x) MACRO_STR2(x)
+
 long align_long(long in, long align);
 
 uint32_t bytes_to_32_bit_int(uint8_t one, uint8_t two, uint8_t three,

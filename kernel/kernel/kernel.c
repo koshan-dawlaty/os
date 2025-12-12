@@ -2,6 +2,7 @@
 #include "kernel/types.h"
 #include "lib/binary_tree.h"
 #include "multiboot.h"
+#include <assert.h>
 #include <ata/ata.h>
 #include <dirent.h>
 #include <drivers/block/ram/ramdisk.h>
@@ -259,6 +260,8 @@ void kernel_init()
 
 int main()
 {
+
+    ASSERT(1 == 2, "message");
 
     printf("abc\n");
 
