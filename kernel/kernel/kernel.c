@@ -253,6 +253,19 @@ void kernel_init()
 
     call_constructors();
 
+    shared_memory_semaphore = new_semaphore(1);
+    shared_memory_spinlock = new_spinlock();
+
+    create_device("/terminal", get_terminal());
+    create_device("/keyboard", get_keyboard());
+    add_task(create_kernel_task());
+    enable_scheduler();
+    /*
+    run_task(kernel_task3, NULL);
+    run_task(kernel_task4, NULL);
+    run_task(kernel_task5, NULL);
+    */
+
 #ifdef TESTS
     run_tests();
 #endif
@@ -260,48 +273,6 @@ void kernel_init()
 
 int main()
 {
-
-    ASSERT(1 == 2, "message");
-
-    printf("abc\n");
-
-    printf("test\ntest\n");
-
-    /* for (size_t i = 0; i < 255; i++) */
-    /* { */
-    /*     framebuffer_draw_char(f, i, 10 + (8 * i), 10); */
-    /* } */
-
-    /* create_device("/term", get_terminal()); */
-    /* file *d = open_device("/term"); */
-
-    /* write_file(d, "abc", 4, 0); */
-
-    /* return 1; */
-
-    /* int f1 = open("/one", 0); */
-    /* int f2 = open("/one", 0); */
-
-    /* close(f1); */
-    /* close(f2); */
-
-    /* return 1; */
-    /* printf("IN MAIN\n"); */
-
-    /* shared = malloc(10); */
-    shared_memory_semaphore = new_semaphore(1);
-    shared_memory_spinlock = new_spinlock();
-
-    create_device("/terminal", get_terminal());
-    create_device("/keyboard", get_keyboard());
-    add_task(create_kernel_task());
-
-    /*
-    run_task(kernel_task3, NULL);
-    run_task(kernel_task4, NULL);
-    run_task(kernel_task5, NULL);
-    */
-    enable_scheduler();
 
     int err = execv("/ksh", (char *[]){NULL});
     if (err < 0)
