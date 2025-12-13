@@ -67,6 +67,11 @@ struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
     return entry_new;
 }
 
+struct dentry **get_dentries(struct dentry *root, struct superblock *sb)
+{
+    struct tmpfs_node *node = TMPFS_ENTRY(root->inode);
+}
+
 /* TODO: a lot of this should not be used with a non ramdisk bev */
 struct tmpfs_superblock
 {

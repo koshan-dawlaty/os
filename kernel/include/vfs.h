@@ -82,6 +82,12 @@ typedef struct dentry
     dentry_type type;
 } dentry;
 
+struct dir_context
+{
+    size_t num_read;
+    size_t fs_offset; /* the offset that the file system uses internally */
+};
+
 /*
  * passing parent as NULL will make the dentry be at the root dir
  */
@@ -92,6 +98,7 @@ typedef struct
 {
     // dentry *(*find_dentry)(char *path, superblock *sb);
     dentry **(*get_dentries)(dentry *entry, superblock *sb);
+    dentry *(*read_dir)(dentry *entry, struct dir_context, superblock *sb);
     dentry *(*append_dentry)(dentry *parent, char *name, superblock *sb);
 
     int (*remove_dentry)(dentry *, char *, superblock *);

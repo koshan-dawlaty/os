@@ -26,8 +26,8 @@ dentry *parse_dentries_component(dentry **dentries, char *component)
     return NULL;
 }
 
-size_t parse_component(const char *path, dentry **current_dir,
-                       struct pathname_lookup_flags flags)
+static size_t parse_component(const char *path, dentry **current_dir,
+                              struct pathname_lookup_flags flags)
 {
     /* TODO: stupid */
     bool starts_with_slash = false;

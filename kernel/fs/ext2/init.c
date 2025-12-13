@@ -55,6 +55,7 @@ const struct fs_type ext2_fs_type = {
                         .alloc_inode = ext2_ialloc},
     .dentry_functions = {.get_dentries = ext2_get_dentries,
                          .append_dentry = ext2_append_dentry,
+                         .read_dir = ext2_readdir,
                          .remove_dentry = ext2_remove_dentry},
     .superblock_functions = {.parse_superblock = ext2_parse_superblock_vfs},
 

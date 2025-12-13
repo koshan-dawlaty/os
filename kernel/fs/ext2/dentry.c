@@ -1,16 +1,14 @@
-#include "bits/pthreadtypes.h"
-#include "ctype.h"
 #include "ext2.h"
-#include "kernel/paging.h"
-#include "kernel/types.h"
-#include "vfs.h"
+#include <err.h>
 #include <errno.h>
+#include <kernel/types.h>
 #include <kernel/utils.h>
 #include <panic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vfs.h>
 
 dentry **ext2_get_dentries(dentry *entry, superblock *sb)
 {
@@ -70,6 +68,47 @@ dentry **ext2_get_dentries(dentry *entry, superblock *sb)
     out_len++;
     out = realloc(out, out_len * sizeof(dentry));
     out[out_len - 1] = NULL;
+
+    return out;
+}
+
+struct dentry *ext2_readdir(struct dentry *entry, struct dir_context context,
+                            superblock *sb)
+{
+    ext2_inode *node = EXT2_INODE(entry->inode);
+
+    size_t size = ext2_get_inode_size(node);
+    u8 *buf = malloc(size);
+    ext2_read_inode(node, buf, size, 0, sb);
+
+    if (context.fs_offset >= EXT2_BLOCK_SIZE(sb))
+    {
+        return ERR_PTR(-EOVERFLOW);
+    }
+
+    buf += context.fs_offset;
+
+    size_t node_index = *(u32 *)(buf);
+
+    u16 name_len = buf[6];
+    /* TODO: there may be some fields that could be used to support longer
+     * filenames */
+
+    u8 *name_ptr = buf + 8;
+
+    char *new_name = malloc(name_len + 1);
+    memcpy(new_name, name_ptr, name_len);
+    /* printf("printing name\n"); */
+    new_name[name_len] = 0;
+
+    ext2_inode *current_node = ext2_get_inode(node_index, sb);
+    dentry *out = new_dentry(new_name, entry,
+                             ext2_get_vfs_node(node_index, current_node, sb),
+                             ext2_get_dentry_type(current_node));
+
+    u16 total_size = *(u16 *)(buf + 4);
+
+    context.fs_offset += total_size;
 
     return out;
 }
