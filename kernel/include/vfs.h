@@ -97,8 +97,6 @@ void free_dentry(dentry *entry);
 
 typedef struct
 {
-    // dentry *(*find_dentry)(char *path, superblock *sb);
-    dentry **(*get_dentries)(dentry *entry, superblock *sb);
     dentry *(*read_dir)(dentry *entry, struct dir_context *, superblock *sb);
     dentry *(*append_dentry)(dentry *parent, char *name, superblock *sb);
 
@@ -157,12 +155,6 @@ struct fs_type
     inode_functions inode_functions;
     superblock_functions superblock_functions;
 };
-
-static inline dentry **dir_get_dentries(dentry *entry)
-{
-    superblock *sb = entry->inode->sb;
-    return sb->type->dentry_functions.get_dentries(entry, sb);
-}
 
 static inline dentry *dir_readdir(dentry *entry, struct dir_context *context)
 {
