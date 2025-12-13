@@ -1,5 +1,6 @@
 #include "ata/ata.h"
 #include "dcache.h"
+#include "scheduler.h"
 #include "vfs_internal.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,6 +75,19 @@ file *new_file(dentry *entry)
     out->entry = entry;
     out->descriptor = 0;
     out->offset = 0;
+
+    switch (entry->type)
+    {
+    case DENTRY_DEVICE:
+    case DENTRY_FILE:
+        break;
+    case DENTRY_MOUNT_POINT:
+    case DENTRY_DIR:
+        out->dir_context = DIR_CONTEXT_INIT();
+        break;
+    case DENTRY_INVALID:
+        break;
+    }
 
     return out;
 }

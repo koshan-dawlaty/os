@@ -1,7 +1,8 @@
 #include "dcache.h"
-#include "err.h"
 #include "vfs.h"
 #include "vfs_internal.h"
+#include <err.h>
+
 #include <errno.h>
 #include <kernel/types.h>
 #include <panic.h>
@@ -10,24 +11,28 @@
 #include <stdlib.h>
 #include <string.h>
 
-dentry *parse_dentries_component(dentry **dentries, char *component)
+dentry *parse_dentries_component(dentry *dir, const char *component)
 {
-    size_t i = 0;
-    while (dentries[i] != NULL)
+
+    struct dir_context context = DIR_CONTEXT_INIT();
+
+    struct dentry *ent = dir_readdir(dir, &context);
+    while (ent != NULL && !IS_ERR(ent))
     {
 
-        if (!strcmp(dentries[i]->name, component))
+        if (!strcmp(ent->name, component))
         {
-            return dentries[i];
+            return ent;
         }
 
-        i++;
+        ent = dir_readdir(dir, &context);
     }
-    return NULL;
+
+    return ent;
 }
 
-size_t parse_component(const char *path, dentry **current_dir,
-                       struct pathname_lookup_flags flags)
+static size_t parse_component(const char *path, dentry **current_dir,
+                              struct pathname_lookup_flags flags)
 {
     /* TODO: stupid */
     bool starts_with_slash = false;
@@ -58,9 +63,8 @@ size_t parse_component(const char *path, dentry **current_dir,
 
     if (entry == NULL)
     {
-        dentry **dentries = dir_get_dentries(*current_dir);
 
-        entry = parse_dentries_component(dentries, component);
+        entry = parse_dentries_component(*current_dir, component);
 
         if (entry == NULL)
         {

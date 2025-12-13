@@ -1,6 +1,7 @@
 #include "assert.h"
 #include "dcache.h"
 #include "dirent.h"
+#include "interrupts/pic.h"
 #include "memory/get_free_pages.h"
 #include "scheduler.h"
 #include "vfs_internal.h"
@@ -117,7 +118,8 @@ file *open_file(const char *path)
     file *out = new_file(dentry);
 
     struct fdlist *list = get_current_fdlist();
-    out->descriptor = fdlist_add(list, out);
+    int fd = fdlist_add(list, out);
+    out->descriptor = fd;
 
     return out;
 }
@@ -128,7 +130,7 @@ file *lookup_descriptor(int fd)
     return fdlist_lookup(list, fd);
 }
 
-int read_dir(file *dir, struct dirent *buf, size_t number)
+int read_dir(struct file *dir, struct dirent *buf, size_t number)
 {
 
     /* TODO: this should maybe be an error code as this is called by a syscall
@@ -139,64 +141,29 @@ int read_dir(file *dir, struct dirent *buf, size_t number)
            "the directory entry should represent a directory");
 
     /* assume buf has space for  n * sizeof(dirent) */
-    struct dirent *dir_buf = (struct dirent *)buf;
 
-    dentry **entries = dir_get_dentries(dir->entry);
-    size_t len = 0;
-    while (entries[len] != NULL)
+    struct dentry *entry = dir_readdir(dir->entry, &dir->dir_context);
+
+    size_t i = 0;
+
+    while (i < number && entry != NULL)
     {
-        len++;
-    }
-
-    if (dir->offset + number > len)
-    {
-        dir->offset = len;
-        return -EINVAL;
-    }
-
-    dentry *current = entries[dir->offset];
-
-    size_t i = dir->offset;
-    size_t j = 0;
-    while (current != NULL && j < number && i < len)
-    {
-
-        memcpy(dir_buf[j].d_name, current->name, strlen(current->name) + 1);
-
-        /* printf("writing to:%p\n", dir_buf[j]); */
-
-        /* TODO: it seems that the inode is invalid if current->type ==
-         * DENTRY_DIR might be a bug?
-         * it seems to overwrite dir_buf[j].name in some cases */
-        if (current->type == DENTRY_FILE)
+        if (IS_ERR(entry))
         {
-            /* printf("%p\n", current->name); */
-            /* printf("%d\n", current->inode->number); */
-            /* printf("WRITING TO:%p\n", &dir_buf[j].d_ino); */
-            /* printf("WRITING TO:%p\n", &dir_buf[j]); */
-
-            /* for (size_t i = 0; i < 10; i++) */
-            /* { */
-            /*     printf("%p ", *(uint8_t *)(0xa0000010 + i)); */
-            /* } */
-            /* printf("\n"); */
-
-            dir_buf[j].d_ino = current->inode->number;
+            return GET_ERR(entry);
         }
-        else
+        entry = dir_readdir(dir->entry, &dir->dir_context);
+
+        memcpy(buf[i].d_name, entry->name, strlen(entry->name));
+
+        if (DENTRY_TYPE_HAS_INODE(entry->type))
         {
-            /* TODO */
-            dir_buf[j].d_ino = 0;
+            buf[i].d_ino = entry->inode->number;
         }
-
         i++;
-        j++;
-        current = entries[i];
     }
 
-    dir->offset += number;
-
-    return j;
+    return 0;
 }
 
 int read_file(file *file, char *buf, size_t n, size_t off)

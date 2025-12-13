@@ -11,7 +11,7 @@
  */
 #define ERR_PTR(err) (void *)err
 #define IS_ERR(ptr)                                                            \
-    ((unsigned long)(void *)ptr) >= (unsigned long)(-MAX_PTR_VAL)
+    (((unsigned long)(void *)ptr) >= (unsigned long)(-MAX_PTR_VAL))
 
 #define GET_ERR(ptr) -((uintptr_t)ptr)
 

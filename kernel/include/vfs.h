@@ -9,7 +9,7 @@
 
 struct fs_type;
 
-typedef struct
+typedef struct superblock
 {
     size_t blocksize;
     void *fs_private;
@@ -21,7 +21,7 @@ typedef struct
 typedef struct
 {
     // TODO: this should have some way of determining what superblock is parsed
-    superblock *(*parse_superblock)(struct bdev *dev);
+    struct superblock *(*parse_superblock)(struct bdev *dev);
 } superblock_functions;
 
 superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
@@ -29,7 +29,7 @@ superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
 
 typedef size_t inode_size;
 
-typedef struct
+typedef struct inode
 {
     ino_t number;
     inode_size size;
@@ -82,6 +82,13 @@ typedef struct dentry
     dentry_type type;
 } dentry;
 
+struct dir_context
+{
+    size_t num_read;
+    size_t fs_offset; /* the offset that the file system uses internally */
+};
+#define DIR_CONTEXT_INIT() (struct dir_context){.num_read = 0, .fs_offset = 0}
+
 /*
  * passing parent as NULL will make the dentry be at the root dir
  */
@@ -90,8 +97,7 @@ void free_dentry(dentry *entry);
 
 typedef struct
 {
-    // dentry *(*find_dentry)(char *path, superblock *sb);
-    dentry **(*get_dentries)(dentry *entry, superblock *sb);
+    dentry *(*read_dir)(dentry *entry, struct dir_context *, superblock *sb);
     dentry *(*append_dentry)(dentry *parent, char *name, superblock *sb);
 
     int (*remove_dentry)(dentry *, char *, superblock *);
@@ -99,10 +105,15 @@ typedef struct
 
 typedef uint32_t fd_t;
 
-typedef struct
+typedef struct file
 {
-    // where read() / write() will read / write from
+    /* where read() / write() will read / write from */
     size_t offset;
+
+    union
+    {
+        struct dir_context dir_context;
+    };
 
     fd_t descriptor;
     // this could be inode, as the filename would probably be known. This could
@@ -145,10 +156,13 @@ struct fs_type
     superblock_functions superblock_functions;
 };
 
-static inline dentry **dir_get_dentries(dentry *entry)
+static inline dentry *dir_readdir(dentry *entry, struct dir_context *context)
 {
     superblock *sb = entry->inode->sb;
-    return sb->type->dentry_functions.get_dentries(entry, sb);
+    struct dentry *out =
+        sb->type->dentry_functions.read_dir(entry, context, sb);
+    context->num_read++;
+    return out;
 }
 
 void register_filesystem(struct fs_type *);

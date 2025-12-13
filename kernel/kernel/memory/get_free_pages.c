@@ -20,7 +20,7 @@ struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
 #elif defined(CONFIG_x86_32)
     .virtual = 0xD0000000,
 #endif
-    .physical = 0x7000000,
+    .physical = 0x700000,
     .size = DEFAULT_BITMAP_SIZE,
     .bitmap = gfp_kernel_bitmap,
     .pg_flags = PAGING_WRITEABLE,

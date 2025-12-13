@@ -274,6 +274,7 @@ void kernel_init()
 int main()
 {
 
+    printf("starting shell\n");
     int err = execv("/ksh", (char *[]){NULL});
     if (err < 0)
     {
