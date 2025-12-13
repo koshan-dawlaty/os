@@ -72,21 +72,27 @@ dentry **ext2_get_dentries(dentry *entry, superblock *sb)
     return out;
 }
 
-struct dentry *ext2_readdir(struct dentry *entry, struct dir_context context,
+struct dentry *ext2_readdir(struct dentry *entry, struct dir_context *context,
                             superblock *sb)
 {
+
+    if (context->fs_offset == EXT2_BLOCK_SIZE(sb))
+    {
+        return NULL;
+    }
+
     ext2_inode *node = EXT2_INODE(entry->inode);
 
     size_t size = ext2_get_inode_size(node);
     u8 *buf = malloc(size);
     ext2_read_inode(node, buf, size, 0, sb);
 
-    if (context.fs_offset >= EXT2_BLOCK_SIZE(sb))
+    if (context->fs_offset > EXT2_BLOCK_SIZE(sb))
     {
         return ERR_PTR(-EOVERFLOW);
     }
 
-    buf += context.fs_offset;
+    buf += context->fs_offset;
 
     size_t node_index = *(u32 *)(buf);
 
@@ -108,7 +114,7 @@ struct dentry *ext2_readdir(struct dentry *entry, struct dir_context context,
 
     u16 total_size = *(u16 *)(buf + 4);
 
-    context.fs_offset += total_size;
+    context->fs_offset += total_size;
 
     return out;
 }

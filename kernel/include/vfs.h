@@ -87,6 +87,7 @@ struct dir_context
     size_t num_read;
     size_t fs_offset; /* the offset that the file system uses internally */
 };
+#define DIR_CONTEXT_INIT() (struct dir_context){.num_read = 0, .fs_offset = 0}
 
 /*
  * passing parent as NULL will make the dentry be at the root dir
@@ -98,7 +99,7 @@ typedef struct
 {
     // dentry *(*find_dentry)(char *path, superblock *sb);
     dentry **(*get_dentries)(dentry *entry, superblock *sb);
-    dentry *(*read_dir)(dentry *entry, struct dir_context, superblock *sb);
+    dentry *(*read_dir)(dentry *entry, struct dir_context *, superblock *sb);
     dentry *(*append_dentry)(dentry *parent, char *name, superblock *sb);
 
     int (*remove_dentry)(dentry *, char *, superblock *);
@@ -156,6 +157,15 @@ static inline dentry **dir_get_dentries(dentry *entry)
 {
     superblock *sb = entry->inode->sb;
     return sb->type->dentry_functions.get_dentries(entry, sb);
+}
+
+static inline dentry *dir_readdir(dentry *entry, struct dir_context *context)
+{
+    superblock *sb = entry->inode->sb;
+    struct dentry *out =
+        sb->type->dentry_functions.read_dir(entry, context, sb);
+    context->num_read++;
+    return out;
 }
 
 void register_filesystem(struct fs_type *);
