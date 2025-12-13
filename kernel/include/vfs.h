@@ -107,10 +107,15 @@ typedef struct
 
 typedef uint32_t fd_t;
 
-typedef struct
+typedef struct file
 {
-    // where read() / write() will read / write from
+    /* where read() / write() will read / write from */
     size_t offset;
+
+    union
+    {
+        struct dir_context dir_context;
+    };
 
     fd_t descriptor;
     // this could be inode, as the filename would probably be known. This could
