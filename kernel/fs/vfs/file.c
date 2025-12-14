@@ -140,7 +140,7 @@ int read_dir(struct file *dir, struct dirent *buf, size_t number)
     ASSERT(dir->entry->type == DENTRY_DIR,
            "the directory entry should represent a directory");
 
-    /* assume buf has space for  n * sizeof(dirent) */
+    /* assume buf has space for n * sizeof(dirent) */
 
     struct dentry *entry = dir_readdir(dir->entry, &dir->dir_context);
 
