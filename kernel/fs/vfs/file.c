@@ -144,6 +144,11 @@ int read_dir(struct file *dir, struct dirent *buf, size_t number)
 
     struct dentry *entry = dir_readdir(dir->entry, &dir->dir_context);
 
+    if (entry == NULL)
+    {
+        return -ENOENT;
+    }
+
     size_t i = 0;
 
     while (i < number && entry != NULL)

@@ -22,6 +22,7 @@ int main(int argc, char **argv)
     {
 
         printf("%s\n", e->d_name);
+        printf("%p\n", e);
         /* printf("%d\n", d->fd); */
         e = readdir(d);
 
