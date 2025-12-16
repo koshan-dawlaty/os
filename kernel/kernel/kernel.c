@@ -259,7 +259,6 @@ void kernel_init()
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     add_task(create_kernel_task());
-    enable_scheduler();
     /*
     run_task(kernel_task3, NULL);
     run_task(kernel_task4, NULL);
@@ -280,6 +279,7 @@ int main()
     {
         printf("did not find shell\n");
     }
+    enable_scheduler();
 
     return 0;
 }

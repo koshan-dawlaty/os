@@ -33,8 +33,9 @@ int execv(const char *path, char *const argv[])
         {
             argc++;
         }
-
-        add_task(load_elf(elf, argc, (char **)argv));
+        struct task *t = load_elf(elf, argc, (char **)argv);
+        add_task(t);
+        free_elf(elf);
     }
     else
     {
