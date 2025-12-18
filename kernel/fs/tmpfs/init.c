@@ -81,7 +81,9 @@ struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
     struct tmpfs_node *parent = TMPFS_NODE(vfs_parent->inode);
 
     struct tmpfs_node *node = tmpfs_node_alloc_file(name, TMPFS_NODE_FILE, sb);
-    struct inode *inode_new = new_inode(0, 0, node, sb);
+    struct inode *inode_new =
+        new_inode(TMPFS_SB(sb)->inode_count++, 0, node, sb);
+    TMPFS_SB(sb)->inode_count++;
     struct dentry *entry_new =
         new_dentry(name, vfs_parent, inode_new, DENTRY_FILE);
 
@@ -120,10 +122,11 @@ found_entry:;
      * inodes */
 
     struct inode *out_node = new_inode(TMPFS_SB(sb)->inode_count, -1, node, sb);
+    TMPFS_SB(sb)->inode_count++;
+
     struct dentry *out =
         new_dentry(/* TODO: cast discards qualifiers */ (char *)node->name,
                    vfs_dir, out_node, DENTRY_FILE);
-    TMPFS_SB(sb)->inode_count++;
 
     return out;
 }
