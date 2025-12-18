@@ -1,11 +1,13 @@
 /* TODO: a lot of this should not be used with a non ramdisk bev */
 
+#include <assert.h>
 #include <bdev.h>
 #include <container_of.h>
 #include <err.h>
 #include <errno.h>
 #include <lib/list.h>
 #include <stdlib.h>
+#include <string.h>
 #include <vfs.h>
 
 struct tmpfs_superblock
@@ -39,7 +41,7 @@ struct tmpfs_node
     enum tmpfs_node_type type;
 };
 
-#define TMPFS_ENTRY(node) (struct tmpfs_node *)node->fs_private
+#define TMPFS_NODE(node) (struct tmpfs_node *)node->fs_private
 
 static struct tmpfs_node *tmpfs_node_alloc(const char *name,
                                            enum tmpfs_node_type type,
@@ -76,7 +78,7 @@ struct tmpfs_node *tmpfs_node_alloc_dir(const char *name,
 struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
                                    struct superblock *sb)
 {
-    struct tmpfs_node *parent = TMPFS_ENTRY(vfs_parent->inode);
+    struct tmpfs_node *parent = TMPFS_NODE(vfs_parent->inode);
 
     struct tmpfs_node *node = tmpfs_node_alloc_file(name, TMPFS_NODE_FILE, sb);
     struct inode *inode_new = new_inode(0, 0, node, sb);
@@ -92,7 +94,7 @@ struct dentry *tmpfs_read_dir(struct dentry *vfs_dir,
                               struct dir_context *context,
                               struct superblock *sb)
 {
-    struct tmpfs_node *dir = TMPFS_ENTRY(vfs_dir->inode);
+    struct tmpfs_node *dir = TMPFS_NODE(vfs_dir->inode);
     /* TODO: this will iterate through the list every time instead of indexing
      * it like an array, maybe make dir_context store a pointer, or something
      * similar
@@ -126,15 +128,50 @@ found_entry:;
     return out;
 }
 
+void tmpfs_read_inode(struct inode *vfs, u8 *buf, size_t n, size_t offset)
+{
+    struct tmpfs_node *node = TMPFS_NODE(vfs);
+
+    ASSERT(node->type == TMPFS_NODE_FILE, "node should be a file");
+
+    if (node->file.len <= n + offset)
+    {
+        n = node->file.len;
+    }
+    memcpy(buf, node->file.data + offset, n);
+}
+
+void tmpfs_write_inode(struct inode *vfs, const u8 *buf, size_t n,
+                       size_t offset)
+{
+    struct tmpfs_node *node = TMPFS_NODE(vfs);
+
+    if (n + offset >= node->file.len)
+    {
+        node->file.data = realloc(node->file.data, n + offset);
+        node->file.len = n + offset;
+    }
+    memcpy(node->file.data + offset, buf, n);
+}
+
 dentry *tmpfs_mount(struct bdev *dev)
 {
     return NULL;
 }
 
-const struct fs_type tmpfs_type = {.name = "tmpfs",
-                                   .mount = tmpfs_mount,
+const struct fs_type tmpfs_type = {
+    .name = "tmpfs",
+    .mount = tmpfs_mount,
 
-                                   .inode_functions = {},
-                                   .dentry_functions = {
-                                       .append_dentry = tmpfs_dentry_append,
-                                   }};
+    .inode_functions =
+        {
+            .read_inode = tmpfs_read_inode,
+            .write_inode = tmpfs_write_inode,
+        },
+    .dentry_functions =
+        {
+            .append_dentry = tmpfs_dentry_append,
+            .read_dir = tmpfs_read_dir,
+        },
+
+};
