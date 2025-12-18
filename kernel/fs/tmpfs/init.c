@@ -1,7 +1,20 @@
-#include "bdev.h"
-#include "lib/list.h"
+/* TODO: a lot of this should not be used with a non ramdisk bev */
+
+#include <bdev.h>
+#include <container_of.h>
+#include <err.h>
+#include <errno.h>
+#include <lib/list.h>
 #include <stdlib.h>
 #include <vfs.h>
+
+struct tmpfs_superblock
+{
+    struct list2 files;
+    ino_t inode_count;
+};
+
+#define TMPFS_SB(s) ((struct tmpfs_superblock *)s->fs_private)
 
 enum tmpfs_node_type
 {
@@ -16,7 +29,11 @@ struct tmpfs_node
     union
     {
         struct list2 *dir_head; /* type == TMPFS_NODE_DIR, array */
-        void *data /* type == TMPFS_NODE_FILE */;
+        struct
+        {
+            void *data;
+            size_t len;
+        } file; /* type == TMPFS_NODE_FILE */
     };
 
     enum tmpfs_node_type type;
@@ -25,7 +42,8 @@ struct tmpfs_node
 #define TMPFS_ENTRY(node) (struct tmpfs_node *)node->fs_private
 
 static struct tmpfs_node *tmpfs_node_alloc(const char *name,
-                                           enum tmpfs_node_type type)
+                                           enum tmpfs_node_type type,
+                                           struct superblock *sb)
 {
     struct tmpfs_node *out = malloc(sizeof(struct tmpfs_node));
 
@@ -37,17 +55,20 @@ static struct tmpfs_node *tmpfs_node_alloc(const char *name,
 }
 
 struct tmpfs_node *tmpfs_node_alloc_file(const char *name,
-                                         enum tmpfs_node_type type)
+                                         enum tmpfs_node_type type,
+                                         struct superblock *sb)
 {
-    struct tmpfs_node *out = tmpfs_node_alloc(name, type);
-    out->data = malloc(0);
+    struct tmpfs_node *out = tmpfs_node_alloc(name, type, sb);
+    out->file.data = malloc(0);
+    out->file.len = 0;
     return out;
 }
 
 struct tmpfs_node *tmpfs_node_alloc_dir(const char *name,
-                                        enum tmpfs_node_type type)
+                                        enum tmpfs_node_type type,
+                                        struct superblock *sb)
 {
-    struct tmpfs_node *out = tmpfs_node_alloc(name, type);
+    struct tmpfs_node *out = tmpfs_node_alloc(name, type, sb);
     out->dir_head = NULL;
     return out;
 }
@@ -57,7 +78,7 @@ struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
 {
     struct tmpfs_node *parent = TMPFS_ENTRY(vfs_parent->inode);
 
-    struct tmpfs_node *node = tmpfs_node_alloc_file(name, TMPFS_NODE_FILE);
+    struct tmpfs_node *node = tmpfs_node_alloc_file(name, TMPFS_NODE_FILE, sb);
     struct inode *inode_new = new_inode(0, 0, node, sb);
     struct dentry *entry_new =
         new_dentry(name, vfs_parent, inode_new, DENTRY_FILE);
@@ -67,14 +88,47 @@ struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
     return entry_new;
 }
 
-/* TODO: a lot of this should not be used with a non ramdisk bev */
-struct tmpfs_superblock
+struct dentry *tmpfs_read_dir(struct dentry *vfs_dir,
+                              struct dir_context *context,
+                              struct superblock *sb)
 {
-    struct list2 files;
-};
+    struct tmpfs_node *dir = TMPFS_ENTRY(vfs_dir->inode);
+    /* TODO: this will iterate through the list every time instead of indexing
+     * it like an array, maybe make dir_context store a pointer, or something
+     * similar
+     * also context->fs_offset == context->num_read, might be able to not
+     * increment (this is probably a really bad idea and will be bad later */
+
+    size_t i = 0;
+    struct list2 *pos;
+    list2_for_each(pos, &dir->list)
+    {
+        if (i == context->fs_offset)
+        {
+            goto found_entry;
+        }
+
+        i++;
+    }
+    return ERR_PTR(-EOVERFLOW);
+
+found_entry:;
+    struct tmpfs_node *node = LIST_ENTRY(pos, struct tmpfs_node, list);
+    /* TODO: dont make a new inode here, the ones in the directory already have
+     * inodes */
+
+    struct inode *out_node = new_inode(TMPFS_SB(sb)->inode_count, -1, node, sb);
+    struct dentry *out =
+        new_dentry(/* TODO: cast discards qualifiers */ (char *)node->name,
+                   vfs_dir, out_node, DENTRY_FILE);
+    TMPFS_SB(sb)->inode_count++;
+
+    return out;
+}
 
 dentry *tmpfs_mount(struct bdev *dev)
 {
+    return NULL;
 }
 
 const struct fs_type tmpfs_type = {.name = "tmpfs",

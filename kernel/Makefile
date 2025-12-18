@@ -74,6 +74,7 @@ fs/vfs/device.o \
 fs/vfs/pathname.o \
 fs/vfs/vfs.o \
 fs/vfs/dcache.o \
+fs/tmpfs/init.o \
 \
 drivers/block/ata/pio.o \
 drivers/block/ata/dma.o \
