@@ -5,8 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vfs.h>
-// TODO: bad
+/* TODO: bad */
 #include "../ext2/ext2.h"
+#include "../tmpfs/tmpfs.h"
 
 superblock *current_superblock = NULL;
 
@@ -27,13 +28,16 @@ void init_vfs()
 
     /* rootdir = ext2_fs_type.mount(dev); */
 
-    current_superblock =
-        ext2_fs_type.superblock_functions.parse_superblock(dev);
+    /* current_superblock = */
+    /*     ext2_fs_type.superblock_functions.parse_superblock(dev); */
 
-    inode *node = current_superblock->type->inode_functions.get_inode(
-        2, current_superblock);
+    current_superblock = tmpfs_type.superblock_functions.parse_superblock(dev);
+    rootdir = tmpfs_type.mount(dev);
 
-    rootdir = new_dentry(".", NULL, node, DENTRY_DIR);
+    /* inode *node = current_superblock->type->inode_functions.get_inode( */
+    /*     2, current_superblock); */
+
+    /* rootdir = new_dentry(".", NULL, node, DENTRY_DIR); */
 
     init_dcache();
 }

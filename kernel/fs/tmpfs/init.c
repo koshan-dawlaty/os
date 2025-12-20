@@ -1,5 +1,5 @@
 /* TODO: a lot of this should not be used with a non ramdisk bev */
-
+#include "tmpfs.h"
 #include <assert.h>
 #include <bdev.h>
 #include <container_of.h>
@@ -42,6 +42,15 @@ struct tmpfs_node
 };
 
 #define TMPFS_NODE(node) (struct tmpfs_node *)node->fs_private
+
+static struct tmpfs_superblock *tmpfs_super_alloc()
+{
+    struct tmpfs_superblock *out = malloc(sizeof(struct tmpfs_superblock));
+
+    out->inode_count = 0;
+
+    return out;
+}
 
 static struct tmpfs_node *tmpfs_node_alloc(const char *name,
                                            enum tmpfs_node_type type,
@@ -157,12 +166,28 @@ void tmpfs_write_inode(struct inode *vfs, const u8 *buf, size_t n,
     memcpy(node->file.data + offset, buf, n);
 }
 
+struct superblock *tmpfs_parse_superblock(struct bdev *dev)
+{
+    struct tmpfs_superblock *tmpfs = tmpfs_super_alloc();
+    struct superblock *out = new_superblock(-1, tmpfs, dev, &tmpfs_type);
+
+    return out;
+}
+
 dentry *tmpfs_mount(struct bdev *dev)
 {
-    return NULL;
+    /* assume that the caller wants to create a new filesystem */
+
+    struct superblock *sb = tmpfs_parse_superblock(dev);
+    struct tmpfs_node *node = tmpfs_node_alloc_dir(".", TMPFS_NODE_DIR, sb);
+    struct inode *inode = new_inode(TMPFS_SB(sb)->inode_count, 0, node, sb);
+    TMPFS_SB(sb)->inode_count++;
+
+    return new_dentry(".", NULL, inode, DENTRY_DIR);
 }
 
 const struct fs_type tmpfs_type = {
+
     .name = "tmpfs",
     .mount = tmpfs_mount,
 
@@ -177,4 +202,8 @@ const struct fs_type tmpfs_type = {
             .read_dir = tmpfs_read_dir,
         },
 
+    .superblock_functions =
+        {
+            .parse_superblock = tmpfs_parse_superblock,
+        },
 };
