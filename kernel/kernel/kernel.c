@@ -273,6 +273,8 @@ void kernel_init()
 int main()
 {
 
+    creat("/ksh", 0);
+
     printf("starting shell\n");
     int err = execv("/ksh", (char *[]){NULL});
     if (err < 0)

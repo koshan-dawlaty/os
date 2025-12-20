@@ -118,19 +118,27 @@ struct dentry *tmpfs_read_dir(struct dentry *vfs_dir,
     {
         if (i == context->fs_offset)
         {
+            context->fs_offset++;
             goto found_entry;
         }
 
         i++;
     }
-    return ERR_PTR(-EOVERFLOW);
+
+    if (context->fs_offset == i)
+    {
+        return NULL;
+    }
+    else
+    {
+        return ERR_PTR(-EOVERFLOW);
+    }
 
 found_entry:;
     struct tmpfs_node *node = LIST_ENTRY(pos, struct tmpfs_node, list);
-    /* TODO: dont make a new inode here, the ones in the directory already have
-     * inodes */
 
-    struct inode *out_node = new_inode(TMPFS_SB(sb)->inode_count, -1, node, sb);
+    struct inode *out_node =
+        new_inode(TMPFS_SB(sb)->inode_count, node->file.len, node, sb);
     TMPFS_SB(sb)->inode_count++;
 
     struct dentry *out =

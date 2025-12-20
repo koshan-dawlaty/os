@@ -77,3 +77,5 @@ generic read/write functions for devices that cannot be read from / written to, 
 
 printing stuff is really expensive in graphics mode, it reads from video memory when it scrolls
 linux kernel like .config 
+
+vfs get_inode might not be needed

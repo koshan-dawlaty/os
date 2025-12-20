@@ -19,7 +19,6 @@ dentry *parse_dentries_component(dentry *dir, const char *component)
     struct dentry *ent = dir_readdir(dir, &context);
     while (ent != NULL && !IS_ERR(ent))
     {
-
         if (!strcmp(ent->name, component))
         {
             return ent;
