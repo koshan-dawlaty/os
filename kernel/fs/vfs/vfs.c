@@ -28,11 +28,11 @@ void init_vfs()
 
     /* rootdir = ext2_fs_type.mount(dev); */
 
-    /* current_superblock = */
-    /*     ext2_fs_type.superblock_functions.parse_superblock(dev); */
-
     current_superblock = tmpfs_type.superblock_functions.parse_superblock(dev);
     rootdir = tmpfs_type.mount(dev);
+
+    /* current_superblock = */
+    /*     ext2_fs_type.superblock_functions.parse_superblock(dev); */
 
     /* inode *node = current_superblock->type->inode_functions.get_inode( */
     /*     2, current_superblock); */

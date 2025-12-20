@@ -170,6 +170,7 @@ void tmpfs_write_inode(struct inode *vfs, const u8 *buf, size_t n,
     {
         node->file.data = realloc(node->file.data, n + offset);
         node->file.len = n + offset;
+        vfs->size = n + offset;
     }
     memcpy(node->file.data + offset, buf, n);
 }
