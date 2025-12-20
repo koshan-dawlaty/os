@@ -273,15 +273,6 @@ void kernel_init()
 int main()
 {
 
-    creat("/one", 0);
-    int fd = open("/one", 0);
-
-    pwrite(fd, "abcdef", 7, 0);
-    char *buf = malloc(100);
-    /* lseek(fd, 0, SEEK_SET); */
-    pread(fd, buf, 100, 0);
-    printf("read:%s\n", buf);
-
     printf("starting shell\n");
     int err = execv("/ksh", (char *[]){NULL});
     if (err < 0)

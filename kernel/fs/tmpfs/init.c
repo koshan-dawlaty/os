@@ -89,6 +89,8 @@ struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
 {
     struct tmpfs_node *parent = TMPFS_NODE(vfs_parent->inode);
 
+    ASSERT(parent->type == TMPFS_NODE_DIR, "entry needs to be a dir");
+
     struct tmpfs_node *node = tmpfs_node_alloc_file(name, TMPFS_NODE_FILE, sb);
     struct inode *inode_new =
         new_inode(TMPFS_SB(sb)->inode_count++, 0, node, sb);
@@ -96,7 +98,14 @@ struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
     struct dentry *entry_new =
         new_dentry(name, vfs_parent, inode_new, DENTRY_FILE);
 
-    list2_add(&node->list, &parent->list);
+    if (parent->dir_head == NULL)
+    {
+        parent->dir_head = &node->list;
+    }
+    else
+    {
+        list2_add(&node->list, parent->dir_head);
+    }
 
     return entry_new;
 }
@@ -195,6 +204,29 @@ dentry *tmpfs_mount(struct bdev *dev)
     return new_dentry(".", NULL, inode, DENTRY_DIR);
 }
 
+int tmpfs_dentry_remove(dentry *parent, char *name, superblock *sb)
+{
+    struct tmpfs_node *node = TMPFS_NODE(parent->inode);
+    ASSERT(node->type == TMPFS_NODE_DIR,
+           "tmpfs_remove_dentry needs a directory passed as the dentry");
+
+    list2 *pos;
+    list_for_each(pos, node->dir_head)
+    {
+        struct tmpfs_node *current = LIST_ENTRY(pos, struct tmpfs_node, list);
+
+        if (!strcmp(current->name, name))
+        {
+            list2_remove(pos, &node->dir_head);
+            /* TODO: bad free */
+            free(current);
+            return 0;
+        }
+    }
+
+    return -ENOENT;
+}
+
 const struct fs_type tmpfs_type = {
 
     .name = "tmpfs",
@@ -208,6 +240,7 @@ const struct fs_type tmpfs_type = {
     .dentry_functions =
         {
             .append_dentry = tmpfs_dentry_append,
+            .remove_dentry = tmpfs_dentry_remove,
             .read_dir = tmpfs_read_dir,
         },
 
