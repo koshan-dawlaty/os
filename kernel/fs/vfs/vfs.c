@@ -1,7 +1,8 @@
-#include "ata/ata.h"
 #include "dcache.h"
-#include "scheduler.h"
 #include "vfs_internal.h"
+#include <ata/ata.h>
+#include <fcntl.h>
+#include <scheduler.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <vfs.h>
@@ -26,9 +27,13 @@ void init_vfs()
 
     struct bdev *dev = get_ata_drive(0);
 
-    struct fs_type type = ext2_fs_type;
+    struct fs_type type = tmpfs_type;
+    /* struct fs_type type = ext2_fs_type; */
     rootdir = type.mount(dev);
     current_superblock = rootdir->inode->sb;
+
+    /* rootdir->inode->sb->type->dentry_functions.append_dentry( */
+    /*     rootdir, "abc", rootdir->inode->sb); */
 
     /* current_superblock =
      * tmpfs_type.superblock_functions.parse_superblock(dev); */
@@ -43,6 +48,13 @@ void init_vfs()
     /* rootdir = new_dentry(".", NULL, node, DENTRY_DIR); */
 
     init_dcache();
+
+    /*     struct dentry *tmpfs_root = tmpfs_type.mount(NULL); */
+    /*     tmpfs_root->name = "tmpfs"; */
+
+    /* tmpfs_root->inode->sb->type->dentry_functions.append_dentry( */
+    /*     tmpfs_root, "a", tmpfs_root->inode->sb); */
+    /* add_dcache(rootdir, tmpfs_root); */
 }
 
 superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
@@ -62,6 +74,7 @@ superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
 dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type)
 {
     dentry *out = malloc(sizeof(dentry));
+
     out->inode = inode;
     out->name = name;
     out->parent = parent;

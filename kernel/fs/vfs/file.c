@@ -153,11 +153,15 @@ int read_dir(struct file *dir, struct dirent *buf, size_t number)
 
     while (i < number && entry != NULL)
     {
+        if (i != 0)
+        {
+            entry = dir_readdir(dir->entry, &dir->dir_context);
+        }
+
         if (IS_ERR(entry))
         {
             return GET_ERR(entry);
         }
-        entry = dir_readdir(dir->entry, &dir->dir_context);
 
         memcpy(buf[i].d_name, entry->name, strlen(entry->name));
 
@@ -165,6 +169,7 @@ int read_dir(struct file *dir, struct dirent *buf, size_t number)
         {
             buf[i].d_ino = entry->inode->number;
         }
+
         i++;
     }
 

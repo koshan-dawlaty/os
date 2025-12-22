@@ -192,6 +192,11 @@ that they will not work because the bootstrap has not initialized them
 
                 char *str = va_arg(list, char *);
 
+                if (str == NULL)
+                {
+                    str = "null";
+                }
+
                 increment_buf(&out, &out_len, &capacity, strlen(str));
 
                 out_len += strlen(str);

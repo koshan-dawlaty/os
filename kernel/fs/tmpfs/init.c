@@ -80,7 +80,7 @@ struct tmpfs_node *tmpfs_node_alloc_dir(const char *name,
                                         struct superblock *sb)
 {
     struct tmpfs_node *out = tmpfs_node_alloc(name, type, sb);
-    out->dir_head = NULL;
+    out->dir_head = &out->list;
     return out;
 }
 
@@ -98,14 +98,14 @@ struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
     struct dentry *entry_new =
         new_dentry(name, vfs_parent, inode_new, DENTRY_FILE);
 
-    if (parent->dir_head == NULL)
-    {
-        parent->dir_head = &node->list;
-    }
-    else
-    {
-        list2_add(&node->list, parent->dir_head);
-    }
+    /* if (parent->dir_head == NULL) */
+    /* { */
+    /*     parent->dir_head = &node->list; */
+    /* } */
+    /* else */
+    /* { */
+    list2_add(&node->list, parent->dir_head);
+    /* } */
 
     return entry_new;
 }
@@ -145,6 +145,8 @@ struct dentry *tmpfs_read_dir(struct dentry *vfs_dir,
 
 found_entry:;
     struct tmpfs_node *node = LIST_ENTRY(pos, struct tmpfs_node, list);
+
+    /* printf("tmpfs:%s\n", node->name); */
 
     struct inode *out_node =
         new_inode(TMPFS_SB(sb)->inode_count, node->file.len, node, sb);

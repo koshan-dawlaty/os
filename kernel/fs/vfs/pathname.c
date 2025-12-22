@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-dentry *parse_dentries_component(dentry *dir, const char *component)
+static dentry *parse_dentries_component(dentry *dir, const char *component)
 {
 
     struct dir_context context = DIR_CONTEXT_INIT();
@@ -19,6 +19,7 @@ dentry *parse_dentries_component(dentry *dir, const char *component)
     struct dentry *ent = dir_readdir(dir, &context);
     while (ent != NULL && !IS_ERR(ent))
     {
+        /* printf("%s\n", ent->name); */
         if (!strcmp(ent->name, component))
         {
             return ent;
