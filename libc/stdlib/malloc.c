@@ -410,3 +410,11 @@ void init_heap()
     heap_mutex = new_spinlock();
 #endif
 }
+
+void *calloc(size_t n, size_t size)
+{
+    void *out = malloc(n * size);
+    bzero(out, n * size);
+
+    return out;
+}

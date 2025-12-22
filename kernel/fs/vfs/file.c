@@ -229,6 +229,9 @@ int write_file(file *file, const char *buf, size_t n, size_t off)
             return cdev_write(dev->character, (u8 *)buf, n);
         }
     }
+    else
+    {
+    }
 
     inode *node = file->entry->inode;
 

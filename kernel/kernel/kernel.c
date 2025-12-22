@@ -273,26 +273,26 @@ void kernel_init()
 int main()
 {
 
-    creat("abc", 0);
-    creat("two", 0);
+    /* creat("abc", 0); */
+    /* creat("two", 0); */
 
-    printf("ls\n");
-    DIR *d = opendir("/");
-    struct dirent *ent = NULL;
-    do
-    {
-        ent = readdir(d);
-        printf("%s\n", ent->d_name);
-    } while (ent != NULL);
-    printf("ls end\n");
+    /* printf("ls\n"); */
+    /* DIR *d = opendir("/"); */
+    /* struct dirent *ent = NULL; */
+    /* do */
+    /* { */
+    /*     ent = readdir(d); */
+    /*     printf("%s\n", ent->d_name); */
+    /* } while (ent != NULL); */
+    /* printf("ls end\n"); */
 
-    int fd = open("/abc", 0);
+    /* int fd = open("/abc", 0); */
 
-    pwrite(fd, "abcdefg", 8, 0);
-    char *buf = malloc(100);
-    pread(fd, buf, 100, 0);
+    /* pwrite(fd, "abcdefg", 8, 0); */
+    /* char *buf = malloc(100); */
+    /* pread(fd, buf, 100, 0); */
 
-    printf("read:%s\n", buf);
+    /* printf("read:%s\n", buf); */
 
     printf("starting shell\n");
     int err = execv("/ksh", (char *[]){NULL});

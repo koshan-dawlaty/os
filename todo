@@ -79,3 +79,5 @@ printing stuff is really expensive in graphics mode, it reads from video memory 
 linux kernel like .config 
 
 vfs get_inode might not be needed
+
+ext2 dentry create makes a entry called '%' when it makes a dentry, its probably corrupting something

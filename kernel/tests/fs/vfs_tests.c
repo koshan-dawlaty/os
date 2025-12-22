@@ -151,3 +151,18 @@ TEST(stdlib_FILE, {
         }
     }
 })
+
+TEST(vfs_read_dir, {
+    struct file *f = open_file("/");
+
+    size_t num = 2;
+    /* we want this to be zeroed because we check if the name is null later */
+    struct dirent *buf = calloc(num, sizeof(struct dirent));
+    read_dir(f, buf, num);
+
+    for (size_t i = 0; i < num; i++)
+    {
+        ASSERT_NONULL(buf[i].d_name,
+                      "element name in buffer should not be null");
+    }
+})

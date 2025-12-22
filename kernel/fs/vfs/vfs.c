@@ -27,8 +27,8 @@ void init_vfs()
 
     struct bdev *dev = get_ata_drive(0);
 
-    struct fs_type type = tmpfs_type;
-    /* struct fs_type type = ext2_fs_type; */
+    /* struct fs_type type = tmpfs_type; */
+    struct fs_type type = ext2_fs_type;
     rootdir = type.mount(dev);
     current_superblock = rootdir->inode->sb;
 
