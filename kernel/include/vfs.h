@@ -85,7 +85,8 @@ typedef struct dentry
 struct dir_context
 {
     size_t num_read;
-    size_t fs_offset; /* the offset that the file system uses internally */
+    size_t dcache_offset; /* the offset that dcache uses internally */
+    size_t fs_offset;     /* the offset that the file system uses internally */
 };
 #define DIR_CONTEXT_INIT() (struct dir_context){.num_read = 0, .fs_offset = 0}
 
@@ -156,14 +157,7 @@ struct fs_type
     superblock_functions superblock_functions;
 };
 
-static inline dentry *dir_readdir(dentry *entry, struct dir_context *context)
-{
-    superblock *sb = entry->inode->sb;
-    struct dentry *out =
-        sb->type->dentry_functions.read_dir(entry, context, sb);
-    context->num_read++;
-    return out;
-}
+dentry *dir_readdir(dentry *entry, struct dir_context *context);
 
 void register_filesystem(struct fs_type *);
 

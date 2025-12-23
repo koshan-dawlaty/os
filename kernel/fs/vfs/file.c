@@ -136,6 +136,7 @@ int read_dir(struct file *dir, struct dirent *buf, size_t number)
     /* TODO: this should maybe be an error code as this is called by a syscall
      */
     NOT_NULL(dir, "directory should not be null");
+    NOT_NULL(dir->entry, "directory should not have null dentry");
 
     ASSERT(dir->entry->type == DENTRY_DIR,
            "the directory entry should represent a directory");

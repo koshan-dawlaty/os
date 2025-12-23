@@ -1,4 +1,6 @@
 #include "dcache.h"
+#include "err.h"
+#include "panic.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
 #include <fcntl.h>
@@ -49,8 +51,8 @@ void init_vfs()
 
     init_dcache();
 
-    /*     struct dentry *tmpfs_root = tmpfs_type.mount(NULL); */
-    /*     tmpfs_root->name = "tmpfs"; */
+    /* struct dentry *tmpfs_root = tmpfs_type.mount(NULL); */
+    /* tmpfs_root->name = "tmpfs"; */
 
     /* tmpfs_root->inode->sb->type->dentry_functions.append_dentry( */
     /*     tmpfs_root, "a", tmpfs_root->inode->sb); */
@@ -138,4 +140,35 @@ int delete_dentry(dentry *entry)
 
 void register_filesystem(struct fs_type *type)
 {
+}
+
+/*
+ * TODO: this currently will not use dcache for actual file system entries
+ * The issue with this is that both dcache and the filesystem have duplicate
+ * information
+ */
+dentry *dir_readdir(dentry *entry, struct dir_context *context)
+{
+    superblock *sb = entry->inode->sb;
+
+    struct dentry *dcache = dcache_readdir(entry, context);
+
+    /* printf("%p\n", dcache); */
+
+    if (!IS_ERR(dcache) && dcache != NULL)
+    {
+        /* printf("got %s from dcache\n", dcache->name); */
+        context->num_read++;
+        return dcache;
+    }
+
+    struct dentry *out =
+        sb->type->dentry_functions.read_dir(entry, context, sb);
+    context->num_read++;
+    if (out != NULL)
+    {
+        /* printf("got %s from not dcache\n", out->name); */
+    }
+
+    return out;
 }

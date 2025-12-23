@@ -256,9 +256,6 @@ void kernel_init()
     shared_memory_semaphore = new_semaphore(1);
     shared_memory_spinlock = new_spinlock();
 
-    create_device("/terminal", get_terminal());
-    create_device("/keyboard", get_keyboard());
-    add_task(create_kernel_task());
     /*
     run_task(kernel_task3, NULL);
     run_task(kernel_task4, NULL);
@@ -273,18 +270,21 @@ void kernel_init()
 int main()
 {
 
-    /* creat("abc", 0); */
+    create_device("/terminal", get_terminal());
+    create_device("/keyboard", get_keyboard());
+
+    creat("abc", 0);
     /* creat("two", 0); */
 
-    /* printf("ls\n"); */
-    /* DIR *d = opendir("/"); */
-    /* struct dirent *ent = NULL; */
-    /* do */
-    /* { */
-    /*     ent = readdir(d); */
-    /*     printf("%s\n", ent->d_name); */
-    /* } while (ent != NULL); */
-    /* printf("ls end\n"); */
+    printf("ls\n");
+    DIR *d = opendir("/");
+    struct dirent *ent = NULL;
+    do
+    {
+        ent = readdir(d);
+        printf("read:%s\n", ent->d_name);
+    } while (ent != NULL);
+    printf("ls end\n");
 
     /* int fd = open("/abc", 0); */
 
@@ -294,6 +294,7 @@ int main()
 
     /* printf("read:%s\n", buf); */
 
+    add_task(create_kernel_task());
     printf("starting shell\n");
     int err = execv("/ksh", (char *[]){NULL});
     if (err < 0)

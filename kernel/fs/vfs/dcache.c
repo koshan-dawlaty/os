@@ -1,9 +1,10 @@
-#include "container_of.h"
-#include "err.h"
-#include "kernel/utils.h"
-#include "lib/list.h"
-#include "lib/lru.h"
-#include "lib/refcount.h"
+#include <container_of.h>
+#include <err.h>
+#include <errno.h>
+#include <kernel/utils.h>
+#include <lib/list.h>
+#include <lib/lru.h>
+#include <lib/refcount.h>
 #include <panic.h>
 #include <stdlib.h>
 #include <string.h>
@@ -215,6 +216,61 @@ void add_dcache(dentry *parent, dentry *new_entry)
     {
         struct dcache_value *value =
             LRU_LIST_ENTRY(pos, struct dcache_value, lru);
+    }
+}
+
+/*
+ * TODO: this currently does not take entries from temporary dcache, because
+ * then it would result in entries not in the dcache not being seen by readdir
+ * attempts to read from the directory if it is in the cache
+ * if it is not in the cache, returns NULL
+ */
+struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
+{
+    struct dcache_dir *dir = get_dcache_dir(entry);
+
+    if (dir == NULL)
+    {
+        return NULL;
+    }
+
+    size_t i = 0;
+    list *pos;
+    list_for_each(pos, dir->permanent_values)
+    {
+        struct dcache_value *value = LIST_ENTRY(pos, struct dcache_value, list);
+
+        if (i == context->dcache_offset)
+        {
+            context->dcache_offset++;
+            return value->entry;
+        }
+
+        i++;
+    }
+
+    /* size_t i = 0; */
+    /* list2 *pos2; */
+    /* list2_for_each(pos2, &dir->values_head->head->list) */
+    /* { */
+    /*     struct dcache_value *value = */
+    /*         LRU_LIST_ENTRY(pos2, struct dcache_value, lru); */
+
+    /*     if (i == context->dcache_offset) */
+    /*     { */
+    /*         context->dcache_offset++; */
+    /*         return value->entry; */
+    /*     } */
+    /* } */
+
+    if (i == context->dcache_offset + 1)
+    {
+        /* done reading the directory */
+        return NULL;
+    }
+    else
+    {
+        return ERR_PTR(-ENOENT);
     }
 }
 

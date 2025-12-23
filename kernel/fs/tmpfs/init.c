@@ -121,6 +121,8 @@ struct dentry *tmpfs_read_dir(struct dentry *vfs_dir,
      * also context->fs_offset == context->num_read, might be able to not
      * increment (this is probably a really bad idea and will be bad later */
 
+    /* printf("number:%p\n", context); */
+
     size_t i = 0;
     struct list2 *pos;
     list2_for_each(pos, &dir->list)
