@@ -164,5 +164,5 @@ dentry *ext2_mount(struct bdev *dev)
         new_superblock(ext2_sb->block_size, ext2_sb, dev, &ext2_fs_type);
 
     inode *node = ext2_iget(2, sb);
-    return new_dentry(".", NULL, node, DENTRY_DIR);
+    return new_dentry(".", NULL, node, DENTRY_MOUNT_POINT);
 }

@@ -81,3 +81,6 @@ linux kernel like .config
 vfs get_inode might not be needed
 
 ext2 dentry create makes a entry called '%' when it makes a dentry, its probably corrupting something
+
+
+vfs probably has a sync bug

@@ -123,9 +123,13 @@ static size_t parse_component(const char *path, dentry **current_dir,
             goto not_dir;
         }
     }
+    else if (entry->type == DENTRY_MOUNT_POINT)
+    {
+        /* TODO */
+    }
     else
     {
-        panic("unhandled dentry type in lookup_path!!!");
+        panic("unhandled dentry type in lookup_path");
     }
 
     /* *current_dir = ERR_PTR(-ENOENT); */

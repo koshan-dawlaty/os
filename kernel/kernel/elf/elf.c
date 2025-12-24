@@ -2,6 +2,7 @@
 #include "kernel/paging.h"
 #include "kernel/utils.h"
 #include "memory/paging_flags.h"
+#include "panic.h"
 #include "scheduler.h"
 #include "sys/types.h"
 #include <elf.h>
@@ -81,7 +82,8 @@ if (header->memory_size > header->file_size)
         }
         else
         {
-            printf("unrecognized header type:%d\n", header->type);
+            panic("unrecognized header type:%d when loading elf file\n",
+                  header->type);
         }
     }
 

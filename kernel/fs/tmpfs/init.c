@@ -199,13 +199,12 @@ struct superblock *tmpfs_parse_superblock(struct bdev *dev)
 dentry *tmpfs_mount(struct bdev *dev)
 {
     /* assume that the caller wants to create a new filesystem */
-
     struct superblock *sb = tmpfs_parse_superblock(dev);
     struct tmpfs_node *node = tmpfs_node_alloc_dir(".", TMPFS_NODE_DIR, sb);
     struct inode *inode = new_inode(TMPFS_SB(sb)->inode_count, 0, node, sb);
     TMPFS_SB(sb)->inode_count++;
 
-    return new_dentry(".", NULL, inode, DENTRY_DIR);
+    return new_dentry(".", NULL, inode, DENTRY_MOUNT_POINT);
 }
 
 int tmpfs_dentry_remove(dentry *parent, char *name, superblock *sb)

@@ -156,7 +156,6 @@ struct dcache_dir *add_dcache_dir(dentry *dir)
 
 void add_dcache_permanent(dentry *parent, dentry *new_entry)
 {
-    printf("test\n");
     struct dcache_dir *dir = get_dcache_dir(parent);
 
     if (dir == NULL)
@@ -179,7 +178,8 @@ void add_dcache_permanent(dentry *parent, dentry *new_entry)
 void add_dcache(dentry *parent, dentry *new_entry)
 {
 
-    if (new_entry->type == DENTRY_DEVICE)
+    if (new_entry->type == DENTRY_DEVICE ||
+        new_entry->type == DENTRY_MOUNT_POINT)
     {
         add_dcache_permanent(parent, new_entry);
         return;

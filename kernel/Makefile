@@ -16,7 +16,7 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas -fstack-protector-all -D__is_libk \
-		-Iacpi/acpica/ # TODO: this is bad
+		# -Iacpi/acpica/ # TODO: this is bad
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
@@ -88,7 +88,7 @@ drivers/character/terminal/device.o \
 drivers/character/keyboard/device.o \
 drivers/device.o \
 \
-acpi/os_layer/os_layer.o \
+# acpi/os_layer/os_layer.o \
 
 
 

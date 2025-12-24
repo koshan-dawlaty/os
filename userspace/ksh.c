@@ -19,6 +19,9 @@ int main()
 
     init_libc();
 
+    execv("cat", (char *[]){"cat", "two", NULL});
+    exit(0);
+
     /* execv("/cat", (char *[]){"/cat", "/one", NULL}); */
 
     /* exit(0); */

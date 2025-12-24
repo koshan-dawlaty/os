@@ -276,15 +276,15 @@ int main()
     creat("abc", 0);
     /* creat("two", 0); */
 
-    printf("ls\n");
-    DIR *d = opendir("/");
-    struct dirent *ent = NULL;
-    do
-    {
-        ent = readdir(d);
-        printf("read:%s\n", ent->d_name);
-    } while (ent != NULL);
-    printf("ls end\n");
+    /* printf("ls\n"); */
+    /* DIR *d = opendir("/"); */
+    /* struct dirent *ent = NULL; */
+    /* do */
+    /* { */
+    /*     ent = readdir(d); */
+    /*     printf("read:%s\n", ent->d_name); */
+    /* } while (ent != NULL); */
+    /* printf("ls end\n"); */
 
     /* int fd = open("/abc", 0); */
 
@@ -294,9 +294,17 @@ int main()
 
     /* printf("read:%s\n", buf); */
 
+    creat("/tmpfs/b", 0);
+    int fd = open("/tmpfs/b", 0);
+    char *buf = malloc(100);
+    pwrite(fd, "abc", 4, 0);
+    pread(fd, buf, 100, 0);
+    printf("file one:%s\n", buf);
+    return 1;
+
     add_task(create_kernel_task());
     printf("starting shell\n");
-    int err = execv("/ksh", (char *[]){NULL});
+    int err = execv("/ksh", (char *[]){"ksh", NULL});
     if (err < 0)
     {
         printf("did not find shell\n");

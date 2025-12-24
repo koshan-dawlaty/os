@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+
 file_name="$1"	
 size="32M"
 fs_root="$2"

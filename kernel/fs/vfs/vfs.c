@@ -7,6 +7,7 @@
 #include <scheduler.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <vfs.h>
 /* TODO: bad */
 #include "../ext2/ext2.h"
@@ -32,33 +33,28 @@ void init_vfs()
     /* struct fs_type type = tmpfs_type; */
     struct fs_type type = ext2_fs_type;
     rootdir = type.mount(dev);
-    current_superblock = rootdir->inode->sb;
+    /* current_superblock = rootdir->inode->sb; */
 
     /* rootdir->inode->sb->type->dentry_functions.append_dentry( */
     /*     rootdir, "abc", rootdir->inode->sb); */
-
-    /* current_superblock =
-     * tmpfs_type.superblock_functions.parse_superblock(dev); */
-    /* rootdir = tmpfs_type.mount(dev); */
-
-    /* current_superblock = */
-    /*     ext2_fs_type.superblock_functions.parse_superblock(dev); */
-
-    /* inode *node = current_superblock->type->inode_functions.get_inode( */
-    /*     2, current_superblock); */
 
     /* rootdir = new_dentry(".", NULL, node, DENTRY_DIR); */
 
     init_dcache();
 
-    /* struct dentry *tmpfs_root = tmpfs_type.mount(NULL); */
-    /* tmpfs_root->name = "tmpfs"; */
-
-    /* tmpfs_root->inode->sb->type->dentry_functions.append_dentry( */
-    /*     tmpfs_root, "a", tmpfs_root->inode->sb); */
-    /* add_dcache(rootdir, tmpfs_root); */
+    mount(rootdir, "tmpfs", tmpfs_type, NULL);
 }
 
+int mount(struct dentry *root, const char *new_name, struct fs_type fs,
+          struct bdev *dev)
+{
+    struct dentry *new_root = fs.mount(dev);
+    /* TODO: cast discards qualifiers */
+    new_root->name = (char *)new_name;
+
+    add_dcache(root, new_root);
+    return 0;
+}
 superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
                            const struct fs_type *type)
 {
@@ -134,7 +130,7 @@ int delete_dentry(dentry *entry)
 
     remove_dcache(entry);
 
-    return current_superblock->type->dentry_functions.remove_dentry(
+    return entry->inode->sb->type->dentry_functions.remove_dentry(
         entry->parent, entry->name, current_superblock);
 }
 
@@ -147,7 +143,7 @@ void register_filesystem(struct fs_type *type)
  * The issue with this is that both dcache and the filesystem have duplicate
  * information
  */
-dentry *dir_readdir(dentry *entry, struct dir_context *context)
+struct dentry *dir_readdir(dentry *entry, struct dir_context *context)
 {
     superblock *sb = entry->inode->sb;
 

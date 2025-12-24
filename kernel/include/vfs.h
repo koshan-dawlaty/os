@@ -227,4 +227,11 @@ void fdlist_free(struct fdlist *list);
 /* TODO: this name is very similar to the standard readdir() function */
 int read_dir(file *dir, struct dirent *buf, size_t number);
 
+/*
+ * mounts @fs on @root using @dev
+ * @fs is accessible from @name
+ */
+int mount(struct dentry *root, const char *new_name, struct fs_type fs,
+          struct bdev *dev);
+
 #endif
