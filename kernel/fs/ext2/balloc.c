@@ -31,6 +31,7 @@ inode *ext2_inode_alloc(superblock *sb)
                 ext2_write_block(usage_bitmap, usage_block, sb);
 
                 inode *node = ext2_iget(i, sb);
+
                 ext2_inode *ext2_node = EXT2_INODE(node);
                 ext2_node->type = 0x81ed;
                 ext2_node->size_low = 0;

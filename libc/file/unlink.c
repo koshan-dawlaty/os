@@ -1,3 +1,4 @@
+#include "errno.h"
 #include <fcntl.h>
 #include <stdbool.h>
 #include <sys/syscall.h>

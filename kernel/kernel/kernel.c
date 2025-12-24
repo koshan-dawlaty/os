@@ -270,10 +270,6 @@ void kernel_init()
 int main()
 {
 
-    create_device("/terminal", get_terminal());
-    create_device("/keyboard", get_keyboard());
-
-    creat("abc", 0);
     /* creat("two", 0); */
 
     /* printf("ls\n"); */
@@ -294,6 +290,25 @@ int main()
 
     /* printf("read:%s\n", buf); */
 
+    char *testfile = "/three";
+    creat(testfile, 0);
+    int fd1 = open(testfile, 0);
+    printf("opening newly created returns:%d\n", fd1);
+    unlink(testfile);
+
+    int fd2 = open(testfile, 0);
+    printf("opening file after delete returns:%d\n", fd2);
+    creat(testfile, 0);
+
+    int fd3 = open(testfile, 0);
+    printf("opening file again returns:%d\n", fd3);
+
+    close(fd1);
+    close(fd2);
+    close(fd3);
+
+    return 1;
+
     creat("/tmpfs/b", 0);
     int fd = open("/tmpfs/b", 0);
     char *buf = malloc(100);
@@ -301,6 +316,9 @@ int main()
     pread(fd, buf, 100, 0);
     printf("file one:%s\n", buf);
     return 1;
+
+    create_device("/terminal", get_terminal());
+    create_device("/keyboard", get_keyboard());
 
     add_task(create_kernel_task());
     printf("starting shell\n");

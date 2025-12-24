@@ -13,8 +13,6 @@
 #include "../ext2/ext2.h"
 #include "../tmpfs/tmpfs.h"
 
-superblock *current_superblock = NULL;
-
 struct fdlist *basic_open_files = NULL;
 
 dentry *rootdir = NULL;
@@ -33,7 +31,6 @@ void init_vfs()
     /* struct fs_type type = tmpfs_type; */
     struct fs_type type = ext2_fs_type;
     rootdir = type.mount(dev);
-    /* current_superblock = rootdir->inode->sb; */
 
     /* rootdir->inode->sb->type->dentry_functions.append_dentry( */
     /*     rootdir, "abc", rootdir->inode->sb); */
@@ -42,11 +39,11 @@ void init_vfs()
 
     init_dcache();
 
-    mount(rootdir, "tmpfs", tmpfs_type, NULL);
+    vfs_mount(rootdir, "tmpfs", tmpfs_type, NULL);
 }
 
-int mount(struct dentry *root, const char *new_name, struct fs_type fs,
-          struct bdev *dev)
+int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
+              struct bdev *dev)
 {
     struct dentry *new_root = fs.mount(dev);
     /* TODO: cast discards qualifiers */
@@ -127,11 +124,10 @@ inode *new_inode(ino_t number, inode_size size, void *fs_private,
 
 int delete_dentry(dentry *entry)
 {
-
     remove_dcache(entry);
 
     return entry->inode->sb->type->dentry_functions.remove_dentry(
-        entry->parent, entry->name, current_superblock);
+        entry->parent, entry->name, entry->inode->sb);
 }
 
 void register_filesystem(struct fs_type *type)

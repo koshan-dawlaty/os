@@ -65,7 +65,8 @@ int ext2_remove_dentry(dentry *entry, char *name, superblock *sb)
     /* TODO: this will not work if the size goes beyond one block */
     ext2_inode *ext2_entry = EXT2_INODE(node);
 
-    u8 *buf = malloc(EXT2_BLOCK_SIZE(sb));
+    size_t block_size = EXT2_BLOCK_SIZE(sb);
+    u8 *buf = malloc(block_size);
     ext2_read_inode(ext2_entry, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
     size_t i = 0;
     size_t prev = 0;
