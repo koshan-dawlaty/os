@@ -1,10 +1,10 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
-#include "kernel/paging.h"
-#include "kernel/types.h"
-#include "vfs.h"
+#include <kernel/paging.h>
+#include <kernel/types.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <vfs.h>
 
 /* TODO: mabye do the architecture specific part of this architecture
  * independent */
@@ -38,7 +38,7 @@ struct task
     void *stack;
     struct registers regs;
     ptr bp;
-    dentry *working_dir;
+    struct dentry *working_dir;
     struct fdlist *descriptors;
 };
 

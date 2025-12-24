@@ -1,11 +1,12 @@
 #ifndef VFS_H
 #define VFS_H
-#include "device.h"
-#include "kernel/types.h"
-#include "sys/types.h"
+#include <device.h>
 #include <dirent.h>
+#include <kernel/types.h>
+#include <scheduler.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/types.h>
 
 struct fs_type;
 
@@ -74,13 +75,37 @@ typedef struct dentry
 
     union
     {
-        inode *inode;
-        struct superblock *sb; /* type == DENTRY_MOUNT_POINT */
-        struct device *dev;    /* type == DENTRY_DEVICE  */
+        inode *inode; /* type == DENTRY_FILE, access with DENTRY_INODE() */
+        struct        /* type == DENTRY_MOUNT_POINT */
+        {
+            struct superblock
+                *sb;            /* superblock associated with this filesystem */
+            struct inode *root; /* node that contains the directory content of
+                                   the root directory for this filesystem,
+                                   access with DENTRY_INODE()
+                                                */
+        } mount_point;
+        struct device *dev; /* type == DENTRY_DEVICE  */
     };
 
     dentry_type type;
 } dentry;
+
+/*
+ * gets inode from dentry, null if it does not have one
+ */
+static inline struct inode *DENTRY_INODE(struct dentry *entry)
+{
+    switch (entry->type)
+    {
+    case DENTRY_DIR:
+        return entry->inode;
+    case DENTRY_MOUNT_POINT:
+        return entry->mount_point.root;
+    default:
+        return NULL;
+    }
+}
 
 struct dir_context
 {

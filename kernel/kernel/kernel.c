@@ -272,15 +272,15 @@ int main()
 
     /* creat("two", 0); */
 
-    /* printf("ls\n"); */
-    /* DIR *d = opendir("/"); */
-    /* struct dirent *ent = NULL; */
-    /* do */
-    /* { */
-    /*     ent = readdir(d); */
-    /*     printf("read:%s\n", ent->d_name); */
-    /* } while (ent != NULL); */
-    /* printf("ls end\n"); */
+    printf("ls\n");
+    DIR *d = opendir("/");
+    struct dirent *ent = NULL;
+    do
+    {
+        ent = readdir(d);
+        printf("read:%s\n", ent->d_name);
+    } while (ent != NULL);
+    printf("ls end\n");
 
     /* int fd = open("/abc", 0); */
 
@@ -289,23 +289,6 @@ int main()
     /* pread(fd, buf, 100, 0); */
 
     /* printf("read:%s\n", buf); */
-
-    char *testfile = "/three";
-    creat(testfile, 0);
-    int fd1 = open(testfile, 0);
-    printf("opening newly created returns:%d\n", fd1);
-    unlink(testfile);
-
-    int fd2 = open(testfile, 0);
-    printf("opening file after delete returns:%d\n", fd2);
-    creat(testfile, 0);
-
-    int fd3 = open(testfile, 0);
-    printf("opening file again returns:%d\n", fd3);
-
-    close(fd1);
-    close(fd2);
-    close(fd3);
 
     return 1;
 

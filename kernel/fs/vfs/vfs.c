@@ -52,11 +52,12 @@ int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
     add_dcache(root, new_root);
     return 0;
 }
-superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
-                           const struct fs_type *type)
+
+struct superblock *new_superblock(size_t blocksize, void *fs_private,
+                                  struct bdev *dev, const struct fs_type *type)
 {
 
-    superblock *out = malloc(sizeof(superblock));
+    struct superblock *out = malloc(sizeof(superblock));
 
     out->blocksize = blocksize;
     out->fs_private = fs_private;
@@ -141,7 +142,8 @@ void register_filesystem(struct fs_type *type)
  */
 struct dentry *dir_readdir(dentry *entry, struct dir_context *context)
 {
-    superblock *sb = entry->inode->sb;
+
+    superblock *sb = DENTRY_INODE(entry)->sb;
 
     struct dentry *dcache = dcache_readdir(entry, context);
 

@@ -138,7 +138,8 @@ int read_dir(struct file *dir, struct dirent *buf, size_t number)
     NOT_NULL(dir, "directory should not be null");
     NOT_NULL(dir->entry, "directory should not have null dentry");
 
-    ASSERT(dir->entry->type == DENTRY_DIR,
+    ASSERT(dir->entry->type == DENTRY_DIR ||
+               dir->entry->type == DENTRY_MOUNT_POINT,
            "the directory entry should represent a directory");
 
     /* assume buf has space for n * sizeof(dirent) */

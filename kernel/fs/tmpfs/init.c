@@ -204,7 +204,9 @@ dentry *tmpfs_mount(struct bdev *dev)
     struct inode *inode = new_inode(TMPFS_SB(sb)->inode_count, 0, node, sb);
     TMPFS_SB(sb)->inode_count++;
 
-    return new_dentry(".", NULL, inode, DENTRY_MOUNT_POINT);
+    struct dentry *out = new_dentry(".", NULL, inode, DENTRY_MOUNT_POINT);
+    out->mount_point.root = inode;
+    return out;
 }
 
 int tmpfs_dentry_remove(dentry *parent, char *name, superblock *sb)
