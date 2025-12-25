@@ -82,8 +82,6 @@ static size_t parse_component(const char *path, dentry **current_dir,
                 }
                 else if (flags.type == DENTRY_DEVICE)
                 {
-                    printf("device\n");
-                    printf("%p\n", flags.dev);
                     entry = new_dentry_dev(component, *current_dir, flags.dev);
                 }
             }

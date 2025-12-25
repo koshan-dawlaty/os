@@ -163,7 +163,7 @@ _start:
 	
 	call kernel_init
 	call _init
-	call main
+	call kmain
 
 	# Infinite loop if the system has nothing more to do.
 1:	

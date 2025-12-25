@@ -132,56 +132,20 @@ void kernel_init()
 #endif
 }
 
-int main()
+void kmain()
 {
-
-    /* creat("two", 0); */
-
-    printf("ls\n");
-    DIR *d = opendir("/");
-    struct dirent *ent = NULL;
-    do
-    {
-        ent = readdir(d);
-        printf("read:%s\n", ent->d_name);
-    } while (ent != NULL);
-    printf("ls end\n");
-
-    /* int fd = open("/abc", 0); */
-
-    /* pwrite(fd, "abcdefg", 8, 0); */
-    /* char *buf = malloc(100); */
-    /* pread(fd, buf, 100, 0); */
-
-    /* printf("read:%s\n", buf); */
-
-    creat("/tmpfs/b", 0);
-    int fd = open("/tmpfs/b", 0);
-    char *buf = malloc(100);
-    pwrite(fd, "abc", 4, 0);
-    pread(fd, buf, 100, 0);
-    printf("file one:%s\n", buf);
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
 
     add_task(create_kernel_task());
+
     printf("starting shell\n");
     int err = execv("/ksh", (char *[]){"ksh", NULL});
-    getchar();
-
-    /* printf("process 1\n"); */
-    /* execv("cat", (char *[]){"cat", "one", NULL}); */
-    /* getchar(); */
-    /* printf("process 2\n"); */
-    /* execv("cat", (char *[]){"cat", "two", NULL}); */
-
     if (err < 0)
     {
         printf("did not find shell\n");
     }
 
     enable_scheduler();
-
-    return 0;
 }
