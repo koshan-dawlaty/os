@@ -57,132 +57,6 @@ __attribute__((noreturn)) void __stack_chk_fail(void)
 
 extern struct pagedir init_pgdir;
 
-extern semaphore *test_semaphore;
-
-semaphore *shared_memory_semaphore;
-spinlock *shared_memory_spinlock;
-char *shared;
-void kernel_task1(void *args)
-
-{
-    printf("got:%s\n", args);
-    printf("1 is running\n");
-    sleep(1);
-    printf("this is kernel task1\n");
-    while (1)
-    {
-        lock_spinlock(shared_memory_spinlock);
-        memcpy(shared, "one", 4);
-
-        schedule();
-        if (strcmp(shared, "one"))
-        {
-            printf("task1: shared memory was corrupted to:%s\n", shared);
-        }
-
-        release_spinlock(shared_memory_spinlock);
-
-        schedule();
-    }
-}
-
-void kernel_task2(void *args)
-{
-    printf("2 is running\n");
-    sleep(2);
-    printf("this is kernel task2\n");
-    while (1)
-    {
-
-        lock_spinlock(shared_memory_spinlock);
-
-        memcpy(shared, "two", 4);
-
-        schedule();
-        schedule();
-        if (strcmp(shared, "two"))
-        {
-            printf("task2: shared memory was corrupted to:%s\n", shared);
-        }
-
-        release_spinlock(shared_memory_spinlock);
-
-        schedule();
-    }
-}
-
-void kernel_task3(void *args)
-{
-
-    printf("this is kernel task3\n");
-    while (1)
-    {
-
-        printf("in kernel_task3\n");
-        char *x = malloc(10);
-        schedule();
-
-        memcpy(x, "one", 4);
-
-        schedule();
-
-        if (strcmp(x, "one"))
-        {
-            printf("task1: shared memory was corrupted to:%s\n", x);
-        }
-
-        schedule();
-        free(x);
-        schedule();
-    }
-}
-
-void kernel_task4(void *args)
-{
-    printf("this is kernel task4\n");
-    while (1)
-    {
-        printf("in kernel_task4\n");
-
-        char *x = malloc(10);
-        schedule();
-        memcpy(x, "two", 4);
-        schedule();
-        if (strcmp(x, "two"))
-        {
-            printf("task2: shared memory was corrupted to:%s\n", x);
-        }
-
-        schedule();
-        free(x);
-        schedule();
-    }
-}
-
-void kernel_task5(void *args)
-{
-    printf("this is kernel task5\n");
-    while (1)
-    {
-
-        printf("in kernel_task5\n");
-        schedule();
-
-        char *x = malloc(10);
-        schedule();
-        memcpy(x, "333", 4);
-        schedule();
-        if (strcmp(x, "333"))
-        {
-            printf("task3: shared memory was corrupted to:%s\n", shared);
-        }
-
-        schedule();
-        free(x);
-        schedule();
-    }
-}
-
 extern void (*__ctors_start[])(void);
 extern void (*__ctors_end[])(void);
 
@@ -253,15 +127,6 @@ void kernel_init()
 
     call_constructors();
 
-    shared_memory_semaphore = new_semaphore(1);
-    shared_memory_spinlock = new_spinlock();
-
-    /*
-    run_task(kernel_task3, NULL);
-    run_task(kernel_task4, NULL);
-    run_task(kernel_task5, NULL);
-    */
-
 #ifdef TESTS
     run_tests();
 #endif
@@ -290,15 +155,12 @@ int main()
 
     /* printf("read:%s\n", buf); */
 
-    return 1;
-
     creat("/tmpfs/b", 0);
     int fd = open("/tmpfs/b", 0);
     char *buf = malloc(100);
     pwrite(fd, "abc", 4, 0);
     pread(fd, buf, 100, 0);
     printf("file one:%s\n", buf);
-    return 1;
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
@@ -306,10 +168,19 @@ int main()
     add_task(create_kernel_task());
     printf("starting shell\n");
     int err = execv("/ksh", (char *[]){"ksh", NULL});
+    getchar();
+
+    /* printf("process 1\n"); */
+    /* execv("cat", (char *[]){"cat", "one", NULL}); */
+    /* getchar(); */
+    /* printf("process 2\n"); */
+    /* execv("cat", (char *[]){"cat", "two", NULL}); */
+
     if (err < 0)
     {
         printf("did not find shell\n");
     }
+
     enable_scheduler();
 
     return 0;
