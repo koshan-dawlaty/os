@@ -156,10 +156,9 @@ struct dentry *ext2_mount(struct bdev *dev)
         new_superblock(ext2_sb->block_size, ext2_sb, dev, &ext2_fs_type);
 
     inode *node = ext2_iget(2, sb);
+    printf("rootdir node is:%d\n", node->number);
 
-    /* TODO: there should be a function that returns a new dentry for a mount
-     * point, and ones for devices and directories */
-    struct dentry *out = new_dentry(".", NULL, node, DENTRY_MOUNT_POINT);
-    out->mount_point.root = node;
+    struct dentry *out = dentry_mount_point_alloc(sb, node);
+    printf("rootdir pointer:%p\n", out);
     return out;
 }

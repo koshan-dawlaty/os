@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "dcache.h"
 #include "err.h"
 #include "panic.h"
@@ -56,7 +57,6 @@ int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
 struct superblock *new_superblock(size_t blocksize, void *fs_private,
                                   struct bdev *dev, const struct fs_type *type)
 {
-
     struct superblock *out = malloc(sizeof(superblock));
 
     out->blocksize = blocksize;
@@ -75,6 +75,18 @@ dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type)
     out->name = name;
     out->parent = parent;
     out->type = type;
+
+    return out;
+}
+dentry *dentry_mount_point_alloc(struct superblock *sb, struct inode *root)
+{
+    struct dentry *out = malloc(sizeof(struct dentry));
+    out->type = DENTRY_MOUNT_POINT;
+    out->name = ".";
+    out->parent = NULL;
+    out->inode = root;
+    /* might be redundant */
+    out->inode->sb = sb;
 
     return out;
 }
@@ -143,7 +155,10 @@ void register_filesystem(struct fs_type *type)
 struct dentry *dir_readdir(dentry *entry, struct dir_context *context)
 {
 
-    superblock *sb = DENTRY_INODE(entry)->sb;
+    ASSERT(entry->type == DENTRY_DIR || entry->type == DENTRY_MOUNT_POINT,
+           "attempt to read directory on non directory dentry");
+
+    struct superblock *sb = entry->inode->sb;
 
     struct dentry *dcache = dcache_readdir(entry, context);
 

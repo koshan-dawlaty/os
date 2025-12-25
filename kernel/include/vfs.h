@@ -75,37 +75,15 @@ typedef struct dentry
 
     union
     {
-        inode *inode; /* type == DENTRY_FILE, access with DENTRY_INODE() */
-        struct        /* type == DENTRY_MOUNT_POINT */
-        {
-            struct superblock
-                *sb;            /* superblock associated with this filesystem */
-            struct inode *root; /* node that contains the directory content of
-                                   the root directory for this filesystem,
-                                   access with DENTRY_INODE()
-                                                */
-        } mount_point;
+        inode *inode; /* type == DENTRY_FILE || DENTRY_DIR || DENTRY_MOUNT_POINT
+                       * if it is a mount point, the inode is the root of the
+                       * mounted filesystem
+                       */
         struct device *dev; /* type == DENTRY_DEVICE  */
     };
 
     dentry_type type;
 } dentry;
-
-/*
- * gets inode from dentry, null if it does not have one
- */
-static inline struct inode *DENTRY_INODE(struct dentry *entry)
-{
-    switch (entry->type)
-    {
-    case DENTRY_DIR:
-        return entry->inode;
-    case DENTRY_MOUNT_POINT:
-        return entry->mount_point.root;
-    default:
-        return NULL;
-    }
-}
 
 struct dir_context
 {
@@ -119,6 +97,8 @@ struct dir_context
  * passing parent as NULL will make the dentry be at the root dir
  */
 dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type);
+
+dentry *dentry_mount_point_alloc(struct superblock *sb, struct inode *root);
 void free_dentry(dentry *entry);
 
 typedef struct

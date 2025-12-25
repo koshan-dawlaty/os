@@ -201,11 +201,10 @@ dentry *tmpfs_mount(struct bdev *dev)
     /* assume that the caller wants to create a new filesystem */
     struct superblock *sb = tmpfs_parse_superblock(dev);
     struct tmpfs_node *node = tmpfs_node_alloc_dir(".", TMPFS_NODE_DIR, sb);
-    struct inode *inode = new_inode(TMPFS_SB(sb)->inode_count, 0, node, sb);
+    struct inode *root = new_inode(TMPFS_SB(sb)->inode_count, 0, node, sb);
     TMPFS_SB(sb)->inode_count++;
 
-    struct dentry *out = new_dentry(".", NULL, inode, DENTRY_MOUNT_POINT);
-    out->mount_point.root = inode;
+    struct dentry *out = dentry_mount_point_alloc(sb, root);
     return out;
 }
 
