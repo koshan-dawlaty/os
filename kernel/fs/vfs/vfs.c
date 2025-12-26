@@ -1,4 +1,5 @@
 #include "dcache.h"
+#include "spinlock.h"
 #include "vfs_internal.h"
 #include <assert.h>
 #include <ata/ata.h>
@@ -119,10 +120,10 @@ file *new_file(dentry *entry)
     return out;
 }
 
-inode *new_inode(ino_t number, inode_size size, void *fs_private,
-                 superblock *sb)
+struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
+                        struct superblock *sb)
 {
-    inode *out = malloc(sizeof(inode));
+    struct inode *out = malloc(sizeof(struct inode));
 
     out->number = number;
     out->size = size;
@@ -130,6 +131,7 @@ inode *new_inode(ino_t number, inode_size size, void *fs_private,
     out->fs_private = fs_private;
 
     out->sb = sb;
+    out->lock = SPINLOCK_INIT();
 
     return out;
 }

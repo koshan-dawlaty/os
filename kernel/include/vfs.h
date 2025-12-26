@@ -36,13 +36,15 @@ typedef struct inode
     ino_t number;
     inode_size size;
 
-    superblock *sb;
+    struct superblock *sb;
+    struct spinlock lock; /* TODO: maybe this shouldnt be a spinlock, as many
+                             inode operations need to wait for a while */
 
     void *fs_private;
 } inode;
 
-inode *new_inode(ino_t number, inode_size size, void *fs_private,
-                 superblock *sb);
+struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
+                        struct superblock *sb);
 
 typedef struct
 {
@@ -240,5 +242,21 @@ int read_dir(file *dir, struct dirent *buf, size_t number);
  */
 int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
               struct bdev *dev);
+
+/* TODO: these should return bytes read or something in the future*/
+static inline int inode_read(struct inode *node, u8 *buf, size_t n, size_t off)
+{
+    node->sb->type->inode_functions.read_inode(node, buf, n, off);
+
+    return 0;
+}
+/* TODO: these should return bytes read or something in the future*/
+static inline int inode_write(struct inode *node, const u8 *buf, size_t n,
+                              size_t off)
+{
+    node->sb->type->inode_functions.write_inode(node, buf, n, off);
+
+    return 0;
+}
 
 #endif

@@ -208,7 +208,7 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     }
 
     inode *node = file->entry->inode;
-
+    lock_spinlock(&node->lock);
     size_t read_size = n;
 
     if (off + n > node->size)
@@ -216,10 +216,10 @@ int read_file(file *file, char *buf, size_t n, size_t off)
         read_size = node->size - off;
     }
 
-    node->sb->type->inode_functions.read_inode(node, (uint8_t *)buf, read_size,
-                                               off);
+    inode_read(node, (uint8_t *)buf, read_size, off);
 
     add_file_offset(file, read_size);
+    release_spinlock(&node->lock);
 
     return read_size;
 }
@@ -245,12 +245,8 @@ int write_file(file *file, const char *buf, size_t n, size_t off)
     }
 
     inode *node = file->entry->inode;
-
     size_t write_size = n;
-
-    node->sb->type->inode_functions.write_inode(node, (const u8 *)buf,
-                                                write_size, off);
-
+    inode_write(node, (const u8 *)buf, write_size, off);
     add_file_offset(file, write_size);
     return write_size;
 }
