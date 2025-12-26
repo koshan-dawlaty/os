@@ -1,7 +1,8 @@
-#include "fcntl.h"
 #include "utils.h"
 #include <errno.h>
+#include <fcntl.h>
 #include <stdint.h>
+#include <syscall.h>
 #include <unistd.h>
 
 #ifdef __is_libk
@@ -12,7 +13,8 @@
 int execv(const char *path, char *const argv[])
 {
 #ifndef __is_libk
-    return syscall_wrapper_asm(2, (uintptr_t)path, (uintptr_t)argv, 0, 0, 0);
+    return syscall_wrapper_asm(SYS_execv, (uintptr_t)path, (uintptr_t)argv, 0,
+                               0, 0);
 
 #else
 

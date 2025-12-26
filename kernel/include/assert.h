@@ -14,6 +14,7 @@
 
 /* panics if pointer is null */
 #define NOT_NULL(pointer, message, ...)                                        \
-    ASSERT(pointer != NULL, message __VA_OPT__(, ) __VA_ARGS__)
+    ASSERT(pointer != NULL,                                                    \
+           "pointer was null\n" message __VA_OPT__(, ) __VA_ARGS__)
 
 #endif

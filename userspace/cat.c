@@ -12,6 +12,7 @@ int main(int argc, char **argv)
 {
 
     init_libc();
+    printf("cat start\n");
 
     if (argc <= 1)
     {
@@ -28,6 +29,15 @@ int main(int argc, char **argv)
         printf("error:%s\n", strerror(errno));
         exit(1);
     }
+
+    char *buf2 = malloc(100);
+    read(fd, buf2, 100);
+    printf("%s\n", buf2);
+    while (1)
+    {
+    }
+
+    exit(1);
 
     size_t read_size = 10;
     size_t buf_len = read_size;
@@ -47,8 +57,6 @@ int main(int argc, char **argv)
         buf = realloc(buf, buf_len);
     }
     printf("%s\n", buf);
-
     close(fd);
-
     exit(0);
 }

@@ -22,7 +22,6 @@ int main()
     /* execv("cat", (char *[]){"cat", "two", NULL}); */
     /* getchar(); */
     /* execv("cat", (char *[]){"cat", "one", NULL}); */
-    exit(0);
 
     /* execv("/cat", (char *[]){"/cat", "/one", NULL}); */
 

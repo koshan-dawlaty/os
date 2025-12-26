@@ -1,5 +1,6 @@
 #ifndef VFS_H
 #define VFS_H
+#include "spinlock.h"
 #include <device.h>
 #include <dirent.h>
 #include <kernel/types.h>
@@ -216,6 +217,7 @@ int seek_file(file *f, off_t offset, int whence);
 struct fdlist
 {
     file **files;
+    struct spinlock lock;
     size_t len;
 };
 struct fdlist *new_fdlist();

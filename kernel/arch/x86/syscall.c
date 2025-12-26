@@ -64,29 +64,14 @@ int syscall_handler(struct syscall_regs *regs)
         /* printf("in syscall:%c\n", c); */
         return c;
     }
-    case 2:
+    case SYS_execv:
     {
         return execv((void *)regs->ebx, (void *)regs->ecx);
     }
     case 3:
     {
-        /* void *ip_address; */
-        /* asm("lea (%%eip), %0" : "=r"(ip_address)); */
-
-        struct interrupt_frame f = {regs->ip, regs->cs, regs->flags, regs->sp,
-                                    regs->ss};
-
-        /* struct registers r = (struct registers){ */
-        /*     regs->gs,  regs->fs,  regs->es, regs->ds,  regs->edi, */
-        /*     regs->esi, regs->ebp, regs->sp, regs->ebx, regs->edx, */
-        /*     regs->ecx, regs->eax, f}; */
-
-        schedule();
-
-        /* switch_tasks(r); */
-        return 1;
     }
-    case 4:
+    case SYS_mmap:
     {
         for (size_t i = 0; i < regs->ecx / 4096; i++)
         {
@@ -107,7 +92,7 @@ int syscall_handler(struct syscall_regs *regs)
     {
         return pread(regs->ebx, (void *)regs->ecx, regs->edx, regs->edi);
     }
-    case 7:
+    case SYS_open:
     {
         return open((void *)regs->ebx, 0);
     }

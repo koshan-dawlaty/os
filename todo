@@ -84,3 +84,5 @@ ext2 dentry create makes a entry called '%' when it makes a dentry, its probably
 
 
 vfs probably has a sync bug
+
+return from launched kernel task (can probably just put a return address on the stack that cleans up data for the task)

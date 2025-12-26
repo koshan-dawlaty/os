@@ -1,9 +1,8 @@
-#include "assert.h"
 #include "dcache.h"
-#include "err.h"
-#include "panic.h"
 #include "vfs_internal.h"
+#include <assert.h>
 #include <ata/ata.h>
+#include <err.h>
 #include <fcntl.h>
 #include <scheduler.h>
 #include <stdio.h>
@@ -16,9 +15,9 @@
 
 struct fdlist *basic_open_files = NULL;
 
-dentry *rootdir = NULL;
+struct dentry *rootdir = NULL;
 
-dentry *get_root_dir()
+struct dentry *get_root_dir()
 {
     return rootdir;
 }

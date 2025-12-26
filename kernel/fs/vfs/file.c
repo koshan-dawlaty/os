@@ -4,6 +4,7 @@
 #include "interrupts/pic.h"
 #include "memory/get_free_pages.h"
 #include "scheduler.h"
+#include "spinlock.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
 #include <bdev.h>
@@ -25,6 +26,7 @@ struct fdlist *new_fdlist()
 
     out->len = 0;
     out->files = malloc(0);
+    out->lock = SPINLOCK_INIT();
 
     return out;
 }
@@ -45,20 +47,28 @@ void fdlist_free(struct fdlist *list)
 
 int fdlist_add(struct fdlist *list, file *f)
 {
+    lock_spinlock(&list->lock);
     list->len++;
     list->files = realloc(list->files, list->len * sizeof(file *));
     list->files[list->len - 1] = f;
 
-    return list->len - 1;
+    int retval = list->len - 1;
+    release_spinlock(&list->lock);
+    return retval;
 }
 
 file *fdlist_lookup(struct fdlist *list, int fd)
 {
+    lock_spinlock(&list->lock);
+
     if (fd < 0 || (size_t)fd > list->len)
     {
+        release_spinlock(&list->lock);
         return NULL;
     }
-    return list->files[fd];
+    void *retval = list->files[fd];
+    release_spinlock(&list->lock);
+    return retval;
 }
 
 int fdlist_close(struct fdlist *list, int fd)
@@ -87,7 +97,6 @@ static inline struct fdlist *get_current_fdlist()
     }
     else
     {
-
         NOT_NULL(task->descriptors,
                  "task file descriptor list was uninitalized");
         return task->descriptors;

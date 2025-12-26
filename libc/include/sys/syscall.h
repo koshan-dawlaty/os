@@ -8,8 +8,11 @@
 #define SYS_creat 12
 #define SYS_exit 9
 #define SYS_unlink 14
+#define SYS_open 7
 #define SYS_close 16
 #define SYS_lseek 15
 #define SYS_getdents 17
+#define SYS_execv 2
+#define SYS_mmap 4
 
 #endif
