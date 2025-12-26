@@ -1,5 +1,6 @@
 #ifndef VFS_H
 #define VFS_H
+#include "mutex.h"
 #include "spinlock.h"
 #include <device.h>
 #include <dirent.h>
@@ -37,8 +38,7 @@ typedef struct inode
     inode_size size;
 
     struct superblock *sb;
-    struct spinlock lock; /* TODO: maybe this shouldnt be a spinlock, as many
-                             inode operations need to wait for a while */
+    struct mutex lock;
 
     void *fs_private;
 } inode;

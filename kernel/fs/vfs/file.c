@@ -3,8 +3,8 @@
 #include "dirent.h"
 #include "interrupts/pic.h"
 #include "memory/get_free_pages.h"
+#include "mutex.h"
 #include "scheduler.h"
-#include "spinlock.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
 #include <bdev.h>
@@ -208,7 +208,7 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     }
 
     inode *node = file->entry->inode;
-    lock_spinlock(&node->lock);
+    mutex_lock(&node->lock);
     size_t read_size = n;
 
     if (off + n > node->size)
@@ -219,7 +219,7 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     inode_read(node, (uint8_t *)buf, read_size, off);
 
     add_file_offset(file, read_size);
-    release_spinlock(&node->lock);
+    mutex_unlock(&node->lock);
 
     return read_size;
 }

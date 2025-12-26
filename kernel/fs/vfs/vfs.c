@@ -1,4 +1,5 @@
 #include "dcache.h"
+#include "mutex.h"
 #include "spinlock.h"
 #include "vfs_internal.h"
 #include <assert.h>
@@ -131,7 +132,7 @@ struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
     out->fs_private = fs_private;
 
     out->sb = sb;
-    out->lock = SPINLOCK_INIT();
+    out->lock = MUTEX_INIT();
 
     return out;
 }

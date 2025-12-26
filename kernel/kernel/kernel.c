@@ -1,8 +1,4 @@
-#include "kernel/graphics.h"
-#include "kernel/types.h"
-#include "lib/binary_tree.h"
 #include "multiboot.h"
-#include "mutex.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <dirent.h>
@@ -13,16 +9,21 @@
 #include <fcntl.h>
 #include <gdt.h>
 #include <interrupts/idt.h>
+#include <kernel/graphics.h>
 #include <kernel/keyboard.h>
 #include <kernel/paging.h>
 #include <kernel/semaphore.h>
 #include <kernel/tty.h>
+#include <kernel/types.h>
+#include <lib/binary_tree.h>
 #include <malloc_internal.h>
 #include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>
+#include <mutex.h>
 #include <panic.h>
 #include <pci/pci.h>
 #include <pit/pit.h>
+#include <sched.h>
 #include <scheduler.h>
 #include <spinlock.h>
 #include <stddef.h>
@@ -153,7 +154,7 @@ void kernel_task1(void *a)
 void kernel_task2(void *a)
 {
     printf("kernel task2\n");
-    int fd = open("/two", 0);
+    int fd = open("/one", 0);
     char *buf = malloc(100);
     schedule();
     read(fd, buf, 100);
@@ -174,12 +175,9 @@ void kmain()
 
     add_task(create_kernel_task());
 
-    run_task(kernel_task1, NULL);
-    run_task(kernel_task2, NULL);
-
-    enable_scheduler();
-
-    return;
+    /* run_task(kernel_task1, NULL); */
+    /* run_task(kernel_task2, NULL); */
+    /* enable_scheduler(); */
 
     printf("starting shell\n");
     int err = execv("/ksh", (char *[]){"ksh", NULL});
