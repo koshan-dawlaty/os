@@ -56,6 +56,7 @@ kernel/elf/elf64.o \
 kernel/scheduler/scheduler.o \
 kernel/scheduler/sleep.o \
 kernel/scheduler/semaphore.o \
+kernel/scheduler/mutex.o \
 kernel/scheduler/spinlock.o \
 kernel/memory/get_free_pages.o \
 kernel/graphics/graphics.o \

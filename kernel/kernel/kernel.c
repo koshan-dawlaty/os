@@ -2,6 +2,7 @@
 #include "kernel/types.h"
 #include "lib/binary_tree.h"
 #include "multiboot.h"
+#include "mutex.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <dirent.h>

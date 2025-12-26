@@ -2,6 +2,7 @@
 #define SEMAPHORE
 
 #include "spinlock.h"
+
 typedef struct
 {
     int value;
