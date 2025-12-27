@@ -89,7 +89,7 @@ $(BIN)/elf_test2 : $(OBJS_START_BIN) $(BIN)/elf_test2.o ../libc/libc.a $(START_O
 	# $(CC) -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
 $(BIN)/ksh : $(OBJS_START_BIN) $(BIN)/ksh.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+	$(CC) -Oz -Ttext=0x600000 -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/ls : $(OBJS_START_BIN) $(BIN)/ls.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
@@ -126,7 +126,7 @@ $(BIN)/%.o: %.S
 
 $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) 
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 
 ifdef CONFIG_x86_32

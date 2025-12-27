@@ -187,4 +187,6 @@ void kmain()
     }
 
     enable_scheduler();
+    getchar();
+    /* execv("/cat", (char *[]){"cat", "one", NULL}); */
 }

@@ -4,6 +4,7 @@
 #include "memory/paging_flags.h"
 #include "panic.h"
 #include "scheduler.h"
+#include "strings.h"
 #include "sys/types.h"
 #include <elf.h>
 #include <stddef.h>
@@ -57,7 +58,8 @@ struct task *load_elf(elf *elf, int argc, char **argv)
             }
 
             /* this may not have zeros at the end */
-            uint8_t *buf = malloc(header->size_memory);
+            u8 *buf = malloc(header->size_memory);
+            bzero(buf, header->size_memory);
             /*
 if (header->memory_size > header->file_size)
 {

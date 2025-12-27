@@ -19,14 +19,6 @@ int main()
 
     init_libc();
 
-    /* execv("cat", (char *[]){"cat", "two", NULL}); */
-    /* getchar(); */
-    /* execv("cat", (char *[]){"cat", "one", NULL}); */
-
-    /* execv("/cat", (char *[]){"/cat", "/one", NULL}); */
-
-    /* exit(0); */
-
     /* int term_fd = open("/terminal", 0); */
     /* char *buf = malloc(10); */
     /* memcpy(buf, "abc", 4); */
@@ -55,7 +47,6 @@ int main()
                 i++;
                 args = realloc(args, sizeof(char *) * i);
                 args[i - 1] = s;
-
                 s = strtok(NULL, " ");
             }
 
@@ -108,7 +99,6 @@ int main()
         }
 
         putchar('\b');
-
         printf(">%s\n", input);
     }
 }

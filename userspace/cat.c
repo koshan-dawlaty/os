@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 
     char *buf2 = malloc(100);
     read(fd, buf2, 100);
-    printf("%s\n", buf2);
+    printf("%s", buf2);
     while (1)
     {
     }

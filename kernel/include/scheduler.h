@@ -1,5 +1,6 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
+#include "compiler.h"
 #include <kernel/paging.h>
 #include <kernel/types.h>
 #include <stdbool.h>
@@ -29,7 +30,7 @@ struct registers
     u64 r8, r9, r10, r11, r12, r13, r14, r15;
 #endif
 
-} __attribute__((packed));
+} __packed;
 
 struct task
 {

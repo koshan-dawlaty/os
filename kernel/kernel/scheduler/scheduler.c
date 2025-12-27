@@ -2,6 +2,7 @@
 #include "gdt.h"
 #include "interrupts/pic.h"
 #include "lib/list.h"
+#include "panic.h"
 #include "sleep.h"
 #include "unistd.h"
 #include "utils.h"
@@ -58,6 +59,10 @@ char **create_user_args(int argc, char **argv)
     char **args = get_free_pages_user(1);
 
     size_t string_offset = argc * sizeof(char *);
+    if (string_offset >= PAGE_SIZE)
+    {
+        panic("ran out of space in user args");
+    }
 
     for (int i = 0; i < argc; i++)
     {
