@@ -63,11 +63,11 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
         return ERR_PTR(-ENOENT);
     }
 
-    uint32_t node_index = (inode_number - 1) % EXT2_INODES_PER_GROUP(sb);
+    u32 node_index = (inode_number - 1) % EXT2_INODES_PER_GROUP(sb);
 
-    uint32_t table_index = group.inode_table;
+    u32 table_index = group.inode_table;
 
-    uint8_t *table_ptr =
+    u8 *table_ptr =
         ext2_read_block(((table_index) + ((node_index * EXT2_INODE_SIZE(sb)) /
                                           EXT2_BLOCK_SIZE(sb))),
                         sb);

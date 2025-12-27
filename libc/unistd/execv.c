@@ -38,6 +38,11 @@ int execv(const char *path, char *const argv[])
         struct task *t = load_elf(elf, argc, (char **)argv);
         add_task(t);
         free_elf(elf);
+        /* this the old task from running soon after this is called, it also
+         * makes this function more responsive as the new task should be
+         * immediately switched to
+         * */
+        schedule();
     }
     else
     {
