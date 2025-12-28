@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct task_queue scheduler_queue = TASK_QUEUE_INIT();
+
 bool scheduler_enabled = false;
 struct task *current_task = NULL;
 struct task *first_task = NULL;
@@ -164,6 +166,7 @@ void ktask_return()
 {
     printf("ktask_return\n");
     irq_state_t irq_state = irq_save_disable();
+    irq_disable();
     {
         struct task *current = get_current_task();
         remove_task(current);
@@ -222,104 +225,33 @@ struct task *create_kernel_task()
 void remove_task(struct task *task)
 {
     irq_state_t irq_state = irq_save_disable();
-
-    if (task == first_task)
-    {
-        struct task *temp = first_task->next;
-        first_task = temp;
-
-        return;
-    }
-
-    struct task *current = first_task;
-    struct task *previous = first_task;
-
-    while (current != NULL && current != task)
-    {
-        previous = current;
-        current = current->next;
-    }
-
-    if (current == NULL)
-    {
-        /* task not in queue */
-        printf("task not in scheduler queue\n");
-        return;
-    }
-
-    previous->next = current->next;
-
+    task_queue_remove(&scheduler_queue, task);
     irq_restore(irq_state);
 }
 
 void add_task(struct task *task)
 {
-
-    irq_state_t state = irq_save_disable();
-
     if (current_task == NULL)
     {
         current_task = task;
-        first_task = task;
-        goto end;
     }
 
-    struct task *temp = first_task;
-    first_task = task;
-    task->next = temp;
-
-end:
+    irq_state_t state = irq_save_disable();
+    task_queue_push(&scheduler_queue, task);
     irq_restore(state);
-}
-
-void add_task_queue(struct task **queue, struct task *task)
-{
-
-    if (*queue == NULL)
-    {
-        *queue = task;
-        return;
-    }
-
-    struct task *temp = *queue;
-    *queue = task;
-    (*queue)->next = temp;
-}
-
-void remove_task_queue(struct task **queue, struct task *task)
-{
-
-    struct task *current = *queue;
-    struct task *previous = *queue;
-    while (current != NULL && current != task)
-    {
-        previous = current;
-        current = current->next;
-    }
-
-    if (current == NULL)
-    {
-        printf("did not find task in queue\n");
-        /* task not in queue */
-        return;
-    }
-
-    previous->next = current->next;
 }
 
 int num_task_switches = 0;
 void switch_tasks()
 {
-    /* printf("switching from:%p ", current_task); */
-    if (current_task->next != NULL)
+    struct list *temp = current_task->list.next;
+    if (temp == NULL)
     {
-        current_task = current_task->next;
+        temp = scheduler_queue.head;
     }
-    else
-    {
-        current_task = first_task;
-    }
-    /* printf("to:%p\n", current_task); */
+    struct task *new_current = LIST_ENTRY(temp, struct task, list);
+
+    current_task = new_current;
 }
 
 void schedule()

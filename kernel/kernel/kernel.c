@@ -151,7 +151,6 @@ size_t num = 10;
 
 void kernel_task1(void *a)
 {
-
     for (size_t i = 0; i < num; i++)
     {
         mutex_lock(&m);
@@ -169,6 +168,7 @@ void kernel_task1(void *a)
 
 void kernel_task2(void *a)
 {
+
     for (size_t i = 0; i < num; i++)
     {
         mutex_lock(&m);
@@ -212,8 +212,8 @@ void kmain()
     ktask_run(kernel_task3, NULL);
     ktask_run(kernel_task2, NULL);
     ktask_run(kernel_task1, NULL);
-    enable_scheduler();
-    return;
+    /* enable_scheduler(); */
+    /* return; */
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());

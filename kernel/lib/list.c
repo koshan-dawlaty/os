@@ -32,30 +32,31 @@ void list_push(struct list *new, struct list **head)
     (*head)->next = temp;
 }
 
-int list_remove(list *entry, list *head)
+bool list_remove(list *entry, list **head)
 {
 
-    if (entry == head)
+    if (entry == *head)
     {
-        head = head->next;
+        *head = (*head)->next;
+        return true;
     }
 
-    list *current = head;
-    list *prev = head;
+    list *current = *head;
+    list *prev = *head;
     while (current != NULL)
     {
 
         if (current == entry)
         {
             prev->next = current->next;
-            return 0;
+            return true;
         }
 
         prev = current;
-        current = head->next;
+        current = current->next;
     }
 
-    return 1;
+    return false;
 }
 
 void list2_add(list2 *new, list2 *head)

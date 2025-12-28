@@ -28,3 +28,17 @@ struct task *task_queue_pop(struct task_queue *queue)
 
     return out;
 }
+
+void task_queue_remove(struct task_queue *queue, struct task *t)
+{
+    if (queue->head == NULL)
+    {
+        printf("task queue empty\n");
+        return; /* TODO: this is probably an error */
+    }
+
+    if (!list_remove(&t->list, &queue->head))
+    {
+        printf("task not in task queue\n");
+    }
+}
