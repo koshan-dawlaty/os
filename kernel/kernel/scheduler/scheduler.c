@@ -162,9 +162,14 @@ void run_task(void (*task)(void *), void *args)
 void ktask_return()
 {
     printf("ktask_return\n");
-    while (1)
+    irq_disable();
     {
+        struct task *current = get_current_task();
+        remove_task(current);
+        free_task(current);
     }
+    irq_enable();
+    schedule();
 }
 
 struct task *new_task_args(ptr ip, void *args)
@@ -186,6 +191,8 @@ struct task *new_task(ptr ip)
     out->next = NULL;
     out->descriptors = new_fdlist();
 
+    /* TODO: this is really stupid and runs out of space all the time, however
+     * it works */
     out->stack = get_free_pages(1) + (PAGE_SIZE - sizeof(ptr) * 5);
     out->working_dir = NULL;
 
