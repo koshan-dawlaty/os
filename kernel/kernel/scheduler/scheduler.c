@@ -166,14 +166,14 @@ void ktask_return()
 {
     printf("ktask_return\n");
     irq_state_t irq_state = irq_save_disable();
-    irq_disable();
     {
         struct task *current = get_current_task();
         remove_task(current);
         free_task(current);
     }
-    irq_restore(irq_state);
     schedule();
+    irq_restore(irq_state);
+    /* execution maybe shouldnt get here */
 }
 
 struct task *new_task_args(ptr ip, void *args)
@@ -181,7 +181,6 @@ struct task *new_task_args(ptr ip, void *args)
     struct task *out = new_task(ip);
     scheduler_set_first_arg(args, &out->regs);
     /* *((ptr *)(out->stack - sizeof(ptr))) = (ptr)ktask_return; */
-    printf("stack:%p\n", out->stack);
     /* *((ptr *)(out->stack - sizeof(ptr) * 4)) = 0x123; */
     *((ptr *)(out->stack - sizeof(ptr) * 4)) = (ptr)ktask_return;
     *((ptr *)(out->stack + sizeof(ptr))) = (ptr)ktask_return;
@@ -256,6 +255,8 @@ void switch_tasks()
 
 void schedule()
 {
+
+    irq_disable();
 
     increment_sleep_queue();
 

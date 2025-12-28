@@ -41,19 +41,18 @@ bool list_remove(list *entry, list **head)
         return true;
     }
 
-    list *current = *head;
-    list *prev = *head;
-    while (current != NULL)
+    struct list *pos;
+    struct list *prev;
+    list_for_each(pos, *head)
     {
 
-        if (current == entry)
+        if (pos == entry)
         {
-            prev->next = current->next;
+            prev->next = pos->next;
             return true;
         }
 
-        prev = current;
-        current = current->next;
+        prev = pos;
     }
 
     return false;

@@ -36,7 +36,7 @@ test_result *get_failed_test(intmax_t num, ...)
     va_list args;
     va_start(args, num);
 
-    char *reason;
+    char *reason = "";
 
     const char *format = NULL;
     if (num == 1)

@@ -151,6 +151,16 @@ size_t num = 10;
 
 void kernel_task1(void *a)
 {
+
+    mutex_lock(&m);
+    schedule();
+    mutex_unlock(&m);
+    mutex_lock(&m);
+    schedule();
+    mutex_unlock(&m);
+
+    return;
+
     for (size_t i = 0; i < num; i++)
     {
         mutex_lock(&m);
@@ -168,6 +178,12 @@ void kernel_task1(void *a)
 
 void kernel_task2(void *a)
 {
+
+    mutex_lock(&m);
+    schedule();
+    mutex_unlock(&m);
+
+    return;
 
     for (size_t i = 0; i < num; i++)
     {
@@ -187,6 +203,8 @@ void kernel_task2(void *a)
 
 void kernel_task3(void *a)
 {
+
+    return;
 
     for (size_t i = 0; i < num; i++)
     {
@@ -212,8 +230,8 @@ void kmain()
     ktask_run(kernel_task3, NULL);
     ktask_run(kernel_task2, NULL);
     ktask_run(kernel_task1, NULL);
-    /* enable_scheduler(); */
-    /* return; */
+    enable_scheduler();
+    return;
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
