@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -195,4 +196,15 @@ TEST(vfs_mkdir, {
     int fd = open("/test1234567/file", 0);
     ASSERT_GE(fd, 0);
     close(fd);
+})
+
+TEST(vfs_file_permissions, {
+    int write_only = open("/one", O_WRONLY);
+    char *buf = malloc(100);
+    int err = read(write_only, buf, 100);
+    ASSERT_EQ(-err, EACCES, "reading from a WRONLY file should not work")
+    close(write_only);
+    int read_only = open("/one", O_RDONLY);
+    err = write(read_only, buf, 100);
+    ASSERT_EQ(-err, EACCES, "writing to a RDONLY file should not work")
 })
