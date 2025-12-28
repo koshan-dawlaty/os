@@ -139,10 +139,6 @@ struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
     return out;
 }
 
-void vfs_mkdir(struct dentry *parent, struct dentry *new_dir)
-{
-}
-
 int delete_dentry(struct dentry *entry)
 {
     remove_dcache(entry);

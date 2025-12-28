@@ -153,9 +153,9 @@ not_dir:
     goto out;
 }
 
-dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
+struct dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
 {
-    dentry *current_dir = NULL;
+    struct dentry *current_dir = NULL;
     size_t component_offset = 0;
 
     if (*path != '/')

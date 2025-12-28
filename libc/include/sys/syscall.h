@@ -14,5 +14,6 @@
 #define SYS_getdents 17
 #define SYS_execv 2
 #define SYS_mmap 4
+#define SYS_mkdir 19
 
 #endif

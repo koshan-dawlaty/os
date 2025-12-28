@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <vfs.h>
 
 TEST(vfs_basic, {
@@ -185,11 +186,7 @@ TEST(vfs_dir_dot_dot_on_dir, {
 })
 
 TEST(vfs_mkdir, {
-    lookup_path(
-        "test1234567",
-        (struct pathname_lookup_flags){
-            .create = 1, .type = DENTRY_DIR}); /* TODO: replace this with an
-                                                  actual mkdir() call */
+    mkdir("test1234567", 0);
     creat("test1234567/file", 0);
     int fd = open("/test1234567/file", 0);
     ASSERT_GE(fd, 0);

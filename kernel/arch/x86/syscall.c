@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -146,6 +147,8 @@ int syscall_handler(struct syscall_regs *regs)
             framebuffer_alloc_user(get_current_framebuffer());
 
         return 0;
+    case SYS_mkdir:
+        return mkdir((const char *)regs->ebx, regs->eax);
     }
 
     printf("no syscall found\n");
