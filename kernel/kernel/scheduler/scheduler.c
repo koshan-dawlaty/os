@@ -159,10 +159,23 @@ void run_task(void (*task)(void *), void *args)
     add_task(new_task_args((ptr)task, args));
 }
 
+void ktask_return()
+{
+    printf("ktask_return\n");
+    while (1)
+    {
+    }
+}
+
 struct task *new_task_args(ptr ip, void *args)
 {
     struct task *out = new_task(ip);
     scheduler_set_first_arg(args, &out->regs);
+    /* *((ptr *)(out->stack - sizeof(ptr))) = (ptr)ktask_return; */
+    printf("stack:%p\n", out->stack);
+    /* *((ptr *)(out->stack - sizeof(ptr) * 4)) = 0x123; */
+    *((ptr *)(out->stack - sizeof(ptr) * 4)) = (ptr)ktask_return;
+    *((ptr *)(out->stack + sizeof(ptr))) = (ptr)ktask_return;
     return out;
 }
 
@@ -173,7 +186,7 @@ struct task *new_task(ptr ip)
     out->next = NULL;
     out->descriptors = new_fdlist();
 
-    out->stack = get_free_pages(1) + (PAGE_SIZE - 0xc);
+    out->stack = get_free_pages(1) + (PAGE_SIZE - sizeof(ptr) * 5);
     out->working_dir = NULL;
 
     out->regs.esp = (ptr)out->stack;

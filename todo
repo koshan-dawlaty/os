@@ -81,10 +81,6 @@ linux kernel like .config
 vfs get_inode might not be needed
 
 ext2 dentry create makes a entry called '%' when it makes a dentry, its probably corrupting something
-
-
 vfs probably has a sync bug
-
 return from launched kernel task (can probably just put a return address on the stack that cleans up data for the task)
-
 readdir() reads from the filesystem alot and does not use dcache (this is also mentioned in another todo comment somewhere)

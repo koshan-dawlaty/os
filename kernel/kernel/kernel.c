@@ -137,18 +137,6 @@ void kernel_init()
 void kernel_task1(void *a)
 {
     printf("kernel task1\n");
-    int fd = open("/one", 0);
-    schedule();
-    char *buf = malloc(100);
-    schedule();
-    read(fd, buf, 100);
-    printf("task1:%s\n", buf);
-
-    close(fd);
-
-    while (1)
-    {
-    }
 }
 
 void kernel_task2(void *a)
@@ -172,6 +160,8 @@ void kmain()
 
     add_task(create_kernel_task());
 
+    run_task(kernel_task1, NULL);
+
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     printf("starting shell\n");
@@ -182,6 +172,6 @@ void kmain()
     }
 
     enable_scheduler();
-    getchar();
+
     /* execv("/cat", (char *[]){"cat", "one", NULL}); */
 }
