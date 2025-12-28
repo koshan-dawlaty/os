@@ -75,6 +75,11 @@ void add_test(test *);
     {                                                                          \
         FAIL_TEST(__VA_ARGS__)                                                 \
     }
+#define ASSERT_EQ_STR(a, b, ...)                                               \
+    if (strcmp(a, b) == 0)                                                     \
+    {                                                                          \
+        FAIL_TEST(__VA_ARGS__)                                                 \
+    }
 #define ASSERT_NONULL(ptr, ...)                                                \
     if (ptr == NULL)                                                           \
     {                                                                          \

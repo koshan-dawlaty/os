@@ -125,11 +125,54 @@ struct dcache_value *get_dcache_value(char *component, struct dcache_dir *dir)
     return NULL;
 }
 
-dentry *get_dcache(char *component, dentry *parent)
+enum dcache_dot_type
+{
+    DCACHE_DOT_INVALID, /* the component is invalid, probably ".something" */
+    DCACHE_DOT_NONE,    /* not "." or "..", but still a valid component */
+    DCACHE_DOT,         /* equal to "." */
+    DCACHE_DOTDOT,      /* equal to ".." */
+};
+
+static inline u8 dcache_handle_dot(const char *component, struct dentry *parent)
+{
+    if (component[0] != '.')
+    {
+        return DCACHE_DOT_NONE;
+    }
+
+    /* this won't go past the end of the string (as long as it is null
+     * terminated), because the first check ensures that it is at least one byte
+     */
+    if (component[1] == 0)
+    {
+        /* component is "." */
+        return DCACHE_DOT;
+    }
+    else if (component[1] != '.' || component[2] != 0)
+    {
+        return DCACHE_DOT_INVALID;
+    }
+    /* component is ".." */
+    return DCACHE_DOTDOT;
+}
+
+struct dentry *get_dcache(char *component, struct dentry *parent)
 {
 
-    struct dcache_dir *dir = get_dcache_dir(parent);
+    enum dcache_dot_type type = dcache_handle_dot(component, parent);
+    switch (type)
+    {
+    case DCACHE_DOT:
+        return parent;
+    case DCACHE_DOTDOT:
+        return parent->parent;
+    case DCACHE_DOT_INVALID:
+        return NULL; /* TODO: this is an error, return an error value */
+    case DCACHE_DOT_NONE:
+        break;
+    }
 
+    struct dcache_dir *dir = get_dcache_dir(parent);
     if (dir == NULL)
     {
         return NULL;

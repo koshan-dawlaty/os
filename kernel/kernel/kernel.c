@@ -170,15 +170,22 @@ void kernel_task2(void *a)
 void kmain()
 {
 
-    create_device("/terminal", get_terminal());
-    create_device("/keyboard", get_keyboard());
-
     add_task(create_kernel_task());
+
+    creat("/tmpfs/a", 0);
+
+    int fd = open("/tmpfs/../../../../tmpfs/../one", 0);
+    printf("fd:%d\n", fd);
+    char *buf = malloc(100);
+    printf("read result:%d\n", read(fd, buf, 100));
+    printf("read:%s\n", buf);
 
     /* run_task(kernel_task1, NULL); */
     /* run_task(kernel_task2, NULL); */
     /* enable_scheduler(); */
 
+    create_device("/terminal", get_terminal());
+    create_device("/keyboard", get_keyboard());
     printf("starting shell\n");
     int err = execv("/ksh", (char *[]){"ksh", NULL});
     if (err < 0)

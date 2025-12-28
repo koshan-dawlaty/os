@@ -33,6 +33,7 @@ void init_vfs()
     /* struct fs_type type = tmpfs_type; */
     struct fs_type type = ext2_fs_type;
     rootdir = type.mount(dev);
+    rootdir->parent = rootdir;
 
     /* rootdir->inode->sb->type->dentry_functions.append_dentry( */
     /*     rootdir, "abc", rootdir->inode->sb); */
@@ -48,6 +49,7 @@ int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
               struct bdev *dev)
 {
     struct dentry *new_root = fs.mount(dev);
+    new_root->parent = root;
     /* TODO: cast discards qualifiers */
     new_root->name = (char *)new_name;
 
@@ -161,7 +163,6 @@ struct dentry *dir_readdir(dentry *entry, struct dir_context *context)
            "attempt to read directory on non directory dentry");
 
     struct superblock *sb = entry->inode->sb;
-
     struct dentry *dcache = dcache_readdir(entry, context);
 
     /* printf("%p\n", dcache); */

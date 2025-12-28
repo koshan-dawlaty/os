@@ -166,3 +166,20 @@ TEST(vfs_read_dir, {
                       "element name in buffer should not be null");
     }
 })
+
+TEST(vfs_dir_dot_dot_on_root_is_root, {
+    int fd = open("/../../../../../one", 0);
+    ASSERT_GE(fd, 0, "file descriptor should be valid");
+
+    char *buf = malloc(100);
+    read(fd, buf, 100);
+    ASSERT_EQ_STR(buf, "file one");
+})
+
+TEST(vfs_dir_dot_dot_on_dir, {
+    int fd = open("/dir/../dir/../dir/../dir/../one", 0);
+    ASSERT_GE(fd, 0, "file descriptor should be valid");
+    char *buf = malloc(100);
+    read(fd, buf, 100);
+    ASSERT_EQ_STR(buf, "file one");
+})
