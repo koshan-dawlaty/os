@@ -9,6 +9,32 @@ FILE *stdout;
 FILE *stdin;
 FILE *stderr;
 
+static int string_flags_to_oflags(const char *flags)
+{
+    if (!strcmp(flags, "r"))
+    {
+        return O_RDONLY;
+    }
+    else if (!strcmp(flags, "w"))
+    {
+        return O_WRONLY;
+    }
+    else if (!strcmp(flags, "r+"))
+    {
+        return O_RDWR;
+    }
+    else if (!strcmp(flags, ""))
+    {
+        /* TODO: this might be an error or undefined */
+        return 0;
+    }
+    else
+    {
+        printf("unknown stream open flags:%s\n", flags);
+        return 0;
+    }
+}
+
 static FILE *new_stream(int fd, const char *flags, size_t buffer_max)
 {
     FILE *out = malloc(sizeof(FILE));
@@ -29,7 +55,7 @@ FILE *fdopen(int fd, const char *flags)
 
 FILE *fopen(const char *path, const char *flags)
 {
-    return fdopen(open(path, 0), flags);
+    return fdopen(open(path, string_flags_to_oflags(flags)), flags);
 }
 
 size_t fread(void *restrict buf, size_t size, size_t number, FILE *restrict f)

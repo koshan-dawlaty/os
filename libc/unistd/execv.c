@@ -18,7 +18,8 @@ int execv(const char *path, char *const argv[])
 
 #else
 
-    int f = open((char *)path, 0);
+    /* TODO: wrong oflags */
+    int f = open((char *)path, O_RDONLY);
 
     if (f < 0)
     {

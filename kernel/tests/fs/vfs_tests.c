@@ -130,7 +130,7 @@ TEST(stdlib_FILE, {
 
     size_t len = 100;
 
-    FILE *f = fopen(testfile, "");
+    FILE *f = fopen(testfile, "r+");
 
     char *write_buf = malloc(len);
     for (size_t i = 0; i < len; i++)
