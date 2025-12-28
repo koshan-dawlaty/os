@@ -45,10 +45,10 @@ bool list_remove(list *entry, list **head)
     struct list *prev;
     list_for_each(pos, *head)
     {
-
         if (pos == entry)
         {
             prev->next = pos->next;
+            pos->next = NULL;
             return true;
         }
 

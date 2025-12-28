@@ -109,4 +109,10 @@ static inline void irq_restore(irq_state_t state)
     }
 }
 
+#define IRQ_OFF(block)                                                         \
+    {                                                                          \
+        irq_state_t state = irq_save_disable();                                \
+        block irq_restore(state);                                              \
+    }
+
 #endif

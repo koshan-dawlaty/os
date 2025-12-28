@@ -152,6 +152,8 @@ size_t num = 10;
 void kernel_task1(void *a)
 {
 
+    printf("kernel_task1 start\n");
+
     mutex_lock(&m);
     schedule();
     mutex_unlock(&m);
@@ -159,7 +161,7 @@ void kernel_task1(void *a)
     schedule();
     mutex_unlock(&m);
 
-    return;
+    printf("kernel_task1 done\n");
 
     for (size_t i = 0; i < num; i++)
     {
@@ -178,12 +180,13 @@ void kernel_task1(void *a)
 
 void kernel_task2(void *a)
 {
+    printf("kernel_task2 start\n");
 
     mutex_lock(&m);
     schedule();
     mutex_unlock(&m);
 
-    return;
+    printf("kernel_task2 done\n");
 
     for (size_t i = 0; i < num; i++)
     {
@@ -204,7 +207,7 @@ void kernel_task2(void *a)
 void kernel_task3(void *a)
 {
 
-    return;
+    printf("kernel_task3\n");
 
     for (size_t i = 0; i < num; i++)
     {
@@ -225,8 +228,8 @@ void kmain()
 {
 
     add_task(create_kernel_task());
-    shared = malloc(4);
 
+    shared = malloc(4);
     ktask_run(kernel_task3, NULL);
     ktask_run(kernel_task2, NULL);
     ktask_run(kernel_task1, NULL);

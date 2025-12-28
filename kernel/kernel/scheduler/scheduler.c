@@ -1,17 +1,18 @@
-#include "elf.h"
-#include "fcntl.h"
-#include "gdt.h"
-#include "interrupts/pic.h"
-#include "lib/list.h"
-#include "panic.h"
 #include "sleep.h"
 #include "unistd.h"
 #include "utils.h"
 #include "vfs.h"
+#include <assert.h>
 #include <drivers/character/terminal.h>
+#include <elf.h>
+#include <fcntl.h>
+#include <gdt.h>
+#include <interrupts/pic.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <lib/list.h>
 #include <memory/get_free_pages.h>
+#include <panic.h>
 #include <scheduler.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -171,9 +172,12 @@ void ktask_return()
         remove_task(current);
         free_task(current);
     }
-    schedule();
     irq_restore(irq_state);
+
+    irq_enable();
+    schedule();
     /* execution maybe shouldnt get here */
+    panic("ktask_return end reached\n");
 }
 
 struct task *new_task_args(ptr ip, void *args)
