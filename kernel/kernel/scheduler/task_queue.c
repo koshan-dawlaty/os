@@ -1,6 +1,8 @@
 #include <lib/list.h>
 #include <scheduler.h>
 #include <stdlib.h>
+#include <utils.h>
+
 #include <task_queue.h>
 
 void task_queue_push(struct task_queue *queue, struct task *t)

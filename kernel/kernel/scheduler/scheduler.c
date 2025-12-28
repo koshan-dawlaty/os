@@ -163,7 +163,7 @@ void ktask_run(void (*task)(void *), void *args)
 void ktask_return()
 {
     printf("ktask_return\n");
-    irq_state_t irq_state = irq_save();
+    irq_state_t irq_state = irq_save_disable();
     {
         struct task *current = get_current_task();
         remove_task(current);
@@ -221,7 +221,7 @@ struct task *create_kernel_task()
 
 void remove_task(struct task *task)
 {
-    irq_state_t irq_state = irq_save();
+    irq_state_t irq_state = irq_save_disable();
 
     if (task == first_task)
     {
@@ -255,7 +255,7 @@ void remove_task(struct task *task)
 void add_task(struct task *task)
 {
 
-    irq_state_t state = irq_save();
+    irq_state_t state = irq_save_disable();
 
     if (current_task == NULL)
     {

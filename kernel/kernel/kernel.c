@@ -160,7 +160,7 @@ void kernel_task1(void *a)
         schedule();
         if (strcmp(shared, "one") != 0)
         {
-            printf("one:%s\n", shared);
+            panic("one:%s\n", shared);
         }
         printf("one unlock\n");
         mutex_unlock(&m);
@@ -178,7 +178,7 @@ void kernel_task2(void *a)
         schedule();
         if (strcmp(shared, "two") != 0)
         {
-            printf("two:%s\n", shared);
+            panic("two:%s\n", shared);
         }
         printf("two unlock\n");
         mutex_unlock(&m);
@@ -196,7 +196,7 @@ void kernel_task3(void *a)
         schedule();
         if (strcmp(shared, "333") != 0)
         {
-            printf("333:%s\n", shared);
+            panic("333:%s\n", shared);
         }
         printf("three unlock\n");
         mutex_unlock(&m);
@@ -209,11 +209,11 @@ void kmain()
     add_task(create_kernel_task());
     shared = malloc(4);
 
-    /* ktask_run(kernel_task3, NULL); */
-    /* ktask_run(kernel_task2, NULL); */
-    /* ktask_run(kernel_task1, NULL); */
-    /* enable_scheduler(); */
-    /* return; */
+    ktask_run(kernel_task3, NULL);
+    ktask_run(kernel_task2, NULL);
+    ktask_run(kernel_task1, NULL);
+    enable_scheduler();
+    return;
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());

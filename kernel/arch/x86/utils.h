@@ -84,6 +84,19 @@ static inline irq_state_t irq_save()
     return irq_state;
 }
 
+/*
+ * helper function that disables irqs and saves the state
+ * equivalent to:
+ * 		irq_save()
+ * 		irq_disable()
+ */
+static inline irq_state_t irq_save_disable()
+{
+    irq_state_t out = irq_save();
+    irq_disable();
+    return out;
+}
+
 static inline void irq_restore(irq_state_t state)
 {
     if (state)
