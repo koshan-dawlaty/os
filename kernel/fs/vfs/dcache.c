@@ -133,7 +133,7 @@ enum dcache_dot_type
     DCACHE_DOTDOT,      /* equal to ".." */
 };
 
-static inline u8 dcache_handle_dot(const char *component, struct dentry *parent)
+static inline enum dcache_dot_type dcache_handle_dot(const char *component)
 {
     if (component[0] != '.')
     {
@@ -159,7 +159,7 @@ static inline u8 dcache_handle_dot(const char *component, struct dentry *parent)
 struct dentry *get_dcache(char *component, struct dentry *parent)
 {
 
-    enum dcache_dot_type type = dcache_handle_dot(component, parent);
+    enum dcache_dot_type type = dcache_handle_dot(component);
     switch (type)
     {
     case DCACHE_DOT:
@@ -270,6 +270,24 @@ void add_dcache(dentry *parent, dentry *new_entry)
  */
 struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
 {
+
+    /* TODO: this is very stupid, but nothing else should access the dcache
+     * offset */
+
+    if (context->dcache_offset ==
+        0) /* equivalent to the path being ".", so return the directory that is
+              being read from  */
+    {
+        context->dcache_offset++;
+        return entry;
+    }
+    else if (context->dcache_offset == 1) /* equivalent to the path being "..",
+              so return the directory that is being read from's parent  */
+    {
+        context->dcache_offset++;
+        return entry->parent;
+    }
+
     struct dcache_dir *dir = get_dcache_dir(entry);
 
     if (dir == NULL)
@@ -277,7 +295,9 @@ struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
         return NULL;
     }
 
-    size_t i = 0;
+    /* because of the trick used to get "." and ".." 2 entries have already been
+     * read */
+    size_t i = 2;
     list *pos;
     list_for_each(pos, dir->permanent_values)
     {

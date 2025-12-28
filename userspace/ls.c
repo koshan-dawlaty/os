@@ -18,7 +18,6 @@ int main(int argc, char **argv)
 
     struct dirent *e = readdir(d);
     while (e != NULL)
-
     {
 
         printf("%s\n", e->d_name);

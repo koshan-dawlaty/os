@@ -13,6 +13,7 @@
 struct dentry *ext2_readdir(struct dentry *entry, struct dir_context *context,
                             superblock *sb)
 {
+read_entry:;
 
     if (context->fs_offset == EXT2_BLOCK_SIZE(sb))
     {
@@ -38,7 +39,16 @@ struct dentry *ext2_readdir(struct dentry *entry, struct dir_context *context,
     /* TODO: there may be some fields that could be used to support longer
      * filenames */
 
-    u8 *name_ptr = buf + 8;
+    char *name_ptr = (char *)buf + 8;
+    u16 total_size = *(u16 *)(buf + 4);
+
+    /* TODO: slightly more efficent way of doing this by checking only the first
+     * two characters (dcache does this in dcache_handle_dot) */
+    if (strcmp(name_ptr, "..") == 0 || strcmp(name_ptr, ".") == 0)
+    {
+        context->fs_offset += total_size;
+        goto read_entry;
+    }
 
     char *new_name = malloc(name_len + 1);
     memcpy(new_name, name_ptr, name_len);
@@ -49,8 +59,6 @@ struct dentry *ext2_readdir(struct dentry *entry, struct dir_context *context,
     dentry *out = new_dentry(new_name, entry,
                              ext2_get_vfs_node(node_index, current_node, sb),
                              ext2_get_dentry_type(current_node));
-
-    u16 total_size = *(u16 *)(buf + 4);
 
     context->fs_offset += total_size;
 
