@@ -1,4 +1,5 @@
 #include "elf.h"
+#include "fcntl.h"
 #include "gdt.h"
 #include "interrupts/pic.h"
 #include "lib/list.h"
@@ -162,13 +163,13 @@ void ktask_run(void (*task)(void *), void *args)
 void ktask_return()
 {
     printf("ktask_return\n");
-    irq_disable();
+    irq_state_t irq_state = irq_save();
     {
         struct task *current = get_current_task();
         remove_task(current);
         free_task(current);
     }
-    irq_enable();
+    irq_restore(irq_state);
     schedule();
 }
 
@@ -218,7 +219,7 @@ struct task *create_kernel_task()
 
 void remove_task(struct task *task)
 {
-    asm("cli");
+    irq_state_t irq_state = irq_save();
 
     if (task == first_task)
     {
@@ -246,11 +247,13 @@ void remove_task(struct task *task)
 
     previous->next = current->next;
 
-    asm("sti");
+    irq_restore(irq_state);
 }
 
 void add_task(struct task *task)
 {
+
+    irq_state_t state = irq_save();
 
     if (current_task == NULL)
     {
@@ -264,7 +267,7 @@ void add_task(struct task *task)
     task->next = temp;
 
 end:
-    asm("sti");
+    irq_restore(state);
 }
 
 void add_task_queue(struct task **queue, struct task *task)

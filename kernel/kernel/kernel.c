@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "utils.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <dirent.h>
@@ -184,11 +185,11 @@ void kernel_task2(void *a)
 
 void kernel_task3(void *a)
 {
+
     while (1)
     {
         mutex_lock(&m);
         printf("three lock\n");
-        schedule();
         memcpy2(shared, "333", 4);
         schedule();
         if (strcmp(shared, "333") != 0)

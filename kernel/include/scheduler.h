@@ -1,5 +1,3 @@
-#ifndef SCHEDULER_H
-#define SCHEDULER_H
 #include "compiler.h"
 #include "lib/list.h"
 #include <kernel/paging.h>
@@ -7,6 +5,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <vfs.h>
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
 
 /* TODO: mabye do the architecture specific part of this architecture
  * independent */
