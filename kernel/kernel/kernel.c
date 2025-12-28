@@ -136,7 +136,7 @@ void kernel_init()
 
 void kernel_task1(void *a)
 {
-    printf("kernel task1\n");
+    printf("kernel task1, %p\n", a);
 }
 
 void kernel_task2(void *a)
@@ -160,7 +160,7 @@ void kmain()
 
     add_task(create_kernel_task());
 
-    run_task(kernel_task1, NULL);
+    ktask_run(kernel_task1, (void *)0x1234567);
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());

@@ -103,6 +103,6 @@ void add_sleep_queue(struct task *task, size_t time);
 
 struct task *new_task_args(ptr ip, void *args);
 
-void run_task(void (*task)(void *), void *args);
+void ktask_run(void (*task)(void *), void *args);
 
 #endif

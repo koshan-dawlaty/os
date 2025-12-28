@@ -154,7 +154,7 @@ struct task *new_task(ptr ip)
     return out;
 }*/
 
-void run_task(void (*task)(void *), void *args)
+void ktask_run(void (*task)(void *), void *args)
 {
     add_task(new_task_args((ptr)task, args));
 }
