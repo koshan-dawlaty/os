@@ -100,12 +100,13 @@ void free_dentry(dentry *entry)
     /* TODO: free inode */
 }
 
-file *new_file(dentry *entry)
+struct file *new_file(struct dentry *entry, int flags)
 {
     file *out = malloc(sizeof(file));
     out->entry = entry;
     out->descriptor = 0;
     out->offset = 0;
+    out->flags = flags;
 
     switch (entry->type)
     {

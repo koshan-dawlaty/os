@@ -113,9 +113,17 @@ typedef struct
 
 typedef uint32_t fd_t;
 
+#define FLAGS_IS_READABLE(flags)                                               \
+    (((flags & O_RDONLY) != 0) || ((flags & O_RDWR) != 0))
+
+#define FLAGS_IS_WRITABLE(flags)                                               \
+    (((flags & O_WRONLY) != 0) || ((flags & O_RDWR) != 0))
+
 typedef struct file
 {
-    /* where read() / write() will read / write from */
+
+    int flags;
+
     size_t offset;
 
     union
@@ -124,9 +132,7 @@ typedef struct file
     };
 
     fd_t descriptor;
-    // this could be inode, as the filename would probably be known. This could
-    // also store the name in the file struct itself
-    dentry *entry;
+    struct dentry *entry;
 } file;
 
 static inline void add_file_offset(file *f, size_t add)
@@ -141,8 +147,8 @@ static inline void add_file_offset(file *f, size_t add)
 /*
  * initializes descriptor as 0
  */
-file *new_file(dentry *entry);
-file *open_file(const char *path);
+struct file *new_file(struct dentry *entry, int permissions);
+file *open_file(const char *path, int permissions);
 int close_file(file *f);
 int read_file(file *file, char *buf, size_t n, size_t off);
 int write_file(file *file, const char *buf, size_t n, size_t off);

@@ -1,6 +1,7 @@
 #include "assert.h"
 #include "dcache.h"
 #include "dirent.h"
+#include "fcntl.h"
 #include "interrupts/pic.h"
 #include "memory/get_free_pages.h"
 #include "mutex.h"
@@ -116,7 +117,7 @@ int close_file(file *f)
     }
 }
 
-file *open_file(const char *path)
+file *open_file(const char *path, int flags)
 {
     dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
     if (IS_ERR(dentry))
@@ -124,7 +125,7 @@ file *open_file(const char *path)
         return ERR_PTR(dentry);
     }
 
-    file *out = new_file(dentry);
+    file *out = new_file(dentry, flags);
 
     struct fdlist *list = get_current_fdlist();
     int fd = fdlist_add(list, out);
@@ -187,8 +188,14 @@ int read_dir(struct file *dir, struct dirent *buf, size_t number)
     return 0;
 }
 
-int read_file(file *file, char *buf, size_t n, size_t off)
+int read_file(struct file *file, char *buf, size_t n, size_t off)
 {
+
+    if (!FLAGS_IS_READABLE(file->flags))
+    {
+        return -EACCES;
+    }
+
     if (file->entry->type == DENTRY_DEVICE)
     {
         struct device *dev = file->entry->dev;
@@ -226,6 +233,12 @@ int read_file(file *file, char *buf, size_t n, size_t off)
 
 int write_file(file *file, const char *buf, size_t n, size_t off)
 {
+
+    if (!FLAGS_IS_WRITABLE(file->flags))
+    {
+        return -EACCES;
+    }
+
     if (file->entry->type == DENTRY_DEVICE)
     {
         struct device *dev = file->entry->dev;
@@ -251,7 +264,7 @@ int write_file(file *file, const char *buf, size_t n, size_t off)
     return write_size;
 }
 
-file *create_file(char *name)
+struct file *create_file(char *name)
 {
     dentry *new = lookup_path(name, PATHNAME_LOOKUP_CREATE);
 
@@ -260,7 +273,8 @@ file *create_file(char *name)
         return ERR_PTR(new);
     }
 
-    return new_file(new);
+    /* TODO */
+    return new_file(new, O_RDWR);
 }
 
 void file_free(file *f)
@@ -305,6 +319,6 @@ file *open_device(const char *devname)
         return (void *)GET_ERR(ent);
     }
 
-    file *out = new_file(ent);
+    file *out = new_file(ent, O_RDWR);
     return out;
 }

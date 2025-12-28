@@ -1,10 +1,10 @@
-#include "tests/tests.h"
-#include "unistd.h"
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <tests/tests.h>
+#include <unistd.h>
 #include <vfs.h>
 
 TEST(vfs_basic, {
@@ -15,14 +15,16 @@ TEST(vfs_basic, {
         buf[i] = (i + 0x30) % 10;
     }
 
-    int fd = open("/testdir/testfile", 0);
+    int fd = open("/testdir/testfile", O_RDWR);
 
     ASSERT_GE(fd, 0, "fd for existing file should be valid");
 
     pwrite(fd, buf, size, 0);
 
     char *read_buf = malloc(size);
-    pread(fd, read_buf, size, 0);
+    int read_result = pread(fd, read_buf, size, 0);
+    ASSERT_EQ(read_result, (int)size, "read %d bytes when %d were expected",
+              read_result, size);
 
     for (size_t i = 0; i < size; i++)
     {
@@ -154,7 +156,9 @@ TEST(stdlib_FILE, {
 })
 
 TEST(vfs_read_dir, {
-    struct file *f = open_file("/");
+    /* this should use O_SEARCH */
+    /* struct file *f = open_file("/", O_SEARCH); */
+    struct file *f = open_file("/", O_RDWR);
 
     size_t num = 2;
     /* we want this to be zeroed because we check if the name is null later */
@@ -178,7 +182,7 @@ TEST(vfs_dir_dot_dot_on_root_is_root, {
 })
 
 TEST(vfs_dir_dot_dot_on_dir, {
-    int fd = open("/dir/../dir/../dir/../dir/../one", 0);
+    int fd = open("/dir/../dir/../dir/../dir/../one", O_RDONLY);
     ASSERT_GE(fd, 0, "file descriptor should be valid");
     char *buf = malloc(100);
     read(fd, buf, 100);

@@ -12,7 +12,7 @@
 int open(const char *path, int flags)
 {
 #ifdef __is_libk
-    file *f = open_file(path);
+    file *f = open_file(path, flags);
     if (IS_ERR(f))
     {
         /* TODO: we might want to set errno here */

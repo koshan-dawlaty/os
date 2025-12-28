@@ -158,12 +158,30 @@ void kernel_task2(void *a)
 void kmain()
 {
 
+    size_t size = 1000;
+    char *buf = malloc(size);
+    for (size_t i = 0; i < size; i++)
+    {
+        buf[i] = (i + 0x30) % 10;
+    }
+
+    int fd = open("/testdir/testfile", O_RDWR);
+
+    printf("%d\n", fd);
+
+    pwrite(fd, buf, size, 0);
+
+    char *read_buf = malloc(size);
+    int read_result = pread(fd, read_buf, size, 0);
+    printf("%d\n", read_result);
+
+    return;
+
     DIR *d = opendir("/");
 
     struct dirent *e = readdir(d);
     while (e != NULL)
     {
-
         printf("%s\n", e->d_name);
         /* printf("%d\n", d->fd); */
         e = readdir(d);
