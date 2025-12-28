@@ -25,6 +25,12 @@ void list_add(list *new, list *head)
     head->next = new;
     new->next = temp;
 }
+void list_push(struct list *new, struct list **head)
+{
+    struct list *temp = *head;
+    *head = new;
+    (*head)->next = temp;
+}
 
 int list_remove(list *entry, list *head)
 {

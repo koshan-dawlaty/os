@@ -55,8 +55,8 @@ def my_pp_func(val):
     # if t.tag == "list":
     #     return ListPrinter(val)
 
-    if t.code == gdb.TYPE_CODE_STRUCT and t.tag == "task":
-        return TaskPrinter(val)
+    # if t.code == gdb.TYPE_CODE_STRUCT and t.tag == "task":
+    #     return TaskPrinter(val)
 
     if t.code == gdb.TYPE_CODE_STRUCT and t.tag == "registers":
         return RegistersPrinter(val)

@@ -15,6 +15,7 @@ list new_list();
 void list_add(list *new, list *head);
 int list_remove(list *entry, list *head);
 list *list_pop(list **head);
+void list_push(struct list *new, struct list **head);
 
 #define LIST_INIT(...)                                                         \
     (list)                                                                     \

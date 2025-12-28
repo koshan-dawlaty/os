@@ -134,24 +134,69 @@ void kernel_init()
 #endif
 }
 
+char *shared = NULL;
+struct mutex m = MUTEX_INIT();
+
+void memcpy2(char *one, char *two, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        schedule();
+        one[i] = two[i];
+    }
+}
+
 void kernel_task1(void *a)
 {
-    printf("kernel task1, %p\n", a);
+
+    while (1)
+    {
+        mutex_lock(&m);
+        printf("one lock\n");
+        memcpy2(shared, "one", 4);
+        schedule();
+        if (strcmp(shared, "one") != 0)
+        {
+            printf("one:%s\n", shared);
+        }
+        printf("one unlock\n");
+        mutex_unlock(&m);
+    }
 }
 
 void kernel_task2(void *a)
 {
-    printf("kernel task2\n");
-    int fd = open("/one", 0);
-    char *buf = malloc(100);
-    schedule();
-    read(fd, buf, 100);
-    printf("task2:%s\n", buf);
-
-    close(fd);
-
     while (1)
     {
+        mutex_lock(&m);
+        printf("two lock\n");
+        schedule();
+        memcpy2(shared, "two", 4);
+        schedule();
+        if (strcmp(shared, "two") != 0)
+        {
+            printf("two:%s\n", shared);
+        }
+        printf("two unlock\n");
+        mutex_unlock(&m);
+    }
+}
+
+void kernel_task3(void *a)
+{
+    while (1)
+    {
+        mutex_lock(&m);
+        printf("three lock\n");
+        schedule();
+        memcpy2(shared, "333", 4);
+        schedule();
+        if (strcmp(shared, "333") != 0)
+        {
+            printf("333:%s\n", shared);
+        }
+        printf("three unlock\n");
+        mutex_unlock(&m);
     }
 }
 
@@ -159,8 +204,14 @@ void kmain()
 {
 
     add_task(create_kernel_task());
+    shared = malloc(4);
 
-    ktask_run(kernel_task1, (void *)0x1234567);
+    ktask_run(kernel_task3, NULL);
+    ktask_run(kernel_task2, NULL);
+    ktask_run(kernel_task1, NULL);
+
+    enable_scheduler();
+    return;
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());

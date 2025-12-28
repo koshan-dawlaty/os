@@ -1,6 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 #include "compiler.h"
+#include "lib/list.h"
 #include <kernel/paging.h>
 #include <kernel/types.h>
 #include <stdbool.h>
@@ -34,6 +35,8 @@ struct registers
 
 struct task
 {
+    struct list list;
+
     struct task *next;
     struct pagedir *pgdir;
     void *stack;

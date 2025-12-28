@@ -1,5 +1,6 @@
-#include "sched.h"
+#include "panic.h"
 #include <mutex.h>
+#include <sched.h>
 #include <scheduler.h>
 #include <utils.h>
 
@@ -9,6 +10,7 @@ void mutex_lock(struct mutex *m)
 
     if (!m->locked)
     {
+        printf("lock\n");
         m->locked = true;
     }
     else
@@ -18,6 +20,7 @@ void mutex_lock(struct mutex *m)
         struct task *temp = m->queue;
         m->queue = current;
         m->queue->next = temp;
+
         sched_yield();
     }
 
@@ -28,6 +31,11 @@ void mutex_unlock(struct mutex *m)
 {
     irq_disable();
 
+    if (!m->locked)
+    {
+        panic("mutex unlock may have been called twice on the same mutex!");
+    }
+
     if (m->queue == NULL)
     {
         m->locked = false;
@@ -36,8 +44,9 @@ void mutex_unlock(struct mutex *m)
     {
         struct task *temp = m->queue;
         m->queue = temp->next;
-
         add_task(temp);
+
+        sched_yield();
     }
 
     irq_enable();
