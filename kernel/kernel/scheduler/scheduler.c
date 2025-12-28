@@ -203,6 +203,8 @@ struct task *new_task(ptr ip)
     *(ptr *)(out->stack) = ip;
     out->pgdir = NULL;
 
+    out->start_addr = (void *)ip;
+
     return out;
 }
 

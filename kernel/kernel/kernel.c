@@ -147,10 +147,12 @@ void memcpy2(char *one, char *two, size_t n)
     }
 }
 
+size_t num = 10;
+
 void kernel_task1(void *a)
 {
 
-    while (1)
+    for (size_t i = 0; i < num; i++)
     {
         mutex_lock(&m);
         printf("one lock\n");
@@ -167,7 +169,7 @@ void kernel_task1(void *a)
 
 void kernel_task2(void *a)
 {
-    while (1)
+    for (size_t i = 0; i < num; i++)
     {
         mutex_lock(&m);
         printf("two lock\n");
@@ -186,7 +188,7 @@ void kernel_task2(void *a)
 void kernel_task3(void *a)
 {
 
-    while (1)
+    for (size_t i = 0; i < num; i++)
     {
         mutex_lock(&m);
         printf("three lock\n");
@@ -207,12 +209,11 @@ void kmain()
     add_task(create_kernel_task());
     shared = malloc(4);
 
-    ktask_run(kernel_task3, NULL);
-    ktask_run(kernel_task2, NULL);
-    ktask_run(kernel_task1, NULL);
-
-    enable_scheduler();
-    return;
+    /* ktask_run(kernel_task3, NULL); */
+    /* ktask_run(kernel_task2, NULL); */
+    /* ktask_run(kernel_task1, NULL); */
+    /* enable_scheduler(); */
+    /* return; */
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());

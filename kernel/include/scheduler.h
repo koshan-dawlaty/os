@@ -44,6 +44,8 @@ struct task
     ptr bp;
     struct dentry *working_dir;
     struct fdlist *descriptors;
+
+    void *start_addr; /* used for debugging */
 };
 
 void switch_tasks();

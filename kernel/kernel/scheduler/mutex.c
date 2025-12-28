@@ -5,9 +5,18 @@
 #include <utils.h>
 #include <vfs.h>
 
+extern void (*kernel_task1)(void *);
+extern void (*kernel_task2)(void *);
+extern void (*kernel_task3)(void *);
+
 void mutex_lock(struct mutex *m)
 {
-    irq_state_t irq_state = irq_save();
+    irq_disable();
+
+    void *addr = get_current_task()->start_addr;
+    if (addr == &kernel_task2)
+    {
+    }
 
     if (!m->locked)
     {
@@ -24,12 +33,12 @@ void mutex_lock(struct mutex *m)
         sched_yield();
     }
 
-    irq_restore(irq_state);
+    irq_enable();
 }
 
 void mutex_unlock(struct mutex *m)
 {
-    irq_state_t irq_state = irq_save();
+    irq_disable();
 
     if (!m->locked)
     {
@@ -49,5 +58,5 @@ void mutex_unlock(struct mutex *m)
         schedule();
     }
 
-    irq_restore(irq_state);
+    irq_enable();
 }
