@@ -183,3 +183,15 @@ TEST(vfs_dir_dot_dot_on_dir, {
     read(fd, buf, 100);
     ASSERT_EQ_STR(buf, "file one");
 })
+
+TEST(vfs_mkdir, {
+    lookup_path(
+        "test1234567",
+        (struct pathname_lookup_flags){
+            .create = 1, .type = DENTRY_DIR}); /* TODO: replace this with an
+                                                  actual mkdir() call */
+    creat("test1234567/file", 0);
+    int fd = open("/test1234567/file", 0);
+    ASSERT_GE(fd, 0);
+    close(fd);
+})
