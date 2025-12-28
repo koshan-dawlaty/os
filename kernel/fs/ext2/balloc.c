@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-inode *ext2_inode_alloc(superblock *sb)
+struct inode *ext2_inode_alloc(struct superblock *sb, u16 type)
 {
     for (size_t j = 0; j < EXT2_TOTAL_INODES(sb) / EXT2_INODES_PER_GROUP(sb);
          j++)
@@ -33,8 +33,16 @@ inode *ext2_inode_alloc(superblock *sb)
                 inode *node = ext2_iget(i, sb);
 
                 ext2_inode *ext2_node = EXT2_INODE(node);
-                ext2_node->type = 0x81ed;
-                ext2_node->size_low = 0;
+                /* TODO: only check if the correct bits are set for the type */
+                if (type == EXT2_INODE_DIR)
+                {
+                    ext2_node->size_low = EXT2_BLOCK_SIZE(sb);
+                }
+                else
+                {
+                    ext2_node->size_low = 0;
+                }
+                ext2_node->type = type;
                 ext2_update_inode(node, sb);
 
                 free(usage_bitmap);
@@ -194,7 +202,8 @@ end:;
     }
 }
 
-dentry *ext2_append_dentry(dentry *parent, char *name, superblock *sb)
+struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
+                                  enum dentry_type type, superblock *sb)
 {
 
     /* TODO: this will not work if the size goes beyond one block */
@@ -210,6 +219,10 @@ dentry *ext2_append_dentry(dentry *parent, char *name, superblock *sb)
         u8 *raw_entry = buf + i;
 
         u16 len = *(u16 *)(raw_entry + 4);
+        if (len == 0)
+        {
+            break;
+        }
 
         if (i + len == EXT2_BLOCK_SIZE(sb))
         {
@@ -229,7 +242,7 @@ dentry *ext2_append_dentry(dentry *parent, char *name, superblock *sb)
     size_t buf_len = align_long((strlen(name) + 8), 4);
     u8 *new_buf = buf + i;
 
-    inode *new_node = ext2_inode_alloc(sb);
+    struct inode *new_node = ext2_inode_alloc(sb, ext2_get_inode_type(type));
 
     memcpy(new_buf + 8, name, strlen(name));
     *(u32 *)(new_buf) = new_node->number;
@@ -243,6 +256,6 @@ dentry *ext2_append_dentry(dentry *parent, char *name, superblock *sb)
     ext2_entry->size_low = EXT2_BLOCK_SIZE(sb);
     ext2_update_inode(parent->inode, sb);
 
-    return new_dentry(name, parent, new_node,
-                      ext2_get_dentry_type(EXT2_INODE(new_node)));
+    /* TODO: cast discards qualifiers */
+    return new_dentry((char *)name, parent, new_node, type);
 }

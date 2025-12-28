@@ -52,11 +52,9 @@ typedef struct
     void (*read_inode)(inode *, uint8_t *buf, size_t n, size_t offset);
     void (*write_inode)(inode *, const uint8_t *buf, size_t n, size_t offset);
 
-    inode *(*alloc_inode)(superblock *sb);
-
 } inode_functions;
 
-typedef enum
+typedef enum dentry_type
 {
     DENTRY_FILE,
     DENTRY_DIR,
@@ -107,7 +105,8 @@ void free_dentry(dentry *entry);
 typedef struct
 {
     dentry *(*read_dir)(dentry *entry, struct dir_context *, superblock *sb);
-    dentry *(*append_dentry)(dentry *parent, char *name, superblock *sb);
+    dentry *(*append_dentry)(dentry *parent, const char *name,
+                             enum dentry_type type, superblock *sb);
 
     int (*remove_dentry)(dentry *, char *, superblock *);
 } dentry_functions;

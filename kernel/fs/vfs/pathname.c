@@ -78,7 +78,7 @@ static size_t parse_component(const char *path, dentry **current_dir,
                     entry =
                         (*current_dir)
                             ->inode->sb->type->dentry_functions.append_dentry(
-                                *current_dir, component,
+                                *current_dir, component, flags.type,
                                 (*current_dir)->inode->sb);
                 }
                 else if (flags.type == DENTRY_DEVICE)

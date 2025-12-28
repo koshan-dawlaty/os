@@ -77,6 +77,9 @@ typedef struct __attribute__((packed))
     uint8_t os_specific2[12];
 } ext2_inode;
 
+#define EXT2_INODE_FILE 0x8000
+#define EXT2_INODE_DIR 0x4000
+
 static inline ext2_inode *EXT2_INODE(inode *i)
 {
     return i->fs_private;
@@ -114,7 +117,7 @@ void ext2_write_block(uint8_t *buffer, size_t block_number, superblock *sb);
 // name is taken from the linux kernel, it could be better
 inode *ext2_iget(ino_t inode_number, superblock *sb);
 
-inode *ext2_inode_alloc(superblock *sb);
+struct inode *ext2_inode_alloc(struct superblock *sb, u16 type);
 uint32_t ext2_block_alloc(superblock *sb);
 
 void ext2_write_inode(inode *node, const uint8_t *buf, size_t buf_len,
@@ -129,8 +132,10 @@ struct dentry *ext2_readdir(struct dentry *entry, struct dir_context *context,
  * returns the type that should be used for the dentry that points to the inode
  */
 dentry_type ext2_get_dentry_type(ext2_inode *node);
+u16 ext2_get_inode_type(dentry_type type);
 
-dentry *ext2_append_dentry(dentry *entry, char *name, superblock *sb);
+struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
+                                  enum dentry_type type, struct superblock *sb);
 
 /* removes a dentry matching name from entry */
 int ext2_remove_dentry(dentry *entry, char *name, superblock *sb);

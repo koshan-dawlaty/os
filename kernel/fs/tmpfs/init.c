@@ -84,19 +84,34 @@ struct tmpfs_node *tmpfs_node_alloc_dir(const char *name,
     return out;
 }
 
-struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
-                                   struct superblock *sb)
+struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, const char *name,
+                                   enum dentry_type type, struct superblock *sb)
 {
     struct tmpfs_node *parent = TMPFS_NODE(vfs_parent->inode);
 
     ASSERT(parent->type == TMPFS_NODE_DIR, "entry needs to be a dir");
 
-    struct tmpfs_node *node = tmpfs_node_alloc_file(name, TMPFS_NODE_FILE, sb);
+    struct tmpfs_node *node;
+
+    switch (type)
+    {
+    case DENTRY_DIR:
+        node = tmpfs_node_alloc_dir(name, TMPFS_NODE_DIR, sb);
+        break;
+    case DENTRY_FILE:
+        node = tmpfs_node_alloc_file(name, TMPFS_NODE_FILE, sb);
+        break;
+    default:
+        UNREACHABLE("fs dentry_append should only be called with files or "
+                    "directorys as the new entry");
+    }
+
     struct inode *inode_new =
         new_inode(TMPFS_SB(sb)->inode_count++, 0, node, sb);
     TMPFS_SB(sb)->inode_count++;
+    /*TODO: cast discards qualifiers */
     struct dentry *entry_new =
-        new_dentry(name, vfs_parent, inode_new, DENTRY_FILE);
+        new_dentry((char *)name, vfs_parent, inode_new, type);
 
     /* if (parent->dir_head == NULL) */
     /* { */

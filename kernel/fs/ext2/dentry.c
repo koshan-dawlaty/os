@@ -25,7 +25,6 @@ read_entry:;
     size_t size = ext2_get_inode_size(node);
     u8 *buf = malloc(size);
     ext2_read_inode(node, buf, size, 0, sb);
-
     if (context->fs_offset > EXT2_BLOCK_SIZE(sb))
     {
         return ERR_PTR(-EOVERFLOW);
@@ -56,9 +55,13 @@ read_entry:;
     new_name[name_len] = 0;
 
     ext2_inode *current_node = ext2_get_inode(node_index, sb);
-    dentry *out = new_dentry(new_name, entry,
-                             ext2_get_vfs_node(node_index, current_node, sb),
-                             ext2_get_dentry_type(current_node));
+    if (current_node == NULL)
+    {
+        return NULL;
+    }
+    struct dentry *out = new_dentry(
+        new_name, entry, ext2_get_vfs_node(node_index, current_node, sb),
+        ext2_get_dentry_type(current_node));
 
     context->fs_offset += total_size;
 

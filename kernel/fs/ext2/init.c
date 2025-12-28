@@ -38,21 +38,18 @@ inode *ext2_iget(ino_t number, superblock *sb)
     return out;
 }
 
-inode *ext2_ialloc(superblock *sb)
-{
-    return ext2_inode_alloc(sb);
-}
-
 struct ext2_superblock *ext2_parse_superblock(struct bdev *dev);
 superblock *ext2_parse_superblock_vfs(struct bdev *dev);
 dentry *ext2_mount(struct bdev *dev);
 
 const struct fs_type ext2_fs_type = {
     .name = "ext2",
-    .inode_functions = {.get_inode = ext2_iget,
-                        .read_inode = ext2_iread,
-                        .write_inode = ext2_iwrite,
-                        .alloc_inode = ext2_ialloc},
+    .inode_functions =
+        {
+            .get_inode = ext2_iget,
+            .read_inode = ext2_iread,
+            .write_inode = ext2_iwrite,
+        },
     .dentry_functions = {.append_dentry = ext2_append_dentry,
                          .read_dir = ext2_readdir,
                          .remove_dentry = ext2_remove_dentry},

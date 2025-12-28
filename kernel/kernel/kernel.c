@@ -158,6 +158,26 @@ void kernel_task2(void *a)
 void kmain()
 {
 
+    lookup_path("test1234567", (struct pathname_lookup_flags){
+                                   .create = 1, .type = DENTRY_DIR});
+    creat("test1234567/file", 0);
+    printf("%d\n", open("/test1234567/file", 0));
+
+    DIR *d = opendir("/");
+
+    struct dirent *e = readdir(d);
+    while (e != NULL)
+    {
+
+        printf("%s\n", e->d_name);
+        /* printf("%d\n", d->fd); */
+        e = readdir(d);
+
+        /* printf("%p\n", malloc(10)); */
+    }
+
+    return;
+
     add_task(create_kernel_task());
 
     ktask_run(kernel_task1, (void *)0x1234567);
