@@ -154,21 +154,14 @@ void kernel_task1(void *a)
 
     printf("kernel_task1 start\n");
 
-    mutex_lock(&m);
-    schedule();
-    mutex_unlock(&m);
-    mutex_lock(&m);
-    schedule();
-    mutex_unlock(&m);
-
-    printf("kernel_task1 done\n");
-
     for (size_t i = 0; i < num; i++)
     {
+        printf("one start\n");
         mutex_lock(&m);
         printf("one lock\n");
         memcpy2(shared, "one", 4);
         schedule();
+        printf("one strcmp\n");
         if (strcmp(shared, "one") != 0)
         {
             panic("one:%s\n", shared);
@@ -182,19 +175,15 @@ void kernel_task2(void *a)
 {
     printf("kernel_task2 start\n");
 
-    mutex_lock(&m);
-    schedule();
-    mutex_unlock(&m);
-
-    printf("kernel_task2 done\n");
-
     for (size_t i = 0; i < num; i++)
     {
+        printf("two start\n");
         mutex_lock(&m);
         printf("two lock\n");
         schedule();
         memcpy2(shared, "two", 4);
         schedule();
+        printf("two strcmp\n");
         if (strcmp(shared, "two") != 0)
         {
             panic("two:%s\n", shared);
@@ -211,10 +200,12 @@ void kernel_task3(void *a)
 
     for (size_t i = 0; i < num; i++)
     {
+        printf("three start\n");
         mutex_lock(&m);
         printf("three lock\n");
         memcpy2(shared, "333", 4);
         schedule();
+        printf("three strcmp\n");
         if (strcmp(shared, "333") != 0)
         {
             panic("333:%s\n", shared);
@@ -229,12 +220,12 @@ void kmain()
 
     add_task(create_kernel_task());
 
-    shared = malloc(4);
-    ktask_run(kernel_task3, NULL);
-    ktask_run(kernel_task2, NULL);
-    ktask_run(kernel_task1, NULL);
-    enable_scheduler();
-    return;
+    /* shared = malloc(4); */
+    /* ktask_run(kernel_task3, NULL); */
+    /* ktask_run(kernel_task2, NULL); */
+    /* ktask_run(kernel_task1, NULL); */
+    /* enable_scheduler(); */
+    /* return; */
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
@@ -246,6 +237,7 @@ void kmain()
     }
 
     enable_scheduler();
+    irq_enable();
 
     /* execv("/cat", (char *[]){"cat", "one", NULL}); */
 }

@@ -29,6 +29,28 @@ struct task *first_task = NULL;
 
 extern struct pagedir init_pgdir;
 
+extern void *kernel_task1;
+extern void *kernel_task2;
+extern void *kernel_task3;
+
+static char *get_task_name(void *func)
+{
+    if (func == &kernel_task1)
+    {
+        return "task1";
+    }
+    else if (func == &kernel_task2)
+    {
+        return "task2";
+    }
+    else if (func == &kernel_task3)
+    {
+        return "task3";
+    }
+
+    return "unknown";
+}
+
 void enable_scheduler()
 {
     scheduler_enabled = true;
@@ -239,27 +261,46 @@ void add_task(struct task *task)
         current_task = task;
     }
 
-    irq_state_t state = irq_save_disable();
-    task_queue_push(&scheduler_queue, task);
-    irq_restore(state);
+    IRQ_OFF({ task_queue_push(&scheduler_queue, task); })
 }
 
 int num_task_switches = 0;
 void switch_tasks()
 {
+    char *old_name = get_task_name(current_task->start_addr);
     struct list *temp = current_task->list.next;
+
     if (temp == NULL)
     {
         temp = scheduler_queue.head;
     }
-    struct task *new_current = LIST_ENTRY(temp, struct task, list);
 
+    struct task *new_current = LIST_ENTRY(temp, struct task, list);
     current_task = new_current;
+    /* printf("switching from:%s to:%s\n", old_name, */
+    /*        get_task_name(current_task->start_addr)); */
+
+    if (new_current->start_addr == &kernel_task2)
+    {
+        /* printf("task2 in scheduler_queue\n"); */
+    }
+}
+
+void display_queue()
+{
+    struct list *pos;
+    list_for_each(pos, scheduler_queue.head)
+    {
+        struct task *t = LIST_ENTRY(pos, struct task, list);
+        printf("%s ", get_task_name(t->start_addr));
+    }
+    printf("\n");
 }
 
 void schedule()
 {
 
+    /* display_queue(); */
     irq_disable();
 
     increment_sleep_queue();

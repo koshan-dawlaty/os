@@ -7,6 +7,11 @@
 
 void task_queue_push(struct task_queue *queue, struct task *t)
 {
+    if (t->list.next != NULL)
+    {
+        struct task *next = containerof(t->list.next, struct task, list);
+        /* printf("%p\n", next->start_addr); */
+    }
     if (queue->head == NULL)
     {
         queue->head = &t->list;
@@ -26,6 +31,9 @@ struct task *task_queue_pop(struct task_queue *queue)
     struct list *list = list_pop(&queue->head);
     struct task *out = LIST_ENTRY(list, struct task, list);
 
+    /* the caller might have not done this themselves */
+    list->next = NULL;
+
     return out;
 }
 
@@ -41,4 +49,6 @@ void task_queue_remove(struct task_queue *queue, struct task *t)
     {
         printf("task not in task queue\n");
     }
+
+    t->next = NULL;
 }
