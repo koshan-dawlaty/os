@@ -1,6 +1,7 @@
 #ifndef I386_UTILS_H
 #define I386_UTILS_H
 #include "kernel/types.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 extern uint32_t stack_top;
@@ -65,5 +66,53 @@ static inline void irq_disable()
 {
     asm("cli");
 }
+
+typedef bool irq_state_t;
+static inline irq_state_t irq_save()
+{
+    ptr flags;
+    asm volatile("pushfq\n\t"
+                 "pop %0"
+                 : "=r"(flags)
+
+                 :
+                 : "memory"
+
+    );
+    ptr is_set = (flags & (1 << 9)) != 0;
+    irq_state_t irq_state = (bool)(is_set);
+    return irq_state;
+}
+
+/*
+ * helper function that disables irqs and saves the state
+ * equivalent to:
+ * 		irq_save()
+ * 		irq_disable()
+ */
+static inline irq_state_t irq_save_disable()
+{
+    irq_state_t out = irq_save();
+    irq_disable();
+    return out;
+}
+
+static inline void irq_restore(irq_state_t state)
+{
+    if (state)
+    {
+        irq_enable();
+    }
+    else
+    {
+        irq_disable();
+    }
+}
+
+#define IRQ_OFF(block)                                                         \
+    {                                                                          \
+        irq_state_t state = irq_save_disable();                                \
+        block irq_restore(state);                                              \
+    }
 
 #endif

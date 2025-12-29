@@ -1,11 +1,12 @@
-#ifndef SCHEDULER_H
-#define SCHEDULER_H
 #include "compiler.h"
+#include "lib/list.h"
 #include <kernel/paging.h>
 #include <kernel/types.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <vfs.h>
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
 
 /* TODO: mabye do the architecture specific part of this architecture
  * independent */
@@ -34,13 +35,16 @@ struct registers
 
 struct task
 {
-    struct task *next;
+    struct list list;
+
     struct pagedir *pgdir;
     void *stack;
     struct registers regs;
     ptr bp;
     struct dentry *working_dir;
     struct fdlist *descriptors;
+
+    void *start_addr; /* used for debugging */
 };
 
 void switch_tasks();

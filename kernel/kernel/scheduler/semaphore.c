@@ -1,3 +1,4 @@
+/* TODO: this is currently broken */
 #include "scheduler.h"
 #include <kernel/semaphore.h>
 #include <panic.h>
@@ -29,7 +30,7 @@ void wait_semaphore(semaphore *s)
         remove_task(current);
         struct task *temp = s->queue;
         s->queue = current;
-        s->queue->next = temp;
+        /* s->queue->next = temp; */
         /* add_task_queue(&s->queue, current); */
 
         sched_yield();
@@ -49,7 +50,7 @@ void release_semaphore(semaphore *s)
     {
 
         struct task *temp = s->queue;
-        s->queue = temp->next;
+        /* s->queue = temp->next; */
 
         /* remove_task_queue(&s->queue, task); */
 

@@ -2,6 +2,7 @@
 #define LIST_H
 
 #include <container_of.h>
+#include <stdbool.h>
 
 /*
  * singly linked list
@@ -13,8 +14,13 @@ typedef struct list
 
 list new_list();
 void list_add(list *new, list *head);
-int list_remove(list *entry, list *head);
+
+/*
+ * returns true if @entry was found in the list, false otherwise
+ */
+bool list_remove(list *entry, list **head);
 list *list_pop(list **head);
+void list_push(struct list *new, struct list **head);
 
 #define LIST_INIT(...)                                                         \
     (list)                                                                     \

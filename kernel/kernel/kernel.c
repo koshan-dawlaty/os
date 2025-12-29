@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "utils.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <dirent.h>
@@ -134,24 +135,83 @@ void kernel_init()
 #endif
 }
 
+char *shared = NULL;
+struct mutex m = MUTEX_INIT();
+
+void memcpy2(char *one, char *two, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        schedule();
+        one[i] = two[i];
+    }
+}
+
+size_t num = 10;
+
 void kernel_task1(void *a)
 {
-    printf("kernel task1, %p\n", a);
+
+    printf("kernel_task1 start\n");
+
+    for (size_t i = 0; i < num; i++)
+    {
+        printf("one start\n");
+        mutex_lock(&m);
+        printf("one lock\n");
+        memcpy2(shared, "one", 4);
+        schedule();
+        printf("one strcmp\n");
+        if (strcmp(shared, "one") != 0)
+        {
+            panic("one:%s\n", shared);
+        }
+        printf("one unlock\n");
+        mutex_unlock(&m);
+    }
 }
 
 void kernel_task2(void *a)
 {
-    printf("kernel task2\n");
-    int fd = open("/one", 0);
-    char *buf = malloc(100);
-    schedule();
-    read(fd, buf, 100);
-    printf("task2:%s\n", buf);
+    printf("kernel_task2 start\n");
 
-    close(fd);
-
-    while (1)
+    for (size_t i = 0; i < num; i++)
     {
+        printf("two start\n");
+        mutex_lock(&m);
+        printf("two lock\n");
+        schedule();
+        memcpy2(shared, "two", 4);
+        schedule();
+        printf("two strcmp\n");
+        if (strcmp(shared, "two") != 0)
+        {
+            panic("two:%s\n", shared);
+        }
+        printf("two unlock\n");
+        mutex_unlock(&m);
+    }
+}
+
+void kernel_task3(void *a)
+{
+
+    printf("kernel_task3\n");
+
+    for (size_t i = 0; i < num; i++)
+    {
+        printf("three start\n");
+        mutex_lock(&m);
+        printf("three lock\n");
+        memcpy2(shared, "333", 4);
+        schedule();
+        printf("three strcmp\n");
+        if (strcmp(shared, "333") != 0)
+        {
+            panic("333:%s\n", shared);
+        }
+        printf("three unlock\n");
+        mutex_unlock(&m);
     }
 }
 
@@ -159,6 +219,13 @@ void kmain()
 {
 
     add_task(create_kernel_task());
+
+    /* shared = malloc(4); */
+    /* ktask_run(kernel_task3, NULL); */
+    /* ktask_run(kernel_task2, NULL); */
+    /* ktask_run(kernel_task1, NULL); */
+    /* enable_scheduler(); */
+    /* return; */
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
@@ -170,6 +237,7 @@ void kmain()
     }
 
     enable_scheduler();
+    irq_enable();
 
     /* execv("/cat", (char *[]){"cat", "one", NULL}); */
 }
