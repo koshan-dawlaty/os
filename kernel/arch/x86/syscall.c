@@ -95,7 +95,7 @@ int syscall_handler(struct syscall_regs *regs)
     }
     case SYS_open:
     {
-        return open((void *)regs->ebx, 0);
+        return open((void *)regs->ebx, regs->ecx);
     }
     case SYS_read:
     {

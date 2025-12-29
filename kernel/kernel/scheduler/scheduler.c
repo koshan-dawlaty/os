@@ -243,6 +243,7 @@ struct task *create_kernel_task()
     save_registers(&out->regs);
     out->pgdir = &init_pgdir;
     out->stack = (void *)out->regs.esp;
+    out->start_addr = (void *)0xDEADBEEF;
 
     return out;
 }

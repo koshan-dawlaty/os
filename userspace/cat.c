@@ -20,7 +20,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    int fd = open(argv[1], 0);
+    int fd = open(argv[1], O_RDONLY);
 
     /* printf("FD IS:%d\n", fd); */
 
@@ -30,14 +30,11 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    char *buf2 = malloc(100);
-    read(fd, buf2, 100);
-    printf("%s", buf2);
-    while (1)
-    {
-    }
+    /* char *buf2 = malloc(100); */
+    /* read(fd, buf2, 100); */
+    /* printf("%s", buf2); */
 
-    exit(1);
+    /* exit(1); */
 
     size_t read_size = 10;
     size_t buf_len = read_size;
