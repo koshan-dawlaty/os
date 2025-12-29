@@ -107,9 +107,10 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 {
     struct task *out = malloc(sizeof(struct task));
 
+    out->start_addr = (void *)ip;
+
     out->bp = sp;
 
-    out->next = NULL;
     out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
     out->descriptors = new_fdlist();
 
@@ -217,7 +218,6 @@ struct task *new_task(ptr ip)
 {
     struct task *out = malloc(sizeof(struct task));
 
-    out->next = NULL;
     out->descriptors = new_fdlist();
 
     /* TODO: this is really stupid and runs out of space all the time, however

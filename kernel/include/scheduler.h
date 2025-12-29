@@ -37,7 +37,6 @@ struct task
 {
     struct list list;
 
-    struct task *next;
     struct pagedir *pgdir;
     void *stack;
     struct registers regs;
