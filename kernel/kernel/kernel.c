@@ -220,6 +220,24 @@ void kmain()
 
     add_task(create_kernel_task());
 
+    char *testfile = "/three";
+    creat(testfile, 0);
+    int fd1 = open(testfile, 0);
+    printf("opening newly created returns:%d\n", fd1);
+    unlink(testfile);
+
+    int fd2 = open(testfile, 0);
+    printf("opening file after delete returns:%d\n", fd2);
+    creat(testfile, 0);
+
+    int fd3 = open(testfile, 0);
+    printf("opening file again returns:%d\n", fd3);
+
+    close(fd1);
+    close(fd2);
+    close(fd3);
+    return;
+
     /* shared = malloc(4); */
     /* ktask_run(kernel_task3, NULL); */
     /* ktask_run(kernel_task2, NULL); */

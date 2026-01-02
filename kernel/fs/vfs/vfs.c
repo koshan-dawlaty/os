@@ -142,10 +142,12 @@ struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
 
 int delete_dentry(struct dentry *entry)
 {
+
+    int retval = entry->inode->sb->type->dentry_functions.remove_dentry(
+        entry->parent, entry->name, entry->inode->sb);
     remove_dcache(entry);
 
-    return entry->inode->sb->type->dentry_functions.remove_dentry(
-        entry->parent, entry->name, entry->inode->sb);
+    return retval;
 }
 
 void register_filesystem(struct fs_type *type)

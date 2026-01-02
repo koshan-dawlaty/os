@@ -3,10 +3,10 @@
 
 #include <stddef.h>
 
-typedef struct __attribute__((packed)) block
+typedef struct __attribute__((packed)) heap_block
 {
     size_t size;
-    struct block *next;
+    struct heap_block *next;
 } heap_block;
 
 #define SMALL_BIN_AMOUNT 60

@@ -140,19 +140,22 @@ static void ext2_read_inode_block(uint32_t indirect_block_num, uint8_t *buf,
     memcpy(buf + bytes_read, block, bytes_remaining);
 }
 
+/* TODO: this would be a lot better if it was inplace */
 void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
                      ext2_inode_index index, superblock *sb)
 {
 
-    uint8_t *block;
+    u8 *block;
     size_t buf_offset = 0;
 
     size_t blocks_offset = 0;
     if (index < EXT2_BLOCK_SIZE(sb) * 12)
     {
         uint block_index = index / EXT2_BLOCK_SIZE(sb);
-        // printf("%p\n", node->direct_blocks);
-        // printf("%d\n", node->direct_blocks[block_index]);
+
+        /* printf("%p\n", node->direct_blocks); */
+        /* printf("%d\n", node->direct_blocks[block_index]); */
+
         block = ext2_read_block(
             node->direct_blocks[block_index + blocks_offset], sb);
         blocks_offset++;
@@ -161,6 +164,8 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
         {
             memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb),
                    buf_len);
+
+            free(block);
 
             return;
         }
@@ -179,6 +184,7 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
                ((buf_len / EXT2_BLOCK_SIZE(sb)) * EXT2_BLOCK_SIZE(sb)))
         {
             memcpy(buf + buf_offset, block, EXT2_BLOCK_SIZE(sb));
+            free(block);
             block = ext2_read_block(
                 node->direct_blocks[block_index + blocks_offset], sb);
             blocks_offset++;
@@ -191,6 +197,7 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
         uint bytes_remaining = buf_len % EXT2_BLOCK_SIZE(sb);
         if (bytes_remaining < EXT2_BLOCK_SIZE(sb))
         {
+            free(block);
             block = ext2_read_block(
                 node->direct_blocks[block_index + blocks_offset - 1], sb);
 
