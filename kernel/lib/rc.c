@@ -19,10 +19,10 @@ void refcount_drop(refcount *rc, void (*drop)(refcount *))
 
     rc->count--;
 
-    if (rc->count < 0)
+    if (rc->count <= 0)
     {
         drop(rc);
-        /* TODO maybe the user wants to free this */
-        free(rc);
+        /* the user (probably) frees rc when freeing the struct containing rc,
+         * so we dont have to free it */
     }
 }

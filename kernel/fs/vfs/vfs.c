@@ -52,8 +52,8 @@ int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
     new_root->parent = root;
     /* TODO: cast discards qualifiers */
     new_root->name = (char *)new_name;
-
     add_dcache(root, new_root);
+
     return 0;
 }
 

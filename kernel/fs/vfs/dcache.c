@@ -10,7 +10,7 @@
 #include <string.h>
 #include <vfs.h>
 
-#define DCACHE_LRU_MAX 10
+#define DCACHE_LRU_MAX 2
 
 struct dcache_dir
 {
@@ -30,7 +30,7 @@ struct dcache_value
         struct list list;
     };
 
-    refcount *rc;
+    refcount rc;
 };
 
 void dcache_free_value(struct dcache_value *value)
@@ -41,7 +41,7 @@ void dcache_free_value(struct dcache_value *value)
 void dcache_rc_value_release(refcount *rc)
 {
     struct dcache_value *value = containerof(rc, struct dcache_value, rc);
-    free(value->entry);
+    dcache_free_value(value);
 }
 
 struct dcache_value *new_dcache_value(dentry *entry)
@@ -50,7 +50,7 @@ struct dcache_value *new_dcache_value(dentry *entry)
 
     out->entry = entry;
     out->lru = LRU_ENTRY_INIT();
-    out->rc = new_refcount();
+    out->rc = REFCOUNT_INIT();
 
     return out;
 }
@@ -251,7 +251,7 @@ void add_dcache(dentry *parent, dentry *new_entry)
         struct dcache_value *value =
             containerof(removed, struct dcache_value, lru);
 
-        refcount_drop(value->rc, dcache_rc_value_release);
+        refcount_drop(&value->rc, dcache_rc_value_release);
     }
 
     struct list2 *pos;

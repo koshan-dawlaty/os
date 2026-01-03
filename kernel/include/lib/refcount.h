@@ -6,6 +6,8 @@ typedef struct
     volatile int count;
 } refcount;
 
+#define REFCOUNT_INIT() (refcount){.count = 1}
+
 refcount *new_refcount();
 
 void refcount_get(refcount *rc);
