@@ -246,7 +246,7 @@ void free_zone(void *ptr, struct malloc_zone *zone)
 
     if (block->size > sizeof(struct heap_block))
     {
-        memset(ptr, 'a', block->size - sizeof(struct heap_block));
+        memset(ptr, 'a', block->size);
     }
 }
 

@@ -218,25 +218,38 @@ void kernel_task3(void *a)
 void kmain()
 {
 
-    add_task(create_kernel_task());
+    /* char *testfile = "/testfile12345678"; */
+    /* creat(testfile, 0); */
 
-    char *testfile = "/three";
-    creat(testfile, 0);
-    int fd1 = open(testfile, 0);
-    printf("opening newly created returns:%d\n", fd1);
-    unlink(testfile);
+    /* size_t len = 100; */
 
-    int fd2 = open(testfile, 0);
-    printf("opening file after delete returns:%d\n", fd2);
-    creat(testfile, 0);
+    /* FILE *f = fopen(testfile, "r+"); */
 
-    int fd3 = open(testfile, 0);
-    printf("opening file again returns:%d\n", fd3);
+    /* char *write_buf = malloc(len); */
+    /* for (size_t i = 0; i < len; i++) */
+    /* { */
+    /*     write_buf[i] = ((i % 26) + 'a'); */
+    /* } */
 
-    close(fd1);
-    close(fd2);
-    close(fd3);
-    return;
+    /* fwrite(write_buf, 10, 10, f); */
+
+    /* rewind(f); */
+
+    /* char *buf = malloc(len); */
+    /* fread(buf, len, 1, f); */
+
+    /* for (size_t i = 0; i < len; i++) */
+    /* { */
+    /*     if (buf[i] != write_buf[i]) */
+    /*     { */
+    /*         panic("file at index:%d is not equal, %d != %d", i, buf[i], */
+    /*               write_buf[i]); */
+    /*     } */
+    /* } */
+    /* return; */
+
+    struct task *kernel_task = create_kernel_task();
+    add_task(kernel_task);
 
     /* shared = malloc(4); */
     /* ktask_run(kernel_task3, NULL); */
@@ -248,6 +261,7 @@ void kmain()
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     printf("starting shell\n");
+    /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
     int err = execv("/ksh", (char *[]){"ksh", NULL});
     if (err < 0)
     {
@@ -256,6 +270,7 @@ void kmain()
 
     enable_scheduler();
     irq_enable();
+    schedule();
 
     /* execv("/cat", (char *[]){"cat", "one", NULL}); */
 }

@@ -1,3 +1,4 @@
+#include <sched.h>
 #include <stdlib.h>
 #include <sys/syscall.h>
 #include <utils.h>
@@ -14,7 +15,14 @@ void exit(int status)
     remove_task(t);
     free_task(t);
     schedule();
+
 #else
     syscall_wrapper_asm(SYS_exit, status, 0, 0, 0, 0);
 #endif
+
+    /* TODO: very bad, the task seems to continue after it is removed */
+    while (1)
+    {
+        sched_yield();
+    }
 }

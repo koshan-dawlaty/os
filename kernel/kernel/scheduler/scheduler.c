@@ -252,6 +252,15 @@ void remove_task(struct task *task)
 {
     irq_state_t irq_state = irq_save_disable();
     task_queue_remove(&scheduler_queue, task);
+
+    if (task == current_task)
+    {
+        current_task = LIST_ENTRY(current_task->list.next, struct task, list);
+        if (current_task == NULL)
+        {
+            current_task = LIST_ENTRY(scheduler_queue.head, struct task, list);
+        }
+    }
     irq_restore(irq_state);
 }
 
