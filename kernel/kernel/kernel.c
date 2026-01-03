@@ -218,36 +218,6 @@ void kernel_task3(void *a)
 void kmain()
 {
 
-    /* char *testfile = "/testfile12345678"; */
-    /* creat(testfile, 0); */
-
-    /* size_t len = 100; */
-
-    /* FILE *f = fopen(testfile, "r+"); */
-
-    /* char *write_buf = malloc(len); */
-    /* for (size_t i = 0; i < len; i++) */
-    /* { */
-    /*     write_buf[i] = ((i % 26) + 'a'); */
-    /* } */
-
-    /* fwrite(write_buf, 10, 10, f); */
-
-    /* rewind(f); */
-
-    /* char *buf = malloc(len); */
-    /* fread(buf, len, 1, f); */
-
-    /* for (size_t i = 0; i < len; i++) */
-    /* { */
-    /*     if (buf[i] != write_buf[i]) */
-    /*     { */
-    /*         panic("file at index:%d is not equal, %d != %d", i, buf[i], */
-    /*               write_buf[i]); */
-    /*     } */
-    /* } */
-    /* return; */
-
     struct task *kernel_task = create_kernel_task();
     add_task(kernel_task);
 

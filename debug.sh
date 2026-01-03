@@ -33,7 +33,7 @@ USERSPACE_ADDR=objdump -h $USER_EXECUTABLE2 | grep \ .text\  | awk '{print $4}'
 gdb \
 	-ex "source pretty-print.py" \
 	-ex "set print pretty" \
-	-ex " add-symbol-file isodir/boot/os.kernel $KERNEL_ADDR" \
+	-ex "add-symbol-file isodir/boot/os.kernel $KERNEL_ADDR" \
 	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
 	-ex "target remote | $QEMU_COMMAND -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")" \
