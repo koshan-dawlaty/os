@@ -42,14 +42,18 @@ struct ext2_superblock *ext2_parse_superblock(struct bdev *dev);
 superblock *ext2_parse_superblock_vfs(struct bdev *dev);
 dentry *ext2_mount(struct bdev *dev);
 
+void ext2_inode_free(struct inode *node)
+{
+    ext2_inode *ext2 = EXT2_INODE(node);
+    free(ext2);
+}
+
 const struct fs_type ext2_fs_type = {
     .name = "ext2",
-    .inode_functions =
-        {
-            .get_inode = ext2_iget,
-            .read_inode = ext2_iread,
-            .write_inode = ext2_iwrite,
-        },
+    .inode_functions = {.get_inode = ext2_iget,
+                        .read_inode = ext2_iread,
+                        .write_inode = ext2_iwrite,
+                        .inode_free = ext2_inode_free},
     .dentry_functions = {.append_dentry = ext2_append_dentry,
                          .read_dir = ext2_readdir,
                          .remove_dentry = ext2_remove_dentry},

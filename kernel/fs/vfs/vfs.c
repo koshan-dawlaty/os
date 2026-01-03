@@ -140,6 +140,14 @@ struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
     return out;
 }
 
+void inode_free(struct inode *node)
+{
+    NOT_NULL(node->sb->type->inode_functions.inode_free,
+             "filesystem did not implement function inode_free")
+    node->sb->type->inode_functions.inode_free(node);
+    free(node);
+}
+
 int delete_dentry(struct dentry *entry)
 {
 

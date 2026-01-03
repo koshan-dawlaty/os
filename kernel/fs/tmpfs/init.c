@@ -58,6 +58,7 @@ static struct tmpfs_node *tmpfs_node_alloc(const char *name,
 {
     struct tmpfs_node *out = malloc(sizeof(struct tmpfs_node));
 
+    /* TODO: strdup? */
     out->name = name;
     out->list = LIST2_INIT();
     out->type = type;
@@ -246,6 +247,14 @@ int tmpfs_dentry_remove(dentry *parent, char *name, superblock *sb)
     return -ENOENT;
 }
 
+/* TODO: this might cause problems where freeing the node results in it not
+ * being present */
+void tmpfs_inode_free(struct inode *node)
+{
+/* TODO */
+#error TODO
+}
+
 const struct fs_type tmpfs_type = {
 
     .name = "tmpfs",
@@ -255,6 +264,7 @@ const struct fs_type tmpfs_type = {
         {
             .read_inode = tmpfs_read_inode,
             .write_inode = tmpfs_write_inode,
+            .inode_free = tmpfs_inode_free,
         },
     .dentry_functions =
         {
