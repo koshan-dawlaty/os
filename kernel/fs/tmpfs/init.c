@@ -251,8 +251,7 @@ int tmpfs_dentry_remove(dentry *parent, char *name, superblock *sb)
  * being present */
 void tmpfs_inode_free(struct inode *node)
 {
-/* TODO */
-#error TODO
+    /* TODO */
 }
 
 const struct fs_type tmpfs_type = {

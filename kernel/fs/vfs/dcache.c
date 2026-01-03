@@ -15,7 +15,7 @@
 struct dcache_dir
 {
     /* parent directory, NULL is root */
-    dentry *dir;
+    struct dentry *dir;
     struct lru_head *values_head;
     struct list *permanent_values;
     list l;
@@ -23,7 +23,7 @@ struct dcache_dir
 
 struct dcache_value
 {
-    dentry *entry;
+    struct dentry *entry;
     union
     {
         struct lru_entry lru;
@@ -190,7 +190,6 @@ struct dentry *get_dcache(char *component, struct dentry *parent)
 
 struct dcache_dir *add_dcache_dir(dentry *dir)
 {
-
     struct dcache_dir *new_dir = new_dcache_dir(dir);
     list_add(&new_dir->l, &dcache_list);
 
@@ -231,6 +230,12 @@ void add_dcache(dentry *parent, dentry *new_entry)
     /* printf("adding %p to cache\n", parent); */
 
     struct dcache_dir *dir = get_dcache_dir(parent);
+
+    if (new_entry->type == DENTRY_DIR)
+    {
+        add_dcache_dir(new_entry);
+        return;
+    }
 
     if (dir == NULL)
     {

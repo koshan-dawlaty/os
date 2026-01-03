@@ -97,7 +97,7 @@ dentry *dentry_mount_point_alloc(struct superblock *sb, struct inode *root)
 void free_dentry(dentry *entry)
 {
     free(entry->name);
-    /* TODO: free inode */
+    inode_free(entry->inode);
 }
 
 struct file *new_file(struct dentry *entry, int flags)

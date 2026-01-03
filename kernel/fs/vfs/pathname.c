@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "dcache.h"
 #include "vfs.h"
 #include "vfs_internal.h"
@@ -126,9 +127,13 @@ static size_t parse_component(const char *path, dentry **current_dir,
     {
         /* TODO */
     }
+    else if (entry->type == DENTRY_INVALID)
+    {
+        UNREACHABLE("invalid dentry");
+    }
     else
     {
-        panic("unhandled dentry type in lookup_path");
+        panic("unhandled dentry type %d in lookup_path", entry->type);
     }
 
     /* *current_dir = ERR_PTR(-ENOENT); */
