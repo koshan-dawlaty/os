@@ -30,7 +30,7 @@ struct dcache_value
         struct list list;
     };
 
-    refcount rc;
+    struct refcount rc;
 };
 
 void dcache_free_value(struct dcache_value *value)
@@ -38,7 +38,7 @@ void dcache_free_value(struct dcache_value *value)
     free_dentry(value->entry);
 }
 
-void dcache_rc_value_release(refcount *rc)
+void dcache_rc_value_release(struct refcount *rc)
 {
     struct dcache_value *value = containerof(rc, struct dcache_value, rc);
     dcache_free_value(value);

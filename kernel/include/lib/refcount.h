@@ -1,16 +1,14 @@
 #ifndef RC_H
 #define RC_H
 
-typedef struct
+struct refcount
 {
     volatile int count;
-} refcount;
+};
 
-#define REFCOUNT_INIT() (refcount){.count = 1}
+#define REFCOUNT_INIT() (struct refcount){.count = 1}
 
-refcount *new_refcount();
-
-void refcount_get(refcount *rc);
-void refcount_drop(refcount *rc, void (*drop)(refcount *));
+void refcount_get(struct refcount *rc);
+void refcount_drop(struct refcount *rc, void (*drop)(struct refcount *));
 
 #endif

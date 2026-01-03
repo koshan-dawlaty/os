@@ -1,20 +1,11 @@
 #include <lib/refcount.h>
-#include <stdlib.h>
 
-refcount *new_refcount()
-{
-    refcount *out = malloc(sizeof(refcount));
-    out->count = 1;
-
-    return out;
-}
-
-void refcount_get(refcount *rc)
+void refcount_get(struct refcount *rc)
 {
     rc->count++;
 }
 
-void refcount_drop(refcount *rc, void (*drop)(refcount *))
+void refcount_drop(struct refcount *rc, void (*drop)(struct refcount *))
 {
 
     rc->count--;
