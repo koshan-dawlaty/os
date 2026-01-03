@@ -43,7 +43,7 @@ int execv(const char *path, char *const argv[])
          * makes this function more responsive as the new task should be
          * immediately switched to
          */
-        schedule();
+        /* schedule(); */
     }
     else
     {

@@ -4,7 +4,6 @@
 #include <utils.h>
 
 #ifdef __is_libk
-
 #include <scheduler.h>
 #endif
 
@@ -19,10 +18,4 @@ void exit(int status)
 #else
     syscall_wrapper_asm(SYS_exit, status, 0, 0, 0, 0);
 #endif
-
-    /* TODO: very bad, the task seems to continue after it is removed */
-    while (1)
-    {
-        sched_yield();
-    }
 }
