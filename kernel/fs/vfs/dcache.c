@@ -256,6 +256,8 @@ void add_dcache(dentry *parent, dentry *new_entry)
         struct dcache_value *value =
             containerof(removed, struct dcache_value, lru);
 
+        printf("removing %s from dcache\n", value->entry->name);
+
         refcount_drop(&value->rc, dcache_rc_value_release);
     }
 

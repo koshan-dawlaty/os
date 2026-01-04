@@ -97,6 +97,7 @@ dentry *dentry_mount_point_alloc(struct superblock *sb, struct inode *root)
 void free_dentry(dentry *entry)
 {
     free(entry->name);
+    /* TODO: we need to do this but it messes up ext2 */
     inode_free(entry->inode);
 }
 
@@ -118,6 +119,7 @@ struct file *new_file(struct dentry *entry, int flags)
         out->dir_context = DIR_CONTEXT_INIT();
         break;
     case DENTRY_INVALID:
+        UNREACHABLE("dentry must have valid type");
         break;
     }
 

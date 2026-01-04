@@ -220,7 +220,10 @@ void kmain()
 
     char *before = malloc(1);
 
-    int fd = open("/one", 0);
+    open("/a", 0);
+    open("/two", 0);
+    open("/wm", 0);
+    int fd = open("/a", 0);
     close(fd);
 
     char *after = malloc(1);
