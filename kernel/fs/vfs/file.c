@@ -84,6 +84,7 @@ int fdlist_close(struct fdlist *list, int fd)
         return -EBADF;
     }
 
+    file_free(list->files[fd]);
     list->files[fd] = NULL;
     return 0;
 }
@@ -117,15 +118,16 @@ int close_file(file *f)
     }
 }
 
-file *open_file(const char *path, int flags)
+struct file *open_file(const char *path, int flags)
 {
     dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
+
     if (IS_ERR(dentry))
     {
         return ERR_PTR(dentry);
     }
 
-    file *out = new_file(dentry, flags);
+    struct file *out = new_file(dentry, flags);
 
     struct fdlist *list = get_current_fdlist();
     int fd = fdlist_add(list, out);
@@ -275,13 +277,6 @@ struct file *create_file(char *name)
 
     /* TODO */
     return new_file(new, O_RDWR);
-}
-
-void file_free(file *f)
-{
-    /* TODO: drop dentry */
-
-    free(f);
 }
 
 int seek_file(file *f, off_t offset, int whence)

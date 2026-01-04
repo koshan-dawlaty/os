@@ -226,8 +226,6 @@ void kmain()
     char *after = malloc(1);
     printf("%p\n", after - before);
 
-    return;
-
     struct task *kernel_task = create_kernel_task();
     add_task(kernel_task);
 

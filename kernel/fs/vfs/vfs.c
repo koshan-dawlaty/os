@@ -124,6 +124,12 @@ struct file *new_file(struct dentry *entry, int flags)
     return out;
 }
 
+void file_free(struct file *file)
+{
+    /* TODO: drop dentry? */
+    /* free(file); */
+}
+
 struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
                         struct superblock *sb)
 {
