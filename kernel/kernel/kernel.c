@@ -218,6 +218,16 @@ void kernel_task3(void *a)
 void kmain()
 {
 
+    char *before = malloc(1);
+
+    int fd = open("/one", 0);
+    close(fd);
+
+    char *after = malloc(1);
+    printf("%p\n", after - before);
+
+    return;
+
     struct task *kernel_task = create_kernel_task();
     add_task(kernel_task);
 
