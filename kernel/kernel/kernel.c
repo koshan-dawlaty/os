@@ -1,3 +1,4 @@
+#include "lib/array.h"
 #include "multiboot.h"
 #include "sys/stat.h"
 #include "utils.h"
@@ -218,23 +219,6 @@ void kernel_task3(void *a)
 
 void kmain()
 {
-
-    mkdir("test1234567", 0);
-    creat("test1234567/file", 0);
-    int fd2 = open("/test1234567/file", 0);
-    printf("%d\n", fd2);
-    close(fd2);
-
-    char *before = malloc(1);
-
-    open("/a", 0);
-    open("/two", 0);
-    open("/wm", 0);
-    int fd = open("/a", 0);
-    close(fd);
-
-    char *after = malloc(1);
-    printf("%p\n", after - before);
 
     struct task *kernel_task = create_kernel_task();
     add_task(kernel_task);

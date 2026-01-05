@@ -1,3 +1,4 @@
+#include "panic.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
@@ -174,12 +175,16 @@ TEST(vfs_read_dir, {
 })
 
 TEST(vfs_dir_dot_dot_on_root_is_root, {
-    int fd = open("/../../../../../one", 0);
+    int fd = open("/../../../../../one", O_RDONLY);
     ASSERT_GE(fd, 0, "file descriptor should be valid");
 
     char *buf = malloc(100);
     read(fd, buf, 100);
-    ASSERT_EQ_STR(buf, "file one");
+
+    const char *expected = "file one\n";
+    ASSERT_EQ_STR(buf, expected, "%s != %s", buf, expected);
+
+    close(fd);
 })
 
 TEST(vfs_dir_dot_dot_on_dir, {
@@ -187,7 +192,11 @@ TEST(vfs_dir_dot_dot_on_dir, {
     ASSERT_GE(fd, 0, "file descriptor should be valid");
     char *buf = malloc(100);
     read(fd, buf, 100);
-    ASSERT_EQ_STR(buf, "file one");
+
+    const char *expected = "file one\n";
+    ASSERT_EQ_STR(buf, expected, "%s != %s", buf, expected);
+
+    close(fd);
 })
 
 TEST(vfs_mkdir, {
