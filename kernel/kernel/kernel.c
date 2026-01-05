@@ -220,32 +220,6 @@ void kernel_task3(void *a)
 void kmain()
 {
 
-    struct array a = ARRAY_INIT();
-    const char *str = "abc";
-    const char *str2 = "123";
-    array_add(&a, str, 4);
-    array_add(&a, str2, 4);
-
-    printf("%s\n", array_get(&a, 1, 4));
-    return;
-
-    mkdir("test1234567", 0);
-    creat("test1234567/file", 0);
-    int fd2 = open("/test1234567/file", 0);
-    printf("%d\n", fd2);
-    close(fd2);
-
-    char *before = malloc(1);
-
-    open("/a", 0);
-    open("/two", 0);
-    open("/wm", 0);
-    int fd = open("/a", 0);
-    close(fd);
-
-    char *after = malloc(1);
-    printf("%p\n", after - before);
-
     struct task *kernel_task = create_kernel_task();
     add_task(kernel_task);
 
