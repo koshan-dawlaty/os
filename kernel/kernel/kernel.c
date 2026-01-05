@@ -1,3 +1,4 @@
+#include "lib/array.h"
 #include "multiboot.h"
 #include "sys/stat.h"
 #include "utils.h"
@@ -218,6 +219,15 @@ void kernel_task3(void *a)
 
 void kmain()
 {
+
+    struct array a = ARRAY_INIT();
+    const char *str = "abc";
+    const char *str2 = "123";
+    array_add(&a, str, 4);
+    array_add(&a, str2, 4);
+
+    printf("%s\n", array_get(&a, 1, 4));
+    return;
 
     mkdir("test1234567", 0);
     creat("test1234567/file", 0);
