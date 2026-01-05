@@ -30,7 +30,7 @@ static dentry *parse_dentries_component(dentry *dir, const char *component)
         ent = dir_readdir(dir, &context);
     }
 
-    return ent;
+    return NULL;
 }
 
 static size_t parse_component(const char *path, dentry **current_dir,

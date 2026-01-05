@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "sys/stat.h"
 #include "utils.h"
 #include <assert.h>
 #include <ata/ata.h>
@@ -217,6 +218,12 @@ void kernel_task3(void *a)
 
 void kmain()
 {
+
+    mkdir("test1234567", 0);
+    creat("test1234567/file", 0);
+    int fd2 = open("/test1234567/file", 0);
+    printf("%d\n", fd2);
+    close(fd2);
 
     char *before = malloc(1);
 

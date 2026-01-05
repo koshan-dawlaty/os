@@ -33,16 +33,18 @@ struct inode *ext2_inode_alloc(struct superblock *sb, u16 type)
                 inode *node = ext2_iget(i, sb);
 
                 ext2_inode *ext2_node = EXT2_INODE(node);
+                ext2_node->type = type;
                 /* TODO: only check if the correct bits are set for the type */
                 if (type == EXT2_INODE_DIR)
                 {
+                    /* TODO: this is kinda stupid, but we want to add a dentry
+                     * that says that this directory is empty  */
                     ext2_node->size_low = EXT2_BLOCK_SIZE(sb);
                 }
                 else
                 {
                     ext2_node->size_low = 0;
                 }
-                ext2_node->type = type;
                 ext2_update_inode(node, sb);
 
                 free(usage_bitmap);

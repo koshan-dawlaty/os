@@ -10,39 +10,13 @@
 #include <string.h>
 #include <vfs.h>
 
-struct ext2_inode_cache
-{
-    ext2_inode_addr number;
-    ext2_inode *node;
-    list l;
-};
-
 inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node, superblock *sb)
 {
     return new_inode(num, ext2_get_inode_size(node), node, sb);
 }
 
-/* struct ext2_inode_cache ext2_inode_cache = {0, NULL, .l = LIST_INIT()}; */
-list ext2_inode_cache_list = LIST_INIT();
-
 ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
 {
-
-    list *pos;
-    list_for_each(pos, &ext2_inode_cache_list)
-    {
-
-        struct ext2_inode_cache *cached_value =
-            containerof(pos, struct ext2_inode_cache, l);
-
-        if (cached_value->number == inode_number)
-        {
-
-            return cached_value->node;
-        }
-    }
-
-    /* printf("get inode\n"); */
 
     if (inode_number == 0)
     {
@@ -80,21 +54,6 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
     memcpy(node_out, node, sizeof(ext2_inode));
 
     free(table_ptr);
-
-    struct ext2_inode_cache *cache_entry =
-        malloc(sizeof(struct ext2_inode_cache));
-    cache_entry->l = LIST_INIT();
-    cache_entry->number = inode_number;
-    cache_entry->node = node_out;
-
-    list_add(&cache_entry->l, &ext2_inode_cache_list);
-
-    list *pos2;
-    list_for_each(pos2, &ext2_inode_cache_list)
-    {
-        struct ext2_inode_cache *cached_value =
-            containerof(pos2, struct ext2_inode_cache, l);
-    }
 
     return node_out;
 }
