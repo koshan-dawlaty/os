@@ -19,6 +19,18 @@ void *array_get(struct array *array, size_t index, size_t item_len)
 {
     /* TODO: could implement this function as a macro so that this prints the
      * line number where this was called */
-    ASSERT(index * item_len < array->capacity, "index out of bounds for array");
+    ASSERT(index * item_len < array->len, "index out of bounds for array");
     return array->data + index * item_len;
+}
+
+void *array_pop(struct array *array, size_t len)
+{
+    ASSERT(array->len >= len, "array length too high, %d > %d", len,
+           array->len);
+
+    void *out = array->data + array->capacity - len;
+
+    array->len -= len;
+
+    return out;
 }

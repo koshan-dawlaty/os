@@ -239,8 +239,11 @@ void socket_task2(void *a)
 
         char *buf = malloc(4);
         unix_socket_recv(s, buf, 4);
-        schedule();
-        printf("received:%s\n", buf);
+
+        if (strcmp(buf, "abc") != 0)
+        {
+            panic("asljkdals:%s\n", buf);
+        }
     }
 }
 

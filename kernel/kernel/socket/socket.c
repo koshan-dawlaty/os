@@ -23,7 +23,6 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
 
     if (sock->send_queue.head == NULL)
     {
-        printf("adding to send queue\n");
         IRQ_OFF({
             struct task *current = get_current_task();
             task_queue_push(&sock->recv_queue, current);
@@ -33,13 +32,11 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
     }
     else
     {
-        printf("removing from send queue\n");
         add_task(task_queue_pop(&sock->send_queue));
     }
 
-    printf("getting value from array\n");
     /* TODO: this should remove data and not go out of bounds */
-    void *sent = array_get(&sock->buffer, 0, len);
+    void *sent = array_pop(&sock->buffer, len);
     memcpy(buf, sent, len);
 
     return 0;
@@ -50,7 +47,6 @@ int unix_socket_send(struct unix_socket *sock, void *buf, size_t len)
     array_add(&sock->buffer, buf, len);
     if (sock->recv_queue.head == NULL)
     {
-        printf("adding to recv queue\n");
 
         IRQ_OFF({
             struct task *current = get_current_task();
@@ -61,7 +57,6 @@ int unix_socket_send(struct unix_socket *sock, void *buf, size_t len)
     }
     else
     {
-        printf("removing from recv queue\n");
         add_task(task_queue_pop(&sock->recv_queue));
         schedule();
     }
