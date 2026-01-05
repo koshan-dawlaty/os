@@ -226,6 +226,7 @@ void socket_task1(void *a)
         struct unix_socket *s = a;
         schedule();
         unix_socket_send(s, "abc", 4);
+        unix_socket_send(s, "123", 4);
     }
 }
 
@@ -240,10 +241,7 @@ void socket_task2(void *a)
         char *buf = malloc(4);
         unix_socket_recv(s, buf, 4);
 
-        if (strcmp(buf, "abc") != 0)
-        {
-            panic("asljkdals:%s\n", buf);
-        }
+        printf("%s\n", buf);
     }
 }
 
@@ -251,19 +249,22 @@ void kmain()
 {
 
     struct unix_socket *s = unix_socket_alloc();
+    unix_socket_recv(s, malloc(10), 10);
+
     struct task *kernel_task = create_kernel_task();
     add_task(kernel_task);
 
-    ktask_run(socket_task1, s);
     ktask_run(socket_task2, s);
+    ktask_run(socket_task1, s);
     enable_scheduler();
+
     return;
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     printf("starting shell\n");
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
-    int err = execv("/ksh", (char *[]){"ksh", NULL});
+    int err = execv("/wm", (char *[]){"wm", NULL});
     if (err < 0)
     {
         printf("did not find shell\n");

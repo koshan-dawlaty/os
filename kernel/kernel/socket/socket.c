@@ -1,3 +1,4 @@
+#include "lib/array.h"
 #include "sched.h"
 #include "utils.h"
 #include "vfs.h"
@@ -6,6 +7,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <task_queue.h>
+
+struct array unix_socket_array = ARRAY_INIT();
+
+struct unix_socket *unix_socket_lookup(int id)
+{
+    return array_get(&unix_socket_array, id, sizeof(struct unix_socket));
+}
+
+int unix_socket_add_array(struct unix_socket *sock)
+{
+    return array_add(&unix_socket_array, sock, sizeof(struct unix_socket));
+}
 
 struct unix_socket *unix_socket_alloc()
 {

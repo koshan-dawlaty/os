@@ -10,7 +10,7 @@ struct array
 };
 
 #define ARRAY_INIT() ((struct array){.capacity = 0, .len = 0, .data = NULL})
-void array_add(struct array *array, const void *data, size_t size);
+int array_add(struct array *array, const void *data, size_t size);
 
 /*
  * you dont own the returned pointer, item_len is the length of one item in the

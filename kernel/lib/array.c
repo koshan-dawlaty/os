@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void array_add(struct array *array, const void *data, size_t size)
+int array_add(struct array *array, const void *data, size_t size)
 {
     if (array->len + size > array->capacity)
     {
@@ -13,6 +13,8 @@ void array_add(struct array *array, const void *data, size_t size)
     }
     memcpy(array->data + array->len, data, size);
     array->len += size;
+
+    return array->len / size;
 }
 
 void *array_get(struct array *array, size_t index, size_t item_len)

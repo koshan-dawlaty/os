@@ -1,5 +1,6 @@
 #include "kernel/graphics.h"
 #include "memory/get_free_pages.h"
+#include "socket.h"
 #include <elf.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -147,8 +148,23 @@ int syscall_handler(struct syscall_regs *regs)
             framebuffer_alloc_user(get_current_framebuffer());
 
         return 0;
-    case SYS_mkdir:
-        return mkdir((const char *)regs->ebx, regs->eax);
+    case SYS_create_socket:
+    {
+        struct unix_socket *s = unix_socket_alloc();
+        return unix_socket_add_array(s);
+    }
+
+    case SYS_send:
+    {
+        struct unix_socket *s = unix_socket_lookup(regs->ebx);
+        return unix_socket_send(s, (void *)regs->ecx, regs->edx);
+    }
+
+    case SYS_recv:
+    {
+        struct unix_socket *s = unix_socket_lookup(regs->ebx);
+        return unix_socket_recv(s, (void *)regs->ecx, regs->edx);
+    }
     }
 
     printf("no syscall found\n");

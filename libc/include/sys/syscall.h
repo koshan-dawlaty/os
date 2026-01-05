@@ -15,5 +15,8 @@
 #define SYS_execv 2
 #define SYS_mmap 4
 #define SYS_mkdir 19
+#define SYS_create_socket 20
+#define SYS_send 21
+#define SYS_recv 22
 
 #endif
