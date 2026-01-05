@@ -1,9 +1,10 @@
 #ifndef TESTS_H
 #define TESTS_H
 
-#include "kernel/types.h"
+#include <kernel/types.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 void run_tests();
 
@@ -76,7 +77,7 @@ void add_test(test *);
         FAIL_TEST(__VA_ARGS__)                                                 \
     }
 #define ASSERT_EQ_STR(a, b, ...)                                               \
-    if (strcmp(a, b) == 0)                                                     \
+    if (strcmp(a, b) != 0)                                                     \
     {                                                                          \
         FAIL_TEST(__VA_ARGS__)                                                 \
     }
