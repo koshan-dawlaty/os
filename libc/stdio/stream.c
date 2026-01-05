@@ -21,6 +21,7 @@ static int string_flags_to_oflags(const char *flags)
     }
     else if (!strcmp(flags, "r+"))
     {
+
         return O_RDWR;
     }
     else if (!strcmp(flags, ""))
@@ -55,7 +56,10 @@ FILE *fdopen(int fd, const char *flags)
 
 FILE *fopen(const char *path, const char *flags)
 {
-    return fdopen(open(path, string_flags_to_oflags(flags)), flags);
+
+    int oflags = string_flags_to_oflags(flags);
+    int fd = open(path, oflags);
+    return fdopen(fd, flags);
 }
 
 size_t fread(void *restrict buf, size_t size, size_t number, FILE *restrict f)

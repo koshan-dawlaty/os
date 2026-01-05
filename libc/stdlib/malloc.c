@@ -243,6 +243,11 @@ void free_zone(void *ptr, struct malloc_zone *zone)
     {
         insert_bin(&zone->unsorted_bin, block);
     }
+
+    if (block->size > sizeof(struct heap_block))
+    {
+        memset(ptr, 'a', block->size);
+    }
 }
 
 void *malloc_zone(size_t size, struct malloc_zone *zone)

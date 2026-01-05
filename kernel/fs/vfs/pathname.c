@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "dcache.h"
 #include "vfs.h"
 #include "vfs_internal.h"
@@ -29,7 +30,7 @@ static dentry *parse_dentries_component(dentry *dir, const char *component)
         ent = dir_readdir(dir, &context);
     }
 
-    return ent;
+    return NULL;
 }
 
 static size_t parse_component(const char *path, dentry **current_dir,
@@ -56,11 +57,12 @@ static size_t parse_component(const char *path, dentry **current_dir,
         final_component = true;
     }
 
+    /* TODO: maybe dont malloc?, this gets passed to strdup() multiple times */
     char *component = malloc(component_len + 1);
     memcpy(component, path, component_len);
     component[component_len] = 0;
 
-    dentry *entry = get_dcache(component, *current_dir);
+    struct dentry *entry = get_dcache(component, *current_dir);
 
     if (entry == NULL)
     {
@@ -78,12 +80,13 @@ static size_t parse_component(const char *path, dentry **current_dir,
                     entry =
                         (*current_dir)
                             ->inode->sb->type->dentry_functions.append_dentry(
-                                *current_dir, component, flags.type,
+                                *current_dir, strdup(component), flags.type,
                                 (*current_dir)->inode->sb);
                 }
                 else if (flags.type == DENTRY_DEVICE)
                 {
-                    entry = new_dentry_dev(component, *current_dir, flags.dev);
+                    entry = new_dentry_dev(strdup(component), *current_dir,
+                                           flags.dev);
                 }
             }
             else
@@ -126,15 +129,19 @@ static size_t parse_component(const char *path, dentry **current_dir,
     {
         /* TODO */
     }
+    else if (entry->type == DENTRY_INVALID)
+    {
+        UNREACHABLE("invalid dentry");
+    }
     else
     {
-        panic("unhandled dentry type in lookup_path");
+        panic("unhandled dentry type %d in lookup_path", entry->type);
     }
 
     /* *current_dir = ERR_PTR(-ENOENT); */
 
 out:
-
+    free(component);
     /* TODO stupid */
     if (starts_with_slash)
     {

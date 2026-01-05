@@ -117,6 +117,7 @@ $(BIN)/%.libk.o: %.S
 
 clean:
 	$(RM) -r bin/*
+	$(RM) $(BINARIES)
 
 install: install-headers install-libs
 

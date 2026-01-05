@@ -18,7 +18,7 @@
            "pointer was null\n" message __VA_OPT__(, ) __VA_ARGS__)
 
 #define UNREACHABLE(message, ...)                                              \
-    panic("unreachable code" __FILE__                                          \
+    panic("unreachable code\n" __FILE__                                        \
           ":" MACRO_STR(__LINE__) " " message __VA_OPT__(, ) __VA_ARGS__);     \
     __builtin_unreachable()
 

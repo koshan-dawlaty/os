@@ -55,9 +55,9 @@ read_entry:;
     new_name[name_len] = 0;
 
     ext2_inode *current_node = ext2_get_inode(node_index, sb);
-    if (current_node == NULL)
+    if (IS_ERR(current_node))
     {
-        return NULL;
+        return ERR_PTR(current_node);
     }
     struct dentry *out = new_dentry(
         new_name, entry, ext2_get_vfs_node(node_index, current_node, sb),

@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "sys/stat.h"
 #include "utils.h"
 #include <assert.h>
 #include <ata/ata.h>
@@ -218,7 +219,25 @@ void kernel_task3(void *a)
 void kmain()
 {
 
-    add_task(create_kernel_task());
+    mkdir("test1234567", 0);
+    creat("test1234567/file", 0);
+    int fd2 = open("/test1234567/file", 0);
+    printf("%d\n", fd2);
+    close(fd2);
+
+    char *before = malloc(1);
+
+    open("/a", 0);
+    open("/two", 0);
+    open("/wm", 0);
+    int fd = open("/a", 0);
+    close(fd);
+
+    char *after = malloc(1);
+    printf("%p\n", after - before);
+
+    struct task *kernel_task = create_kernel_task();
+    add_task(kernel_task);
 
     /* shared = malloc(4); */
     /* ktask_run(kernel_task3, NULL); */
@@ -230,6 +249,7 @@ void kmain()
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     printf("starting shell\n");
+    /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
     int err = execv("/ksh", (char *[]){"ksh", NULL});
     if (err < 0)
     {
@@ -238,6 +258,7 @@ void kmain()
 
     enable_scheduler();
     irq_enable();
+    schedule();
 
     /* execv("/cat", (char *[]){"cat", "one", NULL}); */
 }

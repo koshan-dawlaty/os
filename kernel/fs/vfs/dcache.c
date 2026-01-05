@@ -10,12 +10,12 @@
 #include <string.h>
 #include <vfs.h>
 
-#define DCACHE_LRU_MAX 10
+#define DCACHE_LRU_MAX 2
 
 struct dcache_dir
 {
     /* parent directory, NULL is root */
-    dentry *dir;
+    struct dentry *dir;
     struct lru_head *values_head;
     struct list *permanent_values;
     list l;
@@ -23,14 +23,14 @@ struct dcache_dir
 
 struct dcache_value
 {
-    dentry *entry;
+    struct dentry *entry;
     union
     {
         struct lru_entry lru;
         struct list list;
     };
 
-    refcount *rc;
+    struct refcount rc;
 };
 
 void dcache_free_value(struct dcache_value *value)
@@ -38,10 +38,10 @@ void dcache_free_value(struct dcache_value *value)
     free_dentry(value->entry);
 }
 
-void dcache_rc_value_release(refcount *rc)
+void dcache_rc_value_release(struct refcount *rc)
 {
     struct dcache_value *value = containerof(rc, struct dcache_value, rc);
-    free(value->entry);
+    dcache_free_value(value);
 }
 
 struct dcache_value *new_dcache_value(dentry *entry)
@@ -50,7 +50,7 @@ struct dcache_value *new_dcache_value(dentry *entry)
 
     out->entry = entry;
     out->lru = LRU_ENTRY_INIT();
-    out->rc = new_refcount();
+    out->rc = REFCOUNT_INIT();
 
     return out;
 }
@@ -190,7 +190,6 @@ struct dentry *get_dcache(char *component, struct dentry *parent)
 
 struct dcache_dir *add_dcache_dir(dentry *dir)
 {
-
     struct dcache_dir *new_dir = new_dcache_dir(dir);
     list_add(&new_dir->l, &dcache_list);
 
@@ -232,6 +231,12 @@ void add_dcache(dentry *parent, dentry *new_entry)
 
     struct dcache_dir *dir = get_dcache_dir(parent);
 
+    if (new_entry->type == DENTRY_DIR)
+    {
+        add_dcache_dir(new_entry);
+        return;
+    }
+
     if (dir == NULL)
     {
         dir = add_dcache_dir(parent);
@@ -251,7 +256,9 @@ void add_dcache(dentry *parent, dentry *new_entry)
         struct dcache_value *value =
             containerof(removed, struct dcache_value, lru);
 
-        refcount_drop(value->rc, dcache_rc_value_release);
+        printf("removing %s from dcache\n", value->entry->name);
+
+        refcount_drop(&value->rc, dcache_rc_value_release);
     }
 
     struct list2 *pos;

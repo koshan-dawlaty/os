@@ -10,39 +10,13 @@
 #include <string.h>
 #include <vfs.h>
 
-struct ext2_inode_cache
-{
-    ext2_inode_addr number;
-    ext2_inode *node;
-    list l;
-};
-
 inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node, superblock *sb)
 {
     return new_inode(num, ext2_get_inode_size(node), node, sb);
 }
 
-/* struct ext2_inode_cache ext2_inode_cache = {0, NULL, .l = LIST_INIT()}; */
-list ext2_inode_cache_list = LIST_INIT();
-
 ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
 {
-
-    list *pos;
-    list_for_each(pos, &ext2_inode_cache_list)
-    {
-
-        struct ext2_inode_cache *cached_value =
-            containerof(pos, struct ext2_inode_cache, l);
-
-        if (cached_value->number == inode_number)
-        {
-
-            return cached_value->node;
-        }
-    }
-
-    /* printf("get inode\n"); */
 
     if (inode_number == 0)
     {
@@ -80,21 +54,6 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
     memcpy(node_out, node, sizeof(ext2_inode));
 
     free(table_ptr);
-
-    struct ext2_inode_cache *cache_entry =
-        malloc(sizeof(struct ext2_inode_cache));
-    cache_entry->l = LIST_INIT();
-    cache_entry->number = inode_number;
-    cache_entry->node = node_out;
-
-    list_add(&cache_entry->l, &ext2_inode_cache_list);
-
-    list *pos2;
-    list_for_each(pos2, &ext2_inode_cache_list)
-    {
-        struct ext2_inode_cache *cached_value =
-            containerof(pos2, struct ext2_inode_cache, l);
-    }
 
     return node_out;
 }
@@ -140,19 +99,22 @@ static void ext2_read_inode_block(uint32_t indirect_block_num, uint8_t *buf,
     memcpy(buf + bytes_read, block, bytes_remaining);
 }
 
+/* TODO: this would be a lot better if it was inplace */
 void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
                      ext2_inode_index index, superblock *sb)
 {
 
-    uint8_t *block;
+    u8 *block;
     size_t buf_offset = 0;
 
     size_t blocks_offset = 0;
     if (index < EXT2_BLOCK_SIZE(sb) * 12)
     {
         uint block_index = index / EXT2_BLOCK_SIZE(sb);
-        // printf("%p\n", node->direct_blocks);
-        // printf("%d\n", node->direct_blocks[block_index]);
+
+        /* printf("%p\n", node->direct_blocks); */
+        /* printf("%d\n", node->direct_blocks[block_index]); */
+
         block = ext2_read_block(
             node->direct_blocks[block_index + blocks_offset], sb);
         blocks_offset++;
@@ -161,6 +123,8 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
         {
             memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb),
                    buf_len);
+
+            free(block);
 
             return;
         }
@@ -179,6 +143,7 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
                ((buf_len / EXT2_BLOCK_SIZE(sb)) * EXT2_BLOCK_SIZE(sb)))
         {
             memcpy(buf + buf_offset, block, EXT2_BLOCK_SIZE(sb));
+            free(block);
             block = ext2_read_block(
                 node->direct_blocks[block_index + blocks_offset], sb);
             blocks_offset++;
@@ -191,6 +156,7 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
         uint bytes_remaining = buf_len % EXT2_BLOCK_SIZE(sb);
         if (bytes_remaining < EXT2_BLOCK_SIZE(sb))
         {
+            free(block);
             block = ext2_read_block(
                 node->direct_blocks[block_index + blocks_offset - 1], sb);
 

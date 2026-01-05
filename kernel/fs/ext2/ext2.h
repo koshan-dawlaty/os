@@ -1,5 +1,6 @@
 #ifndef EXT2_H
 #define EXT2_H
+#include "compiler.h"
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -52,7 +53,7 @@ static inline struct ext2_superblock *EXT2_SB(superblock *sb)
 
 #define EXT2_GROUP_DESCRIPTOR_TABLE(sb) EXT2_SB(sb)->group_descriptor_table
 
-typedef struct __attribute__((packed))
+typedef struct __packed
 {
     uint16_t type;
     uint16_t user_id;

@@ -52,8 +52,8 @@ int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
     new_root->parent = root;
     /* TODO: cast discards qualifiers */
     new_root->name = (char *)new_name;
-
     add_dcache(root, new_root);
+
     return 0;
 }
 
@@ -97,7 +97,7 @@ dentry *dentry_mount_point_alloc(struct superblock *sb, struct inode *root)
 void free_dentry(dentry *entry)
 {
     free(entry->name);
-    /* TODO: free inode */
+    inode_free(entry->inode);
 }
 
 struct file *new_file(struct dentry *entry, int flags)
@@ -118,10 +118,17 @@ struct file *new_file(struct dentry *entry, int flags)
         out->dir_context = DIR_CONTEXT_INIT();
         break;
     case DENTRY_INVALID:
+        UNREACHABLE("dentry must have valid type");
         break;
     }
 
     return out;
+}
+
+void file_free(struct file *file)
+{
+    /* TODO: drop dentry? */
+    /* free(file); */
 }
 
 struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
@@ -140,12 +147,22 @@ struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
     return out;
 }
 
+void inode_free(struct inode *node)
+{
+    NOT_NULL(node->sb->type->inode_functions.inode_free,
+             "filesystem did not implement function inode_free")
+    node->sb->type->inode_functions.inode_free(node);
+    free(node);
+}
+
 int delete_dentry(struct dentry *entry)
 {
+
+    int retval = entry->inode->sb->type->dentry_functions.remove_dentry(
+        entry->parent, entry->name, entry->inode->sb);
     remove_dcache(entry);
 
-    return entry->inode->sb->type->dentry_functions.remove_dentry(
-        entry->parent, entry->name, entry->inode->sb);
+    return retval;
 }
 
 void register_filesystem(struct fs_type *type)

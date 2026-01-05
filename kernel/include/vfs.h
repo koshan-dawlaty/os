@@ -46,11 +46,20 @@ typedef struct inode
 struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
                         struct superblock *sb);
 
+/*
+ * frees @node, including filesystem specific data
+ */
+void inode_free(struct inode *node);
+
 typedef struct
 {
     inode *(*get_inode)(ino_t number, superblock *sb);
     void (*read_inode)(inode *, uint8_t *buf, size_t n, size_t offset);
     void (*write_inode)(inode *, const uint8_t *buf, size_t n, size_t offset);
+
+    /* this function should free the filesystem specific data in @node,
+     * NOT delete the inode from the filesystem */
+    void (*inode_free)(struct inode *node);
 
 } inode_functions;
 
