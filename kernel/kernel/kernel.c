@@ -1,5 +1,6 @@
 #include "lib/array.h"
 #include "multiboot.h"
+#include "socket.h"
 #include "sys/stat.h"
 #include "utils.h"
 #include <assert.h>
@@ -217,18 +218,43 @@ void kernel_task3(void *a)
     }
 }
 
+void socket_task1(void *a)
+{
+
+    while (1)
+    {
+        struct unix_socket *s = a;
+        schedule();
+        unix_socket_send(s, "abc", 4);
+    }
+}
+
+void socket_task2(void *a)
+{
+
+    while (1)
+    {
+
+        struct unix_socket *s = a;
+
+        char *buf = malloc(4);
+        unix_socket_recv(s, buf, 4);
+        schedule();
+        printf("received:%s\n", buf);
+    }
+}
+
 void kmain()
 {
 
+    struct unix_socket *s = unix_socket_alloc();
     struct task *kernel_task = create_kernel_task();
     add_task(kernel_task);
 
-    /* shared = malloc(4); */
-    /* ktask_run(kernel_task3, NULL); */
-    /* ktask_run(kernel_task2, NULL); */
-    /* ktask_run(kernel_task1, NULL); */
-    /* enable_scheduler(); */
-    /* return; */
+    ktask_run(socket_task1, s);
+    ktask_run(socket_task2, s);
+    enable_scheduler();
+    return;
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());

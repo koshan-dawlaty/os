@@ -262,6 +262,7 @@ void remove_task(struct task *task)
         }
     }
     irq_restore(irq_state);
+    load_registers(&get_current_task()->regs);
 }
 
 void add_task(struct task *task)

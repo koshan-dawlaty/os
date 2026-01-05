@@ -1,42 +1,75 @@
+#include "sched.h"
+#include "utils.h"
+#include "vfs.h"
 #include <lib/list.h>
+#include <socket.h>
+#include <stdlib.h>
+#include <string.h>
 #include <task_queue.h>
 
-enum socket_state
+struct unix_socket *unix_socket_alloc()
 {
-    SOCKET_LISTEN,
-    SOCKET_CONNECTED,
-    SOCKET_DEFAULT,
-};
+    struct unix_socket *out = malloc(sizeof(struct unix_socket));
 
-struct socket
+    out->buffer = ARRAY_INIT();
+    out->send_queue = TASK_QUEUE_INIT();
+    out->recv_queue = TASK_QUEUE_INIT();
+
+    return out;
+}
+
+int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
 {
-    enum socket_state state;
-    union
-    {
-        struct
-        {
-            size_t backlog;
-            struct socket *waiting;
-        } listener;
-        struct
-        {
-            struct list2 list;
-        } connected;
-        struct
-        {
-        } default_state;
-    };
 
-    union
+    if (sock->send_queue.head == NULL)
     {
-        struct
-        {
-            struct task *current_task;
-        } unix;
-    } protocol;
-};
+        printf("adding to send queue\n");
+        IRQ_OFF({
+            struct task *current = get_current_task();
+            task_queue_push(&sock->recv_queue, current);
+            save_registers(&current->regs);
+            remove_task(current);
+        })
+    }
+    else
+    {
+        printf("removing from send queue\n");
+        add_task(task_queue_pop(&sock->send_queue));
+    }
 
-int socket_listen(struct socket *sock, size_t backlog)
+    printf("getting value from array\n");
+    /* TODO: this should remove data and not go out of bounds */
+    void *sent = array_get(&sock->buffer, 0, len);
+    memcpy(buf, sent, len);
+
+    return 0;
+}
+
+int unix_socket_send(struct unix_socket *sock, void *buf, size_t len)
+{
+    array_add(&sock->buffer, buf, len);
+    if (sock->recv_queue.head == NULL)
+    {
+        printf("adding to recv queue\n");
+
+        IRQ_OFF({
+            struct task *current = get_current_task();
+            task_queue_push(&sock->send_queue, current);
+            save_registers(&current->regs);
+            remove_task(current);
+        })
+    }
+    else
+    {
+        printf("removing from recv queue\n");
+        add_task(task_queue_pop(&sock->recv_queue));
+        schedule();
+    }
+
+    return 0;
+}
+
+int unix_socket_listen(struct unix_socket *sock, size_t backlog)
 {
 
     if (sock->state != SOCKET_DEFAULT)
@@ -49,7 +82,7 @@ int socket_listen(struct socket *sock, size_t backlog)
     return 0;
 }
 
-int socket_accept(struct socket *sock, struct socket *client)
+int unix_socket_accept(struct unix_socket *sock, struct unix_socket *client)
 {
     if (sock->state != SOCKET_LISTEN)
     {
@@ -72,13 +105,13 @@ int socket_accept(struct socket *sock, struct socket *client)
 
     struct list2 *next = list->next;
     sock->listener.waiting = LIST_ENTRY(
-        next, struct socket,
+        next, struct unix_socket,
         connected.list); /* this might be incorrect way to use containerof() */
 
     return 0;
 }
 
-int socket_connect(struct socket *client, struct socket *server)
+int unix_socket_connect(struct unix_socket *client, struct unix_socket *server)
 {
     if (client->state != SOCKET_DEFAULT)
     {
@@ -86,7 +119,7 @@ int socket_connect(struct socket *client, struct socket *server)
     }
     client->state = SOCKET_CONNECTED;
     client->connected.list = LIST2_INIT();
-    struct socket *waiting_queue_head = server->listener.waiting;
+    struct unix_socket *waiting_queue_head = server->listener.waiting;
     if (waiting_queue_head == NULL)
     {
         server->listener.waiting = client;
