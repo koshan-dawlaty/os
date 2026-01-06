@@ -1,15 +1,7 @@
 #include <task_queue.h>
 #include <scheduler.h>
 #include <utils.h>
-
-
-struct wait_queue {
-struct task_queue queue; /* TODO: if this struct only has one member it could be typedef instead */
-};
-
-
-#define WAIT_QUEUE_INIT() ((struct wait_queue){.queue = TASK_QUEUE_INIT()})
-
+#include <wait_queue.h>
 
 void wait_queue_wait(struct wait_queue * queue) {
     IRQ_OFF({
