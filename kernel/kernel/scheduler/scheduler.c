@@ -262,6 +262,8 @@ void remove_task(struct task *task)
         }
     }
     irq_restore(irq_state);
+    printf("%p\n", get_current_task()->start_addr);
+    load_pgdir(get_current_task()->pgdir);
     load_registers(&get_current_task()->regs);
 }
 

@@ -1,3 +1,4 @@
+#include "unistd.h"
 #include <init.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -110,11 +111,12 @@ int main()
     init_libc();
 
     int sock = socket_create();
+    printf("socket created\n");
 
     while (1)
     {
-        char *buf = malloc(10);
-        recv(sock, buf, 10);
+        char *buf = malloc(4);
+        recv(sock, buf, 4);
         printf("%s\n", buf);
     }
 

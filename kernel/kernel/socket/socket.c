@@ -12,12 +12,17 @@ struct array unix_socket_array = ARRAY_INIT();
 
 struct unix_socket *unix_socket_lookup(int id)
 {
+    printf("looking up socket:%d\n", id);
     return array_get(&unix_socket_array, id, sizeof(struct unix_socket));
 }
 
 int unix_socket_add_array(struct unix_socket *sock)
 {
-    return array_add(&unix_socket_array, sock, sizeof(struct unix_socket));
+    int retval =
+        array_add(&unix_socket_array, sock, sizeof(struct unix_socket));
+    printf("created socket number:%d\n", retval);
+
+    return retval;
 }
 
 struct unix_socket *unix_socket_alloc()
@@ -36,12 +41,17 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
 
     if (sock->send_queue.head == NULL)
     {
-        IRQ_OFF({
-            struct task *current = get_current_task();
-            task_queue_push(&sock->recv_queue, current);
-            save_registers(&current->regs);
-            remove_task(current);
-        })
+        {
+            irq_state_t state = irq_save_disable();
+            {
+                printf("%p\n", get_current_task()->start_addr);
+                struct task *current = get_current_task();
+                task_queue_push(&sock->recv_queue, current);
+                save_registers(&current->regs);
+                remove_task(current);
+            }
+            irq_restore(state);
+        }
     }
     else
     {

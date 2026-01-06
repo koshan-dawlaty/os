@@ -6,31 +6,37 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/syscall.h>
 #include <unistd.h>
-extern int syscall_wrapper_asm(uint32_t eax, uint32_t ebx, uint32_t ecx,
-                               uint32_t edx, uint32_t esi, uint32_t edi);
+typedef uintptr_t ptr;
+extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
 
-void main2()
+struct framebuffer *framebuffer_alloc()
 {
+    struct framebuffer *out = NULL;
+    syscall_wrapper_asm(18, (ptr)&out, 0, 0, 0, 0);
 
-    int fd = open("/one", 0);
-    char *buf = malloc(10);
-    pread(fd, buf, 10, 0);
-    printf("%s\n", buf);
+    return out;
+}
 
-    exit(0);
+int socket_create()
+{
+    return syscall_wrapper_asm(SYS_create_socket, 0, 0, 0, 0, 0);
+}
 
-    while (1)
-    {
-        printf("test\n");
-    }
+int send(int socket, void *buf, size_t len)
+{
+    return syscall_wrapper_asm(SYS_send, socket, (ptr)buf, len, 0, 0);
+}
+
+int recv(int socket, void *buf, size_t len)
+{
+    return syscall_wrapper_asm(SYS_recv, socket, (ptr)buf, len, 0, 0);
 }
 
 int main(int argc, char **argv)
 {
-    if (argc > 1)
-    {
-        printf("%d, %s\n", argc, argv[1]);
-    }
-    main2();
+    send(0, "abc", 4);
+
+    exit(0);
 }

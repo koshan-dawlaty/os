@@ -249,16 +249,9 @@ void kmain()
 {
 
     struct unix_socket *s = unix_socket_alloc();
-    unix_socket_recv(s, malloc(10), 10);
 
     struct task *kernel_task = create_kernel_task();
     add_task(kernel_task);
-
-    ktask_run(socket_task2, s);
-    ktask_run(socket_task1, s);
-    enable_scheduler();
-
-    return;
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
@@ -273,6 +266,7 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
+    execv("/elf_test2", (char *[]){"elf_test", NULL});
 
     /* execv("/cat", (char *[]){"cat", "one", NULL}); */
 }
