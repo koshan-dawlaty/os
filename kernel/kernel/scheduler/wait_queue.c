@@ -1,4 +1,6 @@
 #include <task_queue.h>
+#include <scheduler.h>
+#include <utils.h>
 
 
 struct wait_queue {
