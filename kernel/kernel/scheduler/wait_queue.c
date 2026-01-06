@@ -17,3 +17,7 @@ void wait_queue_wait(struct wait_queue * queue) {
         remove_task(current); /* TODO: maybe this shouldnt be in the IRQ_OFF block */
     });
 }
+
+void wait_queue_done(struct wait_queue * queue) {
+    add_task(task_queue_pop(&queue->queue));
+}
