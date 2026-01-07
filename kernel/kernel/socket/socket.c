@@ -2,6 +2,7 @@
 #include "sched.h"
 #include "utils.h"
 #include "vfs.h"
+#include "wait_queue.h"
 #include <lib/list.h>
 #include <socket.h>
 #include <stdlib.h>
@@ -30,8 +31,8 @@ struct unix_socket *unix_socket_alloc()
     struct unix_socket *out = malloc(sizeof(struct unix_socket));
 
     out->buffer = ARRAY_INIT();
-    out->send_queue = TASK_QUEUE_INIT();
-    out->recv_queue = TASK_QUEUE_INIT();
+    out->send_queue = WAIT_QUEUE_INIT();
+    out->recv_queue = WAIT_QUEUE_INIT();
 
     return out;
 }
@@ -39,23 +40,13 @@ struct unix_socket *unix_socket_alloc()
 int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
 {
 
-    if (sock->send_queue.head == NULL)
+    if (WAIT_QUEUE_EMPTY(sock->send_queue))
     {
-        {
-            irq_state_t state = irq_save_disable();
-            {
-                printf("%p\n", get_current_task()->start_addr);
-                struct task *current = get_current_task();
-                task_queue_push(&sock->recv_queue, current);
-                save_registers(&current->regs);
-                remove_task(current);
-            }
-            irq_restore(state);
-        }
+        wait_queue_wait(&sock->recv_queue);
     }
     else
     {
-        add_task(task_queue_pop(&sock->send_queue));
+        wait_queue_done(&sock->send_queue);
     }
 
     /* TODO: this should remove data and not go out of bounds */
@@ -68,20 +59,13 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
 int unix_socket_send(struct unix_socket *sock, void *buf, size_t len)
 {
     array_add(&sock->buffer, buf, len);
-    if (sock->recv_queue.head == NULL)
+    if (WAIT_QUEUE_EMPTY(sock->recv_queue))
     {
-
-        IRQ_OFF({
-            struct task *current = get_current_task();
-            task_queue_push(&sock->send_queue, current);
-            save_registers(&current->regs);
-            remove_task(current);
-        })
+        wait_queue_wait(&sock->send_queue);
     }
     else
     {
-        add_task(task_queue_pop(&sock->recv_queue));
-        schedule();
+        wait_queue_done(&sock->recv_queue);
     }
 
     return 0;
