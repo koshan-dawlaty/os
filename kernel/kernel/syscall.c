@@ -1,6 +1,5 @@
 #include <kernel/types.h>
-
-typedef ptr (*syscall_func_t)(ptr, ptr, ptr, ptr, ptr, ptr);
+#include <kernel/syscall.h>
 
 
 #define MAX_SYSCALLS 256
