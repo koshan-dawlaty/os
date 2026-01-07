@@ -38,7 +38,13 @@ int main(int argc, char **argv)
         sched_yield();
     }
     /* printf("sending data\n"); */
+
     send(0, "abc", 4);
+    send(0, "abc", 4);
+
+    for (;;)
+    {
+    }
 
     exit(0);
 }

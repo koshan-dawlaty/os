@@ -56,6 +56,7 @@ kernel/elf/elf32.o \
 kernel/elf/elf64.o \
 kernel/scheduler/scheduler.o \
 kernel/scheduler/task_queue.o \
+kernel/scheduler/wait_queue.o \
 kernel/scheduler/sleep.o \
 kernel/scheduler/semaphore.o \
 kernel/scheduler/mutex.o \

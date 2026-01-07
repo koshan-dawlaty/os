@@ -3,7 +3,7 @@
 
 #include <lib/array.h>
 #include <stddef.h>
-#include <task_queue.h>
+#include <wait_queue.h>
 
 enum socket_state
 {
@@ -29,8 +29,8 @@ struct unix_socket
     };
 
     struct array buffer;          /* buffer of things that has been sent */
-    struct task_queue send_queue; /* queue that is waiting on send() */
-    struct task_queue recv_queue; /* queue that is waiting on recv() */
+    struct wait_queue send_queue; /* queue that is waiting on send() */
+    struct wait_queue recv_queue; /* queue that is waiting on recv() */
 };
 
 struct unix_socket *unix_socket_alloc();
