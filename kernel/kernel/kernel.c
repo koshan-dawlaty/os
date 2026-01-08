@@ -1,7 +1,9 @@
+#include "kernel/syscall.h"
 #include "lib/array.h"
 #include "multiboot.h"
 #include "socket.h"
 #include "sys/stat.h"
+#include "sys/syscall.h"
 #include "utils.h"
 #include <assert.h>
 #include <ata/ata.h>
@@ -244,6 +246,8 @@ void socket_task2(void *a)
         printf("%s\n", buf);
     }
 }
+
+SYSCALL_DEFINE1(open, SYS_open);
 
 void kmain()
 {
