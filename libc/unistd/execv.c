@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <syscall.h>
 #include <unistd.h>
+#include <kernel_syscall.h>
 
 #ifdef __is_libk
 #include <elf.h>
@@ -55,3 +56,5 @@ int execv(const char *path, char *const argv[])
     return 0;
 #endif
 }
+
+SYSCALL_DEFINE2(execv, SYS_execv);
