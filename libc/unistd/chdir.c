@@ -29,8 +29,8 @@ int chdir(const char *path)
     return syscall_wrapper_asm(SYS_chdir, (uintptr_t)path, 0, 0, 0, 0);
 #endif
 
-    /* TODO: return value */
-    return 1234;
+    
+    return 0;
 }
  
 SYSCALL_DEFINE1(chdir, SYS_chdir);
