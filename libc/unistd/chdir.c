@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <utils.h>
+#include <kernel_syscall.h>
 
 #ifdef __is_libk
 #include <err.h>
@@ -30,3 +31,5 @@ int chdir(const char *path)
     /* TODO: return value */
     return 1234;
 }
+ /* TODO: syscall number in syscall.h */
+SYSCALL_DEFINE1(chdir, 13);
