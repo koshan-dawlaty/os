@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <utils.h>
+#include <syscall.h>
 #include <kernel_syscall.h>
 
 #ifdef __is_libk
@@ -25,11 +26,11 @@ int chdir(const char *path)
 
     current_task->working_dir = dir;
 #else
-    return syscall_wrapper_asm(13, (uintptr_t)path, 0, 0, 0, 0);
+    return syscall_wrapper_asm(SYS_chdir, (uintptr_t)path, 0, 0, 0, 0);
 #endif
 
     /* TODO: return value */
     return 1234;
 }
- /* TODO: syscall number in syscall.h */
-SYSCALL_DEFINE1(chdir, 13);
+ 
+SYSCALL_DEFINE1(chdir, SYS_chdir);
