@@ -18,5 +18,6 @@
 #define SYS_create_socket 20
 #define SYS_send 21
 #define SYS_recv 22
+#define SYS_clone 23
 
 #endif

@@ -161,6 +161,57 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     return out;
 }
 
+struct task *user_thread_alloc(ptr ip)
+{
+
+    ASSERT(get_current_task()->pgdir != NULL,
+           "null pagedir for current task, this might be because a kernel "
+           "thread called this");
+
+    struct task *out = malloc(sizeof(struct task));
+
+    out->start_addr = (void *)ip;
+
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
+    out->bp = (ptr)out->stack;
+    out->descriptors = new_fdlist();
+
+    out->regs = (struct registers){
+        .esp = (ptr)out->stack,
+        .ebp = (ptr)out->stack,
+        .eflags = 1 << 9,
+        .edi = (ip),
+    };
+
+    /* out->working_dir = get_root_dir(); */
+    /* NULL is used to signify root dir */
+    out->working_dir = NULL;
+
+    *(ptr *)(out->stack) = (ptr)new_task_usermode_start;
+    /* edx is the third argument first and second are set later in this function
+     */
+    /* *(ptr *)(out->stack + 8) = ip; */
+
+    out->pgdir = get_current_task()->pgdir;
+    write_kernel_page_tables(out->pgdir);
+    /* TODO: this calls load_pgdir alot */
+    struct pagedir *temp = get_current_pagedir();
+    load_pgdir(out->pgdir);
+
+    load_pgdir(temp);
+
+    /* TODO: this should duplicate file descriptors */
+    const char *term_path = "/terminal";
+    const char *keyboard_path = "/keyboard";
+    /* TODO: maybe have a function to index into the fdlist, like dup2() */
+    /* TODO: maybe make stdin/out not readable/writeable in the kernel */
+    fdlist_add(out->descriptors, open_device(keyboard_path)); /* 0, stdin */
+    fdlist_add(out->descriptors, open_device(term_path));     /* 1, stdout */
+    fdlist_add(out->descriptors, open_device(term_path));     /* 2, stderr */
+
+    return out;
+}
+
 /*
 struct task *new_task(ptr ip)
 {

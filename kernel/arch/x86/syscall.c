@@ -165,6 +165,11 @@ int syscall_handler(struct syscall_regs *regs)
         struct unix_socket *s = unix_socket_lookup(regs->ebx);
         return unix_socket_recv(s, (void *)regs->ecx, regs->edx);
     }
+    case SYS_clone:
+        struct task *new = user_thread_alloc(regs->ebx);
+        add_task(new);
+
+        return 0;
     }
 
     printf("no syscall found\n");

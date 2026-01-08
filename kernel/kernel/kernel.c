@@ -266,7 +266,7 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
-    execv("/elf_test2", (char *[]){"elf_test", NULL});
+    /* execv("/elf_test2", (char *[]){"elf_test", NULL}); */
 
     /* execv("/cat", (char *[]){"cat", "one", NULL}); */
 }
