@@ -246,6 +246,7 @@ void socket_task2(void *a)
         printf("%s\n", buf);
     }
 }
+SYSCALL_DEFINE5(socket_task1, SYS_mmap)
 
 void kmain()
 {
