@@ -115,11 +115,7 @@ void thread1()
 {
     printf("test\n");
 
-    while (1)
-    {
-    }
-
-    return;
+    exit(0);
 }
 
 int main()

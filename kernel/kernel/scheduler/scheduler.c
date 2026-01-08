@@ -69,11 +69,26 @@ bool is_scheduler_enabled()
 void new_task_usermode_start(int argc, char **argv, ptr addr)
 {
 
+    printf("addr:%p\n", addr);
+
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
     temp_regs->esp = 0xBFFEF000;
     scheduler_set_regs_argv(argc, argv, temp_regs);
+
+    jump_usermode_asm(addr, temp_regs);
+}
+
+void user_thread_kernel_start(ptr addr)
+{
+
+    printf("addr:%p\n", addr);
+
+    struct registers *temp_regs = malloc(sizeof(struct registers));
+    *temp_regs = (struct registers){0};
+
+    temp_regs->esp = 0xBFFEF000;
 
     jump_usermode_asm(addr, temp_regs);
 }
@@ -126,7 +141,8 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     out->working_dir = NULL;
 
     *(ptr *)(out->stack) = (ptr)new_task_usermode_start;
-    /* edx is the third argument first and second are set later in this function
+    /* edx is the third argument first and second are set later in this
+     * function
      */
     /* *(ptr *)(out->stack + 8) = ip; */
 
@@ -187,8 +203,9 @@ struct task *user_thread_alloc(ptr ip)
     /* NULL is used to signify root dir */
     out->working_dir = NULL;
 
-    *(ptr *)(out->stack) = (ptr)new_task_usermode_start;
-    /* edx is the third argument first and second are set later in this function
+    *(ptr *)(out->stack) = (ptr)user_thread_kernel_start;
+    /* edx is the third argument first and second are set later in this
+     * function
      */
     /* *(ptr *)(out->stack + 8) = ip; */
 
@@ -271,8 +288,8 @@ struct task *new_task(ptr ip)
 
     out->descriptors = new_fdlist();
 
-    /* TODO: this is really stupid and runs out of space all the time, however
-     * it works */
+    /* TODO: this is really stupid and runs out of space all the time,
+     * however it works */
     out->stack = get_free_pages(1) + (PAGE_SIZE - sizeof(ptr) * 5);
     out->working_dir = NULL;
 
