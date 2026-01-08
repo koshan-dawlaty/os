@@ -1,5 +1,7 @@
+#include "sys/syscall.h"
 #include "utils.h"
 #include <errno.h>
+#include <kernel_syscall.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <utils.h>
@@ -30,3 +32,5 @@ int open(const char *path, int flags)
     return fd;
 #endif
 }
+
+SYSCALL_DEFINE2(open, SYS_open)

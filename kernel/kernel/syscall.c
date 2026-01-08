@@ -11,7 +11,5 @@ void syscall_add(ptr num, syscall_func_t f)
 
 ptr syscall(ptr num, ptr b, ptr c, ptr d, ptr si, ptr di)
 {
-    return syscall_table[num](num, b, c, d, si, di);
+    return syscall_table[num](b, c, d, si, di);
 }
-
-SYSCALL_DEFINE0(syscall, 1);

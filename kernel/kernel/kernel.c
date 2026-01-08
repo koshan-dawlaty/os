@@ -247,10 +247,15 @@ void socket_task2(void *a)
     }
 }
 
-SYSCALL_DEFINE1(open, SYS_open);
-
 void kmain()
 {
+
+    open("/one", 0);
+    open("/one", 0);
+    open("/one", 0);
+    open("/one", 0);
+    int fd = syscall(SYS_open, (ptr) "/one", O_RDONLY, 0, 0, 0);
+    printf("%d\n", fd);
 
     struct unix_socket *s = unix_socket_alloc();
 
