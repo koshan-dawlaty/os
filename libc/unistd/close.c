@@ -1,6 +1,7 @@
 #include "utils.h"
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <kernel_syscall.h>
 
 #ifdef __is_libk
 #include <vfs.h>
@@ -19,3 +20,5 @@ int close(int fd)
     return retval;
 #endif
 }
+
+SYSCALL_DEFINE1(close, SYS_close);

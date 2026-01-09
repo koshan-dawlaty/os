@@ -51,6 +51,7 @@ $(KERNEL_ARCH_TEST_OBJS) \
 kernel/kernel.o \
 kernel/utils.o \
 kernel/panic.o \
+kernel/syscall.o \
 kernel/elf/elf.o \
 kernel/elf/elf32.o \
 kernel/elf/elf64.o \
@@ -129,7 +130,7 @@ all: $(BIN)/os.kernel
 
 # ../libc/libk.a is bad
 $(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk.a
-	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -lk -lgcc
+	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -Wl,--whole-archive -lk -Wl,--no-whole-archive -lgcc
 	grub-file --is-x86-multiboot $(BIN)/os.kernel
 
 

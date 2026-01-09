@@ -1,6 +1,7 @@
 #include "sys/types.h"
 #include "utils.h"
 #include <errno.h>
+#include <kernel_syscall.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/syscall.h>
@@ -39,3 +40,6 @@ int pwrite(int fd, const void *buf, size_t n, off_t off)
 
     return syscall_wrapper_asm(SYS_pwrite, fd, (uintptr_t)buf, n, off, 0);
 }
+
+SYSCALL_DEFINE3(write, SYS_write);
+SYSCALL_DEFINE4(pwrite, SYS_pwrite);

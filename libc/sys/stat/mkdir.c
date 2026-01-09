@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <syscall.h>
+#include <kernel_syscall.h>
 
 #ifdef __is_libk
 #include <err.h>
@@ -24,3 +25,5 @@ int mkdir(const char *path, mode_t mode)
     return syscall_wrapper_asm(SYS_mkdir, (uintptr_t)path, mode, 0, 0, 0);
 #endif
 }
+
+SYSCALL_DEFINE2(mkdir, SYS_mkdir);

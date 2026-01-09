@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/syscall.h>
+#include <kernel_syscall.h>
 #include <unistd.h>
 
 #ifdef __is_libk
@@ -25,6 +26,7 @@ long get_dents(int fd, struct dirent *buf, size_t num)
     return retval;
 #endif
 }
+SYSCALL_DEFINE3(get_dents, SYS_getdents);
 
 DIR *opendir(const char *name)
 {

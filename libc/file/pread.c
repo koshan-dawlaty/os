@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <kernel_syscall.h>
 #include <stdio.h>
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -16,3 +17,5 @@ int pread(int fd, void *buf, size_t n, size_t offset)
     return syscall_wrapper_asm(SYS_pread, fd, (uintptr_t)buf, n, offset, 0);
 #endif
 }
+
+SYSCALL_DEFINE4(pread, SYS_pread)

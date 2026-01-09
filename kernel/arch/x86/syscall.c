@@ -1,3 +1,4 @@
+#include "kernel/syscall.h"
 #include "kernel/graphics.h"
 #include "memory/get_free_pages.h"
 #include "socket.h"
@@ -46,6 +47,9 @@ semaphore *test_semaphore = NULL;
 
 int syscall_handler(struct syscall_regs *regs)
 {
+
+    return kernel_syscall(regs->eax, regs->ebx, regs->ecx, regs->edx, regs->esi,
+                          regs->edi);
 
     /* *(char *)(0xC03FF002 + test) = 'a'; */
     /* test += 2; */

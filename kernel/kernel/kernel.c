@@ -1,8 +1,7 @@
+#include "kernel/syscall.h"
 #include "lib/array.h"
 #include "multiboot.h"
 #include "socket.h"
-#include "sys/stat.h"
-#include "utils.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <dirent.h>
@@ -35,6 +34,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+#include <utils.h>
 #include <vfs.h>
 
 #include <scheduler.h>
@@ -247,6 +250,13 @@ void socket_task2(void *a)
 
 void kmain()
 {
+
+    open("/one", 0);
+    open("/one", 0);
+    open("/one", 0);
+    open("/one", 0);
+    int fd = kernel_syscall(SYS_open, (ptr) "/one", O_RDONLY, 0, 0, 0);
+    printf("%d\n", fd);
 
     struct unix_socket *s = unix_socket_alloc();
 

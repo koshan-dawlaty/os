@@ -1,5 +1,7 @@
+#include "sys/syscall.h"
 #include "utils.h"
 #include <errno.h>
+#include <kernel_syscall.h>
 #include <stdio.h>
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -25,3 +27,5 @@ int read(int fd, void *buf, size_t n)
     return retval;
 #endif
 }
+
+SYSCALL_DEFINE3(read, SYS_read);

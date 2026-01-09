@@ -3,6 +3,7 @@
 #include <sys/syscall.h>
 #include <utils.h>
 #include <vfs.h>
+#include <kernel_syscall.h>
 
 #ifdef __is_libk
 #include <scheduler.h>
@@ -25,3 +26,5 @@ void exit(int status)
     syscall_wrapper_asm(SYS_exit, status, 0, 0, 0, 0);
 #endif
 }
+
+SYSCALL_DEFINE1(exit, SYS_exit);

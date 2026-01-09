@@ -1,10 +1,11 @@
-#include "unistd.h"
+#include <fcntl.h>
 #include <init.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/syscall.h>
+#include <unistd.h>
 
 /* this is copied from the kernel definition, it might change and break
  * everything and that would be bad */
@@ -122,18 +123,9 @@ int main()
 {
     init_libc();
 
-    clone((ptr)thread1);
-
-    exit(1);
-
-    int sock = socket_create();
-    printf("socket created\n");
-
+    open("/one", 0);
     while (1)
     {
-        char *buf = malloc(4);
-        recv(sock, buf, 4);
-        printf("%s\n", buf);
     }
 
     exit(0);
