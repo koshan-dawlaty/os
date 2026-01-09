@@ -1,5 +1,3 @@
-#include <kernel_syscall.h>
-#include <stdint.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <syscall.h>
@@ -9,6 +7,8 @@
 #include <kernel/paging.h>
 #include <memory/paging_flags.h>
 #endif
+
+#include <kernel_syscall.h>
 
 void *mmap(void *addr, size_t len, int prot, int flags, off_t off)
 {

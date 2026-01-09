@@ -2,7 +2,6 @@
 #define SYS_MMAN_H
 
 #include <kernel_syscall.h>
-#include <stdint.h>
 #include <sys/types.h>
 #include <syscall.h>
 

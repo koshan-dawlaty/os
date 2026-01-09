@@ -2,9 +2,6 @@
 #include "lib/array.h"
 #include "multiboot.h"
 #include "socket.h"
-#include "sys/stat.h"
-#include "sys/syscall.h"
-#include "utils.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <dirent.h>
@@ -37,6 +34,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+#include <utils.h>
 #include <vfs.h>
 
 #include <scheduler.h>
@@ -246,7 +247,6 @@ void socket_task2(void *a)
         printf("%s\n", buf);
     }
 }
-SYSCALL_DEFINE5(socket_task1, SYS_mmap)
 
 void kmain()
 {
@@ -276,7 +276,7 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
-    execv("/elf_test2", (char *[]){"elf_test", NULL});
+    /* execv("/elf_test2", (char *[]){"elf_test", NULL}); */
 
     /* execv("/cat", (char *[]){"cat", "one", NULL}); */
 }

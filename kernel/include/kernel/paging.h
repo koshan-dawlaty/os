@@ -1,12 +1,12 @@
 #ifndef PAGING_H
 #define PAGING_H
-#include "kernel/types.h"
+#include <kernel/types.h>
 #define PAGE_SIZE 4096
 
-#include "multiboot.h"
-#include "sys/types.h"
+#include <multiboot.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 struct pagedir
 {
