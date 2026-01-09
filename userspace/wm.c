@@ -45,6 +45,11 @@ int recv(int socket, void *buf, size_t len)
     return syscall_wrapper_asm(SYS_recv, socket, (ptr)buf, len, 0, 0);
 }
 
+int clone(ptr ip)
+{
+    return syscall_wrapper_asm(SYS_clone, ip, 0, 0, 0, 0);
+}
+
 void framebuffer_pixel_write(struct framebuffer *f, uint8_t *pixel, int color)
 {
     pixel[0] = color & 255;         // BLUE
@@ -105,6 +110,13 @@ void draw_window(struct framebuffer *b, struct window *win)
                    (((y + win->y) * b->pitch) + (win->x * b->pixel_width)),
                win->buffer + (y * win->w), win->w * b->pixel_width);
     }
+}
+
+void thread1()
+{
+    printf("test\n");
+
+    exit(0);
 }
 
 int main()
