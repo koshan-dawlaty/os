@@ -134,7 +134,7 @@ int ext2_remove_dentry(dentry *entry, char *name, superblock *sb)
         u8 *raw_entry = buf + i;
         u16 len = *(u16 *)(raw_entry + 4);
 
-        if (i + len == EXT2_BLOCK_SIZE(sb))
+        if (i + len + old_len == EXT2_BLOCK_SIZE(sb))
         {
 
             *(u16 *)(raw_entry + 4) = EXT2_BLOCK_SIZE(sb) - i;

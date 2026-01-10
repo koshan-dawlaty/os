@@ -251,12 +251,8 @@ void socket_task2(void *a)
 void kmain()
 {
 
-    open("/one", 0);
-    open("/one", 0);
-    open("/one", 0);
-    open("/one", 0);
-    int fd = kernel_syscall(SYS_open, (ptr) "/one", O_RDONLY, 0, 0, 0);
-    printf("%d\n", fd);
+    printf("unlink:%d\n", unlink("/one"));
+    printf("open:%d\n", open("/one", O_RDONLY));
 
     struct unix_socket *s = unix_socket_alloc();
 
@@ -267,7 +263,9 @@ void kmain()
     create_device("/keyboard", get_keyboard());
     printf("starting shell\n");
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
-    int err = execv("/wm", (char *[]){"wm", NULL});
+    /* int err = execv("/wm", (char *[]){"wm", NULL}); */
+    int err = execv("/ksh", (char *[]){"ksh", NULL});
+
     if (err < 0)
     {
         printf("did not find shell\n");
