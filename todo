@@ -1,79 +1,47 @@
-more malloc tests
-make it more platform independent
 actually test keyboard driver led/keymatic functions
 modular kernel
-better tests
 physical page allocation that uses grub memory map 
 
-malloc seems to break when the size is too large (it may be if the size is greater than 2 times the page size)
-
-make malloc return physically and virtually contiguous memory
+better physically and virtually contiguous memory allocation
 
 file systems:
 	ext2 seems to hang when the disk image is not an ext2 filesystem
-	ext2 writing
 	ext2 has newlines at the end of files
 	ext2 inodes can only use direct blocks
 
 	the vfs should cache inodes, not the individual drivers
 	very bad error handling	
 
-	pathname lookup
-
-	
 
 syscall wrapper might be duplicated somewhere
-make execv and mmap actually use their arguments
-
-free might not work correctly with sizes around or above 4096
-
-do whatever linux does to not have the syscall handler just be a switch statement
+make mmap actually use its arguments
 
 maybe NULL shoudnt be used to mean root directory in dcache / pathname lookup (but i think linux does it so mabye its fine ??)
-
 struct pagedir should maybe be architecture specific, and generic code should instead maybe use a struct address_space
 
-
 many libc functions cast const char * to char *
-
 block device read might not work if it is not sector aligned
-
 ramdisk might not work at really high sizes
-
 many ext2 functions are just wrappers around the ext2 version of the structures to return vfs structures 
 	(like ext2_parse_superblock and ext2_parse_superblock_vfs)
-
 
 it seems like the initial kernel task cant be removed from the scheduler queue (cant lock semaphores)
 	when i run a loop that is just
 		lock & unlock the malloc semaphore (printf)
 		schedule
 while other threads are calling malloc
-
 it eventually page faults or stack protector faults maybe because of jumping to an invalid task or reading an invalid task
 
-need to set errno for usermode when errno is set in kernel
-
-
+might need to set errno for usermode when errno is set in kernel
 the stdlib FILE test always takes ~60ms to run, it might be because it does not buffer anything in userspace yet
 
-
 it seems like scrolling the terminal is very bad and likes to crash
-shell might have a double free
-
-
-malloc/kmalloc is very weird
 
 maybe read_dir() vfs function should put null values (or maybe just one null value) if the read is past the end of the dentry. it would help when implementing readdir() (libc) beacuse it is null terminated
 errno might not be thread local
 
-
 ext2 (probably just the block group descriptor code) does not work with block size != 1024
-
 generic read/write functions for devices that cannot be read from / written to, functions should return error code 
-
-
-	malloc could fall back to bitmap allocator by checking if the allocation would go beyond sizeof(all of the structues used in a tree allocation) + page size
 
 printing stuff is really expensive in graphics mode, it reads from video memory when it scrolls
 linux kernel like .config 
@@ -115,3 +83,4 @@ IMPORTANT IMPORTANT IMPORTANT IMPORTANT!!!
 
 
 NEED USERMODE/SCHEDULER TESTS!!!
+

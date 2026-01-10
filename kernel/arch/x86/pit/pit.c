@@ -30,7 +30,7 @@ void init_pit()
 
 ISR(pit_handler, {
     pit_time++;
-    if (pit_time % 10 == 0)
+    if (pit_time % 1 == 0)
     {
         schedule();
     }
