@@ -57,6 +57,7 @@ file/read.o \
 file/write.o \
 file/pread.o \
 sys/mman/mmap.o \
+sys/stat/mkdir.o \
 unistd/execv.o \
 unistd/sleep.o \
 unistd/close.o \
@@ -116,6 +117,7 @@ $(BIN)/%.libk.o: %.S
 
 clean:
 	$(RM) -r bin/*
+	$(RM) $(BINARIES)
 
 install: install-headers install-libs
 

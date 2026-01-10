@@ -22,11 +22,12 @@ export BINARY_PREFIX=/usr/bin
 ISO="os.iso"
 export ISO
 
-
+CONFIG_FILE_RAW=$(cat ../config)
+CONFIG_FLAGS=$(echo $CONFIG_FILE_RAW | sed "s/^/-DCONFIG_/")
 
 
 export ARCH=$(./default-host.sh)
-CFLAGS="-DMYOS1234 ${CFLAGS} -Werror -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(./arch-flags.sh $ARCH) -DCONFIG_$ARCH " 
+CFLAGS="  -DMYOS1234 ${CFLAGS} -Werror -Wno-address-of-packed-member -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(./arch-flags.sh $ARCH) -DCONFIG_$ARCH $CONFIG_FLAGS " 
 export CFLAGS
 export CPPFLAGS=''
 

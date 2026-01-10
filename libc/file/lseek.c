@@ -1,5 +1,7 @@
 #include "utils.h"
 #include <errno.h>
+#include <sys/syscall.h>
+#include <kernel_syscall.h>
 #include <unistd.h>
 
 #ifdef __is_libk
@@ -19,6 +21,8 @@ off_t lseek(int fd, off_t offset, int whence)
     return seek_file(f, offset, whence);
 
 #else
-    return syscall_wrapper_asm(15, fd, offset, whence, 0, 0);
+    return syscall_wrapper_asm(SYS_lseek, fd, offset, whence, 0, 0);
 #endif
 }
+
+SYSCALL_DEFINE3(lseek, SYS_lseek);

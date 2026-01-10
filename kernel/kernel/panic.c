@@ -1,4 +1,5 @@
 #include "kernel/tty.h"
+#include "utils.h"
 #include "vga.h"
 #include <extension.h>
 #include <panic.h>
@@ -30,7 +31,7 @@ void vpanic(const char *message, va_list parameters)
 void panic_no_malloc(const char *message)
 {
 
-    asm("cli");
+    irq_disable();
     panic_asm();
 
     terminal_writestring("kernel panicked\n");

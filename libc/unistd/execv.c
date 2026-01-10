@@ -1,8 +1,10 @@
-#include "fcntl.h"
 #include "utils.h"
 #include <errno.h>
+#include <fcntl.h>
 #include <stdint.h>
+#include <syscall.h>
 #include <unistd.h>
+#include <kernel_syscall.h>
 
 #ifdef __is_libk
 #include <elf.h>
@@ -12,11 +14,13 @@
 int execv(const char *path, char *const argv[])
 {
 #ifndef __is_libk
-    return syscall_wrapper_asm(2, (uintptr_t)path, (uintptr_t)argv, 0, 0, 0);
+    return syscall_wrapper_asm(SYS_execv, (uintptr_t)path, (uintptr_t)argv, 0,
+                               0, 0);
 
 #else
 
-    int f = open((char *)path, 0);
+    /* TODO: wrong oflags */
+    int f = open((char *)path, O_RDONLY);
 
     if (f < 0)
     {
@@ -33,8 +37,14 @@ int execv(const char *path, char *const argv[])
         {
             argc++;
         }
-
-        add_task(load_elf(elf, argc, (char **)argv));
+        struct task *t = load_elf(elf, argc, (char **)argv);
+        add_task(t);
+        free_elf(elf);
+        /* this the old task from running soon after this is called, it also
+         * makes this function more responsive as the new task should be
+         * immediately switched to
+         */
+        /* schedule(); */
     }
     else
     {
@@ -46,3 +56,5 @@ int execv(const char *path, char *const argv[])
     return 0;
 #endif
 }
+
+SYSCALL_DEFINE2(execv, SYS_execv);

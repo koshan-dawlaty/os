@@ -15,17 +15,17 @@ struct bdev *new_bdev(struct bdev_functions functions, size_t block_size,
     out->bdev_private = private;
     out->functions = functions;
     out->block_size = block_size;
-    out->rc = new_refcount();
+    out->rc = REFCOUNT_INIT();
 
     return out;
 }
 
 void get_bdev(struct bdev *dev)
 {
-    refcount_get(dev->rc);
+    refcount_get(&dev->rc);
 }
 
-void bdev_refcount_drop(refcount *rc)
+void bdev_refcount_drop(struct refcount *rc)
 {
     struct bdev *device = containerof(rc, struct bdev, rc);
     device->functions.free(device);
@@ -34,7 +34,7 @@ void bdev_refcount_drop(refcount *rc)
 
 void drop_bdev(struct bdev *dev)
 {
-    refcount_drop(dev->rc, bdev_refcount_drop);
+    refcount_drop(&dev->rc, bdev_refcount_drop);
 }
 
 int bdev_write(struct bdev *dev, u8 *buf, size_t num, u64 offset)

@@ -1,7 +1,9 @@
+#include "assert.h"
 #include "dcache.h"
-#include "err.h"
 #include "vfs.h"
 #include "vfs_internal.h"
+#include <err.h>
+
 #include <errno.h>
 #include <kernel/types.h>
 #include <panic.h>
@@ -10,24 +12,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-dentry *parse_dentries_component(dentry **dentries, char *component)
+static dentry *parse_dentries_component(dentry *dir, const char *component)
 {
-    size_t i = 0;
-    while (dentries[i] != NULL)
+
+    struct dir_context context = DIR_CONTEXT_INIT();
+
+    struct dentry *ent = dir_readdir(dir, &context);
+
+    while (ent != NULL && !IS_ERR(ent))
     {
 
-        if (!strcmp(dentries[i]->name, component))
+        if (!strcmp(ent->name, component))
         {
-            return dentries[i];
+            return ent;
         }
 
-        i++;
+        ent = dir_readdir(dir, &context);
     }
+
     return NULL;
 }
 
-size_t parse_component(const char *path, dentry **current_dir,
-                       struct pathname_lookup_flags flags)
+static size_t parse_component(const char *path, dentry **current_dir,
+                              struct pathname_lookup_flags flags)
 {
     /* TODO: stupid */
     bool starts_with_slash = false;
@@ -50,17 +57,17 @@ size_t parse_component(const char *path, dentry **current_dir,
         final_component = true;
     }
 
+    /* TODO: maybe dont malloc?, this gets passed to strdup() multiple times */
     char *component = malloc(component_len + 1);
     memcpy(component, path, component_len);
     component[component_len] = 0;
 
-    dentry *entry = get_dcache(component, *current_dir);
+    struct dentry *entry = get_dcache(component, *current_dir);
 
     if (entry == NULL)
     {
-        dentry **dentries = dir_get_dentries(*current_dir);
 
-        entry = parse_dentries_component(dentries, component);
+        entry = parse_dentries_component(*current_dir, component);
 
         if (entry == NULL)
         {
@@ -73,14 +80,13 @@ size_t parse_component(const char *path, dentry **current_dir,
                     entry =
                         (*current_dir)
                             ->inode->sb->type->dentry_functions.append_dentry(
-                                *current_dir, component,
+                                *current_dir, strdup(component), flags.type,
                                 (*current_dir)->inode->sb);
                 }
                 else if (flags.type == DENTRY_DEVICE)
                 {
-                    printf("device\n");
-                    printf("%p\n", flags.dev);
-                    entry = new_dentry_dev(component, *current_dir, flags.dev);
+                    entry = new_dentry_dev(strdup(component), *current_dir,
+                                           flags.dev);
                 }
             }
             else
@@ -119,15 +125,23 @@ size_t parse_component(const char *path, dentry **current_dir,
             goto not_dir;
         }
     }
+    else if (entry->type == DENTRY_MOUNT_POINT)
+    {
+        /* TODO */
+    }
+    else if (entry->type == DENTRY_INVALID)
+    {
+        UNREACHABLE("invalid dentry");
+    }
     else
     {
-        panic("unhandled dentry type in lookup_path!!!");
+        panic("unhandled dentry type %d in lookup_path", entry->type);
     }
 
     /* *current_dir = ERR_PTR(-ENOENT); */
 
 out:
-
+    free(component);
     /* TODO stupid */
     if (starts_with_slash)
     {
@@ -146,9 +160,9 @@ not_dir:
     goto out;
 }
 
-dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
+struct dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
 {
-    dentry *current_dir = NULL;
+    struct dentry *current_dir = NULL;
     size_t component_offset = 0;
 
     if (*path != '/')

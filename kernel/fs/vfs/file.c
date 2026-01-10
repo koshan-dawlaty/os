@@ -1,7 +1,10 @@
 #include "assert.h"
 #include "dcache.h"
 #include "dirent.h"
+#include "fcntl.h"
+#include "interrupts/pic.h"
 #include "memory/get_free_pages.h"
+#include "mutex.h"
 #include "scheduler.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
@@ -24,6 +27,7 @@ struct fdlist *new_fdlist()
 
     out->len = 0;
     out->files = malloc(0);
+    out->lock = SPINLOCK_INIT();
 
     return out;
 }
@@ -44,20 +48,28 @@ void fdlist_free(struct fdlist *list)
 
 int fdlist_add(struct fdlist *list, file *f)
 {
+    lock_spinlock(&list->lock);
     list->len++;
     list->files = realloc(list->files, list->len * sizeof(file *));
     list->files[list->len - 1] = f;
 
-    return list->len - 1;
+    int retval = list->len - 1;
+    release_spinlock(&list->lock);
+    return retval;
 }
 
 file *fdlist_lookup(struct fdlist *list, int fd)
 {
+    lock_spinlock(&list->lock);
+
     if (fd < 0 || (size_t)fd > list->len)
     {
+        release_spinlock(&list->lock);
         return NULL;
     }
-    return list->files[fd];
+    void *retval = list->files[fd];
+    release_spinlock(&list->lock);
+    return retval;
 }
 
 int fdlist_close(struct fdlist *list, int fd)
@@ -72,6 +84,7 @@ int fdlist_close(struct fdlist *list, int fd)
         return -EBADF;
     }
 
+    file_free(list->files[fd]);
     list->files[fd] = NULL;
     return 0;
 }
@@ -86,7 +99,6 @@ static inline struct fdlist *get_current_fdlist()
     }
     else
     {
-
         NOT_NULL(task->descriptors,
                  "task file descriptor list was uninitalized");
         return task->descriptors;
@@ -106,18 +118,20 @@ int close_file(file *f)
     }
 }
 
-file *open_file(const char *path)
+struct file *open_file(const char *path, int flags)
 {
     dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
+
     if (IS_ERR(dentry))
     {
         return ERR_PTR(dentry);
     }
 
-    file *out = new_file(dentry);
+    struct file *out = new_file(dentry, flags);
 
     struct fdlist *list = get_current_fdlist();
-    out->descriptor = fdlist_add(list, out);
+    int fd = fdlist_add(list, out);
+    out->descriptor = fd;
 
     return out;
 }
@@ -128,79 +142,62 @@ file *lookup_descriptor(int fd)
     return fdlist_lookup(list, fd);
 }
 
-int read_dir(file *dir, struct dirent *buf, size_t number)
+int read_dir(struct file *dir, struct dirent *buf, size_t number)
 {
 
     /* TODO: this should maybe be an error code as this is called by a syscall
      */
     NOT_NULL(dir, "directory should not be null");
+    NOT_NULL(dir->entry, "directory should not have null dentry");
 
-    ASSERT(dir->entry->type == DENTRY_DIR,
+    ASSERT(dir->entry->type == DENTRY_DIR ||
+               dir->entry->type == DENTRY_MOUNT_POINT,
            "the directory entry should represent a directory");
 
-    /* assume buf has space for  n * sizeof(dirent) */
-    struct dirent *dir_buf = (struct dirent *)buf;
+    /* assume buf has space for n * sizeof(dirent) */
 
-    dentry **entries = dir_get_dentries(dir->entry);
-    size_t len = 0;
-    while (entries[len] != NULL)
+    struct dentry *entry = dir_readdir(dir->entry, &dir->dir_context);
+
+    if (entry == NULL)
     {
-        len++;
+        return -ENOENT;
     }
 
-    if (dir->offset + number > len)
+    size_t i = 0;
+
+    while (i < number && entry != NULL)
     {
-        dir->offset = len;
-        return -EINVAL;
-    }
-
-    dentry *current = entries[dir->offset];
-
-    size_t i = dir->offset;
-    size_t j = 0;
-    while (current != NULL && j < number && i < len)
-    {
-
-        memcpy(dir_buf[j].d_name, current->name, strlen(current->name) + 1);
-
-        /* printf("writing to:%p\n", dir_buf[j]); */
-
-        /* TODO: it seems that the inode is invalid if current->type ==
-         * DENTRY_DIR might be a bug?
-         * it seems to overwrite dir_buf[j].name in some cases */
-        if (current->type == DENTRY_FILE)
+        if (i != 0)
         {
-            /* printf("%p\n", current->name); */
-            /* printf("%d\n", current->inode->number); */
-            /* printf("WRITING TO:%p\n", &dir_buf[j].d_ino); */
-            /* printf("WRITING TO:%p\n", &dir_buf[j]); */
-
-            /* for (size_t i = 0; i < 10; i++) */
-            /* { */
-            /*     printf("%p ", *(uint8_t *)(0xa0000010 + i)); */
-            /* } */
-            /* printf("\n"); */
-
-            dir_buf[j].d_ino = current->inode->number;
+            entry = dir_readdir(dir->entry, &dir->dir_context);
         }
-        else
+
+        if (IS_ERR(entry))
         {
-            /* TODO */
-            dir_buf[j].d_ino = 0;
+            return GET_ERR(entry);
+        }
+
+        memcpy(buf[i].d_name, entry->name, strlen(entry->name));
+
+        if (DENTRY_TYPE_HAS_INODE(entry->type))
+        {
+            buf[i].d_ino = entry->inode->number;
         }
 
         i++;
-        j++;
-        current = entries[i];
     }
 
-    dir->offset += number;
-
-    return j;
+    return 0;
 }
 
-int read_file(file *file, char *buf, size_t n, size_t off)
+int read_file(struct file *file, char *buf, size_t n, size_t off)
 {
+
+    if (!FLAGS_IS_READABLE(file->flags))
+    {
+        return -EACCES;
+    }
+
     if (file->entry->type == DENTRY_DEVICE)
     {
         struct device *dev = file->entry->dev;
@@ -220,7 +217,7 @@ int read_file(file *file, char *buf, size_t n, size_t off)
     }
 
     inode *node = file->entry->inode;
-
+    mutex_lock(&node->lock);
     size_t read_size = n;
 
     if (off + n > node->size)
@@ -228,16 +225,22 @@ int read_file(file *file, char *buf, size_t n, size_t off)
         read_size = node->size - off;
     }
 
-    current_superblock->type->inode_functions.read_inode(node, (uint8_t *)buf,
-                                                         read_size, off);
+    inode_read(node, (uint8_t *)buf, read_size, off);
 
     add_file_offset(file, read_size);
+    mutex_unlock(&node->lock);
 
     return read_size;
 }
 
 int write_file(file *file, const char *buf, size_t n, size_t off)
 {
+
+    if (!FLAGS_IS_WRITABLE(file->flags))
+    {
+        return -EACCES;
+    }
+
     if (file->entry->type == DENTRY_DEVICE)
     {
         struct device *dev = file->entry->dev;
@@ -252,19 +255,18 @@ int write_file(file *file, const char *buf, size_t n, size_t off)
             return cdev_write(dev->character, (u8 *)buf, n);
         }
     }
+    else
+    {
+    }
 
     inode *node = file->entry->inode;
-
     size_t write_size = n;
-
-    current_superblock->type->inode_functions.write_inode(node, (const u8 *)buf,
-                                                          write_size, off);
-
+    inode_write(node, (const u8 *)buf, write_size, off);
     add_file_offset(file, write_size);
     return write_size;
 }
 
-file *create_file(char *name)
+struct file *create_file(char *name)
 {
     dentry *new = lookup_path(name, PATHNAME_LOOKUP_CREATE);
 
@@ -273,14 +275,8 @@ file *create_file(char *name)
         return ERR_PTR(new);
     }
 
-    return new_file(new);
-}
-
-void file_free(file *f)
-{
-    /* TODO: drop dentry */
-
-    free(f);
+    /* TODO */
+    return new_file(new, O_RDWR);
 }
 
 int seek_file(file *f, off_t offset, int whence)
@@ -318,6 +314,6 @@ file *open_device(const char *devname)
         return (void *)GET_ERR(ent);
     }
 
-    file *out = new_file(ent);
+    file *out = new_file(ent, O_RDWR);
     return out;
 }

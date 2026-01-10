@@ -1,10 +1,12 @@
-#ifndef SCHEDULER_H
-#define SCHEDULER_H
-#include "kernel/paging.h"
-#include "kernel/types.h"
-#include "vfs.h"
+#include "compiler.h"
+#include "lib/list.h"
+#include <kernel/paging.h>
+#include <kernel/types.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <vfs.h>
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
 
 /* TODO: mabye do the architecture specific part of this architecture
  * independent */
@@ -29,17 +31,20 @@ struct registers
     u64 r8, r9, r10, r11, r12, r13, r14, r15;
 #endif
 
-} __attribute__((packed));
+} __packed;
 
 struct task
 {
-    struct task *next;
+    struct list list;
+
     struct pagedir *pgdir;
     void *stack;
     struct registers regs;
     ptr bp;
-    dentry *working_dir;
+    struct dentry *working_dir;
     struct fdlist *descriptors;
+
+    void *start_addr; /* used for debugging */
 };
 
 void switch_tasks();
@@ -61,6 +66,7 @@ void remove_task_queue(struct task **queue, struct task *task);
 struct task *new_task(ptr ip);
 
 struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv);
+struct task *user_thread_alloc(ptr ip);
 
 /*
  * frees task t
@@ -102,6 +108,6 @@ void add_sleep_queue(struct task *task, size_t time);
 
 struct task *new_task_args(ptr ip, void *args);
 
-void run_task(void (*task)(void *), void *args);
+void ktask_run(void (*task)(void *), void *args);
 
 #endif

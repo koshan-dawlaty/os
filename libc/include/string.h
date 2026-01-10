@@ -7,6 +7,7 @@ size_t strlen(const char *str);
 
 void *memcpy(void *dest, const void *src, size_t size);
 void *memset(void *dest, int c, size_t n);
+void bzero(void *s, size_t n);
 
 char *strdup(char *str);
 

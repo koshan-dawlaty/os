@@ -98,7 +98,7 @@ FILE_NAME="$SERIAL_PIPE.out"
 while [[ ! -p "$FILE_NAME" ]]; do
     sleep 0.05
 done
-cat "$FILE_NAME" 2>/dev/null | python3 tap.py -v
+cat "$FILE_NAME" 2>/dev/null | python3 tap.py 
 
 kill $QEMU_PID 2>/dev/null
 

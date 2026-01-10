@@ -1,15 +1,18 @@
-#include "elf.h"
-#include "gdt.h"
-#include "interrupts/pic.h"
-#include "lib/list.h"
 #include "sleep.h"
 #include "unistd.h"
 #include "utils.h"
 #include "vfs.h"
+#include <assert.h>
 #include <drivers/character/terminal.h>
+#include <elf.h>
+#include <fcntl.h>
+#include <gdt.h>
+#include <interrupts/pic.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <lib/list.h>
 #include <memory/get_free_pages.h>
+#include <panic.h>
 #include <scheduler.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -17,6 +20,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+struct task_queue scheduler_queue = TASK_QUEUE_INIT();
 
 bool scheduler_enabled = false;
 struct task *current_task = NULL;
@@ -42,11 +47,26 @@ bool is_scheduler_enabled()
 void new_task_usermode_start(int argc, char **argv, ptr addr)
 {
 
+    printf("addr:%p\n", addr);
+
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
     temp_regs->esp = 0xBFFEF000;
     scheduler_set_regs_argv(argc, argv, temp_regs);
+
+    jump_usermode_asm(addr, temp_regs);
+}
+
+void user_thread_kernel_start(ptr addr)
+{
+
+    printf("addr:%p\n", addr);
+
+    struct registers *temp_regs = malloc(sizeof(struct registers));
+    *temp_regs = (struct registers){0};
+
+    temp_regs->esp = 0xBFFEF000;
 
     jump_usermode_asm(addr, temp_regs);
 }
@@ -58,6 +78,10 @@ char **create_user_args(int argc, char **argv)
     char **args = get_free_pages_user(1);
 
     size_t string_offset = argc * sizeof(char *);
+    if (string_offset >= PAGE_SIZE)
+    {
+        panic("ran out of space in user args");
+    }
 
     for (int i = 0; i < argc; i++)
     {
@@ -76,9 +100,10 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 {
     struct task *out = malloc(sizeof(struct task));
 
+    out->start_addr = (void *)ip;
+
     out->bp = sp;
 
-    out->next = NULL;
     out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
     out->descriptors = new_fdlist();
 
@@ -94,7 +119,8 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     out->working_dir = NULL;
 
     *(ptr *)(out->stack) = (ptr)new_task_usermode_start;
-    /* edx is the third argument first and second are set later in this function
+    /* edx is the third argument first and second are set later in this
+     * function
      */
     /* *(ptr *)(out->stack + 8) = ip; */
 
@@ -129,6 +155,58 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     return out;
 }
 
+struct task *user_thread_alloc(ptr ip)
+{
+
+    ASSERT(get_current_task()->pgdir != NULL,
+           "null pagedir for current task, this might be because a kernel "
+           "thread called this");
+
+    struct task *out = malloc(sizeof(struct task));
+
+    out->start_addr = (void *)ip;
+
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
+    out->bp = (ptr)out->stack;
+    out->descriptors = new_fdlist();
+
+    out->regs = (struct registers){
+        .esp = (ptr)out->stack,
+        .ebp = (ptr)out->stack,
+        .eflags = 1 << 9,
+        .edi = (ip),
+    };
+
+    /* out->working_dir = get_root_dir(); */
+    /* NULL is used to signify root dir */
+    out->working_dir = NULL;
+
+    *(ptr *)(out->stack) = (ptr)user_thread_kernel_start;
+    /* edx is the third argument first and second are set later in this
+     * function
+     */
+    /* *(ptr *)(out->stack + 8) = ip; */
+
+    out->pgdir = get_current_task()->pgdir;
+    write_kernel_page_tables(out->pgdir);
+    /* TODO: this calls load_pgdir alot */
+    struct pagedir *temp = get_current_pagedir();
+    load_pgdir(out->pgdir);
+
+    load_pgdir(temp);
+
+    /* TODO: this should duplicate file descriptors */
+    const char *term_path = "/terminal";
+    const char *keyboard_path = "/keyboard";
+    /* TODO: maybe have a function to index into the fdlist, like dup2() */
+    /* TODO: maybe make stdin/out not readable/writeable in the kernel */
+    fdlist_add(out->descriptors, open_device(keyboard_path)); /* 0, stdin */
+    fdlist_add(out->descriptors, open_device(term_path));     /* 1, stdout */
+    fdlist_add(out->descriptors, open_device(term_path));     /* 2, stderr */
+
+    return out;
+}
+
 /*
 struct task *new_task(ptr ip)
 {
@@ -149,15 +227,36 @@ struct task *new_task(ptr ip)
     return out;
 }*/
 
-void run_task(void (*task)(void *), void *args)
+void ktask_run(void (*task)(void *), void *args)
 {
     add_task(new_task_args((ptr)task, args));
+}
+
+void ktask_return()
+{
+    printf("ktask_return\n");
+    irq_state_t irq_state = irq_save_disable();
+    {
+        struct task *current = get_current_task();
+        remove_task(current);
+        free_task(current);
+    }
+    irq_restore(irq_state);
+
+    irq_enable();
+    schedule();
+    /* execution maybe shouldnt get here */
+    panic("ktask_return end reached\n");
 }
 
 struct task *new_task_args(ptr ip, void *args)
 {
     struct task *out = new_task(ip);
     scheduler_set_first_arg(args, &out->regs);
+    /* *((ptr *)(out->stack - sizeof(ptr))) = (ptr)ktask_return; */
+    /* *((ptr *)(out->stack - sizeof(ptr) * 4)) = 0x123; */
+    *((ptr *)(out->stack - sizeof(ptr) * 4)) = (ptr)ktask_return;
+    *((ptr *)(out->stack + sizeof(ptr))) = (ptr)ktask_return;
     return out;
 }
 
@@ -165,10 +264,11 @@ struct task *new_task(ptr ip)
 {
     struct task *out = malloc(sizeof(struct task));
 
-    out->next = NULL;
     out->descriptors = new_fdlist();
 
-    out->stack = get_free_pages(1) + (PAGE_SIZE - 0xc);
+    /* TODO: this is really stupid and runs out of space all the time,
+     * however it works */
+    out->stack = get_free_pages(1) + (PAGE_SIZE - sizeof(ptr) * 5);
     out->working_dir = NULL;
 
     out->regs.esp = (ptr)out->stack;
@@ -176,6 +276,8 @@ struct task *new_task(ptr ip)
 
     *(ptr *)(out->stack) = ip;
     out->pgdir = NULL;
+
+    out->start_addr = (void *)ip;
 
     return out;
 }
@@ -187,113 +289,58 @@ struct task *create_kernel_task()
     save_registers(&out->regs);
     out->pgdir = &init_pgdir;
     out->stack = (void *)out->regs.esp;
+    out->start_addr = (void *)0xDEADBEEF;
 
     return out;
 }
 
 void remove_task(struct task *task)
 {
-    asm("cli");
+    irq_state_t irq_state = irq_save_disable();
+    task_queue_remove(&scheduler_queue, task);
 
-    if (task == first_task)
+    if (task == current_task)
     {
-        struct task *temp = first_task->next;
-        first_task = temp;
-
-        return;
+        current_task = LIST_ENTRY(current_task->list.next, struct task, list);
+        if (current_task == NULL)
+        {
+            current_task = LIST_ENTRY(scheduler_queue.head, struct task, list);
+        }
     }
-
-    struct task *current = first_task;
-    struct task *previous = first_task;
-
-    while (current != NULL && current != task)
-    {
-        previous = current;
-        current = current->next;
-    }
-
-    if (current == NULL)
-    {
-        /* task not in queue */
-        printf("task not in scheduler queue\n");
-        return;
-    }
-
-    previous->next = current->next;
-
-    asm("sti");
+    irq_restore(irq_state);
+    load_pgdir(current_task->pgdir);
+    set_kernel_stack((ptr)current_task->stack);
+    load_registers(&current_task->regs);
 }
 
 void add_task(struct task *task)
 {
-
     if (current_task == NULL)
     {
         current_task = task;
-        first_task = task;
-        goto end;
     }
 
-    struct task *temp = first_task;
-    first_task = task;
-    task->next = temp;
-
-end:
-    asm("sti");
-}
-
-void add_task_queue(struct task **queue, struct task *task)
-{
-
-    if (*queue == NULL)
-    {
-        *queue = task;
-        return;
-    }
-
-    struct task *temp = *queue;
-    *queue = task;
-    (*queue)->next = temp;
-}
-
-void remove_task_queue(struct task **queue, struct task *task)
-{
-
-    struct task *current = *queue;
-    struct task *previous = *queue;
-    while (current != NULL && current != task)
-    {
-        previous = current;
-        current = current->next;
-    }
-
-    if (current == NULL)
-    {
-        printf("did not find task in queue\n");
-        /* task not in queue */
-        return;
-    }
-
-    previous->next = current->next;
+    IRQ_OFF({ task_queue_push(&scheduler_queue, task); })
 }
 
 int num_task_switches = 0;
 void switch_tasks()
 {
-    /* printf("switching from:%p ", current_task); */
-    if (current_task->next != NULL)
+    struct list *temp = current_task->list.next;
+
+    if (temp == NULL)
     {
-        current_task = current_task->next;
+        temp = scheduler_queue.head;
     }
-    else
-    {
-        current_task = first_task;
-    }
-    /* printf("to:%p\n", current_task); */
+
+    struct task *new_current = LIST_ENTRY(temp, struct task, list);
+    current_task = new_current;
 }
 
 void schedule()
 {
+
+    irq_disable();
 
     increment_sleep_queue();
 

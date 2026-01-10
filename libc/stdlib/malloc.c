@@ -93,7 +93,7 @@ void *malloc_get_pages(size_t num, struct malloc_zone *zone)
     return get_free_pages_zone(num, zone->zone);
 #else
     user_malloc_addr += 4096;
-    return mmap(user_malloc_addr, num * 4096, 0, 0, 0, 0);
+    return mmap(user_malloc_addr, num * 4096, 0, 0, 0);
     user_malloc_addr += num * 4096;
 #endif
 }
@@ -242,6 +242,11 @@ void free_zone(void *ptr, struct malloc_zone *zone)
     else
     {
         insert_bin(&zone->unsorted_bin, block);
+    }
+
+    if (block->size > sizeof(struct heap_block))
+    {
+        memset(ptr, 'a', block->size);
     }
 }
 
@@ -409,4 +414,12 @@ void init_heap()
 #ifdef __is_libk
     heap_mutex = new_spinlock();
 #endif
+}
+
+void *calloc(size_t n, size_t size)
+{
+    void *out = malloc(n * size);
+    bzero(out, n * size);
+
+    return out;
 }

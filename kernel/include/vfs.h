@@ -1,15 +1,18 @@
 #ifndef VFS_H
 #define VFS_H
-#include "device.h"
-#include "kernel/types.h"
-#include "sys/types.h"
+#include "mutex.h"
+#include "spinlock.h"
+#include <device.h>
 #include <dirent.h>
+#include <kernel/types.h>
+#include <scheduler.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/types.h>
 
 struct fs_type;
 
-typedef struct
+typedef struct superblock
 {
     size_t blocksize;
     void *fs_private;
@@ -21,7 +24,7 @@ typedef struct
 typedef struct
 {
     // TODO: this should have some way of determining what superblock is parsed
-    superblock *(*parse_superblock)(struct bdev *dev);
+    struct superblock *(*parse_superblock)(struct bdev *dev);
 } superblock_functions;
 
 superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
@@ -29,18 +32,24 @@ superblock *new_superblock(size_t blocksize, void *fs_private, struct bdev *dev,
 
 typedef size_t inode_size;
 
-typedef struct
+typedef struct inode
 {
     ino_t number;
     inode_size size;
 
-    superblock *sb;
+    struct superblock *sb;
+    struct mutex lock;
 
     void *fs_private;
 } inode;
 
-inode *new_inode(ino_t number, inode_size size, void *fs_private,
-                 superblock *sb);
+struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
+                        struct superblock *sb);
+
+/*
+ * frees @node, including filesystem specific data
+ */
+void inode_free(struct inode *node);
 
 typedef struct
 {
@@ -48,11 +57,13 @@ typedef struct
     void (*read_inode)(inode *, uint8_t *buf, size_t n, size_t offset);
     void (*write_inode)(inode *, const uint8_t *buf, size_t n, size_t offset);
 
-    inode *(*alloc_inode)(superblock *sb);
+    /* this function should free the filesystem specific data in @node,
+     * NOT delete the inode from the filesystem */
+    void (*inode_free)(struct inode *node);
 
 } inode_functions;
 
-typedef enum
+typedef enum dentry_type
 {
     DENTRY_FILE,
     DENTRY_DIR,
@@ -74,40 +85,63 @@ typedef struct dentry
 
     union
     {
-        inode *inode;
-        struct superblock *sb; /* type == DENTRY_MOUNT_POINT */
-        struct device *dev;    /* type == DENTRY_DEVICE  */
+        inode *inode; /* type == DENTRY_FILE || DENTRY_DIR || DENTRY_MOUNT_POINT
+                       * if it is a mount point, the inode is the root of the
+                       * mounted filesystem
+                       */
+        struct device *dev; /* type == DENTRY_DEVICE  */
     };
 
     dentry_type type;
 } dentry;
 
+struct dir_context
+{
+    size_t num_read;
+    size_t dcache_offset; /* the offset that dcache uses internally */
+    size_t fs_offset;     /* the offset that the file system uses internally */
+};
+#define DIR_CONTEXT_INIT() (struct dir_context){.num_read = 0, .fs_offset = 0}
+
 /*
  * passing parent as NULL will make the dentry be at the root dir
  */
 dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type);
+
+dentry *dentry_mount_point_alloc(struct superblock *sb, struct inode *root);
 void free_dentry(dentry *entry);
 
 typedef struct
 {
-    // dentry *(*find_dentry)(char *path, superblock *sb);
-    dentry **(*get_dentries)(dentry *entry, superblock *sb);
-    dentry *(*append_dentry)(dentry *parent, char *name, superblock *sb);
+    dentry *(*read_dir)(dentry *entry, struct dir_context *, superblock *sb);
+    dentry *(*append_dentry)(dentry *parent, const char *name,
+                             enum dentry_type type, superblock *sb);
 
     int (*remove_dentry)(dentry *, char *, superblock *);
 } dentry_functions;
 
 typedef uint32_t fd_t;
 
-typedef struct
+#define FLAGS_IS_READABLE(flags)                                               \
+    (((flags & O_RDONLY) != 0) || ((flags & O_RDWR) != 0))
+
+#define FLAGS_IS_WRITABLE(flags)                                               \
+    (((flags & O_WRONLY) != 0) || ((flags & O_RDWR) != 0))
+
+typedef struct file
 {
-    // where read() / write() will read / write from
+
+    int flags;
+
     size_t offset;
 
+    union
+    {
+        struct dir_context dir_context;
+    };
+
     fd_t descriptor;
-    // this could be inode, as the filename would probably be known. This could
-    // also store the name in the file struct itself
-    dentry *entry;
+    struct dentry *entry;
 } file;
 
 static inline void add_file_offset(file *f, size_t add)
@@ -122,8 +156,8 @@ static inline void add_file_offset(file *f, size_t add)
 /*
  * initializes descriptor as 0
  */
-file *new_file(dentry *entry);
-file *open_file(const char *path);
+struct file *new_file(struct dentry *entry, int permissions);
+file *open_file(const char *path, int permissions);
 int close_file(file *f);
 int read_file(file *file, char *buf, size_t n, size_t off);
 int write_file(file *file, const char *buf, size_t n, size_t off);
@@ -145,11 +179,7 @@ struct fs_type
     superblock_functions superblock_functions;
 };
 
-static inline dentry **dir_get_dentries(dentry *entry)
-{
-    superblock *sb = entry->inode->sb;
-    return sb->type->dentry_functions.get_dentries(entry, sb);
-}
+dentry *dir_readdir(dentry *entry, struct dir_context *context);
 
 void register_filesystem(struct fs_type *);
 
@@ -203,6 +233,7 @@ int seek_file(file *f, off_t offset, int whence);
 struct fdlist
 {
     file **files;
+    struct spinlock lock;
     size_t len;
 };
 struct fdlist *new_fdlist();
@@ -218,5 +249,28 @@ void fdlist_free(struct fdlist *list);
 
 /* TODO: this name is very similar to the standard readdir() function */
 int read_dir(file *dir, struct dirent *buf, size_t number);
+
+/*
+ * mounts @fs on @root using @dev
+ * @fs is accessible from @name
+ */
+int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
+              struct bdev *dev);
+
+/* TODO: these should return bytes read or something in the future*/
+static inline int inode_read(struct inode *node, u8 *buf, size_t n, size_t off)
+{
+    node->sb->type->inode_functions.read_inode(node, buf, n, off);
+
+    return 0;
+}
+/* TODO: these should return bytes read or something in the future*/
+static inline int inode_write(struct inode *node, const u8 *buf, size_t n,
+                              size_t off)
+{
+    node->sb->type->inode_functions.write_inode(node, buf, n, off);
+
+    return 0;
+}
 
 #endif

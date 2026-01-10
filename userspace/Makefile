@@ -126,7 +126,7 @@ $(BIN)/%.o: %.S
 
 $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) 
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 
 ifdef CONFIG_x86_32

@@ -1,9 +1,10 @@
 #ifndef SYS_MMAN_H
 #define SYS_MMAN_H
 
-#include <stdint.h>
+#include <kernel_syscall.h>
 #include <sys/types.h>
+#include <syscall.h>
 
-void *mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off);
+void *mmap(void *addr, size_t len, int prot, int flags, off_t off);
 
 #endif

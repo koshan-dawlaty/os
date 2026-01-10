@@ -1,143 +1,69 @@
-#include "bits/pthreadtypes.h"
-#include "ctype.h"
 #include "ext2.h"
-#include "kernel/paging.h"
-#include "kernel/types.h"
-#include "vfs.h"
+#include <err.h>
 #include <errno.h>
+#include <kernel/types.h>
 #include <kernel/utils.h>
 #include <panic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vfs.h>
 
-dentry **ext2_get_dentries(dentry *entry, superblock *sb)
+struct dentry *ext2_readdir(struct dentry *entry, struct dir_context *context,
+                            superblock *sb)
 {
-    ext2_inode *node = EXT2_INODE(entry->inode);
+read_entry:;
 
-    dentry **out = malloc(sizeof(dentry));
-    size_t out_len = 0;
-
-    size_t size = ext2_get_inode_size(node);
-    uint8_t *buf = malloc(size);
-    ext2_read_inode(node, buf, size, 0, sb);
-
-    size_t i = 0;
-    while (i < size)
+    if (context->fs_offset == EXT2_BLOCK_SIZE(sb))
     {
-
-        uint8_t *raw_dentry = buf + i;
-
-        /* for (size_t j = 0; j < 10; j++) */
-        /* { */
-        /*     printf("%p ", raw_dentry[j - 5]); */
-        /* } */
-
-        uint32_t node_num = *(uint32_t *)(raw_dentry);
-        /* printf("inode number:%d\n", node_num); */
-        uint16_t name_len = raw_dentry[6];
-        /* TODO: there may be some fields that could be used to support longer
-         * filenames */
-
-        uint8_t *name_ptr = raw_dentry + 8;
-
-        char *new_name = malloc(name_len + 1);
-        memcpy(new_name, name_ptr, name_len);
-        /* printf("printing name\n"); */
-        new_name[name_len] = 0;
-        /* printf("%s\n", new_name); */
-
-        ext2_inode *new_node = ext2_get_inode(node_num, sb);
-        inode *vfs_node = ext2_get_vfs_node(node_num, new_node, sb);
-
-        dentry *vfs = new_dentry(new_name, entry,
-                                 ext2_get_vfs_node(node_num, new_node, sb),
-                                 ext2_get_dentry_type(new_node));
-
-        out_len++;
-        out = realloc(out, out_len * sizeof(dentry));
-        out[out_len - 1] = vfs;
-
-        uint16_t total_size = bytes_to_16_bit_int(raw_dentry[4], raw_dentry[5]);
-        /* printf("inode:%d, total size:%d, name:%s\n", node_num, total_size, */
-        /*        new_name); */
-        /* printf("%d\n", i); */
-
-        i += total_size;
-    }
-
-    out_len++;
-    out = realloc(out, out_len * sizeof(dentry));
-    out[out_len - 1] = NULL;
-
-    return out;
-}
-
-/*
- * this returns a heap pointer to heap pointers
- */
-ext2_dentry **ext2_parse_directory(ext2_inode *node, superblock *sb)
-{
-
-    /* MAY BREAK */
-    if ((node->type >> 12) != 4)
-    {
-        printf("not a directory\n");
-        // not a directory
         return NULL;
     }
 
-    uint64_t size = ext2_get_inode_size(node);
+    ext2_inode *node = EXT2_INODE(entry->inode);
 
-    uint8_t *content = malloc(size);
-    /* size may be wrong */
-    ext2_read_inode(node, content, size, 0, sb);
-
-    ext2_dentry **out = malloc(sizeof(ext2_dentry *));
-    size_t out_len = 1;
-
-    int dentry_type_present = EXT2_FEATURE_FLAGS_REQUIRED(sb) & 2;
-
-    uint offset = 0;
-    uint name_len = 0;
-    while (offset < size)
+    size_t size = ext2_get_inode_size(node);
+    u8 *buf = malloc(size);
+    ext2_read_inode(node, buf, size, 0, sb);
+    if (context->fs_offset > EXT2_BLOCK_SIZE(sb))
     {
-        uint8_t *ptr = (uint8_t *)(content + offset);
-        /* MAY BE WRONG */
-        ext2_inode_index inode =
-            bytes_to_32_bit_int(ptr[0], ptr[1], ptr[2], ptr[3]);
-
-        if (dentry_type_present)
-        {
-            name_len = (*(ptr + 6));
-        }
-        else
-        {
-            name_len = (*(ptr + 6)) | ((*(ptr + 7)) << 8);
-        }
-
-        char *name = malloc((name_len + 1) * sizeof(char));
-
-        for (uint i = 0; i < name_len; i++)
-        {
-            name[i] = (*(ptr + 8 + i));
-        }
-        name[name_len] = '\0';
-        printf("%s\n", name);
-        offset += (*(ptr + 4)) | (*(ptr + 5) << 8);
-
-        ext2_dentry *entry = malloc(sizeof(ext2_dentry));
-        entry->inode = inode;
-        entry->name = name;
-
-        out[out_len - 1] = entry;
-
-        out_len++;
-        out = realloc(out, out_len * sizeof(ext2_dentry));
+        return ERR_PTR(-EOVERFLOW);
     }
 
-    out[out_len] = NULL;
+    buf += context->fs_offset;
+
+    size_t node_index = *(u32 *)(buf);
+
+    u16 name_len = buf[6];
+    /* TODO: there may be some fields that could be used to support longer
+     * filenames */
+
+    char *name_ptr = (char *)buf + 8;
+    u16 total_size = *(u16 *)(buf + 4);
+
+    /* TODO: slightly more efficent way of doing this by checking only the first
+     * two characters (dcache does this in dcache_handle_dot) */
+    if (strcmp(name_ptr, "..") == 0 || strcmp(name_ptr, ".") == 0)
+    {
+        context->fs_offset += total_size;
+        goto read_entry;
+    }
+
+    char *new_name = malloc(name_len + 1);
+    memcpy(new_name, name_ptr, name_len);
+    /* printf("printing name\n"); */
+    new_name[name_len] = 0;
+
+    ext2_inode *current_node = ext2_get_inode(node_index, sb);
+    if (IS_ERR(current_node))
+    {
+        return ERR_PTR(current_node);
+    }
+    struct dentry *out = new_dentry(
+        new_name, entry, ext2_get_vfs_node(node_index, current_node, sb),
+        ext2_get_dentry_type(current_node));
+
+    context->fs_offset += total_size;
 
     return out;
 }
@@ -150,7 +76,8 @@ int ext2_remove_dentry(dentry *entry, char *name, superblock *sb)
     /* TODO: this will not work if the size goes beyond one block */
     ext2_inode *ext2_entry = EXT2_INODE(node);
 
-    u8 *buf = malloc(EXT2_BLOCK_SIZE(sb));
+    size_t block_size = EXT2_BLOCK_SIZE(sb);
+    u8 *buf = malloc(block_size);
     ext2_read_inode(ext2_entry, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
     size_t i = 0;
     size_t prev = 0;
@@ -207,7 +134,7 @@ int ext2_remove_dentry(dentry *entry, char *name, superblock *sb)
         u8 *raw_entry = buf + i;
         u16 len = *(u16 *)(raw_entry + 4);
 
-        if (i + len == EXT2_BLOCK_SIZE(sb))
+        if (i + len + old_len == EXT2_BLOCK_SIZE(sb))
         {
 
             *(u16 *)(raw_entry + 4) = EXT2_BLOCK_SIZE(sb) - i;

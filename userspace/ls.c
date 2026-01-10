@@ -14,11 +14,10 @@ int main(int argc, char **argv)
 
     /* exit(0); */
 
-    DIR *d = opendir(".");
+    DIR *d = opendir("/");
 
     struct dirent *e = readdir(d);
     while (e != NULL)
-
     {
 
         printf("%s\n", e->d_name);

@@ -22,7 +22,7 @@ struct bdev
     struct bdev_functions functions;
     void *bdev_private;
     size_t block_size;
-    refcount *rc;
+    struct refcount rc;
 };
 
 /*

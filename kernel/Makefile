@@ -15,8 +15,9 @@ EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas -fstack-protector-all -D__is_libk \
-		-Iacpi/acpica/ # TODO: this is bad
+CFLAGS:=-ffreestanding -Wall -Wextra  -Wno-unknown-pragmas -fstack-protector-all -D__is_libk \
+		$(CFLAGS) \
+		# -Iacpi/acpica/ # TODO: this is bad 
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
@@ -50,17 +51,23 @@ $(KERNEL_ARCH_TEST_OBJS) \
 kernel/kernel.o \
 kernel/utils.o \
 kernel/panic.o \
+kernel/syscall.o \
 kernel/elf/elf.o \
 kernel/elf/elf32.o \
 kernel/elf/elf64.o \
 kernel/scheduler/scheduler.o \
+kernel/scheduler/task_queue.o \
+kernel/scheduler/wait_queue.o \
 kernel/scheduler/sleep.o \
 kernel/scheduler/semaphore.o \
+kernel/scheduler/mutex.o \
 kernel/scheduler/spinlock.o \
 kernel/memory/get_free_pages.o \
 kernel/graphics/graphics.o \
 kernel/multiboot.o \
+kernel/socket/socket.o \
 lib/list.o \
+lib/array.o \
 lib/binary_tree.o \
 lib/lru.o \
 lib/rc.o \
@@ -74,6 +81,7 @@ fs/vfs/device.o \
 fs/vfs/pathname.o \
 fs/vfs/vfs.o \
 fs/vfs/dcache.o \
+fs/tmpfs/init.o \
 \
 drivers/block/ata/pio.o \
 drivers/block/ata/dma.o \
@@ -87,7 +95,7 @@ drivers/character/terminal/device.o \
 drivers/character/keyboard/device.o \
 drivers/device.o \
 \
-acpi/os_layer/os_layer.o \
+# acpi/os_layer/os_layer.o \
 
 
 
@@ -122,7 +130,7 @@ all: $(BIN)/os.kernel
 
 # ../libc/libk.a is bad
 $(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk.a
-	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -lk -lgcc
+	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -Wl,--whole-archive -lk -Wl,--no-whole-archive -lgcc
 	grub-file --is-x86-multiboot $(BIN)/os.kernel
 
 

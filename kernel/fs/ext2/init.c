@@ -38,23 +38,24 @@ inode *ext2_iget(ino_t number, superblock *sb)
     return out;
 }
 
-inode *ext2_ialloc(superblock *sb)
-{
-    return ext2_inode_alloc(sb);
-}
-
 struct ext2_superblock *ext2_parse_superblock(struct bdev *dev);
 superblock *ext2_parse_superblock_vfs(struct bdev *dev);
 dentry *ext2_mount(struct bdev *dev);
+
+void ext2_inode_free(struct inode *node)
+{
+    ext2_inode *ext2 = EXT2_INODE(node);
+    free(ext2);
+}
 
 const struct fs_type ext2_fs_type = {
     .name = "ext2",
     .inode_functions = {.get_inode = ext2_iget,
                         .read_inode = ext2_iread,
                         .write_inode = ext2_iwrite,
-                        .alloc_inode = ext2_ialloc},
-    .dentry_functions = {.get_dentries = ext2_get_dentries,
-                         .append_dentry = ext2_append_dentry,
+                        .inode_free = ext2_inode_free},
+    .dentry_functions = {.append_dentry = ext2_append_dentry,
+                         .read_dir = ext2_readdir,
                          .remove_dentry = ext2_remove_dentry},
     .superblock_functions = {.parse_superblock = ext2_parse_superblock_vfs},
 
@@ -127,35 +128,27 @@ struct ext2_superblock *ext2_parse_superblock(struct bdev *dev)
 
     size_t block_group_table_size_bytes =
         ((block_group_table_size * sb->block_size));
-    printf("BLOCKSIZE:%d\n", sb->block_size);
-
-    printf("this is what is in the super block\n");
     for (size_t i = 0; i < 100; i++)
     {
         /* printf("%p ", superblock_buffer[i]); */
     }
-    printf("\n");
 
     uint8_t *buf = malloc(block_group_table_size_bytes);
     /* printf("block group:%p\n", block_group_table_size_bytes); */
 
-    printf("second block\n");
     bdev_read(dev, buf, block_group_table_size_bytes, 1024 * 2);
 
-    printf("this is what is in the %d block\n", 2);
     for (size_t i = 0; i < 100; i++)
     {
         /* printf("%p ", buf[i]); */
     }
-    printf("\n");
 
     sb->group_descriptor_table = (ext2_group_descriptor *)buf;
 
-    printf("ext2_mount done\n");
     return sb;
 }
 
-dentry *ext2_mount(struct bdev *dev)
+struct dentry *ext2_mount(struct bdev *dev)
 {
 
     struct ext2_superblock *ext2_sb = ext2_parse_superblock(dev);
@@ -164,5 +157,7 @@ dentry *ext2_mount(struct bdev *dev)
         new_superblock(ext2_sb->block_size, ext2_sb, dev, &ext2_fs_type);
 
     inode *node = ext2_iget(2, sb);
-    return new_dentry(".", NULL, node, DENTRY_DIR);
+
+    struct dentry *out = dentry_mount_point_alloc(sb, node);
+    return out;
 }

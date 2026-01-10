@@ -301,7 +301,7 @@ entry_64_2:
 	
 	call kernel_init
 	call _init
-	call main
+	call kmain
 
 1:
 	hlt

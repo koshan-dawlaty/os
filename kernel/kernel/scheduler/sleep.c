@@ -24,7 +24,7 @@ void print_sleep_queue()
 
 void add_sleep_queue(struct task *task, size_t time)
 {
-    irq_disable();
+    irq_state_t irq_state = irq_save_disable();
 
     struct sleep_queue_entry *new = malloc(sizeof(struct sleep_queue_entry));
 
@@ -71,7 +71,7 @@ void add_sleep_queue(struct task *task, size_t time)
 
     remove_task(task);
 
-    irq_enable();
+    irq_restore(irq_state);
     schedule();
 }
 

@@ -15,7 +15,7 @@ int main(int argc, char **argv)
         printf("need more arguments\n");
         exit(1);
     }
-    int fd = open(argv[1], 0);
+    int fd = open(argv[1], O_WRONLY);
 
     printf("%d\n", strlen(argv[2]));
     write(fd, argv[2], strlen(argv[2]));

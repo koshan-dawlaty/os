@@ -73,6 +73,14 @@ ISR(tss_fault_handler, {
 });
 ISR(invalid_opcode, {
     printf("invalid opcode\n");
+    const int num_bytes = 10;
+    printf("%d bytes from %p (ip)\n", num_bytes, frame->ip);
+    for (int i = 0; i < num_bytes; i++)
+    {
+        printf("%p ", *(u8 *)(frame->ip - 1 + i));
+    }
+    printf("\n");
+
     fault_handler_wait();
 });
 

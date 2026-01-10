@@ -1,5 +1,6 @@
 #ifndef EXT2_H
 #define EXT2_H
+#include "compiler.h"
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -52,7 +53,7 @@ static inline struct ext2_superblock *EXT2_SB(superblock *sb)
 
 #define EXT2_GROUP_DESCRIPTOR_TABLE(sb) EXT2_SB(sb)->group_descriptor_table
 
-typedef struct __attribute__((packed))
+typedef struct __packed
 {
     uint16_t type;
     uint16_t user_id;
@@ -76,6 +77,9 @@ typedef struct __attribute__((packed))
     uint32_t block_addr;
     uint8_t os_specific2[12];
 } ext2_inode;
+
+#define EXT2_INODE_FILE 0x8000
+#define EXT2_INODE_DIR 0x4000
 
 static inline ext2_inode *EXT2_INODE(inode *i)
 {
@@ -114,7 +118,7 @@ void ext2_write_block(uint8_t *buffer, size_t block_number, superblock *sb);
 // name is taken from the linux kernel, it could be better
 inode *ext2_iget(ino_t inode_number, superblock *sb);
 
-inode *ext2_inode_alloc(superblock *sb);
+struct inode *ext2_inode_alloc(struct superblock *sb, u16 type);
 uint32_t ext2_block_alloc(superblock *sb);
 
 void ext2_write_inode(inode *node, const uint8_t *buf, size_t buf_len,
@@ -122,17 +126,21 @@ void ext2_write_inode(inode *node, const uint8_t *buf, size_t buf_len,
 
 inode *ext2_get_vfs_node(ext2_inode_addr num, ext2_inode *node, superblock *sb);
 
-dentry **ext2_get_dentries(dentry *dir, superblock *sb);
+struct dentry *ext2_readdir(struct dentry *entry, struct dir_context *context,
+                            superblock *sb);
 
 /*
  * returns the type that should be used for the dentry that points to the inode
  */
 dentry_type ext2_get_dentry_type(ext2_inode *node);
+u16 ext2_get_inode_type(dentry_type type);
 
-dentry *ext2_append_dentry(dentry *entry, char *name, superblock *sb);
+struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
+                                  enum dentry_type type, struct superblock *sb);
 
 /* removes a dentry matching name from entry */
 int ext2_remove_dentry(dentry *entry, char *name, superblock *sb);
 
 void ext2_update_inode(inode *node, superblock *sb);
+
 #endif

@@ -192,6 +192,11 @@ that they will not work because the bootstrap has not initialized them
 
                 char *str = va_arg(list, char *);
 
+                if (str == NULL)
+                {
+                    str = "null";
+                }
+
                 increment_buf(&out, &out_len, &capacity, strlen(str));
 
                 out_len += strlen(str);
@@ -233,6 +238,11 @@ that they will not work because the bootstrap has not initialized them
                         unsigned long long i = va_arg(list, unsigned long);
                         str = int_to_string_unsigned(i, 10);
                     }
+                    else
+                    {
+                        /* TODO: error */
+                        str = "";
+                    }
                     is_unsigned = false;
                 }
                 else
@@ -256,6 +266,11 @@ that they will not work because the bootstrap has not initialized them
                     {
                         void *x = va_arg(list, void *);
                         str = int_to_string_unsigned((uintptr_t)x, 16);
+                    }
+                    else
+                    {
+                        /* TODO: error */
+                        str = "";
                     }
                 }
 

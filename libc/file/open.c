@@ -1,7 +1,7 @@
-#include "utils.h"
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/syscall.h>
 #include <utils.h>
 
 #ifdef __is_libk
@@ -9,10 +9,12 @@
 #include <vfs.h>
 #endif
 
+#include <kernel_syscall.h>
+
 int open(const char *path, int flags)
 {
 #ifdef __is_libk
-    file *f = open_file(path);
+    file *f = open_file(path, flags);
     if (IS_ERR(f))
     {
         /* TODO: we might want to set errno here */
@@ -30,3 +32,5 @@ int open(const char *path, int flags)
     return fd;
 #endif
 }
+
+SYSCALL_DEFINE2(open, SYS_open)

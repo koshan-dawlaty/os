@@ -1,9 +1,12 @@
-#include "tests/tests.h"
-#include "unistd.h"
+#include "panic.h"
+#include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <tests/tests.h>
+#include <unistd.h>
 #include <vfs.h>
 
 TEST(vfs_basic, {
@@ -14,14 +17,16 @@ TEST(vfs_basic, {
         buf[i] = (i + 0x30) % 10;
     }
 
-    int fd = open("/testdir/testfile", 0);
+    int fd = open("/testdir/testfile", O_RDWR);
 
     ASSERT_GE(fd, 0, "fd for existing file should be valid");
 
     pwrite(fd, buf, size, 0);
 
     char *read_buf = malloc(size);
-    pread(fd, read_buf, size, 0);
+    int read_result = pread(fd, read_buf, size, 0);
+    ASSERT_EQ(read_result, (int)size, "read %d bytes when %d were expected",
+              read_result, size);
 
     for (size_t i = 0; i < size; i++)
     {
@@ -127,7 +132,7 @@ TEST(stdlib_FILE, {
 
     size_t len = 100;
 
-    FILE *f = fopen(testfile, "");
+    FILE *f = fopen(testfile, "r+");
 
     char *write_buf = malloc(len);
     for (size_t i = 0; i < len; i++)
@@ -150,4 +155,65 @@ TEST(stdlib_FILE, {
                       write_buf[i]);
         }
     }
+})
+
+TEST(vfs_read_dir, {
+    /* this should use O_SEARCH */
+    /* struct file *f = open_file("/", O_SEARCH); */
+    struct file *f = open_file("/", O_RDWR);
+
+    size_t num = 2;
+    /* we want this to be zeroed because we check if the name is null later */
+    struct dirent *buf = calloc(num, sizeof(struct dirent));
+    read_dir(f, buf, num);
+
+    for (size_t i = 0; i < num; i++)
+    {
+        ASSERT_NONULL(buf[i].d_name,
+                      "element name in buffer should not be null");
+    }
+})
+
+TEST(vfs_dir_dot_dot_on_root_is_root, {
+    int fd = open("/../../../../../one", O_RDONLY);
+    ASSERT_GE(fd, 0, "file descriptor should be valid");
+
+    char *buf = malloc(100);
+    read(fd, buf, 100);
+
+    const char *expected = "file one\n";
+    ASSERT_EQ_STR(buf, expected, "%s != %s", buf, expected);
+
+    close(fd);
+})
+
+TEST(vfs_dir_dot_dot_on_dir, {
+    int fd = open("/dir/../dir/../dir/../dir/../one", O_RDONLY);
+    ASSERT_GE(fd, 0, "file descriptor should be valid");
+    char *buf = malloc(100);
+    read(fd, buf, 100);
+
+    const char *expected = "file one\n";
+    ASSERT_EQ_STR(buf, expected, "%s != %s", buf, expected);
+
+    close(fd);
+})
+
+TEST(vfs_mkdir, {
+    mkdir("test1234567", 0);
+    creat("test1234567/file", 0);
+    int fd = open("/test1234567/file", 0);
+    ASSERT_GE(fd, 0);
+    close(fd);
+})
+
+TEST(vfs_file_permissions, {
+    int write_only = open("/one", O_WRONLY);
+    char *buf = malloc(100);
+    int err = read(write_only, buf, 100);
+    ASSERT_EQ(-err, EACCES, "reading from a WRONLY file should not work")
+    close(write_only);
+    int read_only = open("/one", O_RDONLY);
+    err = write(read_only, buf, 100);
+    ASSERT_EQ(-err, EACCES, "writing to a RDONLY file should not work")
 })

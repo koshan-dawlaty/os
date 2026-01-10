@@ -1,4 +1,5 @@
 #include "err.h"
+#include "fcntl.h"
 #include <stdlib.h>
 #include <vfs.h>
 
@@ -30,5 +31,5 @@ file *create_device(char *name, struct device *dev)
     entry->type = DENTRY_DEVICE;
     entry->dev = dev;
 
-    return new_file(entry);
+    return new_file(entry, O_RDWR);
 }

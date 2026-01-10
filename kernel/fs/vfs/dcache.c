@@ -1,20 +1,21 @@
-#include "container_of.h"
-#include "err.h"
-#include "kernel/utils.h"
-#include "lib/list.h"
-#include "lib/lru.h"
-#include "lib/refcount.h"
+#include <container_of.h>
+#include <err.h>
+#include <errno.h>
+#include <kernel/utils.h>
+#include <lib/list.h>
+#include <lib/lru.h>
+#include <lib/refcount.h>
 #include <panic.h>
 #include <stdlib.h>
 #include <string.h>
 #include <vfs.h>
 
-#define DCACHE_LRU_MAX 10
+#define DCACHE_LRU_MAX 2
 
 struct dcache_dir
 {
     /* parent directory, NULL is root */
-    dentry *dir;
+    struct dentry *dir;
     struct lru_head *values_head;
     struct list *permanent_values;
     list l;
@@ -22,14 +23,14 @@ struct dcache_dir
 
 struct dcache_value
 {
-    dentry *entry;
+    struct dentry *entry;
     union
     {
         struct lru_entry lru;
         struct list list;
     };
 
-    refcount *rc;
+    struct refcount rc;
 };
 
 void dcache_free_value(struct dcache_value *value)
@@ -37,10 +38,10 @@ void dcache_free_value(struct dcache_value *value)
     free_dentry(value->entry);
 }
 
-void dcache_rc_value_release(refcount *rc)
+void dcache_rc_value_release(struct refcount *rc)
 {
     struct dcache_value *value = containerof(rc, struct dcache_value, rc);
-    free(value->entry);
+    dcache_free_value(value);
 }
 
 struct dcache_value *new_dcache_value(dentry *entry)
@@ -49,7 +50,7 @@ struct dcache_value *new_dcache_value(dentry *entry)
 
     out->entry = entry;
     out->lru = LRU_ENTRY_INIT();
-    out->rc = new_refcount();
+    out->rc = REFCOUNT_INIT();
 
     return out;
 }
@@ -124,11 +125,54 @@ struct dcache_value *get_dcache_value(char *component, struct dcache_dir *dir)
     return NULL;
 }
 
-dentry *get_dcache(char *component, dentry *parent)
+enum dcache_dot_type
+{
+    DCACHE_DOT_INVALID, /* the component is invalid, probably ".something" */
+    DCACHE_DOT_NONE,    /* not "." or "..", but still a valid component */
+    DCACHE_DOT,         /* equal to "." */
+    DCACHE_DOTDOT,      /* equal to ".." */
+};
+
+static inline enum dcache_dot_type dcache_handle_dot(const char *component)
+{
+    if (component[0] != '.')
+    {
+        return DCACHE_DOT_NONE;
+    }
+
+    /* this won't go past the end of the string (as long as it is null
+     * terminated), because the first check ensures that it is at least one byte
+     */
+    if (component[1] == 0)
+    {
+        /* component is "." */
+        return DCACHE_DOT;
+    }
+    else if (component[1] != '.' || component[2] != 0)
+    {
+        return DCACHE_DOT_INVALID;
+    }
+    /* component is ".." */
+    return DCACHE_DOTDOT;
+}
+
+struct dentry *get_dcache(char *component, struct dentry *parent)
 {
 
-    struct dcache_dir *dir = get_dcache_dir(parent);
+    enum dcache_dot_type type = dcache_handle_dot(component);
+    switch (type)
+    {
+    case DCACHE_DOT:
+        return parent;
+    case DCACHE_DOTDOT:
+        return parent->parent;
+    case DCACHE_DOT_INVALID:
+        return NULL; /* TODO: this is an error, return an error value */
+    case DCACHE_DOT_NONE:
+        break;
+    }
 
+    struct dcache_dir *dir = get_dcache_dir(parent);
     if (dir == NULL)
     {
         return NULL;
@@ -146,7 +190,6 @@ dentry *get_dcache(char *component, dentry *parent)
 
 struct dcache_dir *add_dcache_dir(dentry *dir)
 {
-
     struct dcache_dir *new_dir = new_dcache_dir(dir);
     list_add(&new_dir->l, &dcache_list);
 
@@ -155,7 +198,6 @@ struct dcache_dir *add_dcache_dir(dentry *dir)
 
 void add_dcache_permanent(dentry *parent, dentry *new_entry)
 {
-    printf("test\n");
     struct dcache_dir *dir = get_dcache_dir(parent);
 
     if (dir == NULL)
@@ -178,7 +220,8 @@ void add_dcache_permanent(dentry *parent, dentry *new_entry)
 void add_dcache(dentry *parent, dentry *new_entry)
 {
 
-    if (new_entry->type == DENTRY_DEVICE)
+    if (new_entry->type == DENTRY_DEVICE ||
+        new_entry->type == DENTRY_MOUNT_POINT)
     {
         add_dcache_permanent(parent, new_entry);
         return;
@@ -187,6 +230,12 @@ void add_dcache(dentry *parent, dentry *new_entry)
     /* printf("adding %p to cache\n", parent); */
 
     struct dcache_dir *dir = get_dcache_dir(parent);
+
+    if (new_entry->type == DENTRY_DIR)
+    {
+        add_dcache_dir(new_entry);
+        return;
+    }
 
     if (dir == NULL)
     {
@@ -207,7 +256,9 @@ void add_dcache(dentry *parent, dentry *new_entry)
         struct dcache_value *value =
             containerof(removed, struct dcache_value, lru);
 
-        refcount_drop(value->rc, dcache_rc_value_release);
+        /* printf("removing %s from dcache\n", value->entry->name); */
+
+        refcount_drop(&value->rc, dcache_rc_value_release);
     }
 
     struct list2 *pos;
@@ -215,6 +266,81 @@ void add_dcache(dentry *parent, dentry *new_entry)
     {
         struct dcache_value *value =
             LRU_LIST_ENTRY(pos, struct dcache_value, lru);
+    }
+}
+
+/*
+ * TODO: this currently does not take entries from temporary dcache, because
+ * then it would result in entries not in the dcache not being seen by readdir
+ * attempts to read from the directory if it is in the cache
+ * if it is not in the cache, returns NULL
+ */
+struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
+{
+
+    /* TODO: this is very stupid, but nothing else should access the dcache
+     * offset */
+
+    if (context->dcache_offset ==
+        0) /* equivalent to the path being ".", so return the directory that is
+              being read from  */
+    {
+        context->dcache_offset++;
+        return entry;
+    }
+    else if (context->dcache_offset == 1) /* equivalent to the path being "..",
+              so return the directory that is being read from's parent  */
+    {
+        context->dcache_offset++;
+        return entry->parent;
+    }
+
+    struct dcache_dir *dir = get_dcache_dir(entry);
+
+    if (dir == NULL)
+    {
+        return NULL;
+    }
+
+    /* because of the trick used to get "." and ".." 2 entries have already been
+     * read */
+    size_t i = 2;
+    list *pos;
+    list_for_each(pos, dir->permanent_values)
+    {
+        struct dcache_value *value = LIST_ENTRY(pos, struct dcache_value, list);
+
+        if (i == context->dcache_offset)
+        {
+            context->dcache_offset++;
+            return value->entry;
+        }
+
+        i++;
+    }
+
+    /* size_t i = 0; */
+    /* list2 *pos2; */
+    /* list2_for_each(pos2, &dir->values_head->head->list) */
+    /* { */
+    /*     struct dcache_value *value = */
+    /*         LRU_LIST_ENTRY(pos2, struct dcache_value, lru); */
+
+    /*     if (i == context->dcache_offset) */
+    /*     { */
+    /*         context->dcache_offset++; */
+    /*         return value->entry; */
+    /*     } */
+    /* } */
+
+    if (i == context->dcache_offset + 1)
+    {
+        /* done reading the directory */
+        return NULL;
+    }
+    else
+    {
+        return ERR_PTR(-ENOENT);
     }
 }
 

@@ -20,6 +20,8 @@ const char *strerror(int errnum)
         return "already exists";
     case ENOEXEC:
         return "not executable";
+    case EACCES:
+        return "permission denied";
     default:
         return "no error message for this";
     }
