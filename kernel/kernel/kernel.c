@@ -123,7 +123,6 @@ void kernel_init()
         graphics_init(f);
         draw_background(f);
     }
-    return;
 
     malloc(10);
 
@@ -184,9 +183,9 @@ void kmain()
     char *buf = malloc(10);
     *buf = 'a';
     printf("test\n");
-    open("/one", O_RDONLY);
+    printf("%p\n", buf);
 
-    return;
+    /* open("/one", O_RDONLY); */
 
     struct task *kernel_task = create_kernel_task();
     add_task(kernel_task);

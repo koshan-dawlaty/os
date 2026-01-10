@@ -40,6 +40,8 @@ void multiboot_parse_memory_map(struct multiboot_info *info)
 
 struct framebuffer *multiboot_init()
 {
+
+    return NULL;
     void *virtual = get_free_pages_unmmaped(1, &gfp_kernel_zone);
     map_page(&multiboot_struct_physical, virtual,
              PAGING_PRESENT | PAGING_WRITEABLE);
