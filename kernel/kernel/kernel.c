@@ -251,9 +251,6 @@ void socket_task2(void *a)
 void kmain()
 {
 
-    printf("unlink:%d\n", unlink("/one"));
-    printf("open:%d\n", open("/one", O_RDONLY));
-
     struct unix_socket *s = unix_socket_alloc();
 
     struct task *kernel_task = create_kernel_task();
