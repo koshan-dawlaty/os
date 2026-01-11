@@ -17,6 +17,10 @@
 .long FLAGS
 .long CHECKSUM
 
+.align 16
+init_stack_bottom:
+.skip 16384 # 16 KiB
+init_stack_top:
 # Allocate the initial stack.
 .global stack_top
 .section .bootstrap_stack, "aw", @nobits
@@ -103,6 +107,10 @@ _start:
 	
 3:
 
+	mov $init_stack_top, %esp
+	push %eax
+	push %ebx
+	call multiboot_test 
 	// map multiboot info struct
 
 
@@ -132,10 +140,13 @@ _start:
 	movl $(boot_page_directory - 0xC0000000), %ecx
 	movl %ecx, %cr3
 
+	# Set up the stack.
+
 	# Enable paging and the write-protect bit.
 	movl %cr0, %ecx
 	orl $0x80010000, %ecx
 	movl %ecx, %cr0
+
 	
 
 	# Jump to higher half with an absolute jump. 
@@ -144,14 +155,17 @@ _start:
 
 
 
+
+
 .section .text
 
 
 
 4:
+
 	
-	# push $multiboot_magic_physical
-	# push $multiboot_struct_physical
+	# push %eax
+	# push %ebx
 	# call multiboot_test
 	# At this point, paging is fully set up and enabled.
 
@@ -163,9 +177,8 @@ _start:
 	movl %ecx, %cr3
 
 
-	# Set up the stack.
-	mov $stack_top, %esp
 	
+	mov $stack_top, %esp
 	call kernel_init
 	call _init
 	call kmain

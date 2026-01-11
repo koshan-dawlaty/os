@@ -14,7 +14,12 @@
 struct memory_region memory_regions[DEFAULT_MEMORY_REGIONS_MAX] = {0};
 volatile size_t default_memory_regions_len = 0;
 /* #define KERNEL_VIRTUAL_OFFSET 0xffffffff80100000 */
+
+#ifdef CONFIG_x86_64
 #define KERNEL_VIRTUAL_OFFSET 0xffffffff80000000
+#elif defined(CONFIG_x86_32)
+#define KERNEL_VIRTUAL_OFFSET 0xC0000000
+#endif
 
 #define CONVERT_PHYSADDR(addr)                                                 \
     (void *)(((void *)addr) - ((void *)KERNEL_VIRTUAL_OFFSET))
