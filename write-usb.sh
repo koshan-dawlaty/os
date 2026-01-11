@@ -1,8 +1,8 @@
 #!/bin/sh
 
 #TODO:(maybe) this does not build the os
-
 DEVICE="/dev/sda"
+echo "starting to write to $DEVICE"
 
 if findmnt -n -o TARGET "$DEVICE" > /dev/null; then
   echo "$DEVICE is mounted!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!!!!!111!!!1!!!!!!!!!!!!!!!!!"
