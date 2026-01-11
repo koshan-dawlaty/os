@@ -51,7 +51,7 @@ void __section(".multiboot.text") __no_ssp
             (*length_ptr)++;
 
             memory_regions_ptr[(*length_ptr) - 1] = (struct memory_region){
-                .start = (void *)mmmt->addr, .len = mmmt->len};
+                .start = (void *)((ptr)mmmt->addr), .len = mmmt->len};
         }
     }
 }

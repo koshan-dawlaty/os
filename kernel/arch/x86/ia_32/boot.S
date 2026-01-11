@@ -68,6 +68,7 @@ _start:
 	movl %ebx, multiboot_struct_physical	
 	movl %eax, multiboot_magic_physical	
 
+
 	// physical addresses of boot_page_table1	
 	movl $(boot_page_table1 - 0xC0000000), %edi
 
@@ -148,6 +149,10 @@ _start:
 
 
 4:
+	
+	# push $multiboot_magic_physical
+	# push $multiboot_struct_physical
+	# call multiboot_test
 	# At this point, paging is fully set up and enabled.
 
 	# Unmap the identity mapping as it is now unnecessary. 

@@ -71,7 +71,7 @@ typedef bool irq_state_t;
 static inline irq_state_t irq_save()
 {
     ptr flags;
-    asm volatile("pushfq\n\t"
+    asm volatile("pushf\n\t"
                  "pop %0"
                  : "=r"(flags)
 

@@ -40,7 +40,7 @@ extern long paging_page_table_addr;
 #define free_page_bitmap_size NUM_PAGES / 8
 uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
-void *phys_page_start = NULL;
+void *phys_page_start = (void *)0x200000;
 
 struct pagedir init_pgdir;
 struct pagedir *current_pagedir = &init_pgdir;
@@ -195,7 +195,7 @@ void init_paging()
             max = r;
         }
     }
-    phys_page_start = max.start;
+    /* phys_page_start = max.start; */
 }
 
 #define USER_STACK_BASE 0xBFFF0000
