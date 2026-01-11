@@ -111,7 +111,6 @@ void kernel_init()
 {
 
     terminal_initialize();
-    /* gfp_zones_early_init(); */
     init_paging();
     init_heap();
     init_gfp_zones();

@@ -1,6 +1,7 @@
 #include "kernel/paging.h"
 #include "gdt.h"
 #include "interrupts/idt.h"
+#include "kernel/multiboot.h"
 #include "kernel/tty.h"
 #include "kernel/utils.h"
 #include "memory/paging_flags.h"
@@ -39,11 +40,7 @@ extern long paging_page_table_addr;
 #define free_page_bitmap_size NUM_PAGES / 8
 uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
-#ifdef CONFIG_x86_64
-#define PHYS_PAGE_START 0x200000
-#elif defined(CONFIG_x86_32)
-#define PHYS_PAGE_START 0x200000
-#endif
+void *phys_page_start = NULL;
 
 struct pagedir init_pgdir;
 struct pagedir *current_pagedir = &init_pgdir;
@@ -63,10 +60,11 @@ void *get_free_phys_page_dir(struct pagedir dir)
 
     phys_free_page_bitmap[i / 8] |= IN_USE << (i % 8);
 
-    dir.physical_pagetables[i] = (PHYS_PAGE_START + (i * PAGE_SIZE)) | 0x03;
+    dir.physical_pagetables[i] =
+        ((ptr)phys_page_start + (i * PAGE_SIZE)) | 0x03;
     /* printf("test\n"); */
 
-    void *addr = (void *)(PHYS_PAGE_START + (i * PAGE_SIZE));
+    void *addr = (void *)(phys_page_start + (i * PAGE_SIZE));
 
 #ifdef CONFIG_x86_64
     /* memset(addr + 0xffffc00000000000, 0, PAGE_SIZE); */
@@ -112,11 +110,11 @@ void *get_free_phys_pages(struct pagedir *dir, size_t amount)
 
         /* printf("virtual:%p\nphysical:%p\n", virtual_addr, physical_addr); */
         dir->physical_pagetables[j] =
-            (PHYS_PAGE_START + (j * PAGE_SIZE)) | 0x03;
+            ((ptr)phys_page_start + (j * PAGE_SIZE)) | 0x03;
         phys_free_page_bitmap[j / 8] |= (1 << (j % 8));
     }
 
-    void *address = (void *)((i * PAGE_SIZE) + PHYS_PAGE_START);
+    void *address = (void *)((i * PAGE_SIZE) + phys_page_start);
 
     /* release_semaphore(get_free_pages_semaphore); */
 
@@ -185,6 +183,19 @@ void init_paging()
 
     /* test(0xD0000000, 0x1000000); */
     /* get_free_pages_test(); */
+
+    /* assume there is at least one */
+    struct memory_region max = memory_regions_get(0);
+    for (size_t i = 0; i < memory_regions_len(); i++)
+    {
+        struct memory_region r = memory_regions_get(i);
+
+        if (r.len > max.len)
+        {
+            max = r;
+        }
+    }
+    phys_page_start = max.start;
 }
 
 #define USER_STACK_BASE 0xBFFF0000

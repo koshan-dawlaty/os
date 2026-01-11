@@ -330,9 +330,3 @@ void init_gfp_zones()
 
     gfp_zones_initialized = true;
 }
-
-void gfp_zones_early_init()
-{
-
-    gfp_bitmap_kernel_zone.virtual = (ptr)memory_regions_get(0).start;
-}
