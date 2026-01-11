@@ -1,13 +1,60 @@
 #include "multiboot.h"
-#include "kernel/graphics.h"
-#include "memory/get_free_pages.h"
-#include "memory/paging_flags.h"
-#include "panic.h"
+#include <kernel/graphics.h>
+#include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <memory/get_free_pages.h>
+#include <memory/paging_flags.h>
+#include <panic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define DEFAULT_MEMORY_REGIONS_MAX 100
+struct memory_region memory_regions[DEFAULT_MEMORY_REGIONS_MAX] = {0};
+volatile size_t default_memory_regions_len = 0;
+/* #define KERNEL_VIRTUAL_OFFSET 0xffffffff80100000 */
+#define KERNEL_VIRTUAL_OFFSET 0xffffffff80000000
+
+#define CONVERT_PHYSADDR(addr)                                                 \
+    (void *)(((void *)addr) - ((void *)KERNEL_VIRTUAL_OFFSET))
+
+void __section(".multiboot.text") __no_ssp
+    multiboot_test(struct multiboot_info *info, ptr magic)
+{
+
+    if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
+    {
+        panic_no_malloc("invalid grub magic number");
+        return;
+    }
+
+    if (!(info->flags >> 6 & 0x1))
+    {
+        panic_no_malloc("invalid memory map given by grub");
+        return;
+    }
+    multiboot_memory_map_t *mmmt;
+    for (size_t i = 0; i < info->mmap_length;
+         i += sizeof(multiboot_memory_map_t))
+    {
+        mmmt = (multiboot_memory_map_t *)(info->mmap_addr + i);
+
+        /* printf("Start Addr: %x | Length: %x | Size: %x | Type: %d\n", */
+        /*        mmmt->addr, mmmt->len, mmmt->size, mmmt->type); */
+
+        if (mmmt->type == MULTIBOOT_MEMORY_AVAILABLE)
+        {
+            struct memory_region *memory_regions_ptr =
+                CONVERT_PHYSADDR(&memory_regions);
+            size_t *length_ptr = CONVERT_PHYSADDR(&default_memory_regions_len);
+            (*length_ptr)++;
+
+            memory_regions_ptr[(*length_ptr) - 1] = (struct memory_region){
+                .start = (void *)mmmt->addr, .len = mmmt->len};
+        }
+    }
+}
 
 /* we can assume these are next to each other, struct then magic */
 extern u32 multiboot_struct_physical;
@@ -41,7 +88,6 @@ void multiboot_parse_memory_map(struct multiboot_info *info)
 struct framebuffer *multiboot_init()
 {
 
-    return NULL;
     void *virtual = get_free_pages_unmmaped(1, &gfp_kernel_zone);
     map_page(&multiboot_struct_physical, virtual,
              PAGING_PRESENT | PAGING_WRITEABLE);

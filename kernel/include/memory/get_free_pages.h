@@ -101,6 +101,8 @@ void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z);
  */
 void init_gfp_zones();
 
+void gfp_zones_early_init();
+
 /*
  * gets free pages from the bitmap in @zone, but does not map them
  */

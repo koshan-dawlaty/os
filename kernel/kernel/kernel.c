@@ -1,27 +1,25 @@
-#include "compiler.h"
-#include "kernel/graphics.h"
-#include "kernel/syscall.h"
-#include "kernel/types.h"
-#include "lib/array.h"
-#include "lib/binary_tree.h"
 #include "multiboot.h"
-#include "socket.h"
 #include <assert.h>
 #include <ata/ata.h>
+#include <compiler.h>
 #include <dirent.h>
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/keyboard.h>
 #include <drivers/character/terminal.h>
+#include <endian.h>
 #include <err.h>
 #include <fcntl.h>
 #include <gdt.h>
 #include <interrupts/idt.h>
 #include <kernel/graphics.h>
 #include <kernel/keyboard.h>
+#include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/semaphore.h>
+#include <kernel/syscall.h>
 #include <kernel/tty.h>
 #include <kernel/types.h>
+#include <lib/array.h>
 #include <lib/binary_tree.h>
 #include <malloc_internal.h>
 #include <memory/get_free_pages.h>
@@ -32,6 +30,7 @@
 #include <pit/pit.h>
 #include <sched.h>
 #include <scheduler.h>
+#include <socket.h>
 #include <spinlock.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -112,6 +111,7 @@ void kernel_init()
 {
 
     terminal_initialize();
+    /* gfp_zones_early_init(); */
     init_paging();
     init_heap();
     init_gfp_zones();
@@ -145,45 +145,14 @@ void kernel_init()
 #endif
 }
 
-void __section(".multiboot.text") __no_ssp
-    multiboot_test(struct multiboot_info *info, ptr magic)
-{
-
-    return;
-    if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
-    {
-        panic_no_malloc("invalid grub magic number");
-        return;
-    }
-
-    if (!(info->flags >> 6 & 0x1))
-    {
-        panic_no_malloc("invalid memory map given by grub");
-        return;
-    }
-
-    for (size_t i = 0; i < info->mmap_length;
-         i += sizeof(multiboot_memory_map_t))
-    {
-        multiboot_memory_map_t *mmmt =
-            (multiboot_memory_map_t *)(info->mmap_addr + i);
-
-        /* printf("Start Addr: %x | Length: %x | Size: %x | Type: %d\n", */
-        /*        mmmt->addr, mmmt->len, mmmt->size, mmmt->type); */
-
-        if (mmmt->type == MULTIBOOT_MEMORY_AVAILABLE)
-        {
-        }
-    }
-}
-
 void kmain()
 {
 
-    char *buf = malloc(10);
-    *buf = 'a';
-    printf("test\n");
-    printf("%p\n", buf);
+    for (size_t i = 0; i < memory_regions_len(); i++)
+    {
+        struct memory_region region = memory_regions_get(i);
+        printf("%p-%p\n", region.start, region.start + region.len);
+    }
 
     /* open("/one", O_RDONLY); */
 

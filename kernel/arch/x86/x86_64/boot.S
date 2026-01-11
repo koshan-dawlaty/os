@@ -203,13 +203,13 @@ multiboot_init_stack_top:
 .type entry_64, @function
 entry_64:
 
-	# mov $(multiboot_init_stack_top), %esp
+	mov $(multiboot_init_stack_top), %esp
 
 	# mov $(1204), %rdi
 	# mov %rsi, %rdi
 	# mov $(1204), %rdi
 	# mov multiboot_magic_physical, %rdi	
-	# call multiboot_test
+	call multiboot_test
 	mov $0, %rdi
 
 	mov $0x10, %ax

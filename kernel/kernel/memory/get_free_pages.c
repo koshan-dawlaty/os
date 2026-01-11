@@ -1,12 +1,14 @@
 #include "memory/paging_flags.h"
 #include "panic.h"
 #include <container_of.h>
+#include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
 #include <kmalloc.h>
 #include <lib/binary_tree.h>
 #include <lib/list.h>
 #include <memory/get_free_pages.h>
+#include <multiboot.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -327,4 +329,10 @@ void init_gfp_zones()
     gfp_kernel_tree_zone.zone_private = tree_zone;
 
     gfp_zones_initialized = true;
+}
+
+void gfp_zones_early_init()
+{
+
+    gfp_bitmap_kernel_zone.virtual = (ptr)memory_regions_get(0).start;
 }
