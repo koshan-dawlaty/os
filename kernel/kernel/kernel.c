@@ -1,23 +1,25 @@
-#include "kernel/syscall.h"
-#include "lib/array.h"
 #include "multiboot.h"
-#include "socket.h"
 #include <assert.h>
 #include <ata/ata.h>
+#include <compiler.h>
 #include <dirent.h>
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/keyboard.h>
 #include <drivers/character/terminal.h>
+#include <endian.h>
 #include <err.h>
 #include <fcntl.h>
 #include <gdt.h>
 #include <interrupts/idt.h>
 #include <kernel/graphics.h>
 #include <kernel/keyboard.h>
+#include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/semaphore.h>
+#include <kernel/syscall.h>
 #include <kernel/tty.h>
 #include <kernel/types.h>
+#include <lib/array.h>
 #include <lib/binary_tree.h>
 #include <malloc_internal.h>
 #include <memory/get_free_pages.h>
@@ -28,6 +30,7 @@
 #include <pit/pit.h>
 #include <sched.h>
 #include <scheduler.h>
+#include <socket.h>
 #include <spinlock.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -141,117 +144,16 @@ void kernel_init()
 #endif
 }
 
-char *shared = NULL;
-struct mutex m = MUTEX_INIT();
-
-void memcpy2(char *one, char *two, size_t n)
-{
-    for (size_t i = 0; i < n; i++)
-    {
-        schedule();
-        one[i] = two[i];
-    }
-}
-
-size_t num = 10;
-
-void kernel_task1(void *a)
-{
-
-    printf("kernel_task1 start\n");
-
-    for (size_t i = 0; i < num; i++)
-    {
-        printf("one start\n");
-        mutex_lock(&m);
-        printf("one lock\n");
-        memcpy2(shared, "one", 4);
-        schedule();
-        printf("one strcmp\n");
-        if (strcmp(shared, "one") != 0)
-        {
-            panic("one:%s\n", shared);
-        }
-        printf("one unlock\n");
-        mutex_unlock(&m);
-    }
-}
-
-void kernel_task2(void *a)
-{
-    printf("kernel_task2 start\n");
-
-    for (size_t i = 0; i < num; i++)
-    {
-        printf("two start\n");
-        mutex_lock(&m);
-        printf("two lock\n");
-        schedule();
-        memcpy2(shared, "two", 4);
-        schedule();
-        printf("two strcmp\n");
-        if (strcmp(shared, "two") != 0)
-        {
-            panic("two:%s\n", shared);
-        }
-        printf("two unlock\n");
-        mutex_unlock(&m);
-    }
-}
-
-void kernel_task3(void *a)
-{
-
-    printf("kernel_task3\n");
-
-    for (size_t i = 0; i < num; i++)
-    {
-        printf("three start\n");
-        mutex_lock(&m);
-        printf("three lock\n");
-        memcpy2(shared, "333", 4);
-        schedule();
-        printf("three strcmp\n");
-        if (strcmp(shared, "333") != 0)
-        {
-            panic("333:%s\n", shared);
-        }
-        printf("three unlock\n");
-        mutex_unlock(&m);
-    }
-}
-
-void socket_task1(void *a)
-{
-
-    while (1)
-    {
-        struct unix_socket *s = a;
-        schedule();
-        unix_socket_send(s, "abc", 4);
-        unix_socket_send(s, "123", 4);
-    }
-}
-
-void socket_task2(void *a)
-{
-
-    while (1)
-    {
-
-        struct unix_socket *s = a;
-
-        char *buf = malloc(4);
-        unix_socket_recv(s, buf, 4);
-
-        printf("%s\n", buf);
-    }
-}
-
 void kmain()
 {
 
-    struct unix_socket *s = unix_socket_alloc();
+    for (size_t i = 0; i < memory_regions_len(); i++)
+    {
+        struct memory_region region = memory_regions_get(i);
+        printf("%p-%p\n", region.start, region.start + region.len);
+    }
+
+    /* open("/one", O_RDONLY); */
 
     struct task *kernel_task = create_kernel_task();
     add_task(kernel_task);
@@ -271,7 +173,4 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
-    /* execv("/elf_test2", (char *[]){"elf_test", NULL}); */
-
-    /* execv("/cat", (char *[]){"cat", "one", NULL}); */
 }

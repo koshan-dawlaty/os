@@ -1,12 +1,14 @@
 #include "memory/paging_flags.h"
 #include "panic.h"
 #include <container_of.h>
+#include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
 #include <kmalloc.h>
 #include <lib/binary_tree.h>
 #include <lib/list.h>
 #include <memory/get_free_pages.h>
+#include <multiboot.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
