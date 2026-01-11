@@ -227,6 +227,8 @@ int read_file(struct file *file, char *buf, size_t n, size_t off)
 
     inode_read(node, (uint8_t *)buf, read_size, off);
 
+    printf("buf is:%s\n", buf);
+
     add_file_offset(file, read_size);
     mutex_unlock(&node->lock);
 

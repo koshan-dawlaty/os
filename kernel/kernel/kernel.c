@@ -147,6 +147,8 @@ void kernel_init()
 void kmain()
 {
 
+    return;
+
     for (size_t i = 0; i < memory_regions_len(); i++)
     {
         struct memory_region region = memory_regions_get(i);

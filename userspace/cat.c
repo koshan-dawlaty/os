@@ -53,6 +53,8 @@ int main(int argc, char **argv)
         buf_offset += read_size;
         buf = realloc(buf, buf_len);
     }
+
+    buf[buf_offset + bytes_read] = 0;
     printf("%s\n", buf);
     close(fd);
     exit(0);
