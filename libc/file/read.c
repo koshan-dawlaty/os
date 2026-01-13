@@ -8,10 +8,12 @@
 
 #ifdef __is_libk
 #include <vfs.h>
+#include <kernel/userspace.h>
 #endif
 
 int read(int fd, void *buf, size_t n)
 {
+
 
     if (fd < 0)
     {
@@ -19,6 +21,11 @@ int read(int fd, void *buf, size_t n)
     }
 
 #ifdef __is_libk
+
+    if (!user_addr_is_valid(buf)) {
+        return -EFAULT;
+    }
+
     file *f = lookup_descriptor(fd);
     return read_file(f, buf, n, f->offset);
 #else
