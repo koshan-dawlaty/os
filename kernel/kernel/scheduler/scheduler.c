@@ -278,6 +278,7 @@ struct task *new_task(ptr ip)
     out->pgdir = NULL;
 
     out->start_addr = (void *)ip;
+    out->list = LIST_INIT();
 
     return out;
 }

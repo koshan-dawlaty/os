@@ -23,7 +23,7 @@ static inline struct memory_region memory_regions_get(size_t index)
     if (memory_regions[index].start == (void *)0x100000)
     {
         struct memory_region out = memory_regions[index];
-        out.start += 0x200000;
+        out.start += 0x300000;
         return out;
     }
     return memory_regions[index];

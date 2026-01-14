@@ -195,7 +195,7 @@ void init_paging()
             max = r;
         }
     }
-    /* phys_page_start = max.start; */
+    phys_page_start = max.start;
 }
 
 #define USER_STACK_BASE 0xBFFF0000
