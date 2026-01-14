@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 
-
 #ifdef CONFIG_x86_64
 #define USERADDR_END 0xffffc00000000000
 #elif defined(CONFIG_x86_32)
@@ -12,8 +11,9 @@
 #error "unknown architecture"
 #endif
 
-static inline bool user_addr_is_valid(void * addr) {
-    return addr < USERADDR_END;
+static inline bool user_addr_is_valid(void *addr)
+{
+    return addr < (void *)USERADDR_END;
 }
 
 #endif

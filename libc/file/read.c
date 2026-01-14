@@ -7,13 +7,12 @@
 #include <unistd.h>
 
 #ifdef __is_libk
-#include <vfs.h>
 #include <kernel/userspace.h>
+#include <vfs.h>
 #endif
 
 int read(int fd, void *buf, size_t n)
 {
-
 
     if (fd < 0)
     {
@@ -22,7 +21,8 @@ int read(int fd, void *buf, size_t n)
 
 #ifdef __is_libk
 
-    if (!user_addr_is_valid(buf)) {
+    if (user_addr_is_valid(buf))
+    {
         return -EFAULT;
     }
 

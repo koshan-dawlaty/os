@@ -19,6 +19,7 @@
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
 #include <kernel/types.h>
+#include <kernel/userspace.h>
 #include <lib/array.h>
 #include <lib/binary_tree.h>
 #include <malloc_internal.h>
@@ -152,6 +153,8 @@ void kmain()
         struct memory_region region = memory_regions_get(i);
         printf("%p-%p\n", region.start, region.start + region.len);
     }
+
+    printf("%d\n", user_addr_is_valid(kmain));
 
     /* open("/one", O_RDONLY); */
 
