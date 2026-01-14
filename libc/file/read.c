@@ -21,10 +21,6 @@ int read(int fd, void *buf, size_t n)
 
 #ifdef __is_libk
 
-    if (user_addr_is_valid(buf))
-    {
-        return -EFAULT;
-    }
 
     file *f = lookup_descriptor(fd);
     return read_file(f, buf, n, f->offset);
@@ -35,4 +31,8 @@ int read(int fd, void *buf, size_t n)
 #endif
 }
 
-SYSCALL_DEFINE3(read, SYS_read);
+SYSCALL_DEFINE3(read, SYS_read, {
+    if (!user_addr_is_valid(buf)) {
+        return -EFAULT;
+    }
+});
