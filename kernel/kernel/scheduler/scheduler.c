@@ -124,8 +124,11 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
      */
     /* *(ptr *)(out->stack + 8) = ip; */
 
+    printf("pagedir alloc\n");
     out->pgdir = new_pagedir();
+    printf("pagedir alloc done\n");
     write_kernel_page_tables(out->pgdir);
+    printf("kernel page tables written\n");
 
     char **args_temp = malloc(argc * sizeof(char *));
     for (int i = 0; i < argc; i++)
@@ -134,15 +137,18 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
         memcpy(args_temp[i], argv[i], strlen(argv[i]) + 1);
         args_temp[i][strlen(argv[i])] = 0;
     }
-
+    printf("args done\n");
     /* TODO: this calls load_pgdir alot */
     struct pagedir *temp = get_current_pagedir();
     load_pgdir(out->pgdir);
+    printf("second pagedir loaded\n");
     char **args = create_user_args(argc, args_temp);
-
+    printf("user args created\n");
     scheduler_set_regs_arguments(argc, args, ip, &out->regs);
+    printf("scheduler_set_regs_arguments()\n");
 
     load_pgdir(temp);
+    printf("final pagedir loaded\n");
 
     const char *term_path = "/terminal";
     const char *keyboard_path = "/keyboard";

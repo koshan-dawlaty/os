@@ -36,11 +36,15 @@ elf *parse_elf(int fd)
 struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
+    printf("load_elf\n");
     struct task *t = new_task_user(elf->entry_point, 0xBFFEF000, argc, argv);
+    printf("new user task\n");
     struct pagedir *pgdir = t->pgdir;
     struct pagedir *temp_pgdir = get_current_pagedir();
+    printf("get_current_pagedir()\n");
 
     load_pgdir(pgdir);
+    printf("load_pgdir()\n");
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
 
@@ -51,9 +55,10 @@ struct task *load_elf(elf *elf, int argc, char **argv)
             for (size_t i = 0; i <= header->size_memory + PAGE_SIZE;
                  i += PAGE_SIZE)
             {
+                void *phys = get_free_phys_page();
+                printf("mapping at:%p:%p\n", phys, header->virtual_addr + i);
 
-                map_page((void *)get_free_phys_page(),
-                         (void *)(header->virtual_addr + i),
+                map_page(phys, (void *)(header->virtual_addr + i),
                          PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
             }
 
@@ -72,15 +77,18 @@ if (header->memory_size > header->file_size)
 }
             */
 
+            printf("elf reading\n");
             pread(elf->fd, buf, header->size_file, header->file_offset);
 
             uint8_t *dest = (uint8_t *)(header->virtual_addr);
 
+            printf("starting memcpy\n");
             for (size_t i = 0; i < header->size_memory; i++)
             {
 
                 dest[i] = buf[i];
             }
+            printf("memcpy end\n");
         }
         else
         {

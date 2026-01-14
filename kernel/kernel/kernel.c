@@ -123,6 +123,8 @@ void kernel_init()
         draw_background(f);
     }
 
+    printf("page start addr:%p\n", get_free_phys_page());
+
     malloc(10);
 
     init_gdt();
@@ -137,7 +139,9 @@ void kernel_init()
 
     init_vfs();
 
+    printf("calling constructors\n");
     call_constructors();
+    printf("end of kernel init\n");
 
 #ifdef TESTS
     run_tests();
@@ -146,6 +150,16 @@ void kernel_init()
 
 void kmain()
 {
+
+    printf("here\n");
+
+    int fd = open("/one", O_RDONLY);
+
+    printf("file descriptor:%d\n", fd);
+    char *buf = malloc(100);
+    read(fd, buf, 100);
+    printf("read:%s\n", buf);
+    close(fd);
 
     for (size_t i = 0; i < memory_regions_len(); i++)
     {

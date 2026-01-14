@@ -1,8 +1,15 @@
 #!/bin/sh
 
 #TODO:(maybe) this does not build the os
-DEVICE="/dev/sda"
+# DEVICE="/dev/sda"
+DEVICE="$1"
+
+if [[  $# -le 0  ]] ; then
+	echo "provide the path to a device to write to"
+	exit 1	
+fi
 echo "starting to write to $DEVICE"
+date
 
 if findmnt -n -o TARGET "$DEVICE" > /dev/null; then
   echo "$DEVICE is mounted!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!!!!!111!!!1!!!!!!!!!!!!!!!!!"
