@@ -6,6 +6,7 @@ SECTIONS
     . = 0x00100000;
 	KERNEL_PHYSADDR = .;
 
+
 	.multiboot.data ALIGN (4K)  : {
 		*(.multiboot.data)
 	}
@@ -17,6 +18,7 @@ SECTIONS
 
 	KERNEL_VMA = 0xffffffff80000000;
     . += KERNEL_VMA;
+	KERNEL_START = .;
 
     .text : AT(ADDR(.text) - KERNEL_VMA)
     {
@@ -71,6 +73,8 @@ SECTIONS
 	/* } */
 
    _end = .;
+
+	KERNEL_END = .;
 
    /DISCARD/ :
    {
