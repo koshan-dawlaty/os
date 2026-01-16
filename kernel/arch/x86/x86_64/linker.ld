@@ -18,7 +18,7 @@ SECTIONS
 
 	KERNEL_VMA = 0xffffffff80000000;
     . += KERNEL_VMA;
-	KERNEL_START = .;
+	LINKER_KERNEL_START = .;
 
     .text : AT(ADDR(.text) - KERNEL_VMA)
     {
@@ -74,10 +74,10 @@ SECTIONS
 
    _end = .;
 
-	KERNEL_END = .;
 
    /DISCARD/ :
    {
         *(.comment)
    }
+	LINKER_KERNEL_END = .;
 }
