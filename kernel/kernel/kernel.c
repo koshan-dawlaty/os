@@ -161,6 +161,9 @@ void kmain()
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     printf("starting shell\n");
+    printf("the kernel is %d bytes\n", KERNEL_SIZE);
+    printf("the kernel starts at %p\n", KERNEL_START);
+    printf("the kernel ends at %p\n", KERNEL_END);
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
     /* int err = execv("/wm", (char *[]){"wm", NULL}); */
     int err = execv("/ksh", (char *[]){"ksh", NULL});
