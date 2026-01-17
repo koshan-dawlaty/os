@@ -1,10 +1,10 @@
 #include "utils.h"
 #include <errno.h>
 #include <fcntl.h>
+#include <kernel_syscall.h>
 #include <stdint.h>
 #include <syscall.h>
 #include <unistd.h>
-#include <kernel_syscall.h>
 
 #ifdef __is_libk
 #include <elf.h>
@@ -57,4 +57,7 @@ int execv(const char *path, char *const argv[])
 #endif
 }
 
-SYSCALL_DEFINE2(execv, SYS_execv);
+SYSCALL_DEFINE2(SYS_execv, int, const char *path, char *const argv[])
+{
+    return execv(path, argv);
+}

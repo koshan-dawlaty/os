@@ -41,5 +41,12 @@ int pwrite(int fd, const void *buf, size_t n, off_t off)
     return syscall_wrapper_asm(SYS_pwrite, fd, (uintptr_t)buf, n, off, 0);
 }
 
-SYSCALL_DEFINE3(write, SYS_write);
-SYSCALL_DEFINE4(pwrite, SYS_pwrite);
+SYSCALL_DEFINE3(SYS_write, int, int fd, const void *buf, size_t n)
+{
+    return write(fd, buf, n);
+}
+
+SYSCALL_DEFINE4(SYS_pwrite, int, int fd, const void *buf, size_t n, off_t off)
+{
+    return pwrite(fd, buf, n, off);
+}

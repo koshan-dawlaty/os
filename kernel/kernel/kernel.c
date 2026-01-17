@@ -8,6 +8,7 @@
 #include <drivers/character/terminal.h>
 #include <endian.h>
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <gdt.h>
 #include <interrupts/idt.h>
@@ -143,6 +144,10 @@ void kernel_init()
 #ifdef TESTS
     run_tests();
 #endif
+}
+
+SYSCALL_DEFINE1(SYS_exit, void, int status)
+{
 }
 
 void kmain()

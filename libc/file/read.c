@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #ifdef __is_libk
+#include <kernel/syscall.h>
 #include <kernel/userspace.h>
 #include <vfs.h>
 #endif
@@ -21,7 +22,6 @@ int read(int fd, void *buf, size_t n)
 
 #ifdef __is_libk
 
-
     file *f = lookup_descriptor(fd);
     return read_file(f, buf, n, f->offset);
 #else
@@ -31,8 +31,7 @@ int read(int fd, void *buf, size_t n)
 #endif
 }
 
-SYSCALL_DEFINE3(read, SYS_read, {
-    if (!user_addr_is_valid(buf)) {
-        return -EFAULT;
-    }
-});
+SYSCALL_DEFINE3(SYS_read, int, int fd, void *buf, size_t n)
+{
+    return read(fd, buf, n);
+}

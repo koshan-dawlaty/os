@@ -18,4 +18,7 @@ int pread(int fd, void *buf, size_t n, size_t offset)
 #endif
 }
 
-SYSCALL_DEFINE4(pread, SYS_pread)
+SYSCALL_DEFINE4(SYS_pread, int, int fd, void *buf, size_t n, size_t offset)
+{
+    return pread(fd, buf, n, offset);
+}

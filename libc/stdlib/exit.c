@@ -1,9 +1,10 @@
+#include "sys/syscall.h"
+#include <kernel_syscall.h>
 #include <sched.h>
 #include <stdlib.h>
 #include <sys/syscall.h>
 #include <utils.h>
 #include <vfs.h>
-#include <kernel_syscall.h>
 
 #ifdef __is_libk
 #include <scheduler.h>
@@ -27,4 +28,7 @@ void exit(int status)
 #endif
 }
 
-SYSCALL_DEFINE1(exit, SYS_exit);
+SYSCALL_DEFINE1(SYS_exit, void, int status)
+{
+    exit(status);
+}

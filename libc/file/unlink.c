@@ -1,9 +1,9 @@
 #include "errno.h"
 #include <fcntl.h>
+#include <kernel_syscall.h>
 #include <stdbool.h>
 #include <sys/syscall.h>
 #include <utils.h>
-#include <kernel_syscall.h>
 
 #ifdef __is_libk
 #include <vfs.h>
@@ -18,4 +18,7 @@ int unlink(const char *path)
     return syscall_wrapper_asm(SYS_unlink, (uintptr_t)path, 0, 0, 0, 0);
 #endif
 }
-SYSCALL_DEFINE1(unlink, SYS_unlink);
+SYSCALL_DEFINE1(SYS_unlink, int, const char *path)
+{
+    return unlink(path);
+}
