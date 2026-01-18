@@ -25,7 +25,7 @@ extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
 struct framebuffer *framebuffer_alloc()
 {
     struct framebuffer *out = NULL;
-    syscall_wrapper_asm(18, (ptr)&out, 0, 0, 0, 0);
+    syscall_wrapper_asm(SYS_get_framebuffer, (ptr)&out, 0, 0, 0, 0);
 
     return out;
 }
@@ -119,10 +119,22 @@ void thread1()
     exit(0);
 }
 
+struct window_info
+{
+    size_t height;
+    size_t width;
+} __attribute__((packed));
+
 int main()
 {
     init_libc();
     printf("window manager\n");
+
+    struct framebuffer *buffer = framebuffer_alloc();
+    printf("test\n");
+    printf("buf:%p\n", buffer);
+
+    printf("%p\n", buffer->buffer);
 
     int socket = socket_create();
     printf("%d\n", socket);
@@ -130,21 +142,14 @@ int main()
     int client_sock = socket_create();
     send(socket, &client_sock, sizeof(int));
 
-    char *buf = malloc(10);
-    recv(client_sock, buf, 4);
-    printf("%s\n", buf);
+    struct window_info win_info;
+    recv(client_sock, &win_info, sizeof(struct window_info));
+    printf("height:%d\n", win_info.height);
 
-    exit(0);
-
-    struct framebuffer *buffer = framebuffer_alloc();
-    printf("test\n");
-    printf("%p\n", buffer);
-
-    printf("%p\n", buffer->buffer);
     /* printf("%p\n", buffer->pitch); */
     /* framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000); */
 
-    struct window *w = new_window(400, 600, 100, 100);
+    struct window *w = new_window(400, 600, win_info.width, win_info.height);
 
     memset(w->buffer, 0, w->h * w->w * 3);
 

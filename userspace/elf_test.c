@@ -35,6 +35,12 @@ int recv(int socket, void *buf, size_t len)
     return syscall_wrapper_asm(SYS_recv, socket, (ptr)buf, len, 0, 0);
 }
 
+struct window_info
+{
+    size_t height;
+    size_t width;
+} __attribute__((packed));
+
 int main(int argc, char **argv)
 {
     init_libc();
@@ -43,7 +49,9 @@ int main(int argc, char **argv)
     recv(0, &server_sock, sizeof(int));
     printf("%d\n", server_sock);
 
-    send(server_sock, "abc", 4);
+    printf("test\n");
+    struct window_info win = {.height = 100, .width = 100};
+    send(server_sock, &win, sizeof(struct window_info));
 
     exit(0);
 }

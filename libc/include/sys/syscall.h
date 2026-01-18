@@ -20,5 +20,6 @@
 #define SYS_send 21
 #define SYS_recv 22
 #define SYS_clone 23
+#define SYS_get_framebuffer 18
 
 #endif
