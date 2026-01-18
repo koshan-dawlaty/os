@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <init.h>
 #include <sched.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -36,7 +37,13 @@ int recv(int socket, void *buf, size_t len)
 
 int main(int argc, char **argv)
 {
-    send(0, "abc", 4);
+    init_libc();
+    char *buf = malloc(10);
+    int server_sock;
+    recv(0, &server_sock, sizeof(int));
+    printf("%d\n", server_sock);
+
+    send(server_sock, "abc", 4);
 
     exit(0);
 }

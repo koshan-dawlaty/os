@@ -122,8 +122,17 @@ void thread1()
 int main()
 {
     init_libc();
+    printf("window manager\n");
 
-    socket_create();
+    int socket = socket_create();
+    printf("%d\n", socket);
+
+    int client_sock = socket_create();
+    send(socket, &client_sock, sizeof(int));
+
+    char *buf = malloc(10);
+    recv(client_sock, buf, 4);
+    printf("%s\n", buf);
 
     exit(0);
 
