@@ -123,10 +123,7 @@ int main()
 {
     init_libc();
 
-    open("/one", 0);
-    while (1)
-    {
-    }
+    socket_create();
 
     exit(0);
 
