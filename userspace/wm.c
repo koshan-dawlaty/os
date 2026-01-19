@@ -168,7 +168,6 @@ int main()
     printf("code:%d\n", code);
 
     printf("%p\n", memory_len);
-    /* memcpy(buffer->buffer, client_buf, memory_len); */
 
     /* printf("%p\n", buffer->pitch); */
     /* framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000); */
@@ -176,6 +175,7 @@ int main()
     struct window *w = new_window(400, 600, win_info.width, win_info.height);
 
     memset(w->buffer, 0, w->h * w->w * 3);
+    memcpy(w->buffer, client_buf, w->h * w->w * 3);
 
     draw_window(buffer, w);
 

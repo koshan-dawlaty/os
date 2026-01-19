@@ -73,7 +73,9 @@ int main(int argc, char **argv)
     shared_mem_get(mem_id, &framebuffer);
 
     printf("client buffer:%p\n", framebuffer);
-    memset(framebuffer, 'a', 100 * 100 * 4);
+    /* memset(framebuffer, 'a', 100 * 100 * 4); */
+    memset(framebuffer, 255, 100 * 100);
+    /* memset(framebuffer, 'a', 10); */
 
     printf("sending code\n");
     int done_code = 123;
