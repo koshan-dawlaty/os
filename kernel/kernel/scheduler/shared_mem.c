@@ -24,7 +24,7 @@ int shared_mem_alloc(void **addr, size_t len)
 
     void *memory = SHARED_MEMORY_START + shared_memory_offset;
     size_t mem_len = align_long(len, PAGE_SIZE);
-    size_t num_pages = mem_len / PAGE_SIZE;
+    size_t num_pages = (mem_len / PAGE_SIZE) + 1;
     void *physical = get_free_phys_pages(get_current_pagedir(), num_pages);
     for (size_t i = 0; i < num_pages; i++)
     {

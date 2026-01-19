@@ -1,3 +1,4 @@
+#include "wm_lib.h"
 #include <fcntl.h>
 #include <init.h>
 #include <sched.h>
@@ -46,12 +47,6 @@ int shared_mem_get(int id, void **p)
     return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
 }
 
-struct window_info
-{
-    size_t height;
-    size_t width;
-} __attribute__((packed));
-
 int main(int argc, char **argv)
 {
     init_libc();
@@ -61,20 +56,28 @@ int main(int argc, char **argv)
     /* printf("%d\n", server_sock); */
 
     /* printf("test\n"); */
-    struct window_info win = {.height = 100, .width = 100};
-    send(server_sock, &win, sizeof(struct window_info));
+    struct wm_inital win = {.height = 100, .width = 100};
+    send(server_sock, &win, sizeof(struct wm_inital));
     sched_yield();
 
-    int mem_id;
-    recv(server_sock, &mem_id, sizeof(int));
-    printf("memory:%d\n", mem_id);
+    struct wm_second second_message;
+    recv(server_sock, &second_message, sizeof(int));
+    printf("memory:%d\n", second_message.mem_id);
 
     void *framebuffer;
-    shared_mem_get(mem_id, &framebuffer);
+    shared_mem_get(second_message.mem_id, &framebuffer);
 
     printf("client buffer:%p\n", framebuffer);
     /* memset(framebuffer, 'a', 100 * 100 * 4); */
-    memset(framebuffer, 255, 100 * 100);
+
+    memset(framebuffer, 255, 100 * 100 * 3);
+
+    for (size_t y = 0; y < 100; y++)
+    {
+        int c = y % 2 == 0 ? 127 : 0;
+        memset(framebuffer + y * 3 * 100, c, 100 * 3);
+    }
+
     /* memset(framebuffer, 'a', 10); */
 
     printf("sending code\n");

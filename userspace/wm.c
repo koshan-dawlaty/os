@@ -1,3 +1,4 @@
+#include "wm_lib.h"
 #include <fcntl.h>
 #include <init.h>
 #include <stdint.h>
@@ -6,18 +7,6 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-
-/* this is copied from the kernel definition, it might change and break
- * everything and that would be bad */
-struct framebuffer
-{
-    size_t width;
-    size_t height;
-    size_t pitch;
-    size_t depth;
-    size_t pixel_width; /* bytes */
-    void *buffer;
-} __packed;
 
 typedef uintptr_t ptr;
 extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
@@ -49,40 +38,6 @@ int clone(ptr ip)
 {
     return syscall_wrapper_asm(SYS_clone, ip, 0, 0, 0, 0);
 }
-
-void framebuffer_pixel_write(struct framebuffer *f, uint8_t *pixel, int color)
-{
-    pixel[0] = color & 255;         // BLUE
-    pixel[1] = (color >> 8) & 255;  // GREEN
-    pixel[2] = (color >> 16) & 255; // RED
-}
-
-void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
-                           size_t width, size_t height, int color)
-{
-    size_t location = y * f->pitch + x * f->pixel_width;
-
-    for (size_t y_pos = y; y_pos < height + y; y_pos++)
-    {
-        for (size_t x_pos = x; x_pos < width + x; x_pos++)
-        {
-            uint8_t *pixel = f->buffer + location;
-            framebuffer_pixel_write(f, pixel, color);
-            location += f->pixel_width;
-        }
-        location = y_pos * f->pitch + x * f->pixel_width;
-    }
-}
-
-struct window
-{
-    size_t x;
-    size_t y;
-    size_t w;
-    size_t h;
-
-    void *buffer;
-};
 
 struct window *new_window(size_t x, size_t y, size_t w, size_t h)
 {
@@ -129,12 +84,6 @@ void thread1()
     exit(0);
 }
 
-struct window_info
-{
-    size_t height;
-    size_t width;
-} __attribute__((packed));
-
 int main()
 {
     init_libc();
@@ -149,8 +98,8 @@ int main()
     send(socket, &client_sock, sizeof(int));
     printf("test\n");
 
-    struct window_info win_info;
-    recv(client_sock, &win_info, sizeof(struct window_info));
+    struct wm_inital win_info;
+    recv(client_sock, &win_info, sizeof(struct wm_inital));
     printf("height:%d\n", win_info.height);
 
     size_t memory_len = win_info.height * win_info.width * 4;
@@ -160,9 +109,10 @@ int main()
 
     printf("server buf:%p\n", client_buf);
 
-    send(client_sock, &mem_id, sizeof(int));
+    struct wm_second second_message = {.mem_id = mem_id};
+    send(client_sock, &second_message, sizeof(struct wm_second));
 
-    printf("sending code\n");
+    printf("getting code\n");
     int code;
     recv(client_sock, &code, sizeof(int));
     printf("code:%d\n", code);
@@ -172,10 +122,15 @@ int main()
     /* printf("%p\n", buffer->pitch); */
     /* framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000); */
 
-    struct window *w = new_window(400, 600, win_info.width, win_info.height);
+    struct window *w = new_window(500, 600, win_info.width, win_info.height);
 
-    memset(w->buffer, 0, w->h * w->w * 3);
-    memcpy(w->buffer, client_buf, w->h * w->w * 3);
+    /* memset(w->buffer, 0, w->h * w->w * 3); */
+
+    for (size_t y = 0; y < w->h; y++)
+    {
+        size_t offset = y * w->w;
+        memcpy(w->buffer + offset, client_buf + offset, w->h * w->w * 3);
+    }
 
     draw_window(buffer, w);
 
