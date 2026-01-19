@@ -59,20 +59,18 @@ struct task *load_elf(elf *elf, int argc, char **argv)
 
             /* this may not have zeros at the end */
             u8 *buf = malloc(header->size_memory);
-            bzero(buf, header->size_memory);
-            /*
-if (header->memory_size > header->file_size)
-{
-
-    for (size_t i = 0; i < header->memory_size - header->file_size;
-         i++)
-    {
-        buf[header->file_size + i] = 0;
-    }
-}
-            */
 
             pread(elf->fd, buf, header->size_file, header->file_offset);
+
+            if (header->size_memory > header->size_file)
+            {
+
+                for (size_t i = 0; i < header->size_memory - header->size_file;
+                     i++)
+                {
+                    buf[header->size_file + i] = 0;
+                }
+            }
 
             uint8_t *dest = (uint8_t *)(header->virtual_addr);
 

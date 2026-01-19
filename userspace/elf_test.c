@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 typedef uintptr_t ptr;
@@ -35,6 +36,16 @@ int recv(int socket, void *buf, size_t len)
     return syscall_wrapper_asm(SYS_recv, socket, (ptr)buf, len, 0, 0);
 }
 
+int shared_mem_alloc(void **addr)
+{
+    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr)addr, 0, 0, 0, 0);
+}
+
+int shared_mem_get(int id, void **p)
+{
+    return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
+}
+
 struct window_info
 {
     size_t height;
@@ -47,11 +58,27 @@ int main(int argc, char **argv)
     char *buf = malloc(10);
     int server_sock;
     recv(0, &server_sock, sizeof(int));
-    printf("%d\n", server_sock);
+    /* printf("%d\n", server_sock); */
 
-    printf("test\n");
+    /* printf("test\n"); */
     struct window_info win = {.height = 100, .width = 100};
     send(server_sock, &win, sizeof(struct window_info));
+    sched_yield();
+
+    int mem_id;
+    recv(server_sock, &mem_id, sizeof(int));
+    printf("memory:%d\n", mem_id);
+
+    void *framebuffer;
+    shared_mem_get(mem_id, &framebuffer);
+
+    printf("buffer:%p\n", framebuffer);
+    memset(framebuffer, 'a', 100 * 100 * 4);
+
+    printf("sending code\n");
+    int done_code = 123;
+    send(server_sock, &done_code, sizeof(int));
+    printf("done\n");
 
     exit(0);
 }

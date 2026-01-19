@@ -99,6 +99,16 @@ struct window *new_window(size_t x, size_t y, size_t w, size_t h)
     return out;
 }
 
+int shared_mem_alloc(void **addr)
+{
+    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr)memory, 0, 0, 0, 0);
+}
+
+int shared_mem_get(int id, void **p)
+{
+    return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
+}
+
 void draw_window(struct framebuffer *b, struct window *win)
 {
 
@@ -131,20 +141,31 @@ int main()
     printf("window manager\n");
 
     struct framebuffer *buffer = framebuffer_alloc();
-    printf("test\n");
-    printf("buf:%p\n", buffer);
-
-    printf("%p\n", buffer->buffer);
 
     int socket = socket_create();
-    printf("%d\n", socket);
 
     int client_sock = socket_create();
+
     send(socket, &client_sock, sizeof(int));
+    printf("test\n");
 
     struct window_info win_info;
     recv(client_sock, &win_info, sizeof(struct window_info));
     printf("height:%d\n", win_info.height);
+
+    size_t memory_len = win_info.height * win_info.width * 4;
+    char *client_buf = malloc(memory_len);
+    int mem_id = shared_mem_alloc(client_buf);
+    printf("memory:%d\n", mem_id);
+
+    send(client_sock, &mem_id, sizeof(int));
+
+    int code;
+    recv(client_sock, &code, sizeof(int));
+    printf("code:%d\n", code);
+
+    printf("%p\n", memory_len);
+    memcpy(buffer->buffer, client_buf, memory_len);
 
     /* printf("%p\n", buffer->pitch); */
     /* framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000); */

@@ -21,5 +21,7 @@
 #define SYS_recv 22
 #define SYS_clone 23
 #define SYS_get_framebuffer 18
+#define SYS_shared_mem_alloc 24
+#define SYS_shared_mem_get 25
 
 #endif
