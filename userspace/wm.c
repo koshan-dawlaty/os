@@ -99,9 +99,9 @@ struct window *new_window(size_t x, size_t y, size_t w, size_t h)
     return out;
 }
 
-int shared_mem_alloc(void **addr)
+int shared_mem_alloc(void **addr, size_t len)
 {
-    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr)memory, 0, 0, 0, 0);
+    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr)addr, len, 0, 0, 0);
 }
 
 int shared_mem_get(int id, void **p)
@@ -154,18 +154,21 @@ int main()
     printf("height:%d\n", win_info.height);
 
     size_t memory_len = win_info.height * win_info.width * 4;
-    char *client_buf = malloc(memory_len);
-    int mem_id = shared_mem_alloc(client_buf);
+    void *client_buf;
+    int mem_id = shared_mem_alloc(&client_buf, memory_len);
     printf("memory:%d\n", mem_id);
+
+    printf("server buf:%p\n", client_buf);
 
     send(client_sock, &mem_id, sizeof(int));
 
+    printf("sending code\n");
     int code;
     recv(client_sock, &code, sizeof(int));
     printf("code:%d\n", code);
 
     printf("%p\n", memory_len);
-    memcpy(buffer->buffer, client_buf, memory_len);
+    /* memcpy(buffer->buffer, client_buf, memory_len); */
 
     /* printf("%p\n", buffer->pitch); */
     /* framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000); */

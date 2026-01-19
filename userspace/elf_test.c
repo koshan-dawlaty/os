@@ -36,9 +36,9 @@ int recv(int socket, void *buf, size_t len)
     return syscall_wrapper_asm(SYS_recv, socket, (ptr)buf, len, 0, 0);
 }
 
-int shared_mem_alloc(void **addr)
+int shared_mem_alloc(void **addr, size_t len)
 {
-    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr)addr, 0, 0, 0, 0);
+    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr)addr, len, 0, 0, 0);
 }
 
 int shared_mem_get(int id, void **p)
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
     void *framebuffer;
     shared_mem_get(mem_id, &framebuffer);
 
-    printf("buffer:%p\n", framebuffer);
+    printf("client buffer:%p\n", framebuffer);
     memset(framebuffer, 'a', 100 * 100 * 4);
 
     printf("sending code\n");
