@@ -105,12 +105,15 @@ int main()
     size_t memory_len = win_info.height * win_info.width * 4;
     void *client_buf;
     int mem_id = shared_mem_alloc(&client_buf, memory_len);
-    printf("memory:%d\n", mem_id);
 
     printf("server buf:%p\n", client_buf);
 
-    struct wm_second second_message = {.mem_id = mem_id};
-    send(client_sock, &second_message, sizeof(struct wm_second));
+    printf("server:memory:%d\n", mem_id);
+    struct wm_second *second_message = malloc(sizeof(struct wm_second));
+    second_message->mem_id = mem_id;
+
+    printf("in struct:%p\n", second_message->mem_id);
+    send(client_sock, second_message, sizeof(struct wm_second));
 
     printf("getting code\n");
     int code;

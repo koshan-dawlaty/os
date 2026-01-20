@@ -15,7 +15,6 @@ struct array unix_socket_array = ARRAY_INIT();
 
 struct unix_socket *unix_socket_lookup(int id)
 {
-    printf("looking up socket:%d\n", id);
     return array_get(&unix_socket_array, id, sizeof(struct unix_socket));
 }
 

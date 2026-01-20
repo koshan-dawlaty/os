@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 
     struct wm_second second_message;
     recv(server_sock, &second_message, sizeof(int));
-    printf("memory:%d\n", second_message.mem_id);
+    printf("client memory:%d\n", second_message.mem_id);
 
     void *framebuffer;
     shared_mem_get(second_message.mem_id, &framebuffer);
@@ -85,10 +85,13 @@ int main(int argc, char **argv)
     {
         for (size_t x = 0; x < win.width; x++)
         {
-            client_draw_pixel(&w, x, y, 0xFFFFFF);
-            if (y < 1 && x < 10)
+            if ((x + y) % 2 == 0)
             {
-                /* printf("%d\n", y * w.h + x * 3); */
+                client_draw_pixel(&w, x, y, 0x0000FF);
+            }
+            else
+            {
+                client_draw_pixel(&w, x, y, 0);
             }
         }
     }

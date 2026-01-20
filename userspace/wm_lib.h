@@ -57,7 +57,7 @@ struct wm_inital
 struct wm_second
 {
     int mem_id;
-};
+} __packed;
 
 struct wm_client_message
 {

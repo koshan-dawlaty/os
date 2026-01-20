@@ -32,7 +32,7 @@ void *array_pop(struct array *array, size_t len)
     ASSERT(array->len >= len, "array length too high, %d > %d", len,
            array->len);
 
-    void *out = array->data + array->capacity - len;
+    void *out = array->data + array->len - len;
 
     array->len -= len;
 

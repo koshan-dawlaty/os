@@ -16,7 +16,7 @@ struct shared_memory_entry
 struct shared_memory_entry shared_memory_list[SHARED_MEMORY_MAX];
 size_t shared_memory_list_index = 0;
 
-#define SHARED_MEMORY_START (void *)0x40000000
+#define SHARED_MEMORY_START (void *)0x30000000
 size_t shared_memory_offset = 0;
 
 int shared_mem_alloc(void **addr, size_t len)
@@ -26,6 +26,8 @@ int shared_mem_alloc(void **addr, size_t len)
     size_t mem_len = align_long(len, PAGE_SIZE);
     size_t num_pages = (mem_len / PAGE_SIZE) + 1;
     void *physical = get_free_phys_pages(get_current_pagedir(), num_pages);
+
+    printf("physaddr:%p\n", physical);
     for (size_t i = 0; i < num_pages; i++)
     {
         map_page(physical + (PAGE_SIZE * i), memory + (PAGE_SIZE * i),
@@ -47,8 +49,14 @@ int shared_mem_get(int id, void **p)
 {
 
     struct shared_memory_entry ent = shared_memory_list[id];
+    printf("id:%d\n", id);
 
     void *memory = SHARED_MEMORY_START + shared_memory_offset;
+
+    printf(
+        "this is a pointer to the physicall address of the shared memory that "
+        "we are trying to map right now at when this function is called:%p\n",
+        ent.mem);
 
     for (size_t i = 0; i < (ent.len / PAGE_SIZE) + 1; i++)
     {
