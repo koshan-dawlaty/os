@@ -73,7 +73,7 @@ void draw_window(struct framebuffer *b, struct window *win)
         /* printf("%p ", win->buffer + (y * win->w)); */
         memcpy(b->buffer +
                    (((y + win->y) * b->pitch) + (win->x * b->pixel_width)),
-               win->buffer + (y * win->w * 3), win->w * 3);
+               win->buffer + (y * win->w * 4), win->w * 4);
     }
 }
 
@@ -128,19 +128,29 @@ int main()
 
     for (size_t y = 0; y < w->h; y++)
     {
-        size_t offset = y * w->w * 3;
+        size_t offset = y * w->w * 4;
         /* memcpy(w->buffer + offset, client_buf + offset, w->w * 3); */
 
-        memcpy(w->buffer + offset, client_buf + offset, w->w * 3);
+        memcpy(w->buffer + offset, client_buf + offset, w->w * 4);
         /* memcpy(w->buffer + offset, client_buf + offset, w->w); */
     }
 
-    for (size_t y = 0; y < w->h; y++)
-    {
-        int c = y % 2 == 0 ? 127 : 255;
-        /* int c = y; */
-        memset(w->buffer + y * 3 * w->w, c, w->w * 3);
-    }
+    /* struct client_window w2 = {.w = w->w, .h = w->h, .buffer = w->buffer}; */
+
+    /* for (size_t y = 0; y < w2.h; y++) */
+    /* { */
+    /*     for (size_t x = 0; x < w2.w; x++) */
+    /*     { */
+    /*         client_draw_pixel(&w2, x, y, 0x000000FF); */
+    /*     } */
+    /* } */
+
+    /* for (size_t y = 0; y < w->h; y++) */
+    /* { */
+    /*     int c = y % 2 == 0 ? 127 : 255; */
+    /*     /1* int c = y; *1/ */
+    /*     memset(w->buffer + y * 3 * w->w, c, w->w * 3); */
+    /* } */
 
     draw_window(buffer, w);
 

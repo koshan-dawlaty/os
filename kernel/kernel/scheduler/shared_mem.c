@@ -50,12 +50,11 @@ int shared_mem_get(int id, void **p)
 
     void *memory = SHARED_MEMORY_START + shared_memory_offset;
 
-    for (size_t i = 0; i < ent.len / PAGE_SIZE; i++)
+    for (size_t i = 0; i < (ent.len / PAGE_SIZE) + 1; i++)
     {
         map_page(ent.mem + (PAGE_SIZE * i), memory + (PAGE_SIZE * i),
                  PAGING_PRESENT | PAGING_USER | PAGING_WRITEABLE);
     }
-    /* TODO: does not map enough */
 
     *p = memory;
 

@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #define __packed __attribute__((packed))
 
@@ -15,6 +16,25 @@ struct window
 
     void *buffer;
 };
+
+struct client_window
+{
+    size_t w;
+    size_t h;
+
+    void *buffer;
+};
+
+static inline void client_draw_pixel(struct client_window *w, size_t x,
+                                     size_t y, uint32_t color)
+{
+    size_t location = y * w->h * 4 + x * 4;
+
+    uint8_t *pixel = (uint8_t *)w->buffer + location;
+    pixel[0] = color & 255;         // BLUE
+    pixel[1] = (color >> 8) & 255;  // GREEN
+    pixel[2] = (color >> 16) & 255; // RED
+}
 
 /* this is copied from the kernel definition, it might change and break
  * everything and that would be bad */

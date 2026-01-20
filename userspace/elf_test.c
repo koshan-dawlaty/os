@@ -70,13 +70,27 @@ int main(int argc, char **argv)
     printf("client buffer:%p\n", framebuffer);
     /* memset(framebuffer, 'a', 100 * 100 * 4); */
 
-    memset(framebuffer, 255, 100 * 100 * 3);
+    memset(framebuffer, 255, 100 * 100 * 4);
 
     for (size_t y = 0; y < win.height; y++)
     {
         int c = y % 2 == 0 ? 127 : 255;
         /* int c = y; */
-        memset(framebuffer + y * 3 * win.width, c, win.width * 3);
+        memset(framebuffer + y * 4 * win.width, c, win.width * 4);
+    }
+
+    struct client_window w = {.w = win.height, win.width, framebuffer};
+
+    for (size_t y = 0; y < win.height; y++)
+    {
+        for (size_t x = 0; x < win.width; x++)
+        {
+            client_draw_pixel(&w, x, y, 0xFFFFFF);
+            if (y < 1 && x < 10)
+            {
+                /* printf("%d\n", y * w.h + x * 3); */
+            }
+        }
     }
 
     /* memset(framebuffer, 'a', 10); */
