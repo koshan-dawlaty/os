@@ -72,10 +72,10 @@ int main(int argc, char **argv)
 
     memset(framebuffer, 255, 100 * 100 * 3);
 
-    for (size_t y = 0; y < 100; y++)
+    for (size_t y = 0; y < win.height; y++)
     {
-        int c = y % 2 == 0 ? 127 : 0;
-        memset(framebuffer + y * 3 * 100, c, 100 * 3);
+        int c = y % 2 == 0 ? 127 : 255;
+        memset(framebuffer + y * 3 * win.width, c, win.width * 3);
     }
 
     /* memset(framebuffer, 'a', 10); */
