@@ -98,10 +98,16 @@ int main(int argc, char **argv)
 
     /* memset(framebuffer, 'a', 10); */
 
-    printf("sending code\n");
-    int done_code = 123;
-    send(server_sock, &done_code, sizeof(int));
-    printf("done\n");
+    int pos = 10;
+    while (1)
+    {
+        int done_code = WM_RES_RENDER;
+        send(server_sock, &done_code, sizeof(int));
+        pos++;
+        client_draw_pixel(&w, pos, pos, 0x00FF00);
+
+        getchar();
+    }
 
     exit(0);
 }

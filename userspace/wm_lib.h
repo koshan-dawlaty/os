@@ -59,9 +59,13 @@ struct wm_second
     int mem_id;
 } __packed;
 
+#define WM_RES_RENDER 1
+
+typedef int wm_res_code;
+
 struct wm_client_message
 {
-    int code;
+    wm_res_code code;
 } __packed;
 
 void framebuffer_pixel_write(struct framebuffer *f, uint8_t *pixel, int color);

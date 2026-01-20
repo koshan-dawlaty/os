@@ -116,27 +116,33 @@ int main()
     send(client_sock, second_message, sizeof(struct wm_second));
 
     printf("getting code\n");
+    struct window *w = new_window(200, 10, win_info.width, win_info.height);
+
     int code;
     recv(client_sock, &code, sizeof(int));
-    printf("code:%d\n", code);
+    while (code == 1)
+    {
+
+        for (size_t y = 0; y < w->h; y++)
+        {
+            size_t offset = y * w->w * 4;
+            /* memcpy(w->buffer + offset, client_buf + offset, w->w * 3); */
+
+            memcpy(w->buffer + offset, client_buf + offset, w->w * 4);
+            /* memcpy(w->buffer + offset, client_buf + offset, w->w); */
+        }
+
+        draw_window(buffer, w);
+
+        recv(client_sock, &code, sizeof(int));
+    }
 
     printf("%p\n", memory_len);
 
     /* printf("%p\n", buffer->pitch); */
     /* framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000); */
 
-    struct window *w = new_window(200, 10, win_info.width, win_info.height);
-
     /* memset(w->buffer, 126, w->h * w->w * 3); */
-
-    for (size_t y = 0; y < w->h; y++)
-    {
-        size_t offset = y * w->w * 4;
-        /* memcpy(w->buffer + offset, client_buf + offset, w->w * 3); */
-
-        memcpy(w->buffer + offset, client_buf + offset, w->w * 4);
-        /* memcpy(w->buffer + offset, client_buf + offset, w->w); */
-    }
 
     /* struct client_window w2 = {.w = w->w, .h = w->h, .buffer = w->buffer}; */
 
@@ -154,8 +160,6 @@ int main()
     /*     /1* int c = y; *1/ */
     /*     memset(w->buffer + y * 3 * w->w, c, w->w * 3); */
     /* } */
-
-    draw_window(buffer, w);
 
     exit(0);
 }
