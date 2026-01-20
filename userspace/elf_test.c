@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     /* printf("%d\n", server_sock); */
 
     /* printf("test\n"); */
-    struct wm_inital win = {.height = 100, .width = 100};
+    struct wm_inital win = {.height = 100, .width = 600};
     send(server_sock, &win, sizeof(struct wm_inital));
     sched_yield();
 
@@ -75,6 +75,7 @@ int main(int argc, char **argv)
     for (size_t y = 0; y < win.height; y++)
     {
         int c = y % 2 == 0 ? 127 : 255;
+        /* int c = y; */
         memset(framebuffer + y * 3 * win.width, c, win.width * 3);
     }
 

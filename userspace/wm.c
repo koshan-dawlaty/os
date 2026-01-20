@@ -73,7 +73,7 @@ void draw_window(struct framebuffer *b, struct window *win)
         /* printf("%p ", win->buffer + (y * win->w)); */
         memcpy(b->buffer +
                    (((y + win->y) * b->pitch) + (win->x * b->pixel_width)),
-               win->buffer + (y * win->w * 3), win->w * b->pixel_width);
+               win->buffer + (y * win->w * 3), win->w * 3);
     }
 }
 
@@ -122,7 +122,7 @@ int main()
     /* printf("%p\n", buffer->pitch); */
     /* framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000); */
 
-    struct window *w = new_window(500, 600, win_info.width, win_info.height);
+    struct window *w = new_window(200, 10, win_info.width, win_info.height);
 
     /* memset(w->buffer, 126, w->h * w->w * 3); */
 
@@ -133,6 +133,13 @@ int main()
 
         memcpy(w->buffer + offset, client_buf + offset, w->w * 3);
         /* memcpy(w->buffer + offset, client_buf + offset, w->w); */
+    }
+
+    for (size_t y = 0; y < w->h; y++)
+    {
+        int c = y % 2 == 0 ? 127 : 255;
+        /* int c = y; */
+        memset(w->buffer + y * 3 * w->w, c, w->w * 3);
     }
 
     draw_window(buffer, w);
