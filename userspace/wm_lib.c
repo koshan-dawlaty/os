@@ -1,5 +1,6 @@
 #include "wm_lib.h"
 #include <stdint.h>
+#include <stddef.h>
 
 void framebuffer_pixel_write(struct framebuffer *f, uint8_t *pixel, int color)
 {
@@ -23,4 +24,32 @@ void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
         }
         location = y_pos * f->pitch + x * f->pixel_width;
     }
+}
+
+struct PSF_header {
+    uint32_t magic;
+    uint32_t version;
+    uint32_t header_size;
+    uint32_t flags;
+    uint32_t num_glyph;
+    uint32_t bytes_per_glyph;
+    uint32_t height;
+    uint32_t width;
+};
+
+struct PSF_font {
+    struct PSF_header header;
+    uint8_t * content;
+};
+
+struct PSF_font * parse_font(int fd) {
+    struct PSF_font * out = malloc(sizeof(struct PSF_font));
+    
+    pread(fd, &out->header, sizeof(struct PSF_header), 0);
+    
+    size_t content_len = out->header.bytes_per_glyph * out->header.num_glyph;
+    out->content = malloc(content_len);
+    pread(fd, out->content, content_len, out->header.header_size);
+    
+    return out;
 }
