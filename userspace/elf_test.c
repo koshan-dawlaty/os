@@ -93,7 +93,25 @@ int main(int argc, char **argv)
             {
                 client_draw_pixel(&w, x, y, 0);
             }
+
+            client_draw_pixel(&w, x, y, y);
         }
+    }
+
+    int font_fd = open("/font.psfu", O_RDONLY);
+    struct PSF_font *font = font_parse(font_fd);
+
+    if (font == NULL)
+    {
+        printf("font was invalid\n");
+        exit(1);
+    }
+
+    size_t x = 10;
+    for (size_t i = 0; i < 10; i++)
+    {
+        client_draw_char(&w, font, 'a' + i, x, 10);
+        x += font->header.width;
     }
 
     /* memset(framebuffer, 'a', 10); */
