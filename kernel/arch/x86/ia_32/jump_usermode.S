@@ -8,8 +8,11 @@ jump_usermode_asm:
 
 	mov 0x4(%esp), %ebx
 	mov 0x8(%esp), %edi
-	mov $(0xBFFEF000), %ecx
-	mov $(0xBFFEF000), %edx
+
+	mov 0xC(%esp), %ecx
+	mov %ecx, %edx
+	# mov $(0xBFFEF000), %ecx
+	# mov $(0xBFFEF000), %edx
 	# call %eax
 
 
