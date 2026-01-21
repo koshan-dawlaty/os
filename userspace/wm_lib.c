@@ -1,6 +1,8 @@
 #include "wm_lib.h"
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 void framebuffer_pixel_write(struct framebuffer *f, uint8_t *pixel, int color)
 {
@@ -26,30 +28,43 @@ void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
     }
 }
 
-struct PSF_header {
-    uint32_t magic;
-    uint32_t version;
-    uint32_t header_size;
-    uint32_t flags;
-    uint32_t num_glyph;
-    uint32_t bytes_per_glyph;
-    uint32_t height;
-    uint32_t width;
-};
+void client_draw_char(struct client_window *w, struct PSF_font *font, char c,
+                      size_t x, size_t y)
+{
+    struct PSF_header header = font->header;
+    uint8_t *char_start = (header.bytes_per_glyph * c) + font->content;
 
-struct PSF_font {
-    struct PSF_header header;
-    uint8_t * content;
-};
+    for (size_t y_pos = y; y_pos < y + header.height; y_pos++)
+    {
+        for (size_t x_pos = x; x_pos < x + header.width; x_pos++)
+        {
+            if (char_start[y_pos - y] & (1 << (7 - (x_pos - x))))
+            {
+                client_draw_pixel(w, x_pos + 4, y_pos, 0xFFFFFF);
+            }
+            else
+            {
+                /* client_draw_pixel(w, x + 4, y, 0); */
+            }
+        }
+    }
+}
 
-struct PSF_font * parse_font(int fd) {
-    struct PSF_font * out = malloc(sizeof(struct PSF_font));
-    
+#define PSF_FONT_MAGIC 0x864ab572
+struct PSF_font *font_parse(int fd)
+{
+    struct PSF_font *out = malloc(sizeof(struct PSF_font));
+
     pread(fd, &out->header, sizeof(struct PSF_header), 0);
-    
+
+    if (out->header.magic != PSF_FONT_MAGIC)
+    {
+        return NULL;
+    }
+
     size_t content_len = out->header.bytes_per_glyph * out->header.num_glyph;
     out->content = malloc(content_len);
     pread(fd, out->content, content_len, out->header.header_size);
-    
+
     return out;
 }
