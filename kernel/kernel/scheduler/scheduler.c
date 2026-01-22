@@ -58,7 +58,7 @@ void new_task_usermode_start(int argc, char **argv, ptr addr)
     temp_regs->esp = 0xBFFEF000;
     scheduler_set_regs_argv(argc, argv, temp_regs);
 
-    jump_usermode_asm(addr, temp_regs);
+    jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
 }
 
 void user_thread_kernel_start(ptr addr)
@@ -73,7 +73,7 @@ void user_thread_kernel_start(ptr addr)
     printf("thread stack:%p\n", temp_regs->esp);
 #error "set correct stack pointer in jump_usermode_asm"
 
-    jump_usermode_asm(addr, temp_regs);
+    jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
 }
 
 /* copies args to userspace */
