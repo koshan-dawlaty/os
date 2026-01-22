@@ -165,7 +165,8 @@ void kmain()
     printf("the kernel starts at %p\n", KERNEL_START);
     printf("the kernel ends at %p\n", KERNEL_END);
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+
+    execv("/elf_test", (char *[]){"elf_test", NULL});
     int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
 
@@ -177,4 +178,14 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
+    for (size_t i = 0; i < 1; i++)
+    {
+        schedule();
+    }
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+
+    while (1)
+    {
+        schedule();
+    }
 }

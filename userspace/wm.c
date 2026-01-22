@@ -82,28 +82,32 @@ struct framebuffer *buffer;
 
 int current_client = 1;
 
-void process_connection(int socket)
+size_t x = 10;
+
+void process_connection()
 {
+    int socket;
+    socket = current_client;
+
+    printf("client socket:%d\n", socket);
 
     struct wm_inital win_info;
     recv(socket, &win_info, sizeof(struct wm_inital));
-    printf("height:%d\n", win_info.height);
 
     size_t memory_len = win_info.height * win_info.width * 4;
     void *client_buf;
     int mem_id = shared_mem_alloc(&client_buf, memory_len);
 
-    printf("server buf:%p\n", client_buf);
+    /* printf("server buf:%p\n", client_buf); */
 
-    printf("server:memory:%d\n", mem_id);
+    /* printf("server:memory:%d\n", mem_id); */
     struct wm_second *second_message = malloc(sizeof(struct wm_second));
     second_message->mem_id = mem_id;
 
-    printf("in struct:%p\n", second_message->mem_id);
     send(socket, second_message, sizeof(struct wm_second));
 
-    printf("getting code\n");
-    struct window *w = new_window(200, 10, win_info.width, win_info.height);
+    struct window *w = new_window(200 + x, x, win_info.width, win_info.height);
+    x += 100;
 
     int code;
     recv(socket, &code, sizeof(int));
@@ -144,25 +148,20 @@ int main()
     init_libc();
 
     /* printf("window manager\n"); */
-    clone((ptr)thread1);
-
-    while (1)
-    {
-        sched_yield();
-    }
-    exit(1);
-
-    return 1;
+    /* clone((ptr)thread1); */
 
     buffer = framebuffer_alloc();
-
     int socket = socket_create();
-    int client_sock = socket_create();
-    send(socket, &client_sock, sizeof(int));
-    current_client = client_sock;
+    for (;;)
+    {
 
-    /* clone((ptr)(thread1)); */
-    process_connection(client_sock);
+        int client_sock = socket_create();
+        send(socket, &client_sock, sizeof(int));
+        current_client = client_sock;
+
+        clone((ptr)(process_connection));
+    }
+    /* process_connection(client_sock); */
 
     exit(0);
 }

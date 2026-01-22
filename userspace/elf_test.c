@@ -110,15 +110,20 @@ int main(int argc, char **argv)
     /* memset(framebuffer, 'a', 10); */
 
     int pos = 10;
-    size_t x = 10;
+    size_t x = 1;
     while (1)
     {
         int done_code = WM_RES_RENDER;
         send(server_sock, &done_code, sizeof(int));
+        client_draw_pixel(&w, pos, 1, 0xFF0000);
         pos++;
-        client_draw_pixel(&w, pos, pos, 0x00FF00);
 
-        client_draw_char(&w, font, getchar(), x, 20);
+        for (size_t i = 0; i < 1; i++)
+        {
+            sched_yield();
+        }
+
+        /* client_draw_char(&w, font, getchar(), x, 20); */
         x += font->header.width;
     }
 

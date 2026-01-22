@@ -69,9 +69,8 @@ void user_thread_kernel_start(ptr addr)
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
-    temp_regs->esp = (ptr)kmalloc(4096, KMALLOC_USER);
+    temp_regs->esp = (ptr)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
     printf("thread stack:%p\n", temp_regs->esp);
-#error "set correct stack pointer in jump_usermode_asm"
 
     jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
 }
