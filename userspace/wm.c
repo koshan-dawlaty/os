@@ -1,3 +1,4 @@
+#include "sched.h"
 #include "wm_lib.h"
 #include <fcntl.h>
 #include <init.h>
@@ -77,29 +78,15 @@ void draw_window(struct framebuffer *b, struct window *win)
     }
 }
 
-void thread1()
+struct framebuffer *buffer;
+
+int current_client = 1;
+
+void process_connection(int socket)
 {
-    printf("test\n");
-
-    exit(0);
-}
-
-int main()
-{
-    init_libc();
-    printf("window manager\n");
-
-    struct framebuffer *buffer = framebuffer_alloc();
-
-    int socket = socket_create();
-
-    int client_sock = socket_create();
-
-    send(socket, &client_sock, sizeof(int));
-    printf("test\n");
 
     struct wm_inital win_info;
-    recv(client_sock, &win_info, sizeof(struct wm_inital));
+    recv(socket, &win_info, sizeof(struct wm_inital));
     printf("height:%d\n", win_info.height);
 
     size_t memory_len = win_info.height * win_info.width * 4;
@@ -113,13 +100,13 @@ int main()
     second_message->mem_id = mem_id;
 
     printf("in struct:%p\n", second_message->mem_id);
-    send(client_sock, second_message, sizeof(struct wm_second));
+    send(socket, second_message, sizeof(struct wm_second));
 
     printf("getting code\n");
     struct window *w = new_window(200, 10, win_info.width, win_info.height);
 
     int code;
-    recv(client_sock, &code, sizeof(int));
+    recv(socket, &code, sizeof(int));
     while (code == 1)
     {
 
@@ -134,32 +121,48 @@ int main()
 
         draw_window(buffer, w);
 
-        recv(client_sock, &code, sizeof(int));
+        recv(socket, &code, sizeof(int));
     }
 
     printf("%p\n", memory_len);
+}
 
-    /* printf("%p\n", buffer->pitch); */
-    /* framebuffer_draw_rect(buffer, 100, 100, 100, 100, 0xff0000); */
+void thread1()
+{
+    printf("thread\n");
 
-    /* memset(w->buffer, 126, w->h * w->w * 3); */
+    while (1)
+    {
+        sched_yield();
+    }
 
-    /* struct client_window w2 = {.w = w->w, .h = w->h, .buffer = w->buffer}; */
+    exit(0);
+}
 
-    /* for (size_t y = 0; y < w2.h; y++) */
-    /* { */
-    /*     for (size_t x = 0; x < w2.w; x++) */
-    /*     { */
-    /*         client_draw_pixel(&w2, x, y, 0x000000FF); */
-    /*     } */
-    /* } */
+int main()
+{
+    init_libc();
 
-    /* for (size_t y = 0; y < w->h; y++) */
-    /* { */
-    /*     int c = y % 2 == 0 ? 127 : 255; */
-    /*     /1* int c = y; *1/ */
-    /*     memset(w->buffer + y * 3 * w->w, c, w->w * 3); */
-    /* } */
+    /* printf("window manager\n"); */
+    clone((ptr)thread1);
+
+    while (1)
+    {
+        sched_yield();
+    }
+    exit(1);
+
+    return 1;
+
+    buffer = framebuffer_alloc();
+
+    int socket = socket_create();
+    int client_sock = socket_create();
+    send(socket, &client_sock, sizeof(int));
+    current_client = client_sock;
+
+    /* clone((ptr)(thread1)); */
+    process_connection(client_sock);
 
     exit(0);
 }

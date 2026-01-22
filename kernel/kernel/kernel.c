@@ -165,7 +165,7 @@ void kmain()
     printf("the kernel starts at %p\n", KERNEL_START);
     printf("the kernel ends at %p\n", KERNEL_END);
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
-    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
 

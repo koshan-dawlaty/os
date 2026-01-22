@@ -107,16 +107,10 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    size_t x = 10;
-    for (size_t i = 0; i < 10; i++)
-    {
-        client_draw_char(&w, font, 'a' + i, x, 10);
-        x += font->header.width;
-    }
-
     /* memset(framebuffer, 'a', 10); */
 
     int pos = 10;
+    size_t x = 10;
     while (1)
     {
         int done_code = WM_RES_RENDER;
@@ -124,7 +118,8 @@ int main(int argc, char **argv)
         pos++;
         client_draw_pixel(&w, pos, pos, 0x00FF00);
 
-        getchar();
+        client_draw_char(&w, font, getchar(), x, 20);
+        x += font->header.width;
     }
 
     exit(0);
