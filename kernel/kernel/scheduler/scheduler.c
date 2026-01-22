@@ -171,7 +171,8 @@ struct task *user_thread_alloc(ptr ip)
 
     out->start_addr = (void *)ip;
 
-    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x8);
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
+    printf("thread stack:%p\n", out->stack);
     out->bp = (ptr)out->stack;
     out->descriptors = new_fdlist();
 
@@ -190,7 +191,7 @@ struct task *user_thread_alloc(ptr ip)
     /* edx is the third argument first and second are set later in this
      * function
      */
-    /* *(ptr *)(out->stack + 8) = ip; */
+    *(ptr *)(out->stack + 8) = ip;
 
     out->pgdir = current_pgdir;
     write_kernel_page_tables(out->pgdir);
