@@ -64,19 +64,19 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
 static void ext2_read_inode_block(u32 indirect_block_num, u8 *buf,
                                   size_t buf_len, size_t offset, superblock *sb)
 {
-    uint8_t *indirect_block = ext2_read_block(indirect_block_num, sb);
+    u8 *indirect_block = ext2_read_block(indirect_block_num, sb);
 
     /* this assumes there are 12 direct blocks */
-    size_t block_index = (offset / EXT2_BLOCK_SIZE(sb));
+    size_t block_index = (offset / EXT2_BLOCK_SIZE(sb)) - 12;
+    size_t block_num = *(u32 *)(indirect_block + block_index * sizeof(u32));
 
-    uint8_t *block = ext2_read_block(indirect_block[block_index], sb);
+    uint8_t *block = ext2_read_block(block_num, sb);
     block_index++;
 
     size_t bytes_read = 0;
 
     if (buf_len + (offset % EXT2_BLOCK_SIZE(sb)) < EXT2_BLOCK_SIZE(sb))
     {
-        printf("len:%d, %d\n", buf_len, offset);
         memcpy(buf, block + offset % EXT2_BLOCK_SIZE(sb), buf_len);
         return;
     }
@@ -175,8 +175,6 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
     {
         /* TODO: implement */
         /* printf("NOT IMPLEMENTED!!! (ext2)\n"); */
-
-        printf("larger than direct blocks (ext2)\n");
 
         ext2_read_inode_block(node->singly_indirect_block_pointer, buf, buf_len,
                               index, sb);
