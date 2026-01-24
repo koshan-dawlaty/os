@@ -120,18 +120,11 @@ void process_connection()
             for (size_t y = 0; y < w->h; y++)
             {
                 size_t offset = y * w->w * 4;
-                /* memcpy(w->buffer + offset, client_buf + offset, w->w * 3); */
 
                 memcpy(w->buffer + offset, client_buf + offset, w->w * 4);
-                /* memcpy(w->buffer + offset, client_buf + offset, w->w); */
             }
 
             draw_window(buffer, w);
-        }
-        else if (code == WM_RES_KEY)
-        {
-            char c = getchar();
-            send(socket, &c, sizeof(char));
         }
         recv(socket, &code, sizeof(int));
     }

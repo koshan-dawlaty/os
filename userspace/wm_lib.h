@@ -60,7 +60,6 @@ struct wm_second
 } __packed;
 
 #define WM_RES_RENDER 1
-#define WM_RES_KEY 2
 
 typedef int wm_res_code;
 

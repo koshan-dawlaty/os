@@ -123,20 +123,21 @@ int main(int argc, char **argv)
             pos++;
         }
 
-        int key_code = WM_RES_KEY;
-        send(server_sock, &key_code, sizeof(int));
-        char c;
-        recv(server_sock, &c, sizeof(char));
-        client_draw_char(&w, font, c, x, 20);
+        /*         if (server_sock == 1) */
+        /*         { */
+
+        /*             /1* int key_code = WM_RES_KEY; *1/ */
+        /*             /1* send(server_sock, &key_code, sizeof(int)); *1/ */
+        /*             /1* char c; *1/ */
+        /*             /1* recv(server_sock, &c, sizeof(char)); *1/ */
+
+        /*         } */
+        client_draw_char(&w, font, getchar(), x, 20);
 
         for (size_t i = 0; i < 1; i++)
         {
             sched_yield();
         }
-
-        /* if (server_sock == 1) */
-        /* { */
-        /* } */
 
         /* client_draw_char(&w, font, 'a', x, 20); */
         /* client_draw_char(&w, font, getchar(), x, 20); */
