@@ -144,6 +144,7 @@ void thread1()
     exit(0);
 }
 
+char big_array[1000] = {0};
 int main()
 {
     init_libc();

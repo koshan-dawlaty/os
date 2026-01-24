@@ -61,21 +61,22 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
 /*
  * reads the contents of block, as a indirect block
  */
-static void ext2_read_inode_block(uint32_t indirect_block_num, uint8_t *buf,
+static void ext2_read_inode_block(u32 indirect_block_num, u8 *buf,
                                   size_t buf_len, size_t offset, superblock *sb)
 {
     uint8_t *indirect_block = ext2_read_block(indirect_block_num, sb);
 
     /* this assumes there are 12 direct blocks */
-    size_t block_index = (offset / EXT2_BLOCK_SIZE(sb)) + 12;
+    size_t block_index = (offset / EXT2_BLOCK_SIZE(sb));
 
     uint8_t *block = ext2_read_block(indirect_block[block_index], sb);
     block_index++;
 
     size_t bytes_read = 0;
 
-    if (buf_len < EXT2_BLOCK_SIZE(sb))
+    if (buf_len + (offset % EXT2_BLOCK_SIZE(sb)) < EXT2_BLOCK_SIZE(sb))
     {
+        printf("len:%d, %d\n", buf_len, offset);
         memcpy(buf, block + offset % EXT2_BLOCK_SIZE(sb), buf_len);
         return;
     }
