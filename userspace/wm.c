@@ -2,6 +2,7 @@
 #include "wm_lib.h"
 #include <fcntl.h>
 #include <init.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -99,7 +100,6 @@ void process_connection()
     int mem_id = shared_mem_alloc(&client_buf, memory_len);
 
     /* printf("server buf:%p\n", client_buf); */
-
     /* printf("server:memory:%d\n", mem_id); */
     struct wm_second *second_message = malloc(sizeof(struct wm_second));
     second_message->mem_id = mem_id;
@@ -107,24 +107,32 @@ void process_connection()
     send(socket, second_message, sizeof(struct wm_second));
 
     struct window *w = new_window(200 + x, x, win_info.width, win_info.height);
-    x += 100;
+    x += 200;
 
     int code;
     recv(socket, &code, sizeof(int));
-    while (code == 1)
+    while (true)
     {
 
-        for (size_t y = 0; y < w->h; y++)
+        if (code == WM_RES_RENDER)
         {
-            size_t offset = y * w->w * 4;
-            /* memcpy(w->buffer + offset, client_buf + offset, w->w * 3); */
 
-            memcpy(w->buffer + offset, client_buf + offset, w->w * 4);
-            /* memcpy(w->buffer + offset, client_buf + offset, w->w); */
+            for (size_t y = 0; y < w->h; y++)
+            {
+                size_t offset = y * w->w * 4;
+                /* memcpy(w->buffer + offset, client_buf + offset, w->w * 3); */
+
+                memcpy(w->buffer + offset, client_buf + offset, w->w * 4);
+                /* memcpy(w->buffer + offset, client_buf + offset, w->w); */
+            }
+
+            draw_window(buffer, w);
         }
-
-        draw_window(buffer, w);
-
+        else if (code == WM_RES_KEY)
+        {
+            char c = getchar();
+            send(socket, &c, sizeof(char));
+        }
         recv(socket, &code, sizeof(int));
     }
 

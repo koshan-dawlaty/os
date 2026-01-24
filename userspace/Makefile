@@ -81,7 +81,8 @@ BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
 $(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o $(BIN)/wm_lib.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+	$(CC) -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc -Oz
+	# $(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/elf_test2 : $(OBJS_START_BIN) $(BIN)/elf_test2.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)

@@ -15,13 +15,14 @@ struct array unix_socket_array = ARRAY_INIT();
 
 struct unix_socket *unix_socket_lookup(int id)
 {
-    return array_get(&unix_socket_array, id, sizeof(struct unix_socket));
+    return *(struct unix_socket **)array_get(&unix_socket_array, id,
+                                             sizeof(struct unix_socket *));
 }
 
 int unix_socket_add_array(struct unix_socket *sock)
 {
     int retval =
-        array_add(&unix_socket_array, sock, sizeof(struct unix_socket));
+        array_add(&unix_socket_array, &sock, sizeof(struct unix_socket *));
     printf("created socket number:%d\n", retval);
 
     return retval;

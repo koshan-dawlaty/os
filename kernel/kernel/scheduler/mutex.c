@@ -19,7 +19,7 @@ void mutex_lock(struct mutex *m)
     }
     else
     {
-        /* printf("lock 2, %p\n", get_current_task()); */
+        /* printf("lock 2, %p\", get_current_task()); */
         struct task *current = get_current_task();
         /* printf("before:\n"); */
         remove_task(current);
