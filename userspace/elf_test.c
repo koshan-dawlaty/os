@@ -11,45 +11,11 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-typedef uintptr_t ptr;
-extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
-
-struct framebuffer *framebuffer_alloc()
-{
-    struct framebuffer *out = NULL;
-    syscall_wrapper_asm(18, (ptr)&out, 0, 0, 0, 0);
-
-    return out;
-}
-
-int socket_create()
-{
-    return syscall_wrapper_asm(SYS_create_socket, 0, 0, 0, 0, 0);
-}
-
-int send(int socket, void *buf, size_t len)
-{
-    return syscall_wrapper_asm(SYS_send, socket, (ptr)buf, len, 0, 0);
-}
-
-int recv(int socket, void *buf, size_t len)
-{
-    return syscall_wrapper_asm(SYS_recv, socket, (ptr)buf, len, 0, 0);
-}
-
-int shared_mem_alloc(void **addr, size_t len)
-{
-    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr)addr, len, 0, 0, 0);
-}
-
-int shared_mem_get(int id, void **p)
-{
-    return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
-}
 
 int main(int argc, char **argv)
 {
     init_libc();
+
     char *buf = malloc(10);
     int server_sock;
     recv(0, &server_sock, sizeof(int));
@@ -62,12 +28,12 @@ int main(int argc, char **argv)
 
     struct wm_second second_message;
     recv(server_sock, &second_message, sizeof(int));
-    printf("client memory:%d\n", second_message.mem_id);
+    /* printf("client memory:%d\n", second_message.mem_id); */
 
     void *framebuffer;
     shared_mem_get(second_message.mem_id, &framebuffer);
 
-    printf("client buffer:%p\n", framebuffer);
+    /* printf("client buffer:%p\n", framebuffer); */
     /* memset(framebuffer, 'a', 100 * 100 * 4); */
 
     memset(framebuffer, 255, 100 * 100 * 4);
@@ -103,28 +69,44 @@ int main(int argc, char **argv)
 
     if (font == NULL)
     {
-        printf("font was invalid\n");
+        /* printf("font was invalid\n"); */
         exit(1);
-    }
-
-    size_t x = 10;
-    for (size_t i = 0; i < 10; i++)
-    {
-        client_draw_char(&w, font, 'a' + i, x, 10);
-        x += font->header.width;
     }
 
     /* memset(framebuffer, 'a', 10); */
 
     int pos = 10;
+    size_t x = 1;
     while (1)
     {
         int done_code = WM_RES_RENDER;
         send(server_sock, &done_code, sizeof(int));
-        pos++;
-        client_draw_pixel(&w, pos, pos, 0x00FF00);
 
-        getchar();
+        for (size_t i = 0; i < 1; i++)
+        {
+            client_draw_pixel(&w, pos, 1, 0xFF0000);
+            pos++;
+        }
+
+        /*         if (server_sock == 1) */
+        /*         { */
+
+        /*             /1* int key_code = WM_RES_KEY; *1/ */
+        /*             /1* send(server_sock, &key_code, sizeof(int)); *1/ */
+        /*             /1* char c; *1/ */
+        /*             /1* recv(server_sock, &c, sizeof(char)); *1/ */
+
+        /*         } */
+        client_draw_char(&w, font, getchar(), x, 20);
+
+        for (size_t i = 0; i < 1; i++)
+        {
+            sched_yield();
+        }
+
+        /* client_draw_char(&w, font, 'a', x, 20); */
+        /* client_draw_char(&w, font, getchar(), x, 20); */
+        x += font->header.width;
     }
 
     exit(0);

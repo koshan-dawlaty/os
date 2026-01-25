@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys/syscall.h>
 
 #define __packed __attribute__((packed))
 
@@ -93,5 +94,46 @@ struct PSF_font
 void client_draw_char(struct client_window *w, struct PSF_font *font, char c,
                       size_t x, size_t y);
 struct PSF_font *font_parse(int fd);
+
+typedef uintptr_t ptr;
+extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
+
+static inline struct framebuffer *framebuffer_alloc()
+{
+    struct framebuffer *out = NULL;
+    syscall_wrapper_asm(SYS_get_framebuffer, (ptr)&out, 0, 0, 0, 0);
+
+    return out;
+}
+
+static inline int socket_create()
+{
+    return syscall_wrapper_asm(SYS_create_socket, 0, 0, 0, 0, 0);
+}
+
+static inline int send(int socket, void *buf, size_t len)
+{
+    return syscall_wrapper_asm(SYS_send, socket, (ptr)buf, len, 0, 0);
+}
+
+static inline int recv(int socket, void *buf, size_t len)
+{
+    return syscall_wrapper_asm(SYS_recv, socket, (ptr)buf, len, 0, 0);
+}
+
+static inline int clone(ptr ip)
+{
+    return syscall_wrapper_asm(SYS_clone, ip, 0, 0, 0, 0);
+}
+
+static inline int shared_mem_alloc(void **addr, size_t len)
+{
+    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr)addr, len, 0, 0, 0);
+}
+
+static inline int shared_mem_get(int id, void **p)
+{
+    return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
+}
 
 #endif

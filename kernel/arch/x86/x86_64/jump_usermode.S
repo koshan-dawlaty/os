@@ -2,8 +2,10 @@
 .global jump_usermode_asm
 .type   jump_usermode_asm @function
 jump_usermode_asm:
+	# rdx contains the address of the user stack pointer, as it is the third argument
 
-	movq $(0x00000000BFFEF000), %rdx
+
+	# movq $(0x00000000BFFEF000), %rdx
 	movq %rdi, %rbx
 
  	cli
@@ -17,7 +19,7 @@ jump_usermode_asm:
 
  	# mov %esp, %eax
  	
- 	movq $(0x00000000BFFEF000), %rax
+ 	movq %rdx, %rax
 	mov %rdx, %rbp
 	# sub $4, %ebp
  	# mov %rcx, %rax

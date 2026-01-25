@@ -1,4 +1,7 @@
+#include "kernel/syscall.h"
+#include "kmalloc.h"
 #include "sleep.h"
+#include "sys/syscall.h"
 #include "unistd.h"
 #include "utils.h"
 #include "vfs.h"
@@ -55,7 +58,7 @@ void new_task_usermode_start(int argc, char **argv, ptr addr)
     temp_regs->esp = 0xBFFEF000;
     scheduler_set_regs_argv(argc, argv, temp_regs);
 
-    jump_usermode_asm(addr, temp_regs);
+    jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
 }
 
 void user_thread_kernel_start(ptr addr)
@@ -66,9 +69,10 @@ void user_thread_kernel_start(ptr addr)
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
-    temp_regs->esp = 0xBFFEF000;
+    temp_regs->esp = (ptr)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
+    printf("thread stack:%p\n", temp_regs->esp);
 
-    jump_usermode_asm(addr, temp_regs);
+    jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
 }
 
 /* copies args to userspace */
@@ -158,7 +162,8 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 struct task *user_thread_alloc(ptr ip)
 {
 
-    ASSERT(get_current_task()->pgdir != NULL,
+    struct pagedir *current_pgdir = get_current_task()->pgdir;
+    ASSERT(current_pgdir != NULL,
            "null pagedir for current task, this might be because a kernel "
            "thread called this");
 
@@ -167,6 +172,7 @@ struct task *user_thread_alloc(ptr ip)
     out->start_addr = (void *)ip;
 
     out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
+    printf("thread stack:%p\n", out->stack);
     out->bp = (ptr)out->stack;
     out->descriptors = new_fdlist();
 
@@ -181,19 +187,16 @@ struct task *user_thread_alloc(ptr ip)
     /* NULL is used to signify root dir */
     out->working_dir = NULL;
 
-    *(ptr *)(out->stack) = (ptr)user_thread_kernel_start;
+    *((ptr *)(out->stack)) = (ptr)user_thread_kernel_start;
     /* edx is the third argument first and second are set later in this
      * function
      */
-    /* *(ptr *)(out->stack + 8) = ip; */
+    *(ptr *)(out->stack + 8) = ip;
 
-    out->pgdir = get_current_task()->pgdir;
+    out->pgdir = current_pgdir;
     write_kernel_page_tables(out->pgdir);
-    /* TODO: this calls load_pgdir alot */
-    struct pagedir *temp = get_current_pagedir();
-    load_pgdir(out->pgdir);
 
-    load_pgdir(temp);
+    load_pgdir(out->pgdir);
 
     /* TODO: this should duplicate file descriptors */
     const char *term_path = "/terminal";
@@ -206,6 +209,13 @@ struct task *user_thread_alloc(ptr ip)
 
     return out;
 }
+
+void syscall_clone(ptr ip)
+{
+    add_task(user_thread_alloc(ip));
+}
+
+SYSCALL_DEFINE1(syscall_clone, SYS_clone)
 
 /*
 struct task *new_task(ptr ip)

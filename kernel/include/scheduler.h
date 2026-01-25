@@ -1,7 +1,7 @@
-#include "compiler.h"
-#include "lib/list.h"
+#include <compiler.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <lib/list.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <vfs.h>
@@ -86,7 +86,7 @@ extern void switch_tasks_kernel(struct registers *regs, uint32_t ip);
 extern void save_registers(struct registers *regs);
 extern void load_registers(struct registers *regs);
 
-extern void jump_usermode_asm(ptr addr, struct registers *regs);
+extern void jump_usermode_asm(ptr addr, struct registers *regs, ptr sp);
 
 void schedule();
 

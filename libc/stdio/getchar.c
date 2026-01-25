@@ -11,7 +11,6 @@ char getchar()
     /* printf("%d\n", key_available); */
     while (!is_key_available())
     {
-        /* printf("%d\n", key_available); */
         /* printf("test\n"); */
         asm volatile("hlt");
         /* sched_yield(); */

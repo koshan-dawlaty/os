@@ -53,11 +53,6 @@ int shared_mem_get(int id, void **p)
 
     void *memory = SHARED_MEMORY_START + shared_memory_offset;
 
-    printf(
-        "this is a pointer to the physicall address of the shared memory that "
-        "we are trying to map right now at when this function is called:%p\n",
-        ent.mem);
-
     for (size_t i = 0; i < (ent.len / PAGE_SIZE) + 1; i++)
     {
         map_page(ent.mem + (PAGE_SIZE * i), memory + (PAGE_SIZE * i),

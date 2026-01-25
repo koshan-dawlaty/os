@@ -144,6 +144,23 @@ void kernel_init()
 #endif
 }
 
+void t1(void *a)
+{
+
+    while (1)
+    {
+        putchar(getchar());
+    }
+}
+
+void t2(void *a)
+{
+    while (1)
+    {
+        putchar(getchar());
+    }
+}
+
 void kmain()
 {
 
@@ -161,10 +178,15 @@ void kmain()
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     printf("starting shell\n");
-    printf("the kernel is %d bytes\n", KERNEL_SIZE);
-    printf("the kernel starts at %p\n", KERNEL_START);
-    printf("the kernel ends at %p\n", KERNEL_END);
+
+    /* ktask_run(t1, NULL); */
+    /* ktask_run(t2, NULL); */
+    /* enable_scheduler(); */
+    /* irq_enable(); */
+    /* schedule(); */
+
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
+
     execv("/elf_test", (char *[]){"elf_test", NULL});
     int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
@@ -177,4 +199,10 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    while (1)
+    {
+        schedule();
+    }
 }
