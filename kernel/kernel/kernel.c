@@ -15,6 +15,7 @@
 #include <kernel/keyboard.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
+#include <kernel/ps2.h>
 #include <kernel/semaphore.h>
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
@@ -136,6 +137,8 @@ void kernel_init()
     init_ata();
 
     init_vfs();
+
+    ps2_init();
 
     call_constructors();
 
