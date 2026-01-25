@@ -1,7 +1,7 @@
-#include "compiler.h"
-#include "lib/list.h"
+#include <compiler.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <lib/list.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <vfs.h>

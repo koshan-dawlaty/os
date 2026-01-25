@@ -29,7 +29,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 
 OBJS=\
-	lib_test.o
+	list.o
 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
@@ -53,8 +53,8 @@ install-lib: $(LIB_BINARY)
 	cp $(LIB_BINARY) $(DESTDIR)$(LIBDIR)
 
 install-headers:
-	mkdir -p $(DESTDIR)$(INCLUDEDIR)
-	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
+	mkdir -p $(DESTDIR)$(INCLUDEDIR)/lib
+	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/lib/.
 
 clean:
 	$(RM) -r bin/*

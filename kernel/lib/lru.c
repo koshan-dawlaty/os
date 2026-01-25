@@ -1,6 +1,6 @@
 #include "kernel/types.h"
 #include <assert.h>
-#include <container_of.h>
+#include <lib/container_of.h>
 #include <lib/list.h>
 #include <lib/lru.h>
 #include <stdbool.h>

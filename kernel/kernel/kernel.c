@@ -21,7 +21,6 @@
 #include <kernel/types.h>
 #include <lib/array.h>
 #include <lib/binary_tree.h>
-#include <lib_test.h>
 #include <malloc_internal.h>
 #include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>

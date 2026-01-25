@@ -2,9 +2,9 @@
 #include "tmpfs.h"
 #include <assert.h>
 #include <bdev.h>
-#include <container_of.h>
 #include <err.h>
 #include <errno.h>
+#include <lib/container_of.h>
 #include <lib/list.h>
 #include <stdlib.h>
 #include <string.h>

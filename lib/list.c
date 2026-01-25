@@ -1,6 +1,6 @@
-#include "lib/list.h"
-#include "kernel/tty.h"
 #include <err.h>
+#include <kernel/tty.h>
+#include <lib/list.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
