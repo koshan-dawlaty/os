@@ -3,7 +3,7 @@
 void init_libc()
 {
     /* TODO: maybe make these not writeable */
-    stdin = fdopen(0, "");
-    stdout = fdopen(1, "");
-    stderr = fdopen(2, "");
+    stdin = fdopen(0, "r");
+    stdout = fdopen(1, "w");
+    stderr = fdopen(2, "w");
 }
