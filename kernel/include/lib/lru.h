@@ -1,7 +1,7 @@
 #ifndef LRU_H
 #define LRU_H
 
-#include <lib/container_of.h>
+#include <container_of.h>
 #include <lib/list.h>
 #include <stdbool.h>
 #include <stddef.h>

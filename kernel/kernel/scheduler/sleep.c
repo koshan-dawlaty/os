@@ -1,5 +1,5 @@
 #include "sleep.h"
-#include <lib/container_of.h>
+#include <container_of.h>
 #include <lib/list.h>
 #include <scheduler.h>
 #include <stdlib.h>

@@ -4,7 +4,7 @@
 #include <kernel/types.h>
 #include <kmalloc.h>
 #include <lib/binary_tree.h>
-#include <lib/container_of.h>
+#include <container_of.h>
 #include <lib/list.h>
 #include <memory/get_free_pages.h>
 #include <multiboot.h>

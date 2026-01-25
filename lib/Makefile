@@ -53,8 +53,8 @@ install-lib: $(LIB_BINARY)
 	cp $(LIB_BINARY) $(DESTDIR)$(LIBDIR)
 
 install-headers:
-	mkdir -p $(DESTDIR)$(INCLUDEDIR)/lib
-	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/lib/.
+	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
 
 clean:
 	$(RM) -r bin/*
