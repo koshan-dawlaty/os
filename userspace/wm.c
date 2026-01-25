@@ -10,37 +10,6 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-typedef uintptr_t ptr;
-extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
-
-struct framebuffer *framebuffer_alloc()
-{
-    struct framebuffer *out = NULL;
-    syscall_wrapper_asm(SYS_get_framebuffer, (ptr)&out, 0, 0, 0, 0);
-
-    return out;
-}
-
-int socket_create()
-{
-    return syscall_wrapper_asm(SYS_create_socket, 0, 0, 0, 0, 0);
-}
-
-int send(int socket, void *buf, size_t len)
-{
-    return syscall_wrapper_asm(SYS_send, socket, (ptr)buf, len, 0, 0);
-}
-
-int recv(int socket, void *buf, size_t len)
-{
-    return syscall_wrapper_asm(SYS_recv, socket, (ptr)buf, len, 0, 0);
-}
-
-int clone(ptr ip)
-{
-    return syscall_wrapper_asm(SYS_clone, ip, 0, 0, 0, 0);
-}
-
 struct window *new_window(size_t x, size_t y, size_t w, size_t h)
 {
     struct window *out = malloc(sizeof(struct window));
@@ -54,16 +23,6 @@ struct window *new_window(size_t x, size_t y, size_t w, size_t h)
     out->buffer = malloc(w * h * 4);
 
     return out;
-}
-
-int shared_mem_alloc(void **addr, size_t len)
-{
-    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr)addr, len, 0, 0, 0);
-}
-
-int shared_mem_get(int id, void **p)
-{
-    return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
 }
 
 void draw_window(struct framebuffer *b, struct window *win)
@@ -107,7 +66,7 @@ void process_connection()
     send(socket, second_message, sizeof(struct wm_second));
 
     struct window *w = new_window(200 + x, x, win_info.width, win_info.height);
-    x += 200;
+    x += 50;
 
     int code;
     recv(socket, &code, sizeof(int));
@@ -144,7 +103,6 @@ void thread1()
     exit(0);
 }
 
-char big_array[1000] = {0};
 int main()
 {
     init_libc();

@@ -1,5 +1,5 @@
-SYSTEM_HEADER_PROJECTS="../libc ../kernel ../userspace"
-PROJECTS="../libc ../kernel ../userspace"
+SYSTEM_HEADER_PROJECTS="../lib ../libc ../kernel ../userspace "
+PROJECTS="../lib ../libc ../kernel ../userspace "
 
 export MAKE=${MAKE:-make}
 export HOST=${HOST:-$(./default-host.sh)}

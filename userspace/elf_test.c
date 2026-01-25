@@ -11,41 +11,6 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-typedef uintptr_t ptr;
-extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
-
-struct framebuffer *framebuffer_alloc()
-{
-    struct framebuffer *out = NULL;
-    syscall_wrapper_asm(18, (ptr)&out, 0, 0, 0, 0);
-
-    return out;
-}
-
-int socket_create()
-{
-    return syscall_wrapper_asm(SYS_create_socket, 0, 0, 0, 0, 0);
-}
-
-int send(int socket, void *buf, size_t len)
-{
-    return syscall_wrapper_asm(SYS_send, socket, (ptr)buf, len, 0, 0);
-}
-
-int recv(int socket, void *buf, size_t len)
-{
-    return syscall_wrapper_asm(SYS_recv, socket, (ptr)buf, len, 0, 0);
-}
-
-int shared_mem_alloc(void **addr, size_t len)
-{
-    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr)addr, len, 0, 0, 0);
-}
-
-int shared_mem_get(int id, void **p)
-{
-    return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
-}
 
 int main(int argc, char **argv)
 {
