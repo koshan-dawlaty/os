@@ -1,7 +1,8 @@
-#include "sched.h"
 #include "wm_lib.h"
 #include <fcntl.h>
 #include <init.h>
+#include <lib/list.h>
+#include <sched.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -37,6 +38,8 @@ void draw_window(struct framebuffer *b, struct window *win)
                win->buffer + (y * win->w * 4), win->w * 4);
     }
 }
+
+struct list2 l = {};
 
 struct framebuffer *buffer;
 

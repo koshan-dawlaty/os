@@ -91,7 +91,8 @@ BIN=bin
 
 
 
-all: $(BINARIES)
+# all: $(BINARIES)
+all: install-libs
 
 libc.a: $(OBJS_BIN)
 	$(AR) rcs $@ $(OBJS_BIN)

@@ -36,6 +36,8 @@ OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
 LIB_BINARY=$(BIN)/libutil.a
 
+all : install
+
 $(LIB_BINARY) : $(OBJS_BIN)
 	$(AR) rcs $@ $(OBJS_BIN)
 

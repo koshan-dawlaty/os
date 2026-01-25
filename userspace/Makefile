@@ -29,7 +29,7 @@ LIBS:=$(LIBS)
 
 CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings -fomit-frame-pointer
 # this gets rid of moddi3 and simliar functions
-CFLAGS:=$(CFLAGS) -fno-semantic-interposition
+CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib
 
 
 # very bad
@@ -79,6 +79,9 @@ BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
 .PHONY : all clean install install-binaries install-headers
 
+all : $(BINARIES_BIN)
+	$(CC) -o $(BIN)/$
+
 $(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o $(BIN)/wm_lib.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc -Oz
@@ -118,8 +121,6 @@ $(BIN)/wm : $(OBJS_START_BIN) $(BIN)/wm.o $(BIN)/wm_lib.o ../libc/libc.a $(START
 
 
 
-all : $(BINARIES_BIN)
-	$(CC) -o $(BIN)/$
 
 $(BIN)/%.o: %.S
 	@mkdir -p $(BIN)/$(dir $<)
