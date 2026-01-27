@@ -27,12 +27,12 @@ ISR(mouse_interrupt_handler, {
     u8 buttons = inb(0x60);
     u8 x = inb(0x60);
     u8 y = inb(0x60);
-    printf("x:%p\n", x);
 
     struct mouse_queue_ent *ent = malloc(sizeof(struct mouse_queue_ent));
 
     ent->ev.x_change = x;
     ent->ev.y_change = y;
+    ent->list = LIST2_INIT();
 
     if (mouse_queue == NULL)
     {
@@ -43,6 +43,8 @@ ISR(mouse_interrupt_handler, {
         list2_add(&ent->list, mouse_queue);
     }
 
+    printf("isr:%p\n", ent->ev.x_change);
+
     PIC_sendEOI(12);
 });
 
@@ -51,7 +53,6 @@ int mouse_read(struct cdev *dev, u8 *buf, size_t len)
 
     if (mouse_queue == NULL)
     {
-        printf("queue empty\n");
         /* TODO: this task should be put on a waitqueue */
         while (mouse_queue == NULL)
         {

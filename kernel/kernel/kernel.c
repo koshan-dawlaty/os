@@ -1,3 +1,4 @@
+#include "drivers/character/mouse.h"
 #include "multiboot.h"
 #include <assert.h>
 #include <ata/ata.h>
@@ -184,6 +185,7 @@ void kmain()
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
+    create_device("/mouse", mouse_get());
     printf("starting shell\n");
 
     /* ktask_run(t1, NULL); */
