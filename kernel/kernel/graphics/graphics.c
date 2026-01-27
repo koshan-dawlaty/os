@@ -67,6 +67,7 @@ void framebuffer_draw_char(struct framebuffer *f, char c, size_t x, size_t y)
             }
             else
             {
+                framebuffer_put_pixel(f, 0, (x_pos + 4), y_pos);
             }
         }
     }

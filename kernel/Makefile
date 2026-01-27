@@ -52,7 +52,6 @@ kernel/kernel.o \
 kernel/utils.o \
 kernel/panic.o \
 kernel/serial/ps2.o \
-kernel/serial/mouse.o \
 kernel/syscall.o \
 kernel/elf/elf.o \
 kernel/elf/elf32.o \
@@ -93,6 +92,7 @@ drivers/block/ata/ata.o \
 drivers/block/bdev.o \
 drivers/block/ram/drive.o \
 drivers/character/cdev.o \
+drivers/character/mouse.o \
 drivers/character/terminal/device.o \
 drivers/character/keyboard/device.o \
 drivers/device.o \

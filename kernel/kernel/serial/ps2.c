@@ -1,5 +1,6 @@
-#include "panic.h"
+#include <interrupts/idt.h>
 #include <kernel/types.h>
+#include <panic.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <utils.h>
