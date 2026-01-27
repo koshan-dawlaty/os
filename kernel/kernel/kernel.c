@@ -22,6 +22,7 @@
 #include <kernel/types.h>
 #include <lib/array.h>
 #include <lib/binary_tree.h>
+#include <lib/list.h>
 #include <malloc_internal.h>
 #include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>
@@ -166,6 +167,9 @@ void t2(void *a)
 
 void kmain()
 {
+
+    struct list2 list = {NULL, &LIST2_INIT()};
+    struct list2 *ptr = &list;
 
     for (size_t i = 0; i < memory_regions_len(); i++)
     {

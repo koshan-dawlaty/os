@@ -10,6 +10,7 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <userspace/mouse.h>
 
 struct window *new_window(size_t x, size_t y, size_t w, size_t h)
 {
@@ -94,6 +95,18 @@ void process_connection()
     printf("%p\n", memory_len);
 }
 
+void mouse_thread()
+{
+    int mouse_fd = open("/mouse", O_RDONLY);
+    while (true)
+    {
+        struct mouse_event *ev = malloc(sizeof(struct mouse_event));
+        read(mouse_fd, ev, sizeof(struct mouse_event));
+
+        printf("%p\n", ev->x_change);
+    }
+}
+
 void thread1()
 {
     printf("thread\n");
@@ -113,9 +126,11 @@ int main()
     /* printf("window manager\n"); */
     /* clone((ptr)thread1); */
 
+    clone((ptr)mouse_thread);
+
     buffer = framebuffer_alloc();
     int socket = socket_create();
-    for (;;)
+    while (true)
     {
 
         int client_sock = socket_create();

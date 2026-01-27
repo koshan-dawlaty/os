@@ -12,7 +12,14 @@
 #include <stdatomic.h>
 #include <stdio.h>
 #include <string.h>
+#include <userspace/mouse.h>
 #include <utils.h>
+
+struct mouse_queue_ent
+{
+    struct mouse_event ev;
+    struct list2 list;
+};
 
 struct list2 *mouse_queue = NULL;
 
@@ -20,11 +27,12 @@ ISR(mouse_interrupt_handler, {
     u8 buttons = inb(0x60);
     u8 x = inb(0x60);
     u8 y = inb(0x60);
+    printf("x:%p\n", x);
 
-    struct mouse_event *ent = malloc(sizeof(struct mouse_event));
+    struct mouse_queue_ent *ent = malloc(sizeof(struct mouse_queue_ent));
 
-    ent->x_change = x;
-    ent->y_change = y;
+    ent->ev.x_change = x;
+    ent->ev.y_change = y;
 
     if (mouse_queue == NULL)
     {
@@ -43,6 +51,7 @@ int mouse_read(struct cdev *dev, u8 *buf, size_t len)
 
     if (mouse_queue == NULL)
     {
+        printf("queue empty\n");
         /* TODO: this task should be put on a waitqueue */
         while (mouse_queue == NULL)
         {
@@ -52,11 +61,11 @@ int mouse_read(struct cdev *dev, u8 *buf, size_t len)
 
     struct list2 *removed = list2_pop(&mouse_queue);
 
-    struct mouse_event *ent = LIST_ENTRY(removed, struct mouse_event, list);
+    struct mouse_queue_ent *ent =
+        LIST_ENTRY(removed, struct mouse_queue_ent, list);
 
     size_t bytes_written = MAX(len, sizeof(struct mouse_event));
-
-    memcpy(ent, buf, bytes_written);
+    memcpy(&ent->ev, buf, bytes_written);
 
     return bytes_written;
 }
