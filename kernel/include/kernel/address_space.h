@@ -15,6 +15,12 @@ struct addr_space {
     struct list *list_head;
 };
 
-struct address_space address_space_alloc();
+struct addr_space addr_space_alloc();
+void addr_space_free(struct addr_space a);
+
+int addr_space_map(struct addr_space a, void *addr, int flags);
+
+int addr_space_unmap(struct addr_space a, void * addr);
+
 
 #endif
