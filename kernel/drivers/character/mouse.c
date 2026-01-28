@@ -34,8 +34,7 @@ ISR(mouse_interrupt_handler, {
     ent->ev.y_change = y;
     ent->list = LIST2_INIT();
 
-    /* FIXME: this should be or, not and but it is easier when testing */
-    if (x > 0 && y > 0)
+    if (x > 0 || y > 0)
     {
 
         if (mouse_queue == NULL)
@@ -68,7 +67,6 @@ int mouse_read(struct cdev *dev, u8 *buf, size_t len)
     struct mouse_queue_ent *ent =
         LIST_ENTRY(removed, struct mouse_queue_ent, list);
 
-    /* printf("%p, %p\n", len, sizeof(struct mouse_event)); */
     size_t bytes_written = MIN(len, sizeof(struct mouse_event));
     memcpy(buf, &ent->ev, bytes_written);
 

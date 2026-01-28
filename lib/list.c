@@ -159,7 +159,10 @@ struct list2 *list2_pop(struct list2 **head)
     struct list2 *retval = *head;
     *head = (*head)->next;
 
-    (*head)->prev = NULL;
+    if (*head != NULL)
+    {
+        (*head)->prev = NULL;
+    }
 
     return retval;
 }
