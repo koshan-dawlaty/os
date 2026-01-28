@@ -36,33 +36,7 @@ int main(int argc, char **argv)
     /* printf("client buffer:%p\n", framebuffer); */
     /* memset(framebuffer, 'a', 100 * 100 * 4); */
 
-    memset(framebuffer, 255, 100 * 100 * 4);
-
-    for (size_t y = 0; y < win.height; y++)
-    {
-        int c = y % 2 == 0 ? 127 : 255;
-        /* int c = y; */
-        memset(framebuffer + y * 4 * win.width, c, win.width * 4);
-    }
-
     struct client_window w = {.w = win.height, win.width, framebuffer};
-
-    for (size_t y = 0; y < win.height; y++)
-    {
-        for (size_t x = 0; x < win.width; x++)
-        {
-            if ((x + y) % 2 == 0)
-            {
-                client_draw_pixel(&w, x, y, 0x0000FF);
-            }
-            else
-            {
-                client_draw_pixel(&w, x, y, 0);
-            }
-
-            client_draw_pixel(&w, x, y, y);
-        }
-    }
 
     int font_fd = open("/font.psfu", O_RDONLY);
     struct PSF_font *font = font_parse(font_fd);
@@ -75,6 +49,19 @@ int main(int argc, char **argv)
 
     /* memset(framebuffer, 'a', 10); */
 
+    int color = 0xFF;
+    switch (server_sock)
+    {
+    case 1:
+        color = 0xFF0000;
+        break;
+    case 2:
+        color = 0x00FF00;
+        break;
+    case 3:
+        color = 0xFFFF00;
+    }
+
     int pos = 10;
     size_t x = 1;
     while (1)
@@ -82,11 +69,43 @@ int main(int argc, char **argv)
         int done_code = WM_RES_RENDER;
         send(server_sock, &done_code, sizeof(int));
 
-        for (size_t i = 0; i < 1; i++)
-        {
-            client_draw_pixel(&w, pos, 1, 0xFF0000);
-            pos++;
-        }
+        client_draw_pixel(&w, pos, 0, color);
+        pos++;
+
+        /* char c = getchar(); */
+        /* for (size_t y = 0; y < win.height; y++) */
+        /* { */
+        /*     for (size_t x = 0; x < win.width; x++) */
+        /*     { */
+
+        /*         client_draw_pixel(&w, x, y, */
+        /*                           y * x * server_sock * server_sock * c * */
+        /*                               server_sock * server_sock * server_sock
+         * * */
+        /*                               server_sock * server_sock * server_sock
+         * * */
+        /*                               server_sock); */
+
+        /*         client_draw_pixel(&w, x, y, x * y); */
+
+        /*         /1* client_draw_pixel(&w, x, y, *1/ */
+        /*         /1*                   y * x * server_sock * server_sock * c *
+         * *1/ */
+        /*         /1*                       server_sock * server_sock *
+         * server_sock */
+        /*          * * *1/ */
+        /*         /1*                       server_sock * server_sock *
+         * server_sock */
+        /*          * * *1/ */
+        /*         /1*                       server_sock); *1/ */
+        /*     } */
+        /* } */
+
+        /* for (size_t i = 0; i < 1; i++) */
+        /* { */
+        /*     client_draw_pixel(&w, pos, 1, 0xFF0000); */
+        /*     pos++; */
+        /* } */
 
         /*         if (server_sock == 1) */
         /*         { */
@@ -97,7 +116,8 @@ int main(int argc, char **argv)
         /*             /1* recv(server_sock, &c, sizeof(char)); *1/ */
 
         /*         } */
-        client_draw_char(&w, font, getchar(), x, 20);
+        client_draw_char(&w, font, getchar(), x, 40);
+        x += font->header.width * 5;
 
         for (size_t i = 0; i < 1; i++)
         {
@@ -106,7 +126,6 @@ int main(int argc, char **argv)
 
         /* client_draw_char(&w, font, 'a', x, 20); */
         /* client_draw_char(&w, font, getchar(), x, 20); */
-        x += font->header.width;
     }
 
     exit(0);

@@ -68,7 +68,6 @@ kernel/memory/get_free_pages.o \
 kernel/graphics/graphics.o \
 kernel/multiboot.o \
 kernel/socket/socket.o \
-lib/array.o \
 lib/binary_tree.o \
 lib/lru.o \
 lib/rc.o \

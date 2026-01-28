@@ -27,7 +27,7 @@ CONFIG_FLAGS=$(echo $CONFIG_FILE_RAW | sed "s/^/-DCONFIG_/")
 
 
 export ARCH=$(./default-host.sh)
-CFLAGS="  -DMYOS1234 ${CFLAGS} -Werror -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(./arch-flags.sh $ARCH) -DCONFIG_$ARCH $CONFIG_FLAGS " 
+CFLAGS="  -DMYOS1234 ${CFLAGS} -Werror -Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(./arch-flags.sh $ARCH) -DCONFIG_$ARCH $CONFIG_FLAGS " 
 export CFLAGS
 export CPPFLAGS=''
 
