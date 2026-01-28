@@ -3,6 +3,7 @@
 #include "memory/paging_flags.h"
 #include <kernel/paging.h>
 #include <kernel/syscall.h>
+#include <stdio.h>
 #include <syscall.h>
 
 struct shared_memory_entry
@@ -24,10 +25,10 @@ int shared_mem_alloc(void **addr, size_t len)
 
     void *memory = SHARED_MEMORY_START + shared_memory_offset;
     size_t mem_len = align_long(len, PAGE_SIZE);
-    size_t num_pages = (mem_len / PAGE_SIZE) + 1;
+    size_t num_pages = (mem_len / PAGE_SIZE) + 2;
     void *physical = get_free_phys_pages(get_current_pagedir(), num_pages);
 
-    printf("physaddr:%p\n", physical);
+    printf("physaddr:%p-%p, %d\n", physical, physical + len, num_pages);
     for (size_t i = 0; i < num_pages; i++)
     {
         map_page(physical + (PAGE_SIZE * i), memory + (PAGE_SIZE * i),
@@ -49,7 +50,6 @@ int shared_mem_get(int id, void **p)
 {
 
     struct shared_memory_entry ent = shared_memory_list[id];
-    printf("id:%d\n", id);
 
     void *memory = SHARED_MEMORY_START + shared_memory_offset;
 

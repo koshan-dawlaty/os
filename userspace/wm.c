@@ -1,6 +1,7 @@
 #include "wm_lib.h"
 #include <fcntl.h>
 #include <init.h>
+#include <lib/array.h>
 #include <lib/list.h>
 #include <sched.h>
 #include <stdbool.h>
@@ -10,6 +11,8 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+
+struct array windows = ARRAY_INIT();
 
 struct window *new_window(size_t x, size_t y, size_t w, size_t h)
 {
@@ -26,10 +29,12 @@ struct window *new_window(size_t x, size_t y, size_t w, size_t h)
     return out;
 }
 
+struct framebuffer *buffer;
+
 void draw_window(struct framebuffer *b, struct window *win)
 {
 
-    for (size_t y = 0; y < win->h; y++)
+    for (size_t y = 0; y < win->h - 1; y++)
     {
         /* TODO: assumes 3 bytes per pixel */
         /* printf("%p ", win->buffer + (y * win->w)); */
@@ -39,9 +44,17 @@ void draw_window(struct framebuffer *b, struct window *win)
     }
 }
 
-struct list2 l = {};
+void draw_windows(struct framebuffer *b)
+{
+    size_t len = ARRAY_LEN(windows, sizeof(struct window));
 
-struct framebuffer *buffer;
+    for (size_t i = 0; i < len; i++)
+    {
+        /* printf("i:%d ", i); */
+        struct window *win = array_get(&windows, i, sizeof(struct window));
+        draw_window(b, win);
+    }
+}
 
 int current_client = 1;
 
@@ -51,8 +64,6 @@ void process_connection()
 {
     int socket;
     socket = current_client;
-
-    printf("client socket:%d\n", socket);
 
     struct wm_inital win_info;
     recv(socket, &win_info, sizeof(struct wm_inital));
@@ -68,8 +79,10 @@ void process_connection()
 
     send(socket, second_message, sizeof(struct wm_second));
 
-    struct window *w = new_window(200 + x, x, win_info.width, win_info.height);
+    struct window *w = new_window(400 + x, x, win_info.width, win_info.height);
     x += 50;
+
+    size_t index = array_add(&windows, w, sizeof(struct window));
 
     int code;
     recv(socket, &code, sizeof(int));
@@ -86,12 +99,12 @@ void process_connection()
                 memcpy(w->buffer + offset, client_buf + offset, w->w * 4);
             }
 
-            draw_window(buffer, w);
+            draw_windows(buffer);
+            /* draw_window(buffer, w); */
         }
+
         recv(socket, &code, sizeof(int));
     }
-
-    printf("%p\n", memory_len);
 }
 
 void thread1()

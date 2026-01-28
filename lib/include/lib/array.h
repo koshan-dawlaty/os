@@ -9,6 +9,8 @@ struct array
     void *data;
 };
 
+#define ARRAY_LEN(array, size) (array.len / size)
+
 #define ARRAY_INIT() ((struct array){.capacity = 0, .len = 0, .data = NULL})
 int array_add(struct array *array, const void *data, size_t size);
 

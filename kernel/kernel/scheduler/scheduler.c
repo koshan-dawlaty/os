@@ -50,8 +50,6 @@ bool is_scheduler_enabled()
 void new_task_usermode_start(int argc, char **argv, ptr addr)
 {
 
-    printf("addr:%p\n", addr);
-
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
@@ -64,13 +62,10 @@ void new_task_usermode_start(int argc, char **argv, ptr addr)
 void user_thread_kernel_start(ptr addr)
 {
 
-    printf("addr:%p\n", addr);
-
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
     temp_regs->esp = (ptr)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
-    printf("thread stack:%p\n", temp_regs->esp);
 
     jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
 }
@@ -172,7 +167,6 @@ struct task *user_thread_alloc(ptr ip)
     out->start_addr = (void *)ip;
 
     out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
-    printf("thread stack:%p\n", out->stack);
     out->bp = (ptr)out->stack;
     out->descriptors = new_fdlist();
 
