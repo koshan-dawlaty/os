@@ -59,6 +59,8 @@ void draw_windows(struct framebuffer *b)
 
 int current_client = 1;
 
+struct window *mouse;
+
 size_t x = 10;
 
 void process_connection()
@@ -116,6 +118,27 @@ void mouse_thread()
         struct mouse_event *ev = malloc(sizeof(struct mouse_event));
         int size = read(mouse_fd, ev, sizeof(struct mouse_event));
 
+        if (ev->x_change < 0)
+        {
+        }
+
+        mouse->x += ev->x_change;
+        mouse->y += ev->y_change;
+
+        if ((int)mouse->x < 0)
+        {
+            mouse->x = 0;
+        }
+
+        if ((int)mouse->y < 0)
+        {
+            mouse->y = 0;
+        }
+
+        /* printf("%d, %d\n", mouse->x, mouse->y); */
+
+        draw_window(buffer, mouse);
+
         free(ev);
     }
 }
@@ -138,6 +161,8 @@ int main()
 
     /* printf("window manager\n"); */
     /* clone((ptr)thread1); */
+
+    mouse = new_window(0, 0, 10, 10);
 
     clone((ptr)mouse_thread);
 

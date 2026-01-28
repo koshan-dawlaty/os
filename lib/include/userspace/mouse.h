@@ -7,8 +7,8 @@
 
 struct mouse_event
 {
-    u8 x_change;
-    u8 y_change;
+    int x_change;
+    int y_change;
 
 } __packed;
 

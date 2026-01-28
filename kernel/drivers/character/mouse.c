@@ -10,6 +10,7 @@
 #include <panic.h>
 #include <scheduler.h>
 #include <stdatomic.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <userspace/mouse.h>
@@ -23,20 +24,35 @@ struct mouse_queue_ent
 
 struct list2 *mouse_queue = NULL;
 
+#define PS2_MOUSE_LEFT_CLICK (1 << 0)
+#define PS2_MOUSE_RIGHT_CLICK (1 << 1)
+#define PS2_MOUSE_MIDDLE_CLICK (1 << 2)
+#define PS2_MOUSE_ALWAYS_ONE (1 << 3)
+#define PS2_MOUSE_X_SIGN (1 << 4)
+#define PS2_MOUSE_X_OVERFLOW (1 << 6)
+
 ISR(mouse_interrupt_handler, {
     u8 buttons = inb(0x60);
-    u8 x = inb(0x60);
-    u8 y = inb(0x60);
+    int8_t x = inb(0x60);
+    int8_t y = inb(0x60);
+
+    if (!(buttons & PS2_MOUSE_ALWAYS_ONE) || (buttons & PS2_MOUSE_X_OVERFLOW))
+    {
+        goto end;
+    }
 
     struct mouse_queue_ent *ent = malloc(sizeof(struct mouse_queue_ent));
 
+    /* https://wiki.osdev.org/PS/2_Mouse */
+    /* int rel_x = x - ((buttons << 4) & 0x100); */
+    /* int rel_y = y - ((buttons << 3) & 0x100); */
+
     ent->ev.x_change = x;
-    ent->ev.y_change = y;
+    ent->ev.y_change = -y;
     ent->list = LIST2_INIT();
 
-    if (x > 0 || y > 0)
+    if (x != 0 || y != 0)
     {
-
         if (mouse_queue == NULL)
         {
             mouse_queue = &ent->list;
@@ -47,6 +63,7 @@ ISR(mouse_interrupt_handler, {
         }
     }
 
+end:
     PIC_sendEOI(12);
 });
 
