@@ -114,9 +114,9 @@ void mouse_thread()
     while (true)
     {
         struct mouse_event *ev = malloc(sizeof(struct mouse_event));
-        read(mouse_fd, ev, sizeof(struct mouse_event));
+        int size = read(mouse_fd, ev, sizeof(struct mouse_event));
 
-        printf("userspace:%p\n", ev->x_change);
+        free(ev);
     }
 }
 

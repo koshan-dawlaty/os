@@ -34,16 +34,19 @@ ISR(mouse_interrupt_handler, {
     ent->ev.y_change = y;
     ent->list = LIST2_INIT();
 
-    if (mouse_queue == NULL)
+    /* FIXME: this should be or, not and but it is easier when testing */
+    if (x > 0 && y > 0)
     {
-        mouse_queue = &ent->list;
-    }
-    else
-    {
-        list2_add(&ent->list, mouse_queue);
-    }
 
-    printf("isr:%p\n", ent->ev.x_change);
+        if (mouse_queue == NULL)
+        {
+            mouse_queue = &ent->list;
+        }
+        else
+        {
+            list2_add(&ent->list, mouse_queue);
+        }
+    }
 
     PIC_sendEOI(12);
 });
@@ -65,8 +68,9 @@ int mouse_read(struct cdev *dev, u8 *buf, size_t len)
     struct mouse_queue_ent *ent =
         LIST_ENTRY(removed, struct mouse_queue_ent, list);
 
-    size_t bytes_written = MAX(len, sizeof(struct mouse_event));
-    memcpy(&ent->ev, buf, bytes_written);
+    /* printf("%p, %p\n", len, sizeof(struct mouse_event)); */
+    size_t bytes_written = MIN(len, sizeof(struct mouse_event));
+    memcpy(buf, &ent->ev, bytes_written);
 
     return bytes_written;
 }
