@@ -13,7 +13,12 @@
 #include <unistd.h>
 #include <userspace/mouse.h>
 
-struct array windows = ARRAY_INIT();
+struct window_queue_entry
+{
+    struct window *win;
+    struct list2 list;
+};
+struct list2 *window_queue;
 
 struct window *new_window(size_t x, size_t y, size_t w, size_t h)
 {
@@ -47,13 +52,14 @@ void draw_window(struct framebuffer *b, struct window *win)
 
 void draw_windows(struct framebuffer *b)
 {
-    size_t len = ARRAY_LEN(windows, sizeof(struct window));
 
-    for (size_t i = 0; i < len; i++)
+    struct list2 *pos;
+    list2_for_each(pos, window_queue)
     {
-        /* printf("i:%d ", i); */
-        struct window *win = array_get(&windows, i, sizeof(struct window));
-        draw_window(b, win);
+        struct window_queue_entry *ent =
+            LIST_ENTRY(pos, struct window_queue_entry, list);
+
+        draw_window(buffer, ent->win);
     }
 }
 
@@ -85,7 +91,10 @@ void process_connection()
     struct window *w = new_window(400 + x, x, win_info.width, win_info.height);
     x += 50;
 
-    size_t index = array_add(&windows, w, sizeof(struct window));
+    struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
+    ent->list = LIST2_INIT();
+    ent->win = w;
+    list2_add_front(&ent->list, &window_queue);
 
     int code;
     recv(socket, &code, sizeof(int));
@@ -112,6 +121,7 @@ void process_connection()
 
 void mouse_thread()
 {
+
     int mouse_fd = open("/mouse", O_RDONLY);
     while (true)
     {
@@ -138,6 +148,7 @@ void mouse_thread()
         /* printf("%d, %d\n", mouse->x, mouse->y); */
 
         draw_window(buffer, mouse);
+        /* draw_windows(buffer); */
 
         free(ev);
     }
@@ -163,6 +174,10 @@ int main()
     /* clone((ptr)thread1); */
 
     mouse = new_window(0, 0, 10, 10);
+
+    /* this might be bad because this is a stack allocation */
+    struct window_queue_entry mouse_ent = {.win = mouse, .list = LIST2_INIT()};
+    window_queue = &mouse_ent.list;
 
     clone((ptr)mouse_thread);
 
