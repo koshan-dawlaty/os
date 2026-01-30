@@ -102,6 +102,9 @@ void draw_background(struct framebuffer *f)
 
             int color = r | (g << 8) | (b << 16);
             framebuffer_put_pixel(f, color, x, y);
+            /* framebuffer_put_pixel(f, (x + y) % 2 == 0 ? 0xFFFFFF : 0, x, y);
+             */
+            /* framebuffer_put_pixel(f, 0xFFFFFF, x, y); */
         }
     }
 

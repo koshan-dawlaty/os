@@ -36,10 +36,12 @@ int main(int argc, char **argv)
     /* printf("client buffer:%p\n", framebuffer); */
     /* memset(framebuffer, 'a', 100 * 100 * 4); */
 
-    struct client_window w = {.w = win.height, win.width, framebuffer};
+    struct client_window w = {
+        .w = win.width, .h = win.height, .buffer = framebuffer};
 
     int font_fd = open("/font.psfu", O_RDONLY);
     struct PSF_font *font = font_parse(font_fd);
+    printf("%d\n", font->header.bytes_per_glyph);
 
     if (font == NULL)
     {
@@ -62,6 +64,18 @@ int main(int argc, char **argv)
         color = 0xFFFF00;
     }
 
+    memset(w.buffer, 127, win.width * win.height * 4);
+    size_t y;
+    for (y = 0; y < win.height; y++)
+    {
+        for (size_t x = 0; x < win.width; x++)
+        {
+            client_draw_pixel(&w, x, y, color);
+        }
+    }
+
+    printf("%d\n", y);
+
     int pos = 10;
     size_t x = 1;
     while (1)
@@ -69,8 +83,16 @@ int main(int argc, char **argv)
         int done_code = WM_RES_RENDER;
         send(server_sock, &done_code, sizeof(int));
 
-        client_draw_pixel(&w, pos, 0, color);
-        pos++;
+        /* client_draw_pixel(&w, pos, 0, color); */
+        /* pos++; */
+
+        client_draw_char(&w, font, getchar(), x, 40);
+        x += font->header.width;
+
+        for (size_t i = 0; i < 1; i++)
+        {
+            sched_yield();
+        }
 
         /* char c = getchar(); */
         /* for (size_t y = 0; y < win.height; y++) */
@@ -116,13 +138,6 @@ int main(int argc, char **argv)
         /*             /1* recv(server_sock, &c, sizeof(char)); *1/ */
 
         /*         } */
-        client_draw_char(&w, font, getchar(), x, 40);
-        x += font->header.width * 5;
-
-        for (size_t i = 0; i < 1; i++)
-        {
-            sched_yield();
-        }
 
         /* client_draw_char(&w, font, 'a', x, 20); */
         /* client_draw_char(&w, font, getchar(), x, 20); */

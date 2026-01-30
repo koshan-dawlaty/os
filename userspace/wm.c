@@ -28,8 +28,6 @@ struct window *new_window(size_t x, size_t y, size_t w, size_t h)
     out->w = w;
     out->h = h;
 
-    /* TODO: this assumes 3 bytes per pixel */
-
     out->buffer = malloc(w * h * 4);
 
     return out;
@@ -40,10 +38,10 @@ struct framebuffer *buffer;
 void draw_window(struct framebuffer *b, struct window *win)
 {
 
-    for (size_t y = 0; y < win->h - 1; y++)
+    printf("width:%p\n", b->pixel_width);
+    printf("%p\n", b->pitch);
+    for (size_t y = 0; y < win->h; y++)
     {
-        /* TODO: assumes 3 bytes per pixel */
-        /* printf("%p ", win->buffer + (y * win->w)); */
         memcpy(b->buffer +
                    (((y + win->y) * b->pitch) + (win->x * b->pixel_width)),
                win->buffer + (y * win->w * 4), win->w * 4);
@@ -58,8 +56,7 @@ void draw_windows(struct framebuffer *b)
     {
         struct window_queue_entry *ent =
             LIST_ENTRY(pos, struct window_queue_entry, list);
-
-        draw_window(buffer, ent->win);
+        draw_window(b, ent->win);
     }
 }
 
@@ -94,7 +91,15 @@ void process_connection()
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
     ent->list = LIST2_INIT();
     ent->win = w;
-    list2_add_front(&ent->list, &window_queue);
+
+    if (window_queue == NULL)
+    {
+        window_queue = &ent->list;
+    }
+    else
+    {
+        list2_add_front(&ent->list, &window_queue);
+    }
 
     int code;
     recv(socket, &code, sizeof(int));
@@ -125,6 +130,7 @@ void mouse_thread()
     int mouse_fd = open("/mouse", O_RDONLY);
     while (true)
     {
+        continue;
         struct mouse_event *ev = malloc(sizeof(struct mouse_event));
         int size = read(mouse_fd, ev, sizeof(struct mouse_event));
 
@@ -175,9 +181,12 @@ int main()
 
     mouse = new_window(0, 0, 10, 10);
 
+    /* memset(mouse->buffer, 255, 10 * 10 * 4); */
+
     /* this might be bad because this is a stack allocation */
-    struct window_queue_entry mouse_ent = {.win = mouse, .list = LIST2_INIT()};
-    window_queue = &mouse_ent.list;
+    /* struct window_queue_entry mouse_ent = {.win = mouse, .list =
+     * LIST2_INIT()}; */
+    /* window_queue = &mouse_ent.list; */
 
     clone((ptr)mouse_thread);
 
