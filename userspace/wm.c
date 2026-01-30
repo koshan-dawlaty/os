@@ -38,8 +38,6 @@ struct framebuffer *buffer;
 void draw_window(struct framebuffer *b, struct window *win)
 {
 
-    printf("width:%p\n", b->pixel_width);
-    printf("%p\n", b->pitch);
     for (size_t y = 0; y < win->h; y++)
     {
         memcpy(b->buffer +
@@ -130,9 +128,13 @@ void mouse_thread()
     int mouse_fd = open("/mouse", O_RDONLY);
     while (true)
     {
-        continue;
         struct mouse_event *ev = malloc(sizeof(struct mouse_event));
         int size = read(mouse_fd, ev, sizeof(struct mouse_event));
+
+        if (size != sizeof(struct mouse_event))
+        {
+            printf("reading from the mouse returned invalid size!\n");
+        }
 
         if (ev->x_change < 0)
         {
@@ -153,8 +155,8 @@ void mouse_thread()
 
         /* printf("%d, %d\n", mouse->x, mouse->y); */
 
-        draw_window(buffer, mouse);
-        /* draw_windows(buffer); */
+        /* draw_window(buffer, mouse); */
+        draw_windows(buffer);
 
         free(ev);
     }
@@ -184,9 +186,8 @@ int main()
     /* memset(mouse->buffer, 255, 10 * 10 * 4); */
 
     /* this might be bad because this is a stack allocation */
-    /* struct window_queue_entry mouse_ent = {.win = mouse, .list =
-     * LIST2_INIT()}; */
-    /* window_queue = &mouse_ent.list; */
+    struct window_queue_entry mouse_ent = {.win = mouse, .list = LIST2_INIT()};
+    window_queue = &mouse_ent.list;
 
     clone((ptr)mouse_thread);
 

@@ -74,8 +74,6 @@ int main(int argc, char **argv)
         }
     }
 
-    printf("%d\n", y);
-
     int pos = 10;
     size_t x = 1;
     while (1)

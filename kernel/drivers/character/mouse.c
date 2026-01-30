@@ -54,6 +54,11 @@ end:
 int mouse_read(struct cdev *dev, u8 *buf, size_t len)
 {
 
+    while (mouse_x == 0 || mouse_y == 0)
+    {
+        schedule();
+    }
+
     struct mouse_event ev = {.x_change = mouse_x, .y_change = mouse_y};
     mouse_x = 0;
     mouse_y = 0;
