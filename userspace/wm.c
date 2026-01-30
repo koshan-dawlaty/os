@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <userspace/mouse.h>
 
+struct window *focused = NULL;
+
 struct window_queue_entry
 {
     struct window *win;
@@ -38,7 +40,7 @@ struct framebuffer *buffer;
 void draw_window(struct framebuffer *b, struct window *win)
 {
 
-    for (size_t y = 0; y < win->h; y++)
+    for (size_t y = 0; y < win->h - 1; y++)
     {
         memcpy(b->buffer +
                    (((y + win->y) * b->pitch) + (win->x * b->pixel_width)),
@@ -84,7 +86,7 @@ void process_connection()
     send(socket, second_message, sizeof(struct wm_second));
 
     struct window *w = new_window(400 + x, x, win_info.width, win_info.height);
-    x += 50;
+    x += 75;
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
     ent->list = LIST2_INIT();
@@ -155,7 +157,34 @@ void mouse_thread()
 
         if (ev->buttons.left_click)
         {
-            printf("test123\n");
+
+            /* TODO: this should be its own function that traverses the list
+             * backwards */
+            struct list2 *pos;
+            struct list2 *prev = NULL;
+            list2_for_each(pos, window_queue)
+            {
+                prev = pos;
+            }
+
+            for (pos = prev; pos != NULL; pos = pos->prev)
+            {
+
+                struct window *win =
+                    LIST_ENTRY(pos, struct window_queue_entry, list)->win;
+
+                if (mouse->x > win->x && mouse->x < win->x + win->w &&
+                    mouse->y > win->y && mouse->y < win->y + win->h)
+                {
+                    focused = win;
+                    break;
+                }
+            }
+
+            if (focused != NULL)
+            {
+                memset(focused->buffer, 0, focused->w * focused->h * 4);
+            }
         }
 
         /* printf("%d, %d\n", mouse->x, mouse->y); */

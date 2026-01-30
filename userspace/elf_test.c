@@ -64,7 +64,7 @@ int main(int argc, char **argv)
         color = 0xFFFF00;
     }
 
-    memset(w.buffer, 127, win.width * win.height * 4);
+    /* memset(w.buffer, 127, win.width * win.height * 4); */
     size_t y;
     for (y = 0; y < win.height; y++)
     {
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
         /* client_draw_pixel(&w, pos, 0, color); */
         /* pos++; */
 
-        client_draw_char(&w, font, getchar(), x, 40);
+        client_draw_char(&w, font, getchar(), x, 0);
         x += font->header.width;
 
         for (size_t i = 0; i < 1; i++)
