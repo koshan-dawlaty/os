@@ -26,22 +26,40 @@ struct wait_queue mouse_waitqueue = WAIT_QUEUE_INIT();
 #define PS2_MOUSE_ALWAYS_ONE (1 << 3)
 #define PS2_MOUSE_X_SIGN (1 << 4)
 #define PS2_MOUSE_X_OVERFLOW (1 << 6)
+#define PS2_MOUSE_Y_OVERFLOW (1 << 7)
 
-int mouse_x = 0;
-int mouse_y = 0;
+struct mouse_event ps2_mouse_event = {0, 0, {false, false, false}};
 
 ISR(mouse_interrupt_handler, {
     u8 buttons = inb(0x60);
     int8_t x = inb(0x60);
     int8_t y = inb(0x60);
 
-    if (!(buttons & PS2_MOUSE_ALWAYS_ONE) || (buttons & PS2_MOUSE_X_OVERFLOW))
+    /* TODO: maybe use the overflow bit
+     * i think it will make the mouse get offset from the real mouse less
+     */
+    if (!(buttons & PS2_MOUSE_ALWAYS_ONE) || (buttons & PS2_MOUSE_X_OVERFLOW) ||
+        (buttons & PS2_MOUSE_Y_OVERFLOW))
     {
         goto end;
     }
 
-    mouse_x += x;
-    mouse_y += -y;
+    if (buttons & PS2_MOUSE_LEFT_CLICK)
+    {
+        ps2_mouse_event.buttons.left_click = true;
+    }
+    if (buttons & PS2_MOUSE_RIGHT_CLICK)
+    {
+        ps2_mouse_event.buttons.right_click = true;
+    }
+
+    if (buttons & PS2_MOUSE_MIDDLE_CLICK)
+    {
+        ps2_mouse_event.buttons.middle_click = true;
+    }
+
+    ps2_mouse_event.x_change += x;
+    ps2_mouse_event.y_change -= y;
 
     if (!WAIT_QUEUE_EMPTY(mouse_waitqueue))
     {
@@ -55,16 +73,18 @@ end:
 int mouse_read(struct cdev *dev, u8 *buf, size_t len)
 {
 
-    if (mouse_x == 0 && mouse_y == 0)
+    if (MOUSE_EVENT_EMPTY(ps2_mouse_event))
     {
         wait_queue_wait(&mouse_waitqueue);
     }
 
-    struct mouse_event ev = {.x_change = mouse_x, .y_change = mouse_y};
-    mouse_x = 0;
-    mouse_y = 0;
     size_t bytes_written = MIN(len, sizeof(struct mouse_event));
-    memcpy(buf, &ev, bytes_written);
+    memcpy(buf, &ps2_mouse_event, bytes_written);
+
+    ps2_mouse_event.x_change = 0;
+    ps2_mouse_event.y_change = 0;
+
+    ps2_mouse_event.buttons = (struct mouse_buttons){false, false, false};
 
     return bytes_written;
 }

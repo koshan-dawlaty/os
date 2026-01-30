@@ -153,6 +153,11 @@ void mouse_thread()
             mouse->y = 0;
         }
 
+        if (ev->buttons.left_click)
+        {
+            printf("test123\n");
+        }
+
         /* printf("%d, %d\n", mouse->x, mouse->y); */
 
         /* draw_window(buffer, mouse); */
