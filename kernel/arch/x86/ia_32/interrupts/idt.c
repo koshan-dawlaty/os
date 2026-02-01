@@ -3,6 +3,7 @@
 #include "interrupts/idt_internal.h"
 #include "interrupts/pic.h"
 #include "pit/pit.h"
+#include <drivers/character/mouse.h>
 
 #include "ata/ata.h"
 
@@ -84,6 +85,15 @@ void init_idt()
 
     add_idt_entry((IDT_entry){(uint32_t)keyboard_interrupt_handler, 0x8, 0x8E},
                   0x21);
+
+    add_idt_entry(
+        (IDT_entry){
+            .offset = (ptr)mouse_interrupt_handler,
+            .segment_selector = 8,
+            .flags = 0x8E,
+        },
+        44);
+
     /* add_idt_entry((IDT_entry){(uint32_t)ata_isr_2, 0x8, 0x8E}, 4 + 0x20); */
 
     /* add_idt_entry((IDT_entry){(uint32_t)pit_handler, 0x8, 0x8E}, 0x20); */

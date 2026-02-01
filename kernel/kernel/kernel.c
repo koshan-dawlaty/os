@@ -181,6 +181,8 @@ void kmain()
         printf("%p-%p\n", region.start, region.start + region.len);
     }
 
+    printf("%p\n", malloc(10));
+
     /* open("/one", O_RDONLY); */
 
     struct task *kernel_task = create_kernel_task();
