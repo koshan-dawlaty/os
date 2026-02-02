@@ -1,4 +1,3 @@
-#include "kernel/addr_space.h"
 #include "multiboot.h"
 #include <assert.h>
 #include <ata/ata.h>
@@ -6,22 +5,26 @@
 #include <dirent.h>
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/keyboard.h>
+#include <drivers/character/mouse.h>
 #include <drivers/character/terminal.h>
 #include <endian.h>
 #include <err.h>
 #include <fcntl.h>
 #include <gdt.h>
 #include <interrupts/idt.h>
+#include <kernel/addr_space.h>
 #include <kernel/graphics.h>
 #include <kernel/keyboard.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
+#include <kernel/ps2.h>
 #include <kernel/semaphore.h>
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
 #include <kernel/types.h>
 #include <lib/array.h>
 #include <lib/binary_tree.h>
+#include <lib/list.h>
 #include <malloc_internal.h>
 #include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>
@@ -100,6 +103,9 @@ void draw_background(struct framebuffer *f)
 
             int color = r | (g << 8) | (b << 16);
             framebuffer_put_pixel(f, color, x, y);
+            /* framebuffer_put_pixel(f, (x + y) % 2 == 0 ? 0xFFFFFF : 0, x, y);
+             */
+            /* framebuffer_put_pixel(f, 0xFFFFFF, x, y); */
         }
     }
 
@@ -138,6 +144,8 @@ void kernel_init()
 
     init_vfs();
 
+    ps2_init();
+
     call_constructors();
 
 #ifdef TESTS
@@ -165,27 +173,29 @@ void t2(void *a)
 void kmain()
 {
 
-    /* struct addr_space addr_sp = addr_space_alloc(); */
-    /* printf("%p\n", addr_sp.dir); */
-    /* addr_space_load(addr_sp); */
+    struct addr_space addr_sp = addr_space_alloc();
+    printf("%p\n", addr_sp.dir);
+    addr_space_load(addr_sp);
 
-    /* void *addr = (void *)0xB00000000; */
+    void *addr = (void *)0xB00000000;
 
-    /* addr_space_map(addr_sp, addr, 10, PAGING_PRESENT | PAGING_WRITEABLE); */
-    /* for (size_t i = 0; i < 100; i++) */
-    /* { */
-    /*     ((char *)(addr + 9 * PAGE_SIZE))[i] = (i % 10 + 0x30); */
-    /* } */
+    addr_space_map(addr_sp, addr, 10, PAGING_PRESENT | PAGING_WRITEABLE);
+    for (size_t i = 0; i < 100; i++)
+    {
+        ((char *)(addr + 9 * PAGE_SIZE))[i] = (i % 10 + 0x30);
+    }
 
-    /* printf("%s\n", addr + 9 * PAGE_SIZE); */
+    printf("%s\n", addr + 9 * PAGE_SIZE);
 
-    /* addr_space_unmap(addr_sp, addr); */
+    addr_space_unmap(addr_sp, addr);
 
     for (size_t i = 0; i < memory_regions_len(); i++)
     {
         struct memory_region region = memory_regions_get(i);
         printf("%p-%p\n", region.start, region.start + region.len);
     }
+
+    printf("%p\n", malloc(10));
 
     /* open("/one", O_RDONLY); */
 
@@ -194,6 +204,7 @@ void kmain()
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
+    create_device("/mouse", mouse_get());
     printf("starting shell\n");
 
     /* ktask_run(t1, NULL); */

@@ -29,7 +29,7 @@ struct client_window
 static inline void client_draw_pixel(struct client_window *w, size_t x,
                                      size_t y, uint32_t color)
 {
-    size_t location = y * w->h * 4 + x * 4;
+    size_t location = y * w->w * 4 + x * 4;
 
     uint8_t *pixel = (uint8_t *)w->buffer + location;
     pixel[0] = color & 255;         // BLUE
