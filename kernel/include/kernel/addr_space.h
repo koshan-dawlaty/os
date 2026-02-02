@@ -21,6 +21,11 @@ struct addr_space
 struct addr_space addr_space_alloc();
 void addr_space_free(struct addr_space a);
 
+static inline void addr_space_load(struct addr_space a)
+{
+    load_pgdir(a.dir);
+}
+
 int addr_space_map(struct addr_space a, void *addr, size_t num_pages,
                    int flags);
 int addr_space_unmap(struct addr_space a, void *addr);
