@@ -290,7 +290,7 @@ end:
 }
 
 #ifdef __is_libk
-spinlock *heap_mutex = NULL;
+struct spinlock *heap_mutex = NULL;
 #endif
 
 void *malloc(size_t size)

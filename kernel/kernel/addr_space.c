@@ -5,6 +5,9 @@
 #include <lib/list.h>
 #include <memory/paging_flags.h>
 #include <stdlib.h>
+extern struct pagedir init_pgdir;
+
+struct addr_space current_addr_space = {.dir = &init_pgdir, .list_head = NULL};
 
 struct addr_space addr_space_alloc()
 {

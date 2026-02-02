@@ -1,3 +1,4 @@
+#include "kernel/addr_space.h"
 #include <compiler.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
@@ -38,6 +39,8 @@ struct task
     struct list list;
 
     struct pagedir *pgdir;
+    struct addr_space addr_space;
+
     void *stack;
     struct registers regs;
     ptr bp;

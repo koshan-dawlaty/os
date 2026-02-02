@@ -1,4 +1,5 @@
 #include "gdt.h"
+#include "kernel/addr_space.h"
 #include "kernel/paging.h"
 #include "kernel/utils.h"
 #include "memory/paging_flags.h"
@@ -38,9 +39,10 @@ struct task *load_elf(elf *elf, int argc, char **argv)
 
     struct task *t = new_task_user(elf->entry_point, 0xBFFEF000, argc, argv);
     struct pagedir *pgdir = t->pgdir;
+    t->addr_space = (struct addr_space){.dir = t->pgdir, .list_head = NULL};
     struct pagedir *temp_pgdir = get_current_pagedir();
 
-    load_pgdir(pgdir);
+    addr_space_load(t->addr_space);
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
 
@@ -48,13 +50,17 @@ struct task *load_elf(elf *elf, int argc, char **argv)
         /* load */
         if (header->type == 1)
         {
+
             for (size_t i = 0; i <= header->size_memory + PAGE_SIZE;
                  i += PAGE_SIZE)
             {
 
-                map_page((void *)get_free_phys_page(),
-                         (void *)(header->virtual_addr + i),
-                         PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+                addr_space_map(current_addr_space,
+                               (void *)(header->virtual_addr + i), 1,
+                               PAGING_PRESENT | PAGING_USER | PAGING_PRESENT);
+                /* map_page((void *)get_free_phys_page(), */
+                /*          (void *)(header->virtual_addr + i), */
+                /*          PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
             }
 
             /* this may not have zeros at the end */
