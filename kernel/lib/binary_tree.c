@@ -2,12 +2,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-struct bintree_head bintree_head_init()
-{
-    struct bintree_head out = {.root = NULL};
-    return out;
-}
-
 void bintree_add(struct bintree_head *head, struct bintree_node *new)
 {
     if (head->root == NULL)

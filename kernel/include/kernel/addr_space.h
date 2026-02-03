@@ -1,6 +1,7 @@
 #ifndef ADDRESS_SPACE_H
 #define ADDRESS_SPACE_H
 
+#include "lib/binary_tree.h"
 #include <kernel/paging.h>
 #include <lib/list.h>
 
@@ -8,14 +9,14 @@ struct addr_space_page
 {
     void *addr;
     size_t num_pages;
-    struct list list;
+    struct bintree_node node;
 };
 
 /* wrapper for struct pagedir that keeps track of pages */
 struct addr_space
 {
     struct pagedir *dir;
-    struct list *list_head;
+    struct bintree_head head;
 };
 
 struct addr_space addr_space_alloc();

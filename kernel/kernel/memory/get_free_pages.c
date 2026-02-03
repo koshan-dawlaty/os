@@ -318,7 +318,7 @@ void init_gfp_zones()
     tree_zone->base = (void *)0xE0000000;
 #endif
 
-    tree_zone->head = bintree_head_init();
+    tree_zone->head = BINTREE_HEAD_INIT();
 
     map_page(get_free_phys_page(), tree_zone->base,
              PAGING_PRESENT | PAGING_WRITEABLE);
