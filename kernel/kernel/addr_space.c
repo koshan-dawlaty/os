@@ -1,9 +1,10 @@
-#include "kernel/utils.h"
 #include <errno.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
+#include <kernel/utils.h>
 #include <lib/list.h>
 #include <memory/paging_flags.h>
+#include <panic.h>
 #include <stdlib.h>
 extern struct pagedir init_pgdir;
 
@@ -23,50 +24,74 @@ static struct addr_space_page *addr_space_page_alloc(void *addr,
 
     page->addr = addr;
     page->num_pages = num_pages;
+    page->list = LIST_INIT();
 
     return page;
 }
 
 void addr_space_free(struct addr_space a)
 {
-    /* TODO: free pagedir */
+
+    struct list *pos;
+    struct addr_space_page *prev = NULL;
+    list_for_each(pos, a.list_head)
+    {
+        struct addr_space_page *pg =
+            LIST_ENTRY(pos, struct addr_space_page, list);
+
+        for (size_t i = 0; i < pg->num_pages; i++)
+        {
+            unmap_page(pg->addr + (i * PAGE_SIZE));
+        }
+
+        if (prev != NULL)
+        {
+            free(prev);
+        }
+        prev = pg;
+    }
 }
 
-int addr_space_map(struct addr_space a, void *addr, size_t num_pages, int flags)
+int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
+                   int flags)
 {
+    /* printf("start:%p\n", a->list_head); */
+    /* printf("mapping:%p\n", addr); */
     struct pagedir *prev_dir = get_current_pagedir();
-    load_pgdir(a.dir);
+    load_pgdir(a->dir);
     for (size_t i = 0; i < num_pages; i++)
     {
-        write_pagedir(a.dir, get_free_phys_page(), addr + (i * PAGE_SIZE),
+        write_pagedir(a->dir, get_free_phys_page(), addr + (i * PAGE_SIZE),
                       PAGING_PRESENT | flags);
     }
 
     struct addr_space_page *page = addr_space_page_alloc(
         (void *)ptr_align((ptr)addr, PAGE_SIZE), num_pages);
 
-    if (a.list_head != NULL)
+    if (a->list_head != NULL)
     {
-        list_push(&page->list, &a.list_head);
+        list_push(&page->list, &a->list_head);
     }
     else
     {
-        a.list_head = &page->list;
+        a->list_head = &page->list;
     }
 
     load_pgdir(prev_dir);
 
+    /* printf("%p\n", a->list_head); */
+
     return 0;
 }
 
-int addr_space_unmap(struct addr_space a, void *addr)
+int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages)
 {
     struct pagedir *prev_dir = get_current_pagedir();
-    load_pgdir(a.dir);
+    load_pgdir(a->dir);
 
     struct addr_space_page *pg = NULL;
     struct list *pos = NULL;
-    list_for_each(pos, a.list_head)
+    list_for_each(pos, a->list_head)
     {
         pg = LIST_ENTRY(pos, struct addr_space_page, list);
 
@@ -81,12 +106,12 @@ int addr_space_unmap(struct addr_space a, void *addr)
         return -ENOENT;
     }
 
-    size_t num_pages = pg->num_pages;
     for (size_t i = 0; i < num_pages; i++)
     {
         unmap_page(addr + (i * PAGE_SIZE));
     }
 
+    list_remove(pos, &a->list_head);
     free(pg);
 
     load_pgdir(prev_dir);

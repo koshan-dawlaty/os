@@ -55,7 +55,7 @@ struct task *load_elf(elf *elf, int argc, char **argv)
                  i += PAGE_SIZE)
             {
 
-                addr_space_map(current_addr_space,
+                addr_space_map(&t->addr_space,
                                (void *)(header->virtual_addr + i), 1,
                                PAGING_PRESENT | PAGING_USER | PAGING_PRESENT);
                 /* map_page((void *)get_free_phys_page(), */

@@ -179,7 +179,7 @@ void kmain()
 
     void *addr = (void *)0xB00000000;
 
-    addr_space_map(addr_sp, addr, 10, PAGING_PRESENT | PAGING_WRITEABLE);
+    addr_space_map(&addr_sp, addr, 10, PAGING_PRESENT | PAGING_WRITEABLE);
     for (size_t i = 0; i < 100; i++)
     {
         ((char *)(addr + 9 * PAGE_SIZE))[i] = (i % 10 + 0x30);
@@ -187,7 +187,7 @@ void kmain()
 
     printf("%s\n", addr + 9 * PAGE_SIZE);
 
-    addr_space_unmap(addr_sp, addr);
+    addr_space_unmap(&addr_sp, addr, 10);
 
     for (size_t i = 0; i < memory_regions_len(); i++)
     {
