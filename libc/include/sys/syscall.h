@@ -24,4 +24,8 @@
 #define SYS_shared_mem_alloc 24
 #define SYS_shared_mem_get 25
 
+#define SYS_mutex_create 26
+#define SYS_mutex_lock 27
+#define SYS_mutex_unlock 28
+
 #endif

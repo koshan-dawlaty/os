@@ -16,6 +16,12 @@ int main(int argc, char **argv)
 {
     init_libc();
 
+    int mutex = syscall_wrapper_asm(SYS_mutex_create, 0, 0, 0, 0, 0);
+    syscall_wrapper_asm(SYS_mutex_lock, mutex, 0, 0, 0, 0);
+    syscall_wrapper_asm(SYS_mutex_lock, mutex, 0, 0, 0, 0);
+
+    exit(0);
+
     char *buf = malloc(10);
     int server_sock;
     recv(0, &server_sock, sizeof(int));
