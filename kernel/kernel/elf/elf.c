@@ -38,8 +38,7 @@ struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
     struct task *t = new_task_user(elf->entry_point, 0xBFFEF000, argc, argv);
-    struct pagedir *pgdir = t->pgdir;
-    t->addr_space = (struct addr_space){.dir = t->pgdir, .list_head = NULL};
+    t->addr_space = addr_space_alloc();
     struct pagedir *temp_pgdir = get_current_pagedir();
 
     addr_space_load(t->addr_space);
@@ -93,7 +92,7 @@ struct task *load_elf(elf *elf, int argc, char **argv)
         }
     }
 
-    create_userspace_stack(pgdir);
+    create_userspace_stack(t->addr_space.dir);
 
     /* *(char ***)(0xBFFEF000 + sizeof(ptr)) = args; */
     /* *(int *)(0xBFFEF000) = argc; */

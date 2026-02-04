@@ -38,7 +38,6 @@ struct task
 {
     struct list list;
 
-    struct pagedir *pgdir;
     struct addr_space addr_space;
 
     void *stack;

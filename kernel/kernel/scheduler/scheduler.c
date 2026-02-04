@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <gdt.h>
 #include <interrupts/pic.h>
+#include <kernel/addr_space.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
 #include <lib/list.h>
@@ -123,8 +124,7 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
      */
     /* *(ptr *)(out->stack + 8) = ip; */
 
-    out->pgdir = new_pagedir();
-    write_kernel_page_tables(out->pgdir);
+    out->addr_space = addr_space_alloc();
 
     char **args_temp = malloc(argc * sizeof(char *));
     for (int i = 0; i < argc; i++)
@@ -136,7 +136,7 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 
     /* TODO: this calls load_pgdir alot */
     struct pagedir *temp = get_current_pagedir();
-    load_pgdir(out->pgdir);
+    addr_space_load(out->addr_space);
     char **args = create_user_args(argc, args_temp);
 
     scheduler_set_regs_arguments(argc, args, ip, &out->regs);
@@ -157,8 +157,8 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 struct task *user_thread_alloc(ptr ip)
 {
 
-    struct pagedir *current_pgdir = get_current_task()->pgdir;
-    ASSERT(current_pgdir != NULL,
+    struct addr_space current_addr_space = current_task->addr_space;
+    ASSERT(current_addr_space.dir != NULL,
            "null pagedir for current task, this might be because a kernel "
            "thread called this");
 
@@ -187,10 +187,9 @@ struct task *user_thread_alloc(ptr ip)
      */
     *(ptr *)(out->stack + 8) = ip;
 
-    out->pgdir = current_pgdir;
-    write_kernel_page_tables(out->pgdir);
+    out->addr_space = current_addr_space;
 
-    load_pgdir(out->pgdir);
+    addr_space_load(out->addr_space);
 
     /* TODO: this should duplicate file descriptors */
     const char *term_path = "/terminal";
@@ -279,7 +278,7 @@ struct task *new_task(ptr ip)
     out->regs.eflags = 1 << 9;
 
     *(ptr *)(out->stack) = ip;
-    out->pgdir = NULL;
+    out->addr_space = (struct addr_space){.dir = NULL, .list_head = NULL};
 
     out->start_addr = (void *)ip;
     out->list = LIST_INIT();
@@ -292,7 +291,7 @@ struct task *create_kernel_task()
     struct task *out = new_task(0);
 
     save_registers(&out->regs);
-    out->pgdir = &init_pgdir;
+    out->addr_space = (struct addr_space){.dir = &init_pgdir, NULL};
     out->stack = (void *)out->regs.esp;
     out->start_addr = (void *)0xDEADBEEF;
 
@@ -313,7 +312,10 @@ void remove_task(struct task *task)
         }
     }
     irq_restore(irq_state);
-    load_pgdir(current_task->pgdir);
+    if (current_task->addr_space.dir != NULL)
+    {
+        addr_space_load(current_task->addr_space);
+    }
     set_kernel_stack((ptr)current_task->stack);
     load_registers(&current_task->regs);
 }
@@ -366,9 +368,9 @@ void schedule()
     /* printf("%p\n", current_task->pgdir->pgdir); */
     /* printf("%p\n", current_task->pgdir->pgdir_virtual); */
 
-    if (current_task->pgdir != NULL)
+    if (current_task->addr_space.dir != NULL)
     {
-        load_pgdir(current_task->pgdir);
+        addr_space_load(current_task->addr_space);
     }
 
     set_kernel_stack((ptr)current_task->stack);
