@@ -10,6 +10,7 @@
 #include "kernel/keyboard.h"
 #include "keyboard/x86_keyboard.h"
 #include "utils.h"
+#include <kernel/interrupts.h>
 
 extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
 
@@ -112,4 +113,17 @@ void init_idt()
     /* printf("calling interrupt\n"); */
     /* asm volatile("int $0x50"); */
     /* printf("called interrupt\n"); */
+}
+
+void register_interrupt_handler(int num, void * func, int_handler_flags flags) {
+
+    u16 idt_flags;
+    if (flags.is_user) {
+        idt_flags = 0xEE;
+    } else {
+        idt_flags = 0x8E;
+    }
+    
+    add_idt_entry((IDT_entry){(uint32_t)func, 8, flags}, num);
+
 }
