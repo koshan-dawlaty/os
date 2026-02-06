@@ -136,5 +136,5 @@ void register_interrupt_handler(int num, void * func, int_handler_flags flags)
         idt_flags = 0x8E;
     }
 
-    add_idt_entry((IDT_entry){.offset = (ptr)func, .segment_selector = 8, .flags = idt_flags, .stack_table = 0});
+    add_idt_entry((IDT_entry){.offset = (ptr)func, .segment_selector = 8, .flags = idt_flags, .stack_table = 0}, num);
 }
