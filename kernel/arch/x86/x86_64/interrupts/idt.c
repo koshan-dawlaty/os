@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <kernel/interrupts.h>
 
 extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
 
@@ -123,4 +124,17 @@ void init_idt()
                      0x50);
     */
     load_idt();
+}
+
+void register_interrupt_handler(int num, void * func, int_handler_flags flags)
+{
+
+    u16 idt_flags;
+    if (flags.is_user) {
+        idt_flags = 0xEE;
+    } else {
+        idt_flags = 0x8E;
+    }
+
+    add_idt_entry((IDT_entry){.offset = (ptr)func, .segment_selector = 8, .flags = idt_flags, .stack_table = 0});
 }
