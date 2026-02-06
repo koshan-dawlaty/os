@@ -16,12 +16,6 @@ int main(int argc, char **argv)
 {
     init_libc();
 
-    int mutex = syscall_wrapper_asm(SYS_mutex_create, 0, 0, 0, 0, 0);
-    syscall_wrapper_asm(SYS_mutex_lock, mutex, 0, 0, 0, 0);
-    syscall_wrapper_asm(SYS_mutex_lock, mutex, 0, 0, 0, 0);
-
-    exit(0);
-
     char *buf = malloc(10);
     int server_sock;
     recv(0, &server_sock, sizeof(int));
@@ -90,13 +84,18 @@ int main(int argc, char **argv)
         /* client_draw_pixel(&w, pos, 0, color); */
         /* pos++; */
 
-        client_draw_char(&w, font, getchar(), x, 50);
-        x += font->header.width;
+        printf("sending key code\n");
+        int key_code = WM_RES_KEY;
+        send(server_sock, &key_code, sizeof(int));
+        printf("done sending key code\n");
 
-        for (size_t i = 0; i < 1; i++)
-        {
-            sched_yield();
-        }
+        printf("recv\n");
+        char c;
+        recv(server_sock, &c, sizeof(char));
+        printf("%c\n", c);
+
+        /* client_draw_char(&w, font, getchar(), x, 50); */
+        x += font->header.width;
 
         /* char c = getchar(); */
         /* for (size_t y = 0; y < win.height; y++) */

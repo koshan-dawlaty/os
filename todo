@@ -88,11 +88,5 @@ NEED USERMODE/SCHEDULER TESTS!!!
 
 
 
-window manager getchar bug
-	seems to work after writing to both windows by using gdb
-	it might be that 2 threads try to call pop_keyboard_buffer at the same time
-	memcpy srcptr sometimes is very invalid 0xc2c2c2c2c2c2c2 is the value of it
-	backtrace shows unix socket recv with character
-	maybe its just not swapping to the right stack? the srcptr value is the variable "sent", a stack value 
 
-	i think it is being double free'd
+cant make user threads with arguments

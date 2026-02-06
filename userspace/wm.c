@@ -1,3 +1,4 @@
+#include "sys/types.h"
 #include "wm_lib.h"
 #include <fcntl.h>
 #include <init.h>
@@ -13,13 +14,37 @@
 #include <unistd.h>
 #include <userspace/mouse.h>
 
-struct window *focused = NULL;
+struct wm_connection
+{
+    int client_socket;
+    int keyboard_mutex;
+    void *buffer;
+};
+
+struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf)
+{
+    struct wm_connection *conn = malloc(sizeof(struct wm_connection));
+
+    conn->client_socket = client_socket;
+    conn->keyboard_mutex = user_mutex_create();
+    /* TODO: this is stupid */
+    user_mutex_lock(conn->keyboard_mutex);
+    conn->buffer = client_buf;
+
+    return conn;
+}
 
 struct window_queue_entry
 {
     struct window *win;
+    struct wm_connection *conn;
     struct list2 list;
 };
+
+struct window_queue_entry *focused = NULL;
+
+char current_keyboard_char;
+
 struct list2 *window_queue;
 
 struct window *new_window(size_t x, size_t y, size_t w, size_t h)
@@ -85,12 +110,15 @@ void process_connection()
 
     send(socket, second_message, sizeof(struct wm_second));
 
+    struct wm_connection *conn = wm_connection_alloc(socket, client_buf);
+
     struct window *w = new_window(400 + x, x, win_info.width, win_info.height);
     x += 75;
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
     ent->list = LIST2_INIT();
     ent->win = w;
+    ent->conn = conn;
 
     if (window_queue == NULL)
     {
@@ -101,12 +129,16 @@ void process_connection()
         list2_add_front(&ent->list, &window_queue);
     }
 
+    focused = ent;
+
     int code;
     recv(socket, &code, sizeof(int));
     while (true)
     {
 
-        if (code == WM_RES_RENDER)
+        switch (code)
+        {
+        case WM_RES_RENDER:
         {
 
             for (size_t y = 0; y < w->h; y++)
@@ -118,9 +150,41 @@ void process_connection()
 
             draw_windows(buffer);
             /* draw_window(buffer, w); */
+            break;
         }
 
+        case WM_RES_KEY:
+        {
+            /* TODO: this makes it so that the client can't redraw while waiting
+             * for input (and waiting for the window to be focused), this is ok
+             * for now, because the client isn't going to be doing anything
+             * while waiting for input */
+            printf("locking mutex\n");
+            user_mutex_lock(conn->keyboard_mutex);
+            printf("mutex unlocked\n");
+            printf("sending:%c\n", current_keyboard_char);
+            send(socket, &current_keyboard_char, sizeof(char));
+            break;
+        }
+        }
         recv(socket, &code, sizeof(int));
+    }
+}
+
+void keyboard_thread()
+{
+
+    while (true)
+    {
+        char c = getchar();
+
+        if (focused != NULL)
+        {
+            struct wm_connection *conn = focused->conn;
+            current_keyboard_char = c;
+            printf("in keyboard_thread:%c\n", current_keyboard_char);
+            user_mutex_unlock(conn->keyboard_mutex);
+        }
     }
 }
 
@@ -170,20 +234,22 @@ void mouse_thread()
             for (pos = prev; pos != NULL; pos = pos->prev)
             {
 
-                struct window *win =
-                    LIST_ENTRY(pos, struct window_queue_entry, list)->win;
+                struct window_queue_entry *queue_ent =
+                    LIST_ENTRY(pos, struct window_queue_entry, list);
+                struct window *win = queue_ent->win;
 
                 if (mouse->x > win->x && mouse->x < win->x + win->w &&
                     mouse->y > win->y && mouse->y < win->y + win->h)
                 {
-                    focused = win;
+                    focused = queue_ent;
                     break;
                 }
             }
 
             if (focused != NULL)
             {
-                memset(focused->buffer, 0, focused->w * focused->h * 4);
+                memset(focused->win->buffer, 0,
+                       focused->win->w * focused->win->h * 4);
             }
         }
 
@@ -224,6 +290,7 @@ int main()
     window_queue = &mouse_ent.list;
 
     clone((ptr)mouse_thread);
+    clone((ptr)keyboard_thread);
 
     buffer = framebuffer_alloc();
     int socket = socket_create();

@@ -7,6 +7,7 @@
 #include <sched.h>
 #include <scheduler.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/syscall.h>
 #include <utils.h>
 #include <vfs.h>
@@ -24,12 +25,16 @@ void mutex_lock(struct mutex *m)
     }
     else
     {
+        printf("removing task\n");
         /* printf("lock 2, %p\", get_current_task()); */
         struct task *current = get_current_task();
         /* printf("before:\n"); */
+
         remove_task(current);
-        /* display_queue(); */
+
         task_queue_push(&m->queue, current);
+        printf("queue head in lock::%p\n", m->queue.head);
+        /* display_queue(); */
         /* display_queue(); */
         /* printf("after:\n"); */
         /* display_queue(); */
@@ -48,6 +53,7 @@ void mutex_unlock(struct mutex *m)
         panic("mutex unlock may have been called twice on the same mutex!");
     }
 
+    printf("queue head:%p\n", m->queue.head);
     if (m->queue.head == NULL)
     {
         /* printf("unlock 1, %p\n", get_current_task()); */
@@ -55,6 +61,7 @@ void mutex_unlock(struct mutex *m)
     }
     else
     {
+        printf("adding task\n");
         /* printf("unlock 2, %p\n", get_current_task()); */
         struct task *temp = task_queue_pop(&m->queue);
         add_task(temp);
@@ -64,23 +71,27 @@ void mutex_unlock(struct mutex *m)
     irq_restore(state);
 }
 
+/*
+ * all of this code is pretty bad, maybe dont use the array, this might result
+ * in weird things with multiple tasks allocating mutexes
+ */
 struct array user_mutex_array = ARRAY_INIT();
 
 int syscall_mutex_create()
 {
     struct mutex mutex = MUTEX_INIT();
     struct mutex *element = malloc(sizeof(struct mutex));
-    *element = mutex;
+    memcpy(element, &mutex, sizeof(struct mutex));
     size_t index =
-        array_add(&user_mutex_array, element, sizeof(struct mutex *));
+        array_add(&user_mutex_array, &element, sizeof(struct mutex *));
     return index;
 }
 SYSCALL_DEFINE0(syscall_mutex_create, SYS_mutex_create);
 
 void syscall_mutex_lock(int id)
 {
-    struct mutex *mutex =
-        array_get(&user_mutex_array, id, sizeof(struct mutex *));
+    struct mutex *mutex = *(struct mutex **)array_get(&user_mutex_array, id,
+                                                      sizeof(struct mutex *));
 
     mutex_lock(mutex);
 }
@@ -88,8 +99,8 @@ SYSCALL_DEFINE1(syscall_mutex_lock, SYS_mutex_lock);
 
 void syscall_mutex_unlock(int id)
 {
-    struct mutex *mutex =
-        array_get(&user_mutex_array, id, sizeof(struct mutex *));
+    struct mutex *mutex = *(struct mutex **)array_get(&user_mutex_array, id,
+                                                      sizeof(struct mutex *));
 
     mutex_unlock(mutex);
 }

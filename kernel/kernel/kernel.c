@@ -153,12 +153,14 @@ void kernel_init()
 #endif
 }
 
+struct mutex testing_mutex = MUTEX_INIT();
 void t1(void *a)
 {
-
     while (1)
     {
-        putchar(getchar());
+        mutex_lock(&testing_mutex);
+        printf("t1\n");
+        mutex_unlock(&testing_mutex);
     }
 }
 
@@ -166,13 +168,14 @@ void t2(void *a)
 {
     while (1)
     {
-        putchar(getchar());
+        mutex_lock(&testing_mutex);
+        printf("t2\n");
+        mutex_unlock(&testing_mutex);
     }
 }
 
 void kmain()
 {
-
     struct addr_space addr_sp = addr_space_alloc();
     printf("%p\n", addr_sp.dir);
     addr_space_load(addr_sp);
@@ -207,17 +210,20 @@ void kmain()
     create_device("/mouse", mouse_get());
     printf("starting shell\n");
 
-    /* ktask_run(t1, NULL); */
-    /* ktask_run(t2, NULL); */
-    /* enable_scheduler(); */
-    /* irq_enable(); */
-    /* schedule(); */
+    /*
+ktask_run(t1, NULL);
+ktask_run(t2, NULL);
+enable_scheduler();
+irq_enable();
+schedule();
+return;
+    */
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    int err = execv("/elf_test", (char *[]){"/elf_test", NULL});
-    /* int err = execv("/wm", (char *[]){"wm", NULL}); */
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
+    int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
 
     if (err < 0)
