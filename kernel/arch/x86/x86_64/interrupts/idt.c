@@ -3,13 +3,13 @@
 #include <interrupts/idt.h>
 #include <interrupts/idt_internal.h>
 #include <interrupts/pic.h>
+#include <kernel/interrupts.h>
 #include <kernel/types.h>
 #include <keyboard/x86_keyboard.h>
 #include <pit/pit.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <kernel/interrupts.h>
 
 extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
 
@@ -103,7 +103,8 @@ void init_idt()
                               .flags = 0x8E,
                               .stack_table = 0},
                   0x21);
-    add_idt_entry((IDT_entry){(ptr)syscall_handler_asm, 0x8, 0xEE, 0}, 0x80);
+    /* add_idt_entry((IDT_entry){(ptr)syscall_handler_asm, 0x8, 0xEE, 0}, 0x80);
+     */
 
     add_idt_entry((IDT_entry){.offset = (u64)mouse_interrupt_handler,
                               .segment_selector = 8,
@@ -126,15 +127,22 @@ void init_idt()
     load_idt();
 }
 
-void register_interrupt_handler(int num, void * func, int_handler_flags flags)
+void register_interrupt_handler(int num, void *func, int_handler_flags flags)
 {
 
     u16 idt_flags;
-    if (flags.is_user) {
+    if (flags.is_user)
+    {
         idt_flags = 0xEE;
-    } else {
+    }
+    else
+    {
         idt_flags = 0x8E;
     }
 
-    add_idt_entry((IDT_entry){.offset = (ptr)func, .segment_selector = 8, .flags = idt_flags, .stack_table = 0}, num);
+    add_idt_entry((IDT_entry){.offset = (ptr)func,
+                              .segment_selector = 8,
+                              .flags = idt_flags,
+                              .stack_table = 0},
+                  num);
 }

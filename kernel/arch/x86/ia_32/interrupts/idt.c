@@ -115,15 +115,21 @@ void init_idt()
     /* printf("called interrupt\n"); */
 }
 
-void register_interrupt_handler(int num, void * func, int_handler_flags flags) {
+void register_interrupt_handler(int num, void *func, int_handler_flags flags)
+{
 
     u16 idt_flags;
-    if (flags.is_user) {
+    if (flags.is_user)
+    {
         idt_flags = 0xEE;
-    } else {
+    }
+    else
+    {
         idt_flags = 0x8E;
     }
-    
-    add_idt_entry((IDT_entry){(uint32_t)func, 8, flags}, num);
 
+    add_idt_entry((IDT_entry){.offset = (uint32_t)func,
+                              .segment_selector = 8,
+                              .flags = idt_flags},
+                  num);
 }
