@@ -174,25 +174,25 @@ void kmain()
 {
 
     struct addr_space addr_sp = addr_space_alloc();
-    printf("%p\n", addr_sp.dir);
-    addr_space_load(addr_sp);
+    /* printf("%p\n", addr_sp.dir); */
+    /* addr_space_load(addr_sp); */
 
-    void *addr = (void *)0xB00000000;
+    /* void *addr = (void *)0xB00000000; */
 
-    addr_space_map(&addr_sp, addr, 10, PAGING_PRESENT | PAGING_WRITEABLE);
-    for (size_t i = 0; i < 100; i++)
-    {
-        ((char *)(addr + 9 * PAGE_SIZE))[i] = (i % 10 + 0x30);
-    }
+    /* addr_space_map(&addr_sp, addr, 10, PAGING_PRESENT | PAGING_WRITEABLE); */
+    /* for (size_t i = 0; i < 100; i++) */
+    /* { */
+    /*     ((char *)(addr + 9 * PAGE_SIZE))[i] = (i % 10 + 0x30); */
+    /* } */
 
-    printf("%s\n", addr + 9 * PAGE_SIZE);
+    /* printf("%s\n", addr + 9 * PAGE_SIZE); */
 
-    addr_space_unmap(&addr_sp, addr, 10);
+    /* addr_space_unmap(&addr_sp, addr, 10); */
 
     for (size_t i = 0; i < memory_regions_len(); i++)
     {
         struct memory_region region = memory_regions_get(i);
-        printf("%p-%p\n", region.start, region.start + region.len);
+        printf("memory from: %p-%p\n", region.start, region.start + region.len);
     }
 
     printf("%p\n", malloc(10));
@@ -215,9 +215,9 @@ void kmain()
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    int err = execv("/elf_test", (char *[]){"/elf_test", NULL});
-    /* int err = execv("/wm", (char *[]){"wm", NULL}); */
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
+    int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
 
     if (err < 0)
@@ -228,8 +228,8 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("/elf_test", (char *[]){"elf_test", NULL});
     while (1)
     {
         schedule();
