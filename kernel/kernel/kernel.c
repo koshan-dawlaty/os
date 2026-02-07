@@ -177,8 +177,8 @@ void kmain()
 {
 
     IRQ_OFF({
-        /* register_interrupt_handler(0x80, syscall_handler_asm, */
-        /*                            (int_handler_flags){.is_user = true}); */
+        register_interrupt_handler(0x80, syscall_handler_asm,
+                                   (int_handler_flags){.is_user = true});
     })
 
     struct addr_space addr_sp = addr_space_alloc();
