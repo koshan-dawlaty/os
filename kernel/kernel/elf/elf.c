@@ -57,9 +57,12 @@ struct task *load_elf(elf *elf, int argc, char **argv)
                 addr_space_map(&t->addr_space,
                                (void *)(header->virtual_addr + i), 1,
                                PAGING_PRESENT | PAGING_USER | PAGING_PRESENT);
-                /* map_page((void *)get_free_phys_page(), */
-                /*          (void *)(header->virtual_addr + i), */
-                /*          PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
+
+                /*
+write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
+              (void *)(header->virtual_addr + i),
+              PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+                                          */
             }
 
             /* this may not have zeros at the end */

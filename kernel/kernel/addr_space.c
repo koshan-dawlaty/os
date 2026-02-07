@@ -56,13 +56,17 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
                    int flags)
 {
     /* printf("start:%p\n", a->list_head); */
-    /* printf("mapping:%p\n", addr); */
     struct pagedir *prev_dir = get_current_pagedir();
     load_pgdir(a->dir);
     for (size_t i = 0; i < num_pages; i++)
     {
-        write_pagedir(a->dir, get_free_phys_page(), addr + (i * PAGE_SIZE),
-                      PAGING_PRESENT | flags);
+        /* printf("physical address:%p\n", get_free_phys_page()); */
+        /* printf("physical address:%p\n", get_free_phys_page()); */
+        /* printf("physical address:%p\n", get_free_phys_page()); */
+
+        void *phys = get_free_phys_page();
+        write_pagedir(a->dir, phys, addr + (i * PAGE_SIZE),
+                      PAGING_PRESENT | PAGING_WRITEABLE | flags);
     }
 
     struct addr_space_page *page = addr_space_page_alloc(

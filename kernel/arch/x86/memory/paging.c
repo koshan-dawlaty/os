@@ -195,7 +195,9 @@ void init_paging()
             max = r;
         }
     }
-    phys_page_start = max.start;
+    /* TODO: this could theoretically overflow (maybe) */
+    phys_page_start =
+        (void *)((((ptr)(max.start) / PAGE_SIZE) + 1) * PAGE_SIZE);
 }
 
 #define USER_STACK_BASE 0xBFFF0000
