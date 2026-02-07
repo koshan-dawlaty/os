@@ -14,6 +14,7 @@
 #include <interrupts/idt.h>
 #include <kernel/addr_space.h>
 #include <kernel/graphics.h>
+#include <kernel/interrupts.h>
 #include <kernel/keyboard.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
@@ -170,8 +171,15 @@ void t2(void *a)
     }
 }
 
+extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
+
 void kmain()
 {
+
+    IRQ_OFF({
+        register_interrupt_handler(0x80, syscall_handler_asm,
+                                   (int_handler_flags){.is_user = true});
+    })
 
     struct addr_space addr_sp = addr_space_alloc();
     /* printf("%p\n", addr_sp.dir); */
