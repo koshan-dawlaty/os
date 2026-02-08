@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <task_queue.h>
 
 struct task_queue scheduler_queue = TASK_QUEUE_INIT();
 
@@ -311,6 +312,20 @@ bool init_task_exists()
         }
     }
     return false;
+}
+
+void task_queue_add_current(struct task_queue *queue)
+{
+
+    if (!init_task_exists())
+    {
+        printf("INIT TASK IS GONE!!\n");
+    }
+    task_queue_remove(&scheduler_queue, current_task);
+    save_registers(&current_task->regs);
+    struct task *prev = current_task;
+    switch_tasks();
+    task_queue_push(queue, prev);
 }
 
 void remove_task(struct task *task)

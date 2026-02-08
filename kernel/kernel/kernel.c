@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "wait_queue.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>
@@ -154,24 +155,17 @@ void kernel_init()
 }
 
 struct mutex testing_mutex = MUTEX_INIT();
+struct wait_queue testing_wait_queue = WAIT_QUEUE_INIT();
 void t1(void *a)
 {
-    while (1)
-    {
-        mutex_lock(&testing_mutex);
-        printf("t1\n");
-        mutex_unlock(&testing_mutex);
-    }
+    printf("t1\n");
+    wait_queue_wait(&testing_wait_queue);
 }
 
 void t2(void *a)
 {
-    while (1)
-    {
-        mutex_lock(&testing_mutex);
-        printf("t2\n");
-        mutex_unlock(&testing_mutex);
-    }
+    printf("t2\n");
+    wait_queue_done(&testing_wait_queue);
 }
 
 void kmain()
@@ -210,14 +204,12 @@ void kmain()
     create_device("/mouse", mouse_get());
     printf("starting shell\n");
 
-    /*
-ktask_run(t1, NULL);
-ktask_run(t2, NULL);
-enable_scheduler();
-irq_enable();
-schedule();
-return;
-    */
+    ktask_run(t2, NULL);
+    ktask_run(t1, NULL);
+    enable_scheduler();
+    irq_enable();
+    schedule();
+    return;
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 

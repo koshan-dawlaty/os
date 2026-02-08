@@ -1,7 +1,9 @@
-#include <lib/list.h>
-#include <scheduler.h>
+
 #ifndef TASK_QUEUE_H
 #define TASK_QUEUE_H
+
+#include <lib/list.h>
+struct task;
 
 struct task_queue
 {
