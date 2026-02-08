@@ -236,8 +236,8 @@ return;
     schedule();
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    while (1)
-    {
-        schedule();
-    }
+    /* while (1) */
+    /* { */
+    /*     schedule(); */
+    /* } */
 }

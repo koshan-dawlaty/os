@@ -84,17 +84,15 @@ int main(int argc, char **argv)
         /* client_draw_pixel(&w, pos, 0, color); */
         /* pos++; */
 
-        printf("sending key code\n");
         int key_code = WM_RES_KEY;
         send(server_sock, &key_code, sizeof(int));
-        printf("done sending key code\n");
 
-        printf("recv\n");
+        printf("elf_test recv\n");
         char c;
         recv(server_sock, &c, sizeof(char));
-        printf("%c\n", c);
 
-        /* client_draw_char(&w, font, getchar(), x, 50); */
+        printf("elf_test:%c\n", c);
+        client_draw_char(&w, font, c, x, 50);
         x += font->header.width;
 
         /* char c = getchar(); */

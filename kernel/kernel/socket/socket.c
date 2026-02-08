@@ -44,7 +44,6 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
 
     if (WAIT_QUEUE_EMPTY(sock->send_queue))
     {
-        printf("waiting\n");
         wait_queue_wait(&sock->recv_queue);
     }
     else

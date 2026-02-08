@@ -33,7 +33,6 @@ void mutex_lock(struct mutex *m)
         remove_task(current);
 
         task_queue_push(&m->queue, current);
-        printf("queue head in lock::%p\n", m->queue.head);
         /* display_queue(); */
         /* display_queue(); */
         /* printf("after:\n"); */
@@ -53,7 +52,6 @@ void mutex_unlock(struct mutex *m)
         panic("mutex unlock may have been called twice on the same mutex!");
     }
 
-    printf("queue head:%p\n", m->queue.head);
     if (m->queue.head == NULL)
     {
         /* printf("unlock 1, %p\n", get_current_task()); */

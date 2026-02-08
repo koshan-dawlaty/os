@@ -17,7 +17,7 @@
 struct wm_connection
 {
     int client_socket;
-    int keyboard_mutex;
+    int input_socket;
     void *buffer;
 };
 
@@ -26,9 +26,7 @@ struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf)
     struct wm_connection *conn = malloc(sizeof(struct wm_connection));
 
     conn->client_socket = client_socket;
-    conn->keyboard_mutex = user_mutex_create();
-    /* TODO: this is stupid */
-    user_mutex_lock(conn->keyboard_mutex);
+    conn->input_socket = socket_create();
     conn->buffer = client_buf;
 
     return conn;
@@ -141,6 +139,7 @@ void process_connection()
         case WM_RES_RENDER:
         {
 
+            printf("rendering\n");
             for (size_t y = 0; y < w->h; y++)
             {
                 size_t offset = y * w->w * 4;
@@ -155,15 +154,12 @@ void process_connection()
 
         case WM_RES_KEY:
         {
-            /* TODO: this makes it so that the client can't redraw while waiting
-             * for input (and waiting for the window to be focused), this is ok
-             * for now, because the client isn't going to be doing anything
-             * while waiting for input */
-            printf("locking mutex\n");
-            user_mutex_lock(conn->keyboard_mutex);
-            printf("mutex unlocked\n");
-            printf("sending:%c\n", current_keyboard_char);
+            char input;
+            printf("waiting for input\n");
+            recv(conn->input_socket, &input, sizeof(char));
+            printf("got input %c\n", input);
             send(socket, &current_keyboard_char, sizeof(char));
+            printf("sent it\n");
             break;
         }
         }
@@ -182,8 +178,8 @@ void keyboard_thread()
         {
             struct wm_connection *conn = focused->conn;
             current_keyboard_char = c;
-            printf("in keyboard_thread:%c\n", current_keyboard_char);
-            user_mutex_unlock(conn->keyboard_mutex);
+
+            send(conn->input_socket, &c, sizeof(char));
         }
     }
 }

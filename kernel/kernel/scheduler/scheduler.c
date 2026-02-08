@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "vfs.h"
 #include <assert.h>
+#include <container_of.h>
 #include <drivers/character/terminal.h>
 #include <elf.h>
 #include <fcntl.h>
@@ -298,10 +299,31 @@ struct task *create_kernel_task()
     return out;
 }
 
+bool init_task_exists()
+{
+    struct list *pos;
+    list_for_each(pos, scheduler_queue.head)
+    {
+        struct task *t = containerof(pos, struct task, list);
+        if (t->start_addr == (void *)0xDEADBEEF)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void remove_task(struct task *task)
 {
     irq_state_t irq_state = irq_save_disable();
+
+    if (!init_task_exists())
+    {
+        printf("INIT TASK IS GONE!!\n");
+    }
     task_queue_remove(&scheduler_queue, task);
+
+    /* printf("this is the  sched queue head:%p\n", scheduler_queue.head); */
 
     if (task == current_task)
     {
@@ -309,8 +331,14 @@ void remove_task(struct task *task)
         if (current_task == NULL)
         {
             current_task = LIST_ENTRY(scheduler_queue.head, struct task, list);
+
+            if (current_task == NULL)
+            {
+                printf("why is this null:%p\n", scheduler_queue.head);
+            }
         }
     }
+
     irq_restore(irq_state);
     if (current_task->addr_space.dir != NULL)
     {
