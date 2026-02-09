@@ -204,12 +204,12 @@ void kmain()
     create_device("/mouse", mouse_get());
     printf("starting shell\n");
 
-    ktask_run(t2, NULL);
-    ktask_run(t1, NULL);
-    enable_scheduler();
-    irq_enable();
-    schedule();
-    return;
+    /* ktask_run(t2, NULL); */
+    /* ktask_run(t1, NULL); */
+    /* enable_scheduler(); */
+    /* irq_enable(); */
+    /* schedule(); */
+    /* return; */
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
