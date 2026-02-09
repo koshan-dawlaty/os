@@ -3,5 +3,6 @@
 #include <interrupts/idt.h>
 
 #define INTERRUPT_ATTRIBUTE ISR_ATTRIBUTE
+#define INT_SYSCALL 0x80
 
 #endif
