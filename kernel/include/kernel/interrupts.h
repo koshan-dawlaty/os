@@ -1,9 +1,7 @@
 #ifndef INTERRUPTS_H
 #define INTERRUPTS_H
 #include <types.h>
-
-/* TODO: make architecture specific macro definitions for numbers, like
- * INT_SYSCALL is 0x80 on x86 */
+#include <interrutpts/arch_interrupts.h>
 
 typedef struct
 {
