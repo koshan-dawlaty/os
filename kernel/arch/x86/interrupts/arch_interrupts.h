@@ -2,7 +2,8 @@
 #define ARCH_INTERRUPTS_H
 #include <interrupts/idt.h>
 
-#define INTERRUPT_ATTRIBUTE ISR_ATTRIBUTE
+#define ARCH_INTERRUPT_HANDLER_DEFINE(name, body) ISR(name, body)
+#define ARCH_INTERRUPT_ATTRIBUTE ISR_ATTRIBUTE
 #define INT_SYSCALL 0x80
 
 #endif
