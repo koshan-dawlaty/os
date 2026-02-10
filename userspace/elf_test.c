@@ -85,6 +85,12 @@ int main(int argc, char **argv)
         /* client_draw_pixel(&w, pos, 0, color); */
         /* pos++; */
 
+        /* TODO: FIXME: TODO: FIXME: this is a temporary fix so that */
+        for (size_t i = 0; i < 1; i++)
+        {
+            sched_yield();
+        }
+
         int key_code = WM_RES_KEY;
         send(server_sock, &key_code, sizeof(int));
 

@@ -133,7 +133,7 @@ void process_connection()
     recv(socket, &code, sizeof(int));
     while (true)
     {
-
+        printf("got code:%d\n", code);
         switch (code)
         {
         case WM_RES_RENDER:
@@ -156,13 +156,14 @@ void process_connection()
         {
             char input = 'a';
             printf("waiting for input\n");
-            /* recv(conn->input_socket, &input, sizeof(char)); */
+            recv(conn->input_socket, &input, sizeof(char));
             printf("got input %c, sending\n", input);
             send(socket, &input, sizeof(char));
             printf("sent it\n");
             break;
         }
         }
+        printf("waiting for next code\n");
         recv(socket, &code, sizeof(int));
     }
 }
