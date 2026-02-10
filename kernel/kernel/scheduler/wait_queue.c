@@ -6,13 +6,13 @@
 
 extern struct task_queue scheduler_queue;
 extern struct task *current_task;
+extern void print_tasks();
 
 void wait_queue_wait(struct wait_queue *queue)
 {
     irq_state_t state = irq_save_disable();
     struct task *current = get_current_task();
 
-    task_queue_push(&queue->queue, current);
     save_registers(&current->regs);
 
     task_queue_remove(&scheduler_queue, current);
@@ -30,6 +30,10 @@ void wait_queue_wait(struct wait_queue *queue)
             }
         }
     }
+
+    task_queue_push(&queue->queue, current);
+
+    /* print_tasks(); */
 
     if (current_task->addr_space.dir != NULL)
     {

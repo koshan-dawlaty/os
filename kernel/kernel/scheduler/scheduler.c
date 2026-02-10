@@ -434,3 +434,14 @@ void free_task(struct task *t)
 
     free(t);
 }
+
+void print_tasks()
+{
+    struct list *pos;
+    list_for_each(pos, scheduler_queue.head)
+    {
+        struct task *t = containerof(pos, struct task, list);
+        printf("%p ", t->start_addr);
+    }
+    printf("\n");
+}

@@ -139,7 +139,7 @@ void process_connection()
         case WM_RES_RENDER:
         {
 
-            printf("rendering\n");
+            printf("rendering!!\n");
             for (size_t y = 0; y < w->h; y++)
             {
                 size_t offset = y * w->w * 4;
@@ -154,11 +154,11 @@ void process_connection()
 
         case WM_RES_KEY:
         {
-            char input;
+            char input = 'a';
             printf("waiting for input\n");
-            recv(conn->input_socket, &input, sizeof(char));
-            printf("got input %c\n", input);
-            send(socket, &current_keyboard_char, sizeof(char));
+            /* recv(conn->input_socket, &input, sizeof(char)); */
+            printf("got input %c, sending\n", input);
+            send(socket, &input, sizeof(char));
             printf("sent it\n");
             break;
         }

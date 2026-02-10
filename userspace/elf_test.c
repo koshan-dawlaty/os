@@ -78,6 +78,7 @@ int main(int argc, char **argv)
     size_t x = 1;
     while (1)
     {
+        printf("elf_test is rendering\n");
         int done_code = WM_RES_RENDER;
         send(server_sock, &done_code, sizeof(int));
 
