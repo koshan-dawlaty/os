@@ -12,6 +12,23 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+struct wm_client {
+    struct client_window win;
+    int socket;
+};
+
+void wm_render(struct wm_client client) {
+    int render_code = WM_RES_RENDER;
+    send(client.socket, &render_code, sizeof(int));
+    
+    int ack_code;
+    recv(client.socket, &ack_code, sizeof(int));
+    if (ack_code != 3) {
+        printf("server responded with invalid acknowledgment code:%d, ack_code);
+        exit(1);
+    }
+}
+
 int main(int argc, char **argv)
 {
     init_libc();
@@ -42,6 +59,8 @@ int main(int argc, char **argv)
     int font_fd = open("/font.psfu", O_RDONLY);
     struct PSF_font *font = font_parse(font_fd);
     printf("%d\n", font->header.bytes_per_glyph);
+    
+    struct wm_client client = {.win = w, .socket = server_sock};
 
     if (font == NULL)
     {
@@ -79,16 +98,7 @@ int main(int argc, char **argv)
     while (1)
     {
         /* printf("elf_test is rendering\n"); */
-        int done_code = WM_RES_RENDER;
-        send(server_sock, &done_code, sizeof(int));
-
-        int ack_code;
-        recv(server_sock, &ack_code, sizeof(int));
-        if (ack_code != 3)
-        {
-            printf("bad\n");
-            exit(0);
-        }
+        wm_render(client);
 
         /* client_draw_pixel(&w, pos, 0, color); */
         /* pos++; */
