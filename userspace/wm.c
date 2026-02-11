@@ -133,13 +133,13 @@ void process_connection()
     recv(socket, &code, sizeof(int));
     while (true)
     {
-        printf("got code:%d\n", code);
+        /* printf("got code:%d\n", code); */
         switch (code)
         {
         case WM_RES_RENDER:
         {
 
-            printf("rendering!!\n");
+            /* printf("rendering!!\n"); */
             for (size_t y = 0; y < w->h; y++)
             {
                 size_t offset = y * w->w * 4;
@@ -148,6 +148,10 @@ void process_connection()
             }
 
             draw_windows(buffer);
+
+            int ack_code = 3;
+            send(socket, &ack_code, sizeof(int));
+
             /* draw_window(buffer, w); */
             break;
         }
@@ -155,15 +159,15 @@ void process_connection()
         case WM_RES_KEY:
         {
             char input = 'a';
-            printf("waiting for input\n");
+            /* printf("waiting for input\n"); */
             recv(conn->input_socket, &input, sizeof(char));
-            printf("got input %c, sending\n", input);
+            /* printf("got input %c, sending\n", input); */
             send(socket, &input, sizeof(char));
-            printf("sent it\n");
+            /* printf("sent it\n"); */
             break;
         }
         }
-        printf("waiting for next code\n");
+        /* printf("waiting for next code\n"); */
         recv(socket, &code, sizeof(int));
     }
 }
@@ -245,8 +249,9 @@ void mouse_thread()
 
             if (focused != NULL)
             {
-                memset(focused->win->buffer, 0,
-                       focused->win->w * focused->win->h * 4);
+                memset(focused->win->buffer, 127, focused->win->w * 4 * 10);
+                /* memset(focused->win->buffer, 0, */
+                /*        focused->win->w * focused->win->h * 4); */
             }
         }
 
