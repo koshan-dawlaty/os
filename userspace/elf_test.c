@@ -12,33 +12,6 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-struct wm_client {
-    struct client_window win;
-    int socket;
-};
-
-void wm_render(struct wm_client client) {
-    int render_code = WM_RES_RENDER;
-    send(client.socket, &render_code, sizeof(int));
-    
-    int ack_code;
-    recv(client.socket, &ack_code, sizeof(int));
-    if (ack_code != 3) {
-        printf("server responded with invalid acknowledgment code:%d, ack_code);
-        exit(1);
-    }
-}
-
-char wm_get_key(struct wm_client client) {
-    int key_code = WM_RES_KEY;
-    send(client.socket, &key_code, sizeof(int));
-    
-    char out;
-    recv(client.socket, &out, sizeof(char));
-    
-    return out;
-    
-}
 
 int main(int argc, char **argv)
 {
