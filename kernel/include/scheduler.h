@@ -1,3 +1,6 @@
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
+
 #include "kernel/addr_space.h"
 #include <compiler.h>
 #include <kernel/paging.h>
@@ -6,8 +9,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <vfs.h>
-#ifndef SCHEDULER_H
-#define SCHEDULER_H
 
 /* TODO: mabye do the architecture specific part of this architecture
  * independent */
@@ -111,5 +112,8 @@ void add_sleep_queue(struct task *task, size_t time);
 struct task *new_task_args(ptr ip, void *args);
 
 void ktask_run(void (*task)(void *), void *args);
+
+struct task_queue;
+void task_queue_add_current(struct task_queue *queue);
 
 #endif

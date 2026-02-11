@@ -60,7 +60,9 @@ struct wm_second
     int mem_id;
 } __packed;
 
+/* TODO: some way of making these increment automatically? */
 #define WM_RES_RENDER 1
+#define WM_RES_KEY 2
 
 typedef int wm_res_code;
 
@@ -134,6 +136,21 @@ static inline int shared_mem_alloc(void **addr, size_t len)
 static inline int shared_mem_get(int id, void **p)
 {
     return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
+}
+
+static inline int user_mutex_create()
+{
+    return syscall_wrapper_asm(SYS_mutex_create, 0, 0, 0, 0, 0);
+}
+
+static inline void user_mutex_lock(int mutex)
+{
+    syscall_wrapper_asm(SYS_mutex_lock, mutex, 0, 0, 0, 0);
+}
+
+static inline void user_mutex_unlock(int mutex)
+{
+    syscall_wrapper_asm(SYS_mutex_unlock, mutex, 0, 0, 0, 0);
 }
 
 #endif

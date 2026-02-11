@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "wait_queue.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>
@@ -154,21 +155,18 @@ void kernel_init()
 #endif
 }
 
+struct mutex testing_mutex = MUTEX_INIT();
+struct wait_queue testing_wait_queue = WAIT_QUEUE_INIT();
 void t1(void *a)
 {
-
-    while (1)
-    {
-        putchar(getchar());
-    }
+    printf("t1\n");
+    wait_queue_wait(&testing_wait_queue);
 }
 
 void t2(void *a)
 {
-    while (1)
-    {
-        putchar(getchar());
-    }
+    printf("t2\n");
+    wait_queue_done(&testing_wait_queue);
 }
 
 extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
@@ -215,11 +213,12 @@ void kmain()
     create_device("/mouse", mouse_get());
     printf("starting shell\n");
 
-    /* ktask_run(t1, NULL); */
     /* ktask_run(t2, NULL); */
+    /* ktask_run(t1, NULL); */
     /* enable_scheduler(); */
     /* irq_enable(); */
     /* schedule(); */
+    /* return; */
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 

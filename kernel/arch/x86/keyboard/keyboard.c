@@ -135,15 +135,17 @@ void keyboard_init()
     keyboard_set_typematic(0, 0);
     keyboard_set_led(KEYBOARD_LED_CAPS_LOCK);
 
-    /* for (size_t i = 0; i < 10; i++) */
-    /* { */
-    /*     push_keyboard_buffer('a'); */
-    /*     push_keyboard_buffer('b'); */
-    /*     push_keyboard_buffer('c'); */
-    /*     push_keyboard_buffer('d'); */
-    /*     push_keyboard_buffer('e'); */
-    /*     push_keyboard_buffer('f'); */
-    /* } */
+    /*
+for (size_t i = 0; i < 10; i++)
+{
+push_keyboard_buffer('a');
+push_keyboard_buffer('b');
+push_keyboard_buffer('c');
+push_keyboard_buffer('d');
+push_keyboard_buffer('e');
+push_keyboard_buffer('f');
+}
+*/
 }
 
 bool is_key_available()

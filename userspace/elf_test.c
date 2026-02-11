@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
     /* memset(framebuffer, 'a', 10); */
 
-    int color = 0xFF;
+    int color = 0xFFFF00;
     switch (server_sock)
     {
     case 1:
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
         color = 0x00FF00;
         break;
     case 3:
-        color = 0xFFFF00;
+        color = 0xFF;
     }
 
     /* memset(w.buffer, 127, win.width * win.height * 4); */
@@ -78,19 +78,33 @@ int main(int argc, char **argv)
     size_t x = 1;
     while (1)
     {
+        /* printf("elf_test is rendering\n"); */
         int done_code = WM_RES_RENDER;
         send(server_sock, &done_code, sizeof(int));
+
+        int ack_code;
+        recv(server_sock, &ack_code, sizeof(int));
+        if (ack_code != 3)
+        {
+            printf("bad\n");
+            exit(0);
+        }
 
         /* client_draw_pixel(&w, pos, 0, color); */
         /* pos++; */
 
-        client_draw_char(&w, font, getchar(), x, 50);
-        x += font->header.width;
+        /* TODO: FIXME: TODO: FIXME: this is a temporary fix so that */
 
-        for (size_t i = 0; i < 1; i++)
-        {
-            sched_yield();
-        }
+        int key_code = WM_RES_KEY;
+        send(server_sock, &key_code, sizeof(int));
+
+        /* printf("elf_test recv\n"); */
+        char c;
+        recv(server_sock, &c, sizeof(char));
+
+        /* printf("elf_test:%c\n", c); */
+        client_draw_char(&w, font, c, x, 50);
+        x += font->header.width;
 
         /* char c = getchar(); */
         /* for (size_t y = 0; y < win.height; y++) */
