@@ -160,5 +160,6 @@ struct wm_client {
 
 void wm_render(struct wm_client client);
 char wm_get_key(struct wm_client client);
+struct wm_client wm_client_connect();
 
 #endif
