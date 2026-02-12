@@ -12,6 +12,7 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+
 int main(int argc, char **argv)
 {
     init_libc();
@@ -42,6 +43,8 @@ int main(int argc, char **argv)
     int font_fd = open("/font.psfu", O_RDONLY);
     struct PSF_font *font = font_parse(font_fd);
     printf("%d\n", font->header.bytes_per_glyph);
+    
+    struct wm_client client = {.win = w, .socket = server_sock};
 
     if (font == NULL)
     {
@@ -79,16 +82,7 @@ int main(int argc, char **argv)
     while (1)
     {
         /* printf("elf_test is rendering\n"); */
-        int done_code = WM_RES_RENDER;
-        send(server_sock, &done_code, sizeof(int));
-
-        int ack_code;
-        recv(server_sock, &ack_code, sizeof(int));
-        if (ack_code != 3)
-        {
-            printf("bad\n");
-            exit(0);
-        }
+        wm_render(client);
 
         /* client_draw_pixel(&w, pos, 0, color); */
         /* pos++; */
@@ -98,61 +92,11 @@ int main(int argc, char **argv)
         int key_code = WM_RES_KEY;
         send(server_sock, &key_code, sizeof(int));
 
-        /* printf("elf_test recv\n"); */
         char c;
         recv(server_sock, &c, sizeof(char));
 
-        /* printf("elf_test:%c\n", c); */
         client_draw_char(&w, font, c, x, 50);
         x += font->header.width;
-
-        /* char c = getchar(); */
-        /* for (size_t y = 0; y < win.height; y++) */
-        /* { */
-        /*     for (size_t x = 0; x < win.width; x++) */
-        /*     { */
-
-        /*         client_draw_pixel(&w, x, y, */
-        /*                           y * x * server_sock * server_sock * c * */
-        /*                               server_sock * server_sock * server_sock
-         * * */
-        /*                               server_sock * server_sock * server_sock
-         * * */
-        /*                               server_sock); */
-
-        /*         client_draw_pixel(&w, x, y, x * y); */
-
-        /*         /1* client_draw_pixel(&w, x, y, *1/ */
-        /*         /1*                   y * x * server_sock * server_sock * c *
-         * *1/ */
-        /*         /1*                       server_sock * server_sock *
-         * server_sock */
-        /*          * * *1/ */
-        /*         /1*                       server_sock * server_sock *
-         * server_sock */
-        /*          * * *1/ */
-        /*         /1*                       server_sock); *1/ */
-        /*     } */
-        /* } */
-
-        /* for (size_t i = 0; i < 1; i++) */
-        /* { */
-        /*     client_draw_pixel(&w, pos, 1, 0xFF0000); */
-        /*     pos++; */
-        /* } */
-
-        /*         if (server_sock == 1) */
-        /*         { */
-
-        /*             /1* int key_code = WM_RES_KEY; *1/ */
-        /*             /1* send(server_sock, &key_code, sizeof(int)); *1/ */
-        /*             /1* char c; *1/ */
-        /*             /1* recv(server_sock, &c, sizeof(char)); *1/ */
-
-        /*         } */
-
-        /* client_draw_char(&w, font, 'a', x, 20); */
-        /* client_draw_char(&w, font, getchar(), x, 20); */
     }
 
     exit(0);

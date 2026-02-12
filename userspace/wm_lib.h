@@ -153,4 +153,13 @@ static inline void user_mutex_unlock(int mutex)
     syscall_wrapper_asm(SYS_mutex_unlock, mutex, 0, 0, 0, 0);
 }
 
+struct wm_client {
+    int socket;
+    struct client_window win;
+};
+
+void wm_render(struct wm_client client);
+char wm_get_key(struct wm_client client);
+struct wm_client wm_client_connect();
+
 #endif
