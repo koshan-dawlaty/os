@@ -198,25 +198,12 @@ int read_file(struct file *file, char *buf, size_t n, size_t off)
         return -EACCES;
     }
 
-    if (file->entry->type == DENTRY_DEVICE)
+    if (file->operations.read != NULL)
     {
-        struct device *dev = file->entry->dev;
-        /* TODO: see if we should use a file offset for block devices */
-
-        if (dev->type == DEV_BLOCK)
-        {
-            return bdev_read(dev->block, (u8 *)buf, n, off);
-        }
-        else if (dev->type == DEV_CHARACTER)
-        {
-            return cdev_read(dev->character, (u8 *)buf, n);
-        }
-    }
-    else
-    {
+        return file->operations.read(file, buf, n, off);
     }
 
-    inode *node = file->entry->inode;
+    struct inode *node = file->entry->inode;
     mutex_lock(&node->lock);
     size_t read_size = n;
 
@@ -241,22 +228,9 @@ int write_file(file *file, const char *buf, size_t n, size_t off)
         return -EACCES;
     }
 
-    if (file->entry->type == DENTRY_DEVICE)
+    if (file->operations.write != NULL)
     {
-        struct device *dev = file->entry->dev;
-        /* TODO: see if we should use a file offset for block devices */
-
-        if (dev->type == DEV_BLOCK)
-        {
-            return bdev_write(dev->block, (u8 *)buf, n, off);
-        }
-        else if (dev->type == DEV_CHARACTER)
-        {
-            return cdev_write(dev->character, (u8 *)buf, n);
-        }
-    }
-    else
-    {
+        return file->operations.write(file, buf, n, off);
     }
 
     inode *node = file->entry->inode;
@@ -302,18 +276,4 @@ int seek_file(file *f, off_t offset, int whence)
     }
 
     return f->offset;
-}
-
-/* TODO: bad name, does not actually add the device to the fdlist */
-file *open_device(const char *devname)
-{
-    dentry *ent = lookup_path(devname, PATHNAME_LOOKUP_FIND);
-
-    if (IS_ERR(ent))
-    {
-        return (void *)GET_ERR(ent);
-    }
-
-    file *out = new_file(ent, O_RDWR);
-    return out;
 }

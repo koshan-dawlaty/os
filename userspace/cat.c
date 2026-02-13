@@ -10,7 +10,6 @@
 
 int main(int argc, char **argv)
 {
-
     init_libc();
     printf("cat start\n");
 
@@ -21,6 +20,10 @@ int main(int argc, char **argv)
     }
 
     int fd = open(argv[1], O_RDONLY);
+
+    for (;;)
+    {
+    }
 
     /* printf("FD IS:%d\n", fd); */
 

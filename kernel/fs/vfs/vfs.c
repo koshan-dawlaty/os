@@ -108,6 +108,10 @@ struct file *new_file(struct dentry *entry, int flags)
     out->offset = 0;
     out->flags = flags;
 
+    /* TODO: this should be done by the caller, but as of right now, not all
+     * types of file use this */
+    out->operations = FILE_OPERATIONS_EMPTY;
+
     switch (entry->type)
     {
     case DENTRY_DEVICE:

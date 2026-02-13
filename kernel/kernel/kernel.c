@@ -222,10 +222,10 @@ void kmain()
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
-    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
-    int err = execv("/wm", (char *[]){"wm", NULL});
-    /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
+    /* int err = execv("/wm", (char *[]){"wm", NULL}); */
+    int err = execv("/ksh", (char *[]){"ksh", NULL});
 
     if (err < 0)
     {
@@ -235,8 +235,8 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
-    execv("/elf_test", (char *[]){"elf_test", NULL});
-    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     while (1)
     {
         schedule();

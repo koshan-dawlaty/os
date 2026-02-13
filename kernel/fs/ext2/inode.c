@@ -1,8 +1,8 @@
 #include "err.h"
 #include "ext2.h"
+#include <container_of.h>
 #include <errno.h>
 #include <kernel/utils.h>
-#include <container_of.h>
 #include <lib/list.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -80,6 +80,8 @@ static void ext2_read_inode_block(u32 indirect_block_num, u8 *buf,
         memcpy(buf, block + offset % EXT2_BLOCK_SIZE(sb), buf_len);
         return;
     }
+
+    printf("maybe untested (ext2)\n");
 
     size_t read_size = EXT2_BLOCK_SIZE(sb) - (offset % EXT2_BLOCK_SIZE(sb));
     memcpy(buf, block + offset % EXT2_BLOCK_SIZE(sb), read_size);
