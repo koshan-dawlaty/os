@@ -172,7 +172,7 @@ static inline void add_file_offset(file *f, size_t add)
  * initializes descriptor as 0
  */
 struct file *new_file(struct dentry *entry, int permissions);
-file *open_file(const char *path, int permissions);
+struct file *open_file(const char *path, int permissions);
 int close_file(file *f);
 int read_file(file *file, char *buf, size_t n, size_t off);
 int write_file(file *file, const char *buf, size_t n, size_t off);

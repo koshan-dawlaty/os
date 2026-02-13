@@ -33,6 +33,7 @@
 #include <mutex.h>
 #include <panic.h>
 #include <pci/pci.h>
+#include <pipe.h>
 #include <pit/pit.h>
 #include <sched.h>
 #include <scheduler.h>
@@ -157,16 +158,19 @@ void kernel_init()
 
 struct mutex testing_mutex = MUTEX_INIT();
 struct wait_queue testing_wait_queue = WAIT_QUEUE_INIT();
+
 void t1(void *a)
 {
-    printf("t1\n");
-    wait_queue_wait(&testing_wait_queue);
+    struct file *pipe = a;
+    write_file(pipe, "abc", 4, 0);
 }
 
 void t2(void *a)
 {
-    printf("t2\n");
-    wait_queue_done(&testing_wait_queue);
+    struct file *pipe = a;
+    char *buf = malloc(4);
+    read_file(pipe, buf, 4, 0);
+    printf("read:%s\n", buf);
 }
 
 extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
@@ -213,8 +217,13 @@ void kmain()
     create_device("/mouse", mouse_get());
     printf("starting shell\n");
 
-    /* ktask_run(t2, NULL); */
-    /* ktask_run(t1, NULL); */
+    /* struct file *read, *write; */
+    /* pipe_open(&read, &write); */
+
+    /* printf("%p, %p\n", read, write); */
+
+    /* ktask_run(t2, read); */
+    /* ktask_run(t1, write); */
     /* enable_scheduler(); */
     /* irq_enable(); */
     /* schedule(); */

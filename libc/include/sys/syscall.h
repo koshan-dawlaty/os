@@ -28,4 +28,6 @@
 #define SYS_mutex_lock 27
 #define SYS_mutex_unlock 28
 
+#define SYS_pipe 29
+
 #endif

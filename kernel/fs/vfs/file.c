@@ -118,7 +118,7 @@ int close_file(file *f)
     }
 }
 
-int read_file_fs(struct file *file, char *buf, size_t n, size_t off)
+static int read_file_fs(struct file *file, char *buf, size_t n, size_t off)
 {
     struct inode *node = file->entry->inode;
     mutex_lock(&node->lock);
@@ -137,7 +137,8 @@ int read_file_fs(struct file *file, char *buf, size_t n, size_t off)
     return read_size;
 }
 
-int write_file_fs(struct file *file, const char *buf, size_t n, size_t off)
+static int write_file_fs(struct file *file, const char *buf, size_t n,
+                         size_t off)
 {
 
     inode *node = file->entry->inode;
@@ -249,14 +250,14 @@ int write_file(file *file, const char *buf, size_t n, size_t off)
     }
 
     NOT_NULL(file->operations.write,
-             "read called on a file without a write operation");
+             "write called on a file without a write operation");
 
     return file->operations.write(file, buf, n, off);
 }
 
 struct file *create_file(char *name)
 {
-    dentry *new = lookup_path(name, PATHNAME_LOOKUP_CREATE);
+    struct dentry *new = lookup_path(name, PATHNAME_LOOKUP_CREATE);
 
     if (IS_ERR(new))
     {
