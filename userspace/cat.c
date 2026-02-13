@@ -21,10 +21,6 @@ int main(int argc, char **argv)
 
     int fd = open(argv[1], O_RDONLY);
 
-    for (;;)
-    {
-    }
-
     /* printf("FD IS:%d\n", fd); */
 
     if (fd == -1)
