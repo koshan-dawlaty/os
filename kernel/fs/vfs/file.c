@@ -1,19 +1,19 @@
-#include "assert.h"
 #include "dcache.h"
-#include "dirent.h"
-#include "fcntl.h"
-#include "interrupts/pic.h"
-#include "memory/get_free_pages.h"
-#include "mutex.h"
-#include "scheduler.h"
 #include "vfs_internal.h"
+#include <assert.h>
 #include <ata/ata.h>
 #include <bdev.h>
 #include <cdev.h>
 #include <device.h>
+#include <dirent.h>
 #include <err.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <interrupts/pic.h>
 #include <kernel/types.h>
+#include <memory/get_free_pages.h>
+#include <mutex.h>
+#include <scheduler.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -118,9 +118,43 @@ int close_file(file *f)
     }
 }
 
+int read_file_fs(struct file *file, char *buf, size_t n, size_t off)
+{
+    struct inode *node = file->entry->inode;
+    mutex_lock(&node->lock);
+    size_t read_size = n;
+
+    if (off + n > node->size)
+    {
+        read_size = node->size - off;
+    }
+
+    inode_read(node, (uint8_t *)buf, read_size, off);
+
+    add_file_offset(file, read_size);
+    mutex_unlock(&node->lock);
+
+    return read_size;
+}
+
+int write_file_fs(struct file *file, const char *buf, size_t n, size_t off)
+{
+
+    inode *node = file->entry->inode;
+    size_t write_size = n;
+    inode_write(node, (const u8 *)buf, write_size, off);
+    add_file_offset(file, write_size);
+    return write_size;
+}
+
+const struct file_operations fs_file_operations = {.read = read_file_fs,
+                                                   .write = write_file_fs};
+
+/* TODO: the name does not convey that this is always opening a file from the
+ * filesystems */
 struct file *open_file(const char *path, int flags)
 {
-    dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
+    struct dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
 
     if (IS_ERR(dentry))
     {
@@ -128,6 +162,7 @@ struct file *open_file(const char *path, int flags)
     }
 
     struct file *out = new_file(dentry, flags);
+    out->operations = fs_file_operations;
 
     struct fdlist *list = get_current_fdlist();
     int fd = fdlist_add(list, out);
@@ -190,6 +225,7 @@ int read_dir(struct file *dir, struct dirent *buf, size_t number)
     return 0;
 }
 
+/* NOT IMPORTANT: maybe inline these */
 int read_file(struct file *file, char *buf, size_t n, size_t off)
 {
 
@@ -198,26 +234,10 @@ int read_file(struct file *file, char *buf, size_t n, size_t off)
         return -EACCES;
     }
 
-    if (file->operations.read != NULL)
-    {
-        return file->operations.read(file, buf, n, off);
-    }
+    NOT_NULL(file->operations.read,
+             "read called on a file without a read operation");
 
-    struct inode *node = file->entry->inode;
-    mutex_lock(&node->lock);
-    size_t read_size = n;
-
-    if (off + n > node->size)
-    {
-        read_size = node->size - off;
-    }
-
-    inode_read(node, (uint8_t *)buf, read_size, off);
-
-    add_file_offset(file, read_size);
-    mutex_unlock(&node->lock);
-
-    return read_size;
+    return file->operations.read(file, buf, n, off);
 }
 
 int write_file(file *file, const char *buf, size_t n, size_t off)
@@ -228,16 +248,10 @@ int write_file(file *file, const char *buf, size_t n, size_t off)
         return -EACCES;
     }
 
-    if (file->operations.write != NULL)
-    {
-        return file->operations.write(file, buf, n, off);
-    }
+    NOT_NULL(file->operations.write,
+             "read called on a file without a write operation");
 
-    inode *node = file->entry->inode;
-    size_t write_size = n;
-    inode_write(node, (const u8 *)buf, write_size, off);
-    add_file_offset(file, write_size);
-    return write_size;
+    return file->operations.write(file, buf, n, off);
 }
 
 struct file *create_file(char *name)
