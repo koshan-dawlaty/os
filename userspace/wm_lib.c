@@ -68,3 +68,55 @@ struct PSF_font *font_parse(int fd)
 
     return out;
 }
+
+void wm_render(struct wm_client client)
+{
+    int render_code = WM_RES_RENDER;
+    send(client.socket, &render_code, sizeof(int));
+
+    int ack_code;
+    recv(client.socket, &ack_code, sizeof(int));
+    if (ack_code != 3)
+    {
+        printf("server responded with invalid acknowledgment code:%d\n",
+               ack_code);
+        exit(1);
+    }
+}
+
+char wm_get_key(struct wm_client client)
+{
+    int key_code = WM_RES_KEY;
+    send(client.socket, &key_code, sizeof(int));
+
+    char out;
+    recv(client.socket, &out, sizeof(char));
+
+    return out;
+}
+
+struct wm_client wm_client_connect()
+{
+    /* TODO: assumes socket is 0, make it something in the fs */
+    int server_sock;
+    recv(0, &server_sock, sizeof(int));
+
+    struct wm_inital win = {.height = 100, .width = 600};
+    send(server_sock, &win, sizeof(struct wm_inital));
+
+    /* TODO: make this a recv() acknowledge like for rendering */
+    sched_yield();
+
+    struct wm_second second_message;
+    recv(server_sock, &second_message, sizeof(int));
+
+    void *framebuffer;
+    shared_mem_get(second_message.mem_id, &framebuffer);
+
+    struct client_window w = {
+        .w = win.width, .h = win.height, .buffer = framebuffer};
+
+    struct wm_client out = {.win = w, .socket = server_sock};
+
+    return out;
+}

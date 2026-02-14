@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "wait_queue.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>
@@ -32,6 +33,7 @@
 #include <mutex.h>
 #include <panic.h>
 #include <pci/pci.h>
+#include <pipe.h>
 #include <pit/pit.h>
 #include <sched.h>
 #include <scheduler.h>
@@ -45,6 +47,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
+#include <userspace/mouse.h>
 #include <utils.h>
 #include <vfs.h>
 
@@ -154,21 +157,29 @@ void kernel_init()
 #endif
 }
 
+struct mutex testing_mutex = MUTEX_INIT();
+struct wait_queue testing_wait_queue = WAIT_QUEUE_INIT();
+
 void t1(void *a)
 {
-
-    while (1)
-    {
-        putchar(getchar());
-    }
+    struct file *pipe = a;
+    write_file(pipe, "abc", 4, 0);
 }
 
 void t2(void *a)
 {
-    while (1)
-    {
-        putchar(getchar());
-    }
+    struct file *pipe = a;
+    char *buf = malloc(4);
+    read_file(pipe, buf, 4, 0);
+    printf("read:%s\n", buf);
+}
+
+void t3(void *a)
+{
+    int m = open("/mouse", O_RDONLY);
+    struct mouse_event *ev = malloc(sizeof(struct mouse_event));
+    read(m, ev, sizeof(struct mouse_event));
+    printf("x change: %d\n", ev->x_change);
 }
 
 extern __int_handler void syscall_handler_asm(struct interrupt_frame *frame);
@@ -213,16 +224,23 @@ void kmain()
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     create_device("/mouse", mouse_get());
-    printf("starting shell\n");
 
-    /* ktask_run(t1, NULL); */
-    /* ktask_run(t2, NULL); */
+    /* struct file *read, *write; */
+    /* pipe_open(&read, &write); */
+
+    /* printf("%p, %p\n", read, write); */
+
+    /* ktask_run(t2, read); */
+    /* ktask_run(t1, write); */
+    /* ktask_run(t3, NULL); */
     /* enable_scheduler(); */
     /* irq_enable(); */
     /* schedule(); */
+    /* return; */
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
+    printf("starting shell\n");
     execv("/elf_test", (char *[]){"elf_test", NULL});
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
     int err = execv("/wm", (char *[]){"wm", NULL});
@@ -236,8 +254,8 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
-    execv("/elf_test", (char *[]){"elf_test", NULL});
-    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     while (1)
     {
         schedule();

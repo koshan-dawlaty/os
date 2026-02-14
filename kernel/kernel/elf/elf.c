@@ -38,7 +38,6 @@ struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
     struct task *t = new_task_user(elf->entry_point, 0xBFFEF000, argc, argv);
-    t->addr_space = addr_space_alloc();
     struct pagedir *temp_pgdir = get_current_pagedir();
 
     addr_space_load(t->addr_space);

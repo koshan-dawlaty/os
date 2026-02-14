@@ -1,3 +1,4 @@
+#include <kernel_syscall.h>
 #include <utils.h>
 #ifdef __is_libk
 #include <scheduler.h>
@@ -11,3 +12,5 @@ void sched_yield()
     syscall_wrapper_asm(3, 0, 0, 0, 0, 0);
 #endif
 }
+
+SYSCALL_DEFINE0(sched_yield, 3)

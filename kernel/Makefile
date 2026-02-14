@@ -78,6 +78,7 @@ fs/ext2/init.o \
 fs/ext2/inode.o \
 fs/ext2/misc.o \
 fs/vfs/file.o \
+fs/vfs/pipe.o \
 fs/vfs/device.o \
 fs/vfs/pathname.o \
 fs/vfs/vfs.o \
