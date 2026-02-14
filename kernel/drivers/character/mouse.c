@@ -1,10 +1,10 @@
-#include "unistd.h"
 #include <cdev.h>
 #include <device.h>
 #include <drivers/character/mouse.h>
 #include <errno.h>
 #include <interrupts/idt.h>
 #include <interrupts/pic.h>
+#include <kernel/interrupts.h>
 #include <kernel/ps2.h>
 #include <lib/list.h>
 #include <lib/utils.h>
@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <userspace/mouse.h>
 #include <utils.h>
 #include <wait_queue.h>
@@ -30,7 +31,7 @@ struct wait_queue mouse_waitqueue = WAIT_QUEUE_INIT();
 
 struct mouse_event ps2_mouse_event = {0, 0, {false, false, false}};
 
-ISR(mouse_interrupt_handler, {
+INT_HANDLER(mouse_interrupt_handler, {
     u8 buttons = inb(0x60);
     int8_t x = inb(0x60);
     int8_t y = inb(0x60);

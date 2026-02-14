@@ -1,4 +1,5 @@
 #include "interrupts/idt.h"
+#include "kernel/interrupts.h"
 #include "keyboard_map.h"
 #include "spinlock.h"
 #include "vfs.h"
@@ -61,7 +62,7 @@ void keyboard_isr_disable()
     IRQ_set_mask(1);
 }
 
-ISR(keyboard_interrupt_handler, {
+INT_HANDLER(keyboard_interrupt_handler, {
     uint8_t scancode = inb(0x60);
     if (scancode < 0x81)
     {

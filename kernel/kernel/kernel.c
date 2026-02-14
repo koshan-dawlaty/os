@@ -171,7 +171,7 @@ void t2(void *a)
     }
 }
 
-extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
+extern __int_handler void syscall_handler_asm(struct interrupt_frame *frame);
 
 void kmain()
 {
