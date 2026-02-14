@@ -29,5 +29,6 @@
 #define SYS_mutex_unlock 28
 
 #define SYS_pipe 29
+#define SYS_execv_stdio 30
 
 #endif

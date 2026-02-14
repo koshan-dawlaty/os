@@ -247,7 +247,7 @@ int seek_file(file *f, off_t offset, int whence);
 
 struct fdlist
 {
-    file **files;
+    struct file **files;
     struct spinlock lock;
     size_t len;
 };
@@ -257,8 +257,8 @@ struct fdlist *new_fdlist();
  * adds the file to the list
  * returns the file descriptor for the file
  */
-int fdlist_add(struct fdlist *list, file *f);
-file *fdlist_lookup(struct fdlist *list, int fd);
+int fdlist_add(struct fdlist *list, struct file *f);
+struct file *fdlist_lookup(struct fdlist *list, int fd);
 
 void fdlist_free(struct fdlist *list);
 

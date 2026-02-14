@@ -12,6 +12,17 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+int pipe(int fds[2])
+{
+    return syscall_wrapper_asm(SYS_pipe, (ptr)fds, 0, 0, 0, 0);
+}
+
+int execv_stdio(const char *path, char *const argv[], int in, int out)
+{
+    return syscall_wrapper_asm(SYS_execv_stdio, (ptr)path, (ptr)argv, in, out,
+                               0);
+}
+
 int main()
 {
     init_libc();
@@ -52,6 +63,15 @@ int main()
             client_draw_pixel(&client.win, x, y, color);
         }
     }
+
+    /* int p[2]; */
+    /* pipe(p); */
+    /* /1* execv("/ls", (char *[]){"ls", NULL}); *1/ */
+    /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, p[1]); */
+    /* /1* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); *1/ */
+    /* char *buf = malloc(10); */
+    /* read(p[0], buf, 10); */
+    /* printf("read:%s\n", buf); */
 
     int pos = 10;
     size_t x = 1;

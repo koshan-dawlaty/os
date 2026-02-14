@@ -1,10 +1,12 @@
 #include "lib/array.h"
 #include "scheduler.h"
 #include <fcntl.h>
+#include <kernel_syscall.h>
 #include <lib/array.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syscall.h>
 #include <vfs.h>
 #include <wait_queue.h>
 

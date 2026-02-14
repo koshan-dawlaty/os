@@ -58,7 +58,7 @@ int fdlist_add(struct fdlist *list, file *f)
     return retval;
 }
 
-file *fdlist_lookup(struct fdlist *list, int fd)
+struct file *fdlist_lookup(struct fdlist *list, int fd)
 {
     lock_spinlock(&list->lock);
 
