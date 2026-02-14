@@ -47,6 +47,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
+#include <userspace/mouse.h>
 #include <utils.h>
 #include <vfs.h>
 
@@ -173,6 +174,14 @@ void t2(void *a)
     printf("read:%s\n", buf);
 }
 
+void t3(void *a)
+{
+    int m = open("/mouse", O_RDONLY);
+    struct mouse_event *ev = malloc(sizeof(struct mouse_event));
+    read(m, ev, sizeof(struct mouse_event));
+    printf("x change: %d\n", ev->x_change);
+}
+
 extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
 
 void kmain()
@@ -215,7 +224,6 @@ void kmain()
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     create_device("/mouse", mouse_get());
-    printf("starting shell\n");
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */
@@ -224,6 +232,7 @@ void kmain()
 
     /* ktask_run(t2, read); */
     /* ktask_run(t1, write); */
+    /* ktask_run(t3, NULL); */
     /* enable_scheduler(); */
     /* irq_enable(); */
     /* schedule(); */
@@ -231,6 +240,7 @@ void kmain()
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
+    printf("starting shell\n");
     execv("/elf_test", (char *[]){"elf_test", NULL});
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
     int err = execv("/wm", (char *[]){"wm", NULL});

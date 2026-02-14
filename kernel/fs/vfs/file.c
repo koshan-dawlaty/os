@@ -1,4 +1,5 @@
 #include "dcache.h"
+#include "unistd.h"
 #include "vfs_internal.h"
 #include <assert.h>
 #include <ata/ata.h>
@@ -151,6 +152,8 @@ static int write_file_fs(struct file *file, const char *buf, size_t n,
 const struct file_operations fs_file_operations = {.read = read_file_fs,
                                                    .write = write_file_fs};
 
+extern const struct file_operations device_operations;
+
 /* TODO: the name does not convey that this is always opening a file from the
  * filesystems */
 struct file *open_file(const char *path, int flags)
@@ -163,7 +166,23 @@ struct file *open_file(const char *path, int flags)
     }
 
     struct file *out = new_file(dentry, flags);
-    out->operations = fs_file_operations;
+
+    switch (dentry->type)
+    {
+    case DENTRY_DIR:
+    case DENTRY_MOUNT_POINT: /* TODO: maybe these have their own operations */
+    case DENTRY_FILE:
+        out->operations = fs_file_operations;
+        break;
+    case DENTRY_DEVICE:
+        out->operations = device_operations;
+        break;
+
+    case DENTRY_INVALID:
+        UNREACHABLE("invalid dentry type");
+    default:
+        UNREACHABLE("unknown dentry type / operations");
+    }
 
     struct fdlist *list = get_current_fdlist();
     int fd = fdlist_add(list, out);

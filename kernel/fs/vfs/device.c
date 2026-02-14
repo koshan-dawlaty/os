@@ -76,7 +76,6 @@ struct file *create_device(char *name, struct device *dev)
     entry->dev = dev;
 
     struct file *out = new_file(entry, O_RDWR);
-
     out->operations = device_operations;
 
     return out;
