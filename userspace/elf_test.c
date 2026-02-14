@@ -31,7 +31,7 @@ int main()
 
     int font_fd = open("/font.psfu", O_RDONLY);
     struct PSF_font *font = font_parse(font_fd);
-    printf("%d\n", font->header.bytes_per_glyph);
+    /* printf("%d\n", font->header.bytes_per_glyph); */
 
     if (font == NULL)
     {
@@ -64,14 +64,14 @@ int main()
         }
     }
 
-    /* int p[2]; */
-    /* pipe(p); */
-    /* /1* execv("/ls", (char *[]){"ls", NULL}); *1/ */
-    /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, p[1]); */
-    /* /1* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); *1/ */
-    /* char *buf = malloc(10); */
-    /* read(p[0], buf, 10); */
-    /* printf("read:%s\n", buf); */
+    int p[2];
+    pipe(p);
+    /* execv("/ls", (char *[]){"ls", NULL}); */
+    execv_stdio("/ls", (char *[]){"ls", NULL}, 0, p[1]);
+    /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); */
+    char *buf = malloc(10);
+    read(p[0], buf, 10);
+    printf("read:%s\n", buf);
 
     int pos = 10;
     size_t x = 1;
