@@ -64,13 +64,25 @@ int main()
         }
     }
 
-    int p[2];
-    pipe(p);
+    int stdout_pipe[2];
+    pipe(stdout_pipe);
+
+    int stdin_pipe[2];
+    pipe(stdin_pipe);
     /* execv("/ls", (char *[]){"ls", NULL}); */
-    execv_stdio("/ls", (char *[]){"ls", NULL}, 0, p[1]);
+    /* execv("/ksh", (char *[]){"ksh", NULL}); */
+    execv_stdio("/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0], stdout_pipe[1]);
     /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); */
-    char *buf = malloc(10);
-    read(p[0], buf, 10);
+
+    size_t len = 100;
+    char *buf = malloc(len);
+    read(stdout_pipe[0], buf, len);
+    printf("read:%s\n", buf);
+
+    const char *str = "\neno tac";
+    write(stdin_pipe[1], str, strlen(str));
+
+    read(stdout_pipe[0], buf, len);
     printf("read:%s\n", buf);
 
     int pos = 10;

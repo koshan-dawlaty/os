@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <kernel_syscall.h>
 #include <lib/array.h>
+#include <lib/utils.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,14 +24,20 @@ int pipe_read(struct file *file, char *buf, size_t n, size_t off)
     struct pipe *pipe = file->file_private;
     struct pipe *write = pipe->other;
 
-    printf("%p\n", write->buffer.len);
+    printf("len:%p\n", write->buffer.len);
     if (write->buffer.len == 0)
     {
         wait_queue_wait(&write->queue);
     }
 
-    void *result = array_pop(&write->buffer, n);
-    memcpy(buf, result, n);
+    /* returning only what is in the pipe (not always n bytes) is kinda weird,
+     * but it is what the standard for linux does (at least from what i can
+     * tell) */
+
+    size_t read_size = MIN(n, write->buffer.len);
+
+    void *result = array_pop(&write->buffer, read_size);
+    memcpy(buf, result, read_size);
 
     return 0;
 }
