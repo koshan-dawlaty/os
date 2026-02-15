@@ -159,13 +159,6 @@ void kernel_init()
 #endif
 }
 
-SYSCALL_DEFINE5(SYS_exit, int, int, status, char *, str, int, three, int, four,
-                int, five)
-{
-    printf("syscall:%d, %s %d, %d, %d\n", status, str, three, four, five);
-    return 0;
-}
-
 extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
 
 void kmain()
@@ -176,10 +169,10 @@ void kmain()
                                    (int_handler_flags){.is_user = true});
     })
 
-    printf("%p\n", kernel_syscall(SYS_exit, 1, (ptr) "abc", 3, 4, 5));
-    printf("%d\n", user_addr_is_valid(kmain));
+    /* printf("%p\n", kernel_syscall(SYS_exit, 1, (ptr) "abc", 3, 4, 5)); */
+    /* printf("%d\n", user_addr_is_valid(kmain)); */
 
-    return;
+    /* return; */
 
     /* open("/one", O_RDONLY); */
 
@@ -206,10 +199,10 @@ void kmain()
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
     printf("starting shell\n");
-    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
-    int err = execv("/wm", (char *[]){"wm", NULL});
-    /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
+    /* int err = execv("/wm", (char *[]){"wm", NULL}); */
+    int err = execv("/ksh", (char *[]){"ksh", NULL});
 
     if (err < 0)
     {

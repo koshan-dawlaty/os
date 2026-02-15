@@ -210,6 +210,7 @@ void syscall_clone(ptr ip)
     add_task(user_thread_alloc(ip));
 }
 
+/* TODO: */
 /* SYSCALL_DEFINE1(syscall_clone, SYS_clone) */
 
 /*

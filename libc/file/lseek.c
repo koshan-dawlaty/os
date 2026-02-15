@@ -25,7 +25,7 @@ off_t lseek(int fd, off_t offset, int whence)
 #endif
 }
 
-/* SYSCALL_DEFINE3(SYS_lseek, off_t, int fd, off_t offset, int whence) */
-/* { */
-/*     return lseek(fd, offset, whence); */
-/* } */
+SYSCALL_DEFINE3(SYS_lseek, off_t, int, fd, off_t, offset, int, whence)
+{
+    return lseek(fd, offset, whence);
+}

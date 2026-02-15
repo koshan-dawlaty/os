@@ -84,6 +84,7 @@ int syscall_mutex_create()
         array_add(&user_mutex_array, &element, sizeof(struct mutex *));
     return index;
 }
+/* TODO: */
 /* SYSCALL_DEFINE0(syscall_mutex_create, SYS_mutex_create); */
 
 void syscall_mutex_lock(int id)

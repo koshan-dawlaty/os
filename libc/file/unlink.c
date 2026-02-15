@@ -19,7 +19,7 @@ int unlink(const char *path)
 #endif
 }
 
-/* SYSCALL_DEFINE1(SYS_unlink, int, const char *path) */
-/* { */
-/*     return unlink(path); */
-/* } */
+SYSCALL_DEFINE1(SYS_unlink, int, const char *, path)
+{
+    return unlink(path);
+}

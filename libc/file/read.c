@@ -31,7 +31,7 @@ int read(int fd, void *buf, size_t n)
 #endif
 }
 
-/* SYSCALL_DEFINE3(SYS_read, int, int fd, void *buf, size_t n) */
-/* { */
-/*     return read(fd, buf, n); */
-/* } */
+SYSCALL_DEFINE3(SYS_read, int, int, fd, void *, buf, size_t, n)
+{
+    return read(fd, buf, n);
+}

@@ -32,7 +32,7 @@ int chdir(const char *path)
     return 0;
 }
 
-/* SYSCALL_DEFINE1(SYS_chdir, int, const char *path) */
-/* { */
-/*     return chdir(path); */
-/* } */
+SYSCALL_DEFINE1(SYS_chdir, int, const char *, path)
+{
+    return chdir(path);
+}

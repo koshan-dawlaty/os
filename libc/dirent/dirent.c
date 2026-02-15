@@ -26,11 +26,10 @@ long get_dents(int fd, struct dirent *buf, size_t num)
     return retval;
 #endif
 }
-/* SYSCALL_DEFINE3(SYS_getdents, long, int fd, struct dirent *buf, size_t num)
- */
-/* { */
-/*     return get_dents(fd, buf, num); */
-/* } */
+SYSCALL_DEFINE3(SYS_getdents, long, int, fd, struct dirent *, buf, size_t, num)
+{
+    return get_dents(fd, buf, num);
+}
 
 DIR *opendir(const char *name)
 {

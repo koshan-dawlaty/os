@@ -13,4 +13,9 @@ void sched_yield()
 #endif
 }
 
-/* SYSCALL_DEFINE0(sched_yield, 3) */
+SYSCALL_DEFINE0(3, int)
+{
+    sched_yield();
+
+    return 0;
+}
