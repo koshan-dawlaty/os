@@ -64,5 +64,5 @@ int shared_mem_get(int id, void **p)
     return 0;
 }
 
-SYSCALL_DEFINE2(shared_mem_alloc, SYS_shared_mem_alloc)
-SYSCALL_DEFINE2(shared_mem_get, SYS_shared_mem_get)
+/* SYSCALL_DEFINE2(shared_mem_alloc, SYS_shared_mem_alloc) */
+/* SYSCALL_DEFINE2(shared_mem_get, SYS_shared_mem_get) */

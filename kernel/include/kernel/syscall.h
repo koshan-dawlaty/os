@@ -24,7 +24,6 @@ ptr kernel_syscall(ptr num, ptr, ptr, ptr, ptr, ptr);
     }                                                                          \
     __constructor void __sys_##num##_init()                                    \
     {                                                                          \
-        /* TODO: dont cast to void * */                                        \
         syscall_add(num, __sys_##num##_func_real);                             \
     }                                                                          \
     return_type __sys_##num##_func(__VA_ARGS__)
@@ -34,26 +33,44 @@ ptr kernel_syscall(ptr num, ptr, ptr, ptr, ptr, ptr);
 #define SYSCALL_DEFINE0(num, return_type)                                      \
     SYSCALL_DEFINE_GENERIC(num, return_type, SYSCALL_INTERNAL_FUNC(num)();)
 
-#define SYSCALL_DEFINE1(num, return_type, t1, a1)                              \
-    SYSCALL_DEFINE_GENERIC(num, return_type, SYSCALL_INTERNAL_FUNC(num)(a1);   \
-                           , __VA_ARGS__)
-#define SYSCALL_DEFINE2(num, return_type, ...)                                 \
+#define SYSCALL_DEFINE1(num, return_type, t1, arg1)                            \
     SYSCALL_DEFINE_GENERIC(                                                    \
-        num, return_type, SYSCALL_INTERNAL_FUNC(num)(a1, a2);, __VA_ARGS__)
+        num, return_type,                                                      \
+        return SYSCALL_INTERNAL_FUNC(num)(__MACRO_ARG_CAST(t1, a1));           \
+        , t1 arg1)
 
-#define SYSCALL_DEFINE3(num, return_type, ...)                                 \
-    SYSCALL_DEFINE_GENERIC(num, return_type,                                   \
-                           SYSCALL_INTERNAL_FUNC(num)(a1, a2, a3);             \
-                           , __VA_ARGS__)
+#define SYSCALL_DEFINE2(num, return_type, t1, arg1, t2, arg2)                  \
+    SYSCALL_DEFINE_GENERIC(                                                    \
+        num, return_type,                                                      \
+        return SYSCALL_INTERNAL_FUNC(num)(__MACRO_ARG_CAST(t1, a1),            \
+                                          __MACRO_ARG_CAST(t2, a2));           \
+        , t1 arg1, t2 arg2)
 
-#define SYSCALL_DEFINE4(num, return_type, ...)                                 \
-    SYSCALL_DEFINE_GENERIC(num, return_type,                                   \
-                           SYSCALL_INTERNAL_FUNC(num)(a1, a2, a3, a4);         \
-                           , __VA_ARGS__)
+#define SYSCALL_DEFINE3(num, return_type, t1, arg1, t2, arg2, t3, arg3)        \
+    SYSCALL_DEFINE_GENERIC(                                                    \
+        num, return_type,                                                      \
+        return SYSCALL_INTERNAL_FUNC(num)(__MACRO_ARG_CAST(t1, a1),            \
+                                          __MACRO_ARG_CAST(t2, a2),            \
+                                          __MACRO_ARG_CAST(t3, a3));           \
+        , t1 arg1, t2 arg2, t3 arg3)
 
-#define SYSCALL_DEFINE5(num, return_type, ...)                                 \
-    SYSCALL_DEFINE_GENERIC(num, return_type,                                   \
-                           SYSCALL_INTERNAL_FUNC(num)(a1, a2, a3, a4, a5);     \
-                           , __VA_ARGS__)
+#define SYSCALL_DEFINE4(num, return_type, t1, arg1, t2, arg2, t3, arg3, t4,    \
+                        arg4)                                                  \
+    SYSCALL_DEFINE_GENERIC(                                                    \
+        num, return_type,                                                      \
+        return SYSCALL_INTERNAL_FUNC(num)(                                     \
+            __MACRO_ARG_CAST(t1, a1), __MACRO_ARG_CAST(t2, a2),                \
+            __MACRO_ARG_CAST(t3, a3), __MACRO_ARG_CAST(t4, a4));               \
+        , t1 arg1, t2 arg2, t3 arg3, t4 arg4)
+
+#define SYSCALL_DEFINE5(num, return_type, t1, arg1, t2, arg2, t3, arg3, t4,    \
+                        arg4, t5, arg5)                                        \
+    SYSCALL_DEFINE_GENERIC(                                                    \
+        num, return_type,                                                      \
+        return SYSCALL_INTERNAL_FUNC(num)(                                     \
+            __MACRO_ARG_CAST(t1, a1), __MACRO_ARG_CAST(t2, a2),                \
+            __MACRO_ARG_CAST(t3, a3), __MACRO_ARG_CAST(t4, a4),                \
+            __MACRO_ARG_CAST(t5, a5));                                         \
+        , t1 arg1, t2 arg2, t3 arg3, t4 arg4, t5 arg5)
 
 #endif

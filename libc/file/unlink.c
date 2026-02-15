@@ -18,7 +18,8 @@ int unlink(const char *path)
     return syscall_wrapper_asm(SYS_unlink, (uintptr_t)path, 0, 0, 0, 0);
 #endif
 }
-SYSCALL_DEFINE1(SYS_unlink, int, const char *path)
-{
-    return unlink(path);
-}
+
+/* SYSCALL_DEFINE1(SYS_unlink, int, const char *path) */
+/* { */
+/*     return unlink(path); */
+/* } */

@@ -154,6 +154,6 @@ int syscall_socket_recv(int socket, void *buf, size_t len)
     return unix_socket_recv(s, (void *)buf, len);
 }
 
-SYSCALL_DEFINE0(socket_create, SYS_create_socket)
-SYSCALL_DEFINE3(syscall_socket_send, SYS_send)
-SYSCALL_DEFINE3(syscall_socket_recv, SYS_recv)
+/* SYSCALL_DEFINE0(socket_create, SYS_create_socket) */
+/* SYSCALL_DEFINE3(syscall_socket_send, SYS_send) */
+/* SYSCALL_DEFINE3(syscall_socket_recv, SYS_recv) */

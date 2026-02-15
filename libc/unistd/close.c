@@ -21,7 +21,7 @@ int close(int fd)
 #endif
 }
 
-SYSCALL_DEFINE1(SYS_close, int, int fd)
-{
-    return close(fd);
-}
+/* SYSCALL_DEFINE1(SYS_close, int, int fd) */
+/* { */
+/*     return close(fd); */
+/* } */

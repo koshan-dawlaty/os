@@ -159,8 +159,11 @@ void kernel_init()
 #endif
 }
 
-SYSCALL_DEFINE1(SYS_exit, void, int status)
+SYSCALL_DEFINE5(SYS_exit, int, int, status, char *, str, int, three, int, four,
+                int, five)
 {
+    printf("syscall:%d, %s %d, %d, %d\n", status, str, three, four, five);
+    return 0;
 }
 
 extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
@@ -173,29 +176,10 @@ void kmain()
                                    (int_handler_flags){.is_user = true});
     })
 
-    struct addr_space addr_sp = addr_space_alloc();
-    /* printf("%p\n", addr_sp.dir); */
-    /* addr_space_load(addr_sp); */
-
-    /* void *addr = (void *)0xB00000000; */
-
-    /* addr_space_map(&addr_sp, addr, 10, PAGING_PRESENT | PAGING_WRITEABLE); */
-    /* for (size_t i = 0; i < 100; i++) */
-    /* { */
-    /*     ((char *)(addr + 9 * PAGE_SIZE))[i] = (i % 10 + 0x30); */
-    /* } */
-
-    /* printf("%s\n", addr + 9 * PAGE_SIZE); */
-
-    /* addr_space_unmap(&addr_sp, addr, 10); */
-
-    for (size_t i = 0; i < memory_regions_len(); i++)
-    {
-        struct memory_region region = memory_regions_get(i);
-        printf("memory from: %p-%p\n", region.start, region.start + region.len);
-    }
-
+    printf("%p\n", kernel_syscall(SYS_exit, 1, (ptr) "abc", 3, 4, 5));
     printf("%d\n", user_addr_is_valid(kmain));
+
+    return;
 
     /* open("/one", O_RDONLY); */
 

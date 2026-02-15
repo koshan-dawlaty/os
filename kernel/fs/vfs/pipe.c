@@ -98,4 +98,4 @@ int syscall_pipe(int fds[2])
     return 0;
 }
 
-SYSCALL_DEFINE1(syscall_pipe, SYS_pipe);
+/* SYSCALL_DEFINE1(syscall_pipe, SYS_pipe); */

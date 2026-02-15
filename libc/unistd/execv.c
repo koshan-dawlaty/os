@@ -57,10 +57,10 @@ int execv(const char *path, char *const argv[])
 #endif
 }
 
-SYSCALL_DEFINE2(SYS_execv, int, const char *path, char *const argv[])
-{
-    return execv(path, argv);
-}
+/* SYSCALL_DEFINE2(SYS_execv, int, const char *path, char *const argv[]) */
+/* { */
+/*     return execv(path, argv); */
+/* } */
 #ifdef __is_libk
 int execv_stdio(const char *path, char *const argv[], int stdin, int stdout)
 {
@@ -112,5 +112,5 @@ int execv_stdio(const char *path, char *const argv[], int stdin, int stdout)
 }
 #endif
 
-SYSCALL_DEFINE4(execv_stdio, SYS_execv_stdio);
-SYSCALL_DEFINE2(execv, SYS_execv);
+/* SYSCALL_DEFINE4(execv_stdio, SYS_execv_stdio); */
+/* SYSCALL_DEFINE2(execv, SYS_execv); */

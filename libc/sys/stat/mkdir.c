@@ -26,7 +26,7 @@ int mkdir(const char *path, mode_t mode)
 #endif
 }
 
-SYSCALL_DEFINE2(SYS_mkdir, int, const char *path, mode_t mode)
-{
-    return mkdir(path, mode);
-}
+/* SYSCALL_DEFINE2(SYS_mkdir, int, const char *path, mode_t mode) */
+/* { */
+/*     return mkdir(path, mode); */
+/* } */

@@ -84,7 +84,7 @@ int syscall_mutex_create()
         array_add(&user_mutex_array, &element, sizeof(struct mutex *));
     return index;
 }
-SYSCALL_DEFINE0(syscall_mutex_create, SYS_mutex_create);
+/* SYSCALL_DEFINE0(syscall_mutex_create, SYS_mutex_create); */
 
 void syscall_mutex_lock(int id)
 {
@@ -93,7 +93,7 @@ void syscall_mutex_lock(int id)
 
     mutex_lock(mutex);
 }
-SYSCALL_DEFINE1(syscall_mutex_lock, SYS_mutex_lock);
+/* SYSCALL_DEFINE1(syscall_mutex_lock, SYS_mutex_lock); */
 
 void syscall_mutex_unlock(int id)
 {
@@ -102,4 +102,4 @@ void syscall_mutex_unlock(int id)
 
     mutex_unlock(mutex);
 }
-SYSCALL_DEFINE1(syscall_mutex_unlock, SYS_mutex_unlock);
+/* SYSCALL_DEFINE1(syscall_mutex_unlock, SYS_mutex_unlock); */
