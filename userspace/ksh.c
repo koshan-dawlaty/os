@@ -19,6 +19,8 @@ int main()
 
     init_libc();
 
+    printf("shell!!\n");
+
     /* int term_fd = open("/terminal", 0); */
     /* char *buf = malloc(10); */
     /* memcpy(buf, "abc", 4); */

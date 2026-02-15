@@ -1,12 +1,14 @@
-#include "compiler.h"
-#include "lib/list.h"
+#ifndef SCHEDULER_H
+#define SCHEDULER_H
+
+#include "kernel/addr_space.h"
+#include <compiler.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <lib/list.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <vfs.h>
-#ifndef SCHEDULER_H
-#define SCHEDULER_H
 
 /* TODO: mabye do the architecture specific part of this architecture
  * independent */
@@ -37,7 +39,8 @@ struct task
 {
     struct list list;
 
-    struct pagedir *pgdir;
+    struct addr_space addr_space;
+
     void *stack;
     struct registers regs;
     ptr bp;
@@ -86,7 +89,7 @@ extern void switch_tasks_kernel(struct registers *regs, uint32_t ip);
 extern void save_registers(struct registers *regs);
 extern void load_registers(struct registers *regs);
 
-extern void jump_usermode_asm(ptr addr, struct registers *regs);
+extern void jump_usermode_asm(ptr addr, struct registers *regs, ptr sp);
 
 void schedule();
 
@@ -109,5 +112,8 @@ void add_sleep_queue(struct task *task, size_t time);
 struct task *new_task_args(ptr ip, void *args);
 
 void ktask_run(void (*task)(void *), void *args);
+
+struct task_queue;
+void task_queue_add_current(struct task_queue *queue);
 
 #endif

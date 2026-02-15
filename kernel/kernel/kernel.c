@@ -1,10 +1,12 @@
 #include "multiboot.h"
+#include "wait_queue.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>
 #include <dirent.h>
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/keyboard.h>
+#include <drivers/character/mouse.h>
 #include <drivers/character/terminal.h>
 #include <endian.h>
 #include <err.h>
@@ -12,10 +14,13 @@
 #include <fcntl.h>
 #include <gdt.h>
 #include <interrupts/idt.h>
+#include <kernel/addr_space.h>
 #include <kernel/graphics.h>
+#include <kernel/interrupts.h>
 #include <kernel/keyboard.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
+#include <kernel/ps2.h>
 #include <kernel/semaphore.h>
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
@@ -23,12 +28,14 @@
 #include <kernel/userspace.h>
 #include <lib/array.h>
 #include <lib/binary_tree.h>
+#include <lib/list.h>
 #include <malloc_internal.h>
 #include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>
 #include <mutex.h>
 #include <panic.h>
 #include <pci/pci.h>
+#include <pipe.h>
 #include <pit/pit.h>
 #include <sched.h>
 #include <scheduler.h>
@@ -42,6 +49,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
+#include <userspace/mouse.h>
 #include <utils.h>
 #include <vfs.h>
 
@@ -101,6 +109,9 @@ void draw_background(struct framebuffer *f)
 
             int color = r | (g << 8) | (b << 16);
             framebuffer_put_pixel(f, color, x, y);
+            /* framebuffer_put_pixel(f, (x + y) % 2 == 0 ? 0xFFFFFF : 0, x, y);
+             */
+            /* framebuffer_put_pixel(f, 0xFFFFFF, x, y); */
         }
     }
 
@@ -139,6 +150,8 @@ void kernel_init()
 
     init_vfs();
 
+    ps2_init();
+
     call_constructors();
 
 #ifdef TESTS
@@ -150,13 +163,36 @@ SYSCALL_DEFINE1(SYS_exit, void, int status)
 {
 }
 
+extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
+
 void kmain()
 {
+
+    IRQ_OFF({
+        register_interrupt_handler(0x80, syscall_handler_asm,
+                                   (int_handler_flags){.is_user = true});
+    })
+
+    struct addr_space addr_sp = addr_space_alloc();
+    /* printf("%p\n", addr_sp.dir); */
+    /* addr_space_load(addr_sp); */
+
+    /* void *addr = (void *)0xB00000000; */
+
+    /* addr_space_map(&addr_sp, addr, 10, PAGING_PRESENT | PAGING_WRITEABLE); */
+    /* for (size_t i = 0; i < 100; i++) */
+    /* { */
+    /*     ((char *)(addr + 9 * PAGE_SIZE))[i] = (i % 10 + 0x30); */
+    /* } */
+
+    /* printf("%s\n", addr + 9 * PAGE_SIZE); */
+
+    /* addr_space_unmap(&addr_sp, addr, 10); */
 
     for (size_t i = 0; i < memory_regions_len(); i++)
     {
         struct memory_region region = memory_regions_get(i);
-        printf("%p-%p\n", region.start, region.start + region.len);
+        printf("memory from: %p-%p\n", region.start, region.start + region.len);
     }
 
     printf("%d\n", user_addr_is_valid(kmain));
@@ -168,10 +204,28 @@ void kmain()
 
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
-    printf("starting shell\n");
+    create_device("/mouse", mouse_get());
+
+    /* struct file *read, *write; */
+    /* pipe_open(&read, &write); */
+
+    /* printf("%p, %p\n", read, write); */
+
+    /* ktask_run(t2, read); */
+    /* ktask_run(t1, write); */
+    /* ktask_run(t3, NULL); */
+    /* enable_scheduler(); */
+    /* irq_enable(); */
+    /* schedule(); */
+    /* return; */
+
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
-    /* int err = execv("/wm", (char *[]){"wm", NULL}); */
-    int err = execv("/ksh", (char *[]){"ksh", NULL});
+
+    printf("starting shell\n");
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
+    int err = execv("/wm", (char *[]){"wm", NULL});
+    /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
 
     if (err < 0)
     {
@@ -181,4 +235,10 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    while (1)
+    {
+        schedule();
+    }
 }

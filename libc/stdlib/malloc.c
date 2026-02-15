@@ -43,7 +43,8 @@ long align_long2(long in, long align)
 
 #ifdef __is_libk
 struct malloc_zone kernel_malloc_zone = INIT_MALLOC_ZONE(&gfp_kernel_zone);
-struct malloc_zone kernel_tree_malloc_zone = INIT_MALLOC_ZONE(&gfp_kernel_zone);
+struct malloc_zone kernel_tree_malloc_zone =
+    INIT_MALLOC_ZONE(&gfp_kernel_tree_zone);
 
 /* struct malloc_zone kernel_tree_malloc_zone = */
 /*     INIT_MALLOC_ZONE(&gfp_kernel_tree_zone); */
@@ -93,8 +94,9 @@ void *malloc_get_pages(size_t num, struct malloc_zone *zone)
     return get_free_pages_zone(num, zone->zone);
 #else
     user_malloc_addr += 4096;
-    return mmap(user_malloc_addr, num * 4096, 0, 0, 0);
+    void *out = mmap(user_malloc_addr, num * 4096, 0, 0, 0);
     user_malloc_addr += num * 4096;
+    return out;
 #endif
 }
 
@@ -288,7 +290,7 @@ end:
 }
 
 #ifdef __is_libk
-spinlock *heap_mutex = NULL;
+struct spinlock *heap_mutex = NULL;
 #endif
 
 void *malloc(size_t size)

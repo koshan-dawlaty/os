@@ -1,5 +1,7 @@
 #include "interrupts/idt.h"
 #include "keyboard_map.h"
+#include "spinlock.h"
+#include "vfs.h"
 #include "x86_keyboard.h"
 #include <kernel/keyboard.h>
 #include <stdbool.h>
@@ -15,9 +17,13 @@ volatile int key_available;
 uint8_t keyboard_buffer_head = 0;
 uint8_t keyboard_buffer_tail = 0;
 
+struct mutex keyboard_mutex = MUTEX_INIT();
+
 void push_keyboard_buffer(char c)
 {
     /* printf("keyboard isr\n"); */
+
+    mutex_lock(&keyboard_mutex);
     uint8_t next_head = (keyboard_buffer_head + 1) % KEYBOARD_BUFFER_SIZE;
 
     if (next_head != keyboard_buffer_tail)
@@ -29,16 +35,20 @@ void push_keyboard_buffer(char c)
     {
         panic("keyboard buffer overflow!\n");
     }
+    mutex_unlock(&keyboard_mutex);
 }
 
 char pop_keyboard_buffer()
 {
+    mutex_lock(&keyboard_mutex);
     if (keyboard_buffer_head == keyboard_buffer_tail)
     {
+        mutex_unlock(&keyboard_mutex);
         return 0; // empty
     }
     char c = keyboard_buffer[keyboard_buffer_tail];
     keyboard_buffer_tail = (keyboard_buffer_tail + 1) % KEYBOARD_BUFFER_SIZE;
+    mutex_unlock(&keyboard_mutex);
     return c;
 }
 
@@ -126,13 +136,16 @@ void keyboard_init()
     keyboard_set_led(KEYBOARD_LED_CAPS_LOCK);
 
     /*
+for (size_t i = 0; i < 10; i++)
+{
 push_keyboard_buffer('a');
 push_keyboard_buffer('b');
 push_keyboard_buffer('c');
 push_keyboard_buffer('d');
 push_keyboard_buffer('e');
 push_keyboard_buffer('f');
-    */
+}
+*/
 }
 
 bool is_key_available()

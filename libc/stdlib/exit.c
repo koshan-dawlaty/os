@@ -1,4 +1,3 @@
-#include "sys/syscall.h"
 #include <kernel_syscall.h>
 #include <sched.h>
 #include <stdlib.h>
@@ -14,6 +13,9 @@ void exit(int status)
 {
 #ifdef __is_libk
     struct task *t = get_current_task();
+
+    printf("exit addr_space:%p\n", &t->addr_space);
+    addr_space_free(t->addr_space);
     /* TODO: this is not atomic, and should be implemented in one function */
     remove_task(t);
     free_task(t);

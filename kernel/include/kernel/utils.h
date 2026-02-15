@@ -9,6 +9,11 @@
 
 long align_long(long in, long align);
 
+static inline ptr ptr_align(ptr in, ptr align)
+{
+    return (in + align - 1) & ~(align - 1);
+}
+
 uint32_t bytes_to_32_bit_int(uint8_t one, uint8_t two, uint8_t three,
                              uint8_t four);
 uint16_t bytes_to_16_bit_int(uint8_t one, uint8_t two);

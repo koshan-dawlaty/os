@@ -4,6 +4,7 @@ ENTRY (_start)
 SECTIONS
 {
         . = 0x00100000;
+	LINKER_KERNEL_START = . + 0xC0000000;
 	/* The kernel will live at 3GB + 1MB in the virtual address space, */
 	/* which will be mapped to 1MB in the physical address space. */
 	/* Note that we page-align the sections. */
@@ -56,4 +57,5 @@ SECTIONS
 	/* } */
 	/* Add a symbol that indicates the end address of the kernel. */
 	_kernel_end = .;
+	LINKER_KERNEL_END = .;
 }

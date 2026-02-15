@@ -1,4 +1,5 @@
 #include "gdt.h"
+#include "kernel/addr_space.h"
 #include "kernel/paging.h"
 #include "kernel/utils.h"
 #include "memory/paging_flags.h"
@@ -37,10 +38,9 @@ struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
     struct task *t = new_task_user(elf->entry_point, 0xBFFEF000, argc, argv);
-    struct pagedir *pgdir = t->pgdir;
     struct pagedir *temp_pgdir = get_current_pagedir();
 
-    load_pgdir(pgdir);
+    addr_space_load(t->addr_space);
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
 
@@ -48,31 +48,36 @@ struct task *load_elf(elf *elf, int argc, char **argv)
         /* load */
         if (header->type == 1)
         {
+
             for (size_t i = 0; i <= header->size_memory + PAGE_SIZE;
                  i += PAGE_SIZE)
             {
 
-                map_page((void *)get_free_phys_page(),
-                         (void *)(header->virtual_addr + i),
-                         PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+                addr_space_map(&t->addr_space,
+                               (void *)(header->virtual_addr + i), 1,
+                               PAGING_PRESENT | PAGING_USER | PAGING_PRESENT);
+
+                /*
+write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
+              (void *)(header->virtual_addr + i),
+              PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+                                          */
             }
 
             /* this may not have zeros at the end */
             u8 *buf = malloc(header->size_memory);
-            bzero(buf, header->size_memory);
-            /*
-if (header->memory_size > header->file_size)
-{
-
-    for (size_t i = 0; i < header->memory_size - header->file_size;
-         i++)
-    {
-        buf[header->file_size + i] = 0;
-    }
-}
-            */
 
             pread(elf->fd, buf, header->size_file, header->file_offset);
+
+            if (header->size_memory > header->size_file)
+            {
+
+                for (size_t i = 0; i < header->size_memory - header->size_file;
+                     i++)
+                {
+                    buf[header->size_file + i] = 0;
+                }
+            }
 
             uint8_t *dest = (uint8_t *)(header->virtual_addr);
 
@@ -89,7 +94,7 @@ if (header->memory_size > header->file_size)
         }
     }
 
-    create_userspace_stack(pgdir);
+    create_userspace_stack(t->addr_space.dir);
 
     /* *(char ***)(0xBFFEF000 + sizeof(ptr)) = args; */
     /* *(int *)(0xBFFEF000) = argc; */

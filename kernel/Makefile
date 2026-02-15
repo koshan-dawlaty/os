@@ -49,8 +49,10 @@ $(KERNEL_ARCH_OBJS) \
 $(KERNEL_TEST_OBJS) \
 $(KERNEL_ARCH_TEST_OBJS) \
 kernel/kernel.o \
+kernel/addr_space.o \
 kernel/utils.o \
 kernel/panic.o \
+kernel/serial/ps2.o \
 kernel/syscall.o \
 kernel/elf/elf.o \
 kernel/elf/elf32.o \
@@ -62,12 +64,11 @@ kernel/scheduler/sleep.o \
 kernel/scheduler/semaphore.o \
 kernel/scheduler/mutex.o \
 kernel/scheduler/spinlock.o \
+kernel/scheduler/shared_mem.o \
 kernel/memory/get_free_pages.o \
 kernel/graphics/graphics.o \
 kernel/multiboot.o \
 kernel/socket/socket.o \
-lib/list.o \
-lib/array.o \
 lib/binary_tree.o \
 lib/lru.o \
 lib/rc.o \
@@ -77,6 +78,7 @@ fs/ext2/init.o \
 fs/ext2/inode.o \
 fs/ext2/misc.o \
 fs/vfs/file.o \
+fs/vfs/pipe.o \
 fs/vfs/device.o \
 fs/vfs/pathname.o \
 fs/vfs/vfs.o \
@@ -91,6 +93,7 @@ drivers/block/ata/ata.o \
 drivers/block/bdev.o \
 drivers/block/ram/drive.o \
 drivers/character/cdev.o \
+drivers/character/mouse.o \
 drivers/character/terminal/device.o \
 drivers/character/keyboard/device.o \
 drivers/device.o \
@@ -130,7 +133,7 @@ all: $(BIN)/os.kernel
 
 # ../libc/libk.a is bad
 $(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk.a
-	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -Wl,--whole-archive -lk -Wl,--no-whole-archive -lgcc
+	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -Wl,--whole-archive -lk -lutil -Wl,--no-whole-archive -lgcc
 	grub-file --is-x86-multiboot $(BIN)/os.kernel
 
 

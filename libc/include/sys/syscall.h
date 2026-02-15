@@ -20,5 +20,15 @@
 #define SYS_send 21
 #define SYS_recv 22
 #define SYS_clone 23
+#define SYS_get_framebuffer 18
+#define SYS_shared_mem_alloc 24
+#define SYS_shared_mem_get 25
+
+#define SYS_mutex_create 26
+#define SYS_mutex_lock 27
+#define SYS_mutex_unlock 28
+
+#define SYS_pipe 29
+#define SYS_execv_stdio 30
 
 #endif
