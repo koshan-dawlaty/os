@@ -1,7 +1,7 @@
 #ifndef LIST_H
 #define LIST_H
 
-#include <container_of.h>
+#include "container_of.h"
 #include <stdbool.h>
 
 /*
@@ -60,5 +60,7 @@ void list2_add_front(list2 *new, list2 **head);
 void list2_remove(list2 *value, list2 **head);
 void list2_insert_after(list2 *new, list2 *after);
 void list2_insert_end(list2 *new, list2 **head);
+
+struct list2 *list2_pop(struct list2 **head);
 
 #endif

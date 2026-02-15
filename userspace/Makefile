@@ -22,14 +22,14 @@ CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas 
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas  -Oz
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
 CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings -fomit-frame-pointer
 # this gets rid of moddi3 and simliar functions
-CFLAGS:=$(CFLAGS) -fno-semantic-interposition
+CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib
 
 
 # very bad
@@ -79,9 +79,14 @@ BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
 .PHONY : all clean install install-binaries install-headers
 
-$(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+all : $(BINARIES_BIN)
+	$(CC) -o $(BIN)/$
+
+$(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o $(BIN)/wm_lib.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+	# $(CC) -Ttext=0x600000  -o $@ $^ $(CFLAGS)  -nostdlib -lgcc -Oz
+	$(CC) -o $@ $^ $(CFLAGS)  -nostdlib -lgcc -Oz
+	# $(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/elf_test2 : $(OBJS_START_BIN) $(BIN)/elf_test2.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
@@ -111,14 +116,12 @@ $(BIN)/touch : $(OBJS_START_BIN) $(BIN)/touch.o ../libc/libc.a $(START_OBJ)  $(O
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/wm : $(OBJS_START_BIN) $(BIN)/wm.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/wm : $(OBJS_START_BIN) $(BIN)/wm.o $(BIN)/wm_lib.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc
 
 
 
-all : $(BINARIES_BIN)
-	$(CC) -o $(BIN)/$
 
 $(BIN)/%.o: %.S
 	@mkdir -p $(BIN)/$(dir $<)

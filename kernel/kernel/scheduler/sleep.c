@@ -1,9 +1,9 @@
 #include "sleep.h"
-#include "container_of.h"
-#include "lib/list.h"
-#include "scheduler.h"
-#include "utils.h"
+#include <container_of.h>
+#include <lib/list.h>
+#include <scheduler.h>
 #include <stdlib.h>
+#include <utils.h>
 
 list2 *sleep_queue_head = NULL;
 

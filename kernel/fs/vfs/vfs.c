@@ -102,24 +102,29 @@ void free_dentry(dentry *entry)
 
 struct file *new_file(struct dentry *entry, int flags)
 {
-    file *out = malloc(sizeof(file));
+    struct file *out = malloc(sizeof(struct file));
     out->entry = entry;
     out->descriptor = 0;
     out->offset = 0;
     out->flags = flags;
 
-    switch (entry->type)
+    /* TODO: the entry attribute should be removed and replaced with something
+     * using file_private and file operations */
+    if (entry != NULL)
     {
-    case DENTRY_DEVICE:
-    case DENTRY_FILE:
-        break;
-    case DENTRY_MOUNT_POINT:
-    case DENTRY_DIR:
-        out->dir_context = DIR_CONTEXT_INIT();
-        break;
-    case DENTRY_INVALID:
-        UNREACHABLE("dentry must have valid type");
-        break;
+        switch (entry->type)
+        {
+        case DENTRY_DEVICE:
+        case DENTRY_FILE:
+            break;
+        case DENTRY_MOUNT_POINT:
+        case DENTRY_DIR:
+            out->dir_context = DIR_CONTEXT_INIT();
+            break;
+        case DENTRY_INVALID:
+            UNREACHABLE("dentry must have valid type");
+            break;
+        }
     }
 
     return out;

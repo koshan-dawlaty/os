@@ -1,5 +1,5 @@
+#include "kernel/addr_space.h"
 #include "memory/paging_flags.h"
-#include "panic.h"
 #include <container_of.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
@@ -9,6 +9,7 @@
 #include <lib/list.h>
 #include <memory/get_free_pages.h>
 #include <multiboot.h>
+#include <panic.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -247,6 +248,10 @@ void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
 
         for (size_t i = 0; i < amount; i++)
         {
+            void *addr = zone->base + ((zone->offset + i) * 4096);
+
+            /* TODO: (possibly) we are not going to track this is in an struct
+             * addr_space because it is in the kernel */
             map_page(get_free_phys_page(),
                      zone->base + ((zone->offset + i) * 4096),
                      PAGING_PRESENT | PAGING_WRITEABLE);

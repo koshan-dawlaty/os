@@ -1,13 +1,18 @@
+#include "kernel/syscall.h"
+#include "kmalloc.h"
 #include "sleep.h"
+#include "sys/syscall.h"
 #include "unistd.h"
 #include "utils.h"
 #include "vfs.h"
 #include <assert.h>
+#include <container_of.h>
 #include <drivers/character/terminal.h>
 #include <elf.h>
 #include <fcntl.h>
 #include <gdt.h>
 #include <interrupts/pic.h>
+#include <kernel/addr_space.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
 #include <lib/list.h>
@@ -20,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <task_queue.h>
 
 struct task_queue scheduler_queue = TASK_QUEUE_INIT();
 
@@ -47,28 +53,24 @@ bool is_scheduler_enabled()
 void new_task_usermode_start(int argc, char **argv, ptr addr)
 {
 
-    printf("addr:%p\n", addr);
-
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
     temp_regs->esp = 0xBFFEF000;
     scheduler_set_regs_argv(argc, argv, temp_regs);
 
-    jump_usermode_asm(addr, temp_regs);
+    jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
 }
 
 void user_thread_kernel_start(ptr addr)
 {
 
-    printf("addr:%p\n", addr);
-
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
-    temp_regs->esp = 0xBFFEF000;
+    temp_regs->esp = (ptr)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
 
-    jump_usermode_asm(addr, temp_regs);
+    jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
 }
 
 /* copies args to userspace */
@@ -124,11 +126,7 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
      */
     /* *(ptr *)(out->stack + 8) = ip; */
 
-    printf("pagedir alloc\n");
-    out->pgdir = new_pagedir();
-    printf("pagedir alloc done\n");
-    write_kernel_page_tables(out->pgdir);
-    printf("kernel page tables written\n");
+    out->addr_space = addr_space_alloc();
 
     char **args_temp = malloc(argc * sizeof(char *));
     for (int i = 0; i < argc; i++)
@@ -140,8 +138,7 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     printf("args done\n");
     /* TODO: this calls load_pgdir alot */
     struct pagedir *temp = get_current_pagedir();
-    load_pgdir(out->pgdir);
-    printf("second pagedir loaded\n");
+    addr_space_load(out->addr_space);
     char **args = create_user_args(argc, args_temp);
     printf("user args created\n");
     scheduler_set_regs_arguments(argc, args, ip, &out->regs);
@@ -164,7 +161,8 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 struct task *user_thread_alloc(ptr ip)
 {
 
-    ASSERT(get_current_task()->pgdir != NULL,
+    struct addr_space current_addr_space = current_task->addr_space;
+    ASSERT(current_addr_space.dir != NULL,
            "null pagedir for current task, this might be because a kernel "
            "thread called this");
 
@@ -187,19 +185,15 @@ struct task *user_thread_alloc(ptr ip)
     /* NULL is used to signify root dir */
     out->working_dir = NULL;
 
-    *(ptr *)(out->stack) = (ptr)user_thread_kernel_start;
+    *((ptr *)(out->stack)) = (ptr)user_thread_kernel_start;
     /* edx is the third argument first and second are set later in this
      * function
      */
-    /* *(ptr *)(out->stack + 8) = ip; */
+    *(ptr *)(out->stack + 8) = ip;
 
-    out->pgdir = get_current_task()->pgdir;
-    write_kernel_page_tables(out->pgdir);
-    /* TODO: this calls load_pgdir alot */
-    struct pagedir *temp = get_current_pagedir();
-    load_pgdir(out->pgdir);
+    out->addr_space = current_addr_space;
 
-    load_pgdir(temp);
+    addr_space_load(out->addr_space);
 
     /* TODO: this should duplicate file descriptors */
     const char *term_path = "/terminal";
@@ -212,6 +206,13 @@ struct task *user_thread_alloc(ptr ip)
 
     return out;
 }
+
+void syscall_clone(ptr ip)
+{
+    add_task(user_thread_alloc(ip));
+}
+
+SYSCALL_DEFINE1(syscall_clone, SYS_clone)
 
 /*
 struct task *new_task(ptr ip)
@@ -281,9 +282,10 @@ struct task *new_task(ptr ip)
     out->regs.eflags = 1 << 9;
 
     *(ptr *)(out->stack) = ip;
-    out->pgdir = NULL;
+    out->addr_space = (struct addr_space){.dir = NULL, .list_head = NULL};
 
     out->start_addr = (void *)ip;
+    out->list = LIST_INIT();
 
     return out;
 }
@@ -293,17 +295,52 @@ struct task *create_kernel_task()
     struct task *out = new_task(0);
 
     save_registers(&out->regs);
-    out->pgdir = &init_pgdir;
+    out->addr_space = (struct addr_space){.dir = &init_pgdir, NULL};
     out->stack = (void *)out->regs.esp;
     out->start_addr = (void *)0xDEADBEEF;
 
     return out;
 }
 
+bool init_task_exists()
+{
+    struct list *pos;
+    list_for_each(pos, scheduler_queue.head)
+    {
+        struct task *t = containerof(pos, struct task, list);
+        if (t->start_addr == (void *)0xDEADBEEF)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void task_queue_add_current(struct task_queue *queue)
+{
+
+    if (!init_task_exists())
+    {
+        printf("INIT TASK IS GONE!!\n");
+    }
+    task_queue_remove(&scheduler_queue, current_task);
+    save_registers(&current_task->regs);
+    struct task *prev = current_task;
+    switch_tasks();
+    task_queue_push(queue, prev);
+}
+
 void remove_task(struct task *task)
 {
     irq_state_t irq_state = irq_save_disable();
+
+    if (!init_task_exists())
+    {
+        printf("INIT TASK IS GONE!!\n");
+    }
     task_queue_remove(&scheduler_queue, task);
+
+    /* printf("this is the  sched queue head:%p\n", scheduler_queue.head); */
 
     if (task == current_task)
     {
@@ -311,10 +348,19 @@ void remove_task(struct task *task)
         if (current_task == NULL)
         {
             current_task = LIST_ENTRY(scheduler_queue.head, struct task, list);
+
+            if (current_task == NULL)
+            {
+                printf("why is this null:%p\n", scheduler_queue.head);
+            }
         }
     }
+
     irq_restore(irq_state);
-    load_pgdir(current_task->pgdir);
+    if (current_task->addr_space.dir != NULL)
+    {
+        addr_space_load(current_task->addr_space);
+    }
     set_kernel_stack((ptr)current_task->stack);
     load_registers(&current_task->regs);
 }
@@ -367,9 +413,9 @@ void schedule()
     /* printf("%p\n", current_task->pgdir->pgdir); */
     /* printf("%p\n", current_task->pgdir->pgdir_virtual); */
 
-    if (current_task->pgdir != NULL)
+    if (current_task->addr_space.dir != NULL)
     {
-        load_pgdir(current_task->pgdir);
+        addr_space_load(current_task->addr_space);
     }
 
     set_kernel_stack((ptr)current_task->stack);
@@ -389,4 +435,15 @@ void free_task(struct task *t)
     fdlist_free(t->descriptors);
 
     free(t);
+}
+
+void print_tasks()
+{
+    struct list *pos;
+    list_for_each(pos, scheduler_queue.head)
+    {
+        struct task *t = containerof(pos, struct task, list);
+        printf("%p ", t->start_addr);
+    }
+    printf("\n");
 }

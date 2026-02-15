@@ -48,6 +48,14 @@ semaphore *test_semaphore = NULL;
 int syscall_handler(struct syscall_regs *regs)
 {
 
+    if (regs->eax == SYS_get_framebuffer)
+    {
+        *(struct framebuffer **)regs->ebx =
+            framebuffer_alloc_user(get_current_framebuffer());
+
+        return 1;
+    }
+
     return kernel_syscall(regs->eax, regs->ebx, regs->ecx, regs->edx, regs->esi,
                           regs->edi);
 }

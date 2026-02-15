@@ -1,3 +1,4 @@
+#include <init.h>
 #include <sched.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -33,13 +34,16 @@ int recv(int socket, void *buf, size_t len)
 
 int main(int argc, char **argv)
 {
+    init_libc();
+
     /* for (size_t i = 0; i < 2; i++) */
     /* { */
     /*     sched_yield(); */
     /* } */
     /* /1* printf("sending data\n"); *1/ */
 
-    /* send(0, "abc", 4); */
+    /* printf("elf_test2\n"); */
+    send(0, "abc", 4);
     /* send(0, "abc", 4); */
 
     for (;;)

@@ -1,12 +1,14 @@
-#include "kernel/paging.h"
-#include "kmalloc.h"
-#include "memory/get_free_pages.h"
-#include "memory/paging_flags.h"
 #include "psu_font.h"
 #include <compiler.h>
 #include <kernel/graphics.h>
+#include <kernel/paging.h>
+#include <kernel/syscall.h>
 #include <kernel/types.h>
+#include <kmalloc.h>
+#include <memory/get_free_pages.h>
+#include <memory/paging_flags.h>
 #include <stdio.h>
+#include <syscall.h>
 
 struct PSF_font_header
 {
@@ -65,6 +67,7 @@ void framebuffer_draw_char(struct framebuffer *f, char c, size_t x, size_t y)
             }
             else
             {
+                framebuffer_put_pixel(f, 0, (x_pos + 4), y_pos);
             }
         }
     }
@@ -133,4 +136,8 @@ struct framebuffer *framebuffer_alloc_user(struct framebuffer *buffer)
     out->pitch = buffer->pitch;
 
     return out;
+}
+
+void syscall_alloc_framebuffer(struct framebuffer *ptr)
+{
 }

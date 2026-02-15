@@ -103,7 +103,10 @@ size_t fwrite(const void *restrict buf, size_t size, size_t number, FILE *f)
 
     size_t bytes_remaining = total_size - write_size;
 
-    write(f->fd, buf + write_size, bytes_remaining);
+    if (bytes_remaining != 0)
+    {
+        write(f->fd, buf + write_size, bytes_remaining);
+    }
     memset(f->buffer, 0, f->buffer_max);
 
     return total_size;

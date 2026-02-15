@@ -1,6 +1,6 @@
-#include "lib/list.h"
-#include "kernel/tty.h"
 #include <err.h>
+#include <kernel/tty.h>
+#include <lib/list.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -151,4 +151,18 @@ void list2_insert_end(list2 *new, list2 **head)
 
     prev->next = new;
     new->prev = prev;
+}
+
+struct list2 *list2_pop(struct list2 **head)
+{
+
+    struct list2 *retval = *head;
+    *head = (*head)->next;
+
+    if (*head != NULL)
+    {
+        (*head)->prev = NULL;
+    }
+
+    return retval;
 }

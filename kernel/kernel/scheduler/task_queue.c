@@ -1,3 +1,4 @@
+#include "panic.h"
 #include <lib/list.h>
 #include <scheduler.h>
 #include <stdlib.h>
@@ -5,8 +6,10 @@
 
 #include <task_queue.h>
 
+extern struct task_queue scheduler_queue;
 void task_queue_push(struct task_queue *queue, struct task *t)
 {
+
     if (t->list.next != NULL)
     {
         struct task *next = containerof(t->list.next, struct task, list);

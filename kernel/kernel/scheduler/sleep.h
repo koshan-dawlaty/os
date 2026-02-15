@@ -1,7 +1,7 @@
 #ifndef SCHED_SLEEP_H
 #define SCHED_SLEEP_H
 
-#include "lib/list.h"
+#include <lib/list.h>
 #include <stddef.h>
 
 struct sleep_queue_entry
