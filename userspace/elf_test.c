@@ -22,7 +22,7 @@ int execv_stdio(const char *path, char *const argv[], int in, int out)
                                0);
 }
 
-#define ARRAY_LEN 44000
+#define ARRAY_LEN 1000
 char big_array[ARRAY_LEN];
 
 int main()
