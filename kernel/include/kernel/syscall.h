@@ -31,7 +31,8 @@ ptr kernel_syscall(ptr num, ptr, ptr, ptr, ptr, ptr);
 #define __MACRO_ARG_CAST(t, x) ((t)(x))
 
 #define SYSCALL_DEFINE0(num, return_type)                                      \
-    SYSCALL_DEFINE_GENERIC(num, return_type, SYSCALL_INTERNAL_FUNC(num)();)
+    SYSCALL_DEFINE_GENERIC(num, return_type,                                   \
+                           return SYSCALL_INTERNAL_FUNC(num)();)
 
 #define SYSCALL_DEFINE1(num, return_type, t1, arg1)                            \
     SYSCALL_DEFINE_GENERIC(                                                    \

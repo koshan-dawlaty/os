@@ -1,3 +1,4 @@
+#include "sys/syscall.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <kernel_syscall.h>
@@ -114,3 +115,13 @@ int execv_stdio(const char *path, char *const argv[], int stdin, int stdout)
 
 /* TODO: */
 /* SYSCALL_DEFINE4(execv_stdio, SYS_execv_stdio); */
+
+SYSCALL_DEFINE4(SYS_execv_stdio, int, const char *, path, char **, argv, int,
+                stdin, int, stdout)
+{
+#ifdef __is_libk
+    return execv_stdio(path, argv, stdin, stdout);
+#endif
+
+    return 0;
+}

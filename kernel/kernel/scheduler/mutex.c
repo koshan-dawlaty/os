@@ -1,4 +1,5 @@
 #include "lib/array.h"
+#include "unistd.h"
 #include <fcntl.h>
 #include <kernel/syscall.h>
 #include <lib/array.h>
@@ -75,7 +76,7 @@ void mutex_unlock(struct mutex *m)
  */
 struct array user_mutex_array = ARRAY_INIT();
 
-int syscall_mutex_create()
+SYSCALL_DEFINE0(SYS_mutex_create, int)
 {
     struct mutex mutex = MUTEX_INIT();
     struct mutex *element = malloc(sizeof(struct mutex));
@@ -84,23 +85,21 @@ int syscall_mutex_create()
         array_add(&user_mutex_array, &element, sizeof(struct mutex *));
     return index;
 }
-/* TODO: */
-/* SYSCALL_DEFINE0(syscall_mutex_create, SYS_mutex_create); */
 
-void syscall_mutex_lock(int id)
+SYSCALL_DEFINE1(SYS_mutex_lock, int, int, id)
 {
     struct mutex *mutex = *(struct mutex **)array_get(&user_mutex_array, id,
                                                       sizeof(struct mutex *));
-
     mutex_lock(mutex);
-}
-/* SYSCALL_DEFINE1(syscall_mutex_lock, SYS_mutex_lock); */
 
-void syscall_mutex_unlock(int id)
+    return 0;
+}
+
+SYSCALL_DEFINE1(SYS_mutex_unlock, int, int, id)
 {
     struct mutex *mutex = *(struct mutex **)array_get(&user_mutex_array, id,
                                                       sizeof(struct mutex *));
-
     mutex_unlock(mutex);
+
+    return 0;
 }
-/* SYSCALL_DEFINE1(syscall_mutex_unlock, SYS_mutex_unlock); */
