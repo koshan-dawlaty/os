@@ -22,9 +22,26 @@ int execv_stdio(const char *path, char *const argv[], int in, int out)
                                0);
 }
 
+#define ARRAY_LEN 44000
+char big_array[ARRAY_LEN];
+
 int main()
 {
+
     init_libc();
+
+    for (size_t i = 0; i < ARRAY_LEN; i++)
+    {
+        big_array[i] = 'a' + (i % 26);
+    }
+
+    for (size_t i = 0; i < ARRAY_LEN; i++)
+    {
+        printf("%c ", big_array[i]);
+    }
+
+    exit(1);
+    return 1;
 
     struct wm_client client = wm_client_connect();
 

@@ -58,30 +58,59 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
     return node_out;
 }
 
+/* gets the actual block number from a logical block */
+static u32 ext2_inode_get_block(struct inode *vfs, size_t block_num,
+                                struct superblock *sb)
+{
+    struct ext2_inode *node = EXT2_INODE(vfs);
+
+    if (block_num < 12)
+    {
+        return node->direct_blocks[block_num];
+    }
+
+    u32 *indirect_block =
+        (u32 *)ext2_read_block(node->singly_indirect_block_pointer, sb);
+
+    size_t block = *(u32 *)(indirect_block + ((block_num - 12) * sizeof(u32)));
+
+    return block;
+}
+
 /*
  * reads the contents of block, as a indirect block
  */
 static void ext2_read_inode_block(u32 indirect_block_num, u8 *buf,
                                   size_t buf_len, size_t offset, superblock *sb)
 {
+    printf("offset:%d, len:%d\n", offset, buf_len);
+    printf("INDEIRECT BLOCK NUM:%d\n", indirect_block_num);
     u8 *indirect_block = ext2_read_block(indirect_block_num, sb);
 
     /* this assumes there are 12 direct blocks */
     size_t block_index = (offset / EXT2_BLOCK_SIZE(sb)) - 12;
+    printf("block_index:%d\n", block_index);
     size_t block_num = *(u32 *)(indirect_block + block_index * sizeof(u32));
+    printf("block_num:%d\n", block_num);
 
-    uint8_t *block = ext2_read_block(block_num, sb);
+    /* it seems like this can return incorrect data */
+    u8 *block = ext2_read_block(block_num, sb);
     block_index++;
 
     size_t bytes_read = 0;
 
+    printf("%d\n", buf_len + (offset % EXT2_BLOCK_SIZE(sb)));
+    printf("%d\n", offset % EXT2_BLOCK_SIZE(sb));
+
     if (buf_len + (offset % EXT2_BLOCK_SIZE(sb)) < EXT2_BLOCK_SIZE(sb))
     {
-        memcpy(buf, block + offset % EXT2_BLOCK_SIZE(sb), buf_len);
+        memcpy(buf, block + (offset % EXT2_BLOCK_SIZE(sb)), buf_len);
         return;
     }
 
     printf("maybe untested (ext2)\n");
+
+    return;
 
     size_t read_size = EXT2_BLOCK_SIZE(sb) - (offset % EXT2_BLOCK_SIZE(sb));
     memcpy(buf, block + offset % EXT2_BLOCK_SIZE(sb), read_size);
@@ -111,73 +140,64 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
     size_t buf_offset = 0;
 
     size_t blocks_offset = 0;
-    if (index < EXT2_BLOCK_SIZE(sb) * 12)
+    uint block_index = index / EXT2_BLOCK_SIZE(sb);
+
+    /* printf("%p\n", node->direct_blocks); */
+    /* printf("%d\n", node->direct_blocks[block_index]); */
+
+    block =
+        ext2_read_block(node->direct_blocks[block_index + blocks_offset], sb);
+    blocks_offset++;
+
+    if (buf_len + (index % EXT2_BLOCK_SIZE(sb)) < EXT2_BLOCK_SIZE(sb))
     {
-        uint block_index = index / EXT2_BLOCK_SIZE(sb);
+        memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb), buf_len);
 
-        /* printf("%p\n", node->direct_blocks); */
-        /* printf("%d\n", node->direct_blocks[block_index]); */
+        free(block);
 
-        block = ext2_read_block(
-            node->direct_blocks[block_index + blocks_offset], sb);
-        blocks_offset++;
-
-        if (buf_len + (index % EXT2_BLOCK_SIZE(sb)) < EXT2_BLOCK_SIZE(sb))
-        {
-            memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb),
-                   buf_len);
-
-            free(block);
-
-            return;
-        }
-
-        int read_size = EXT2_BLOCK_SIZE(sb) - (index % EXT2_BLOCK_SIZE(sb));
-        memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb),
-               read_size);
-
-        buf_offset += read_size;
-
-        block = ext2_read_block(
-            node->direct_blocks[block_index + blocks_offset], sb);
-        blocks_offset++;
-
-        while (buf_offset <
-               ((buf_len / EXT2_BLOCK_SIZE(sb)) * EXT2_BLOCK_SIZE(sb)))
-        {
-            memcpy(buf + buf_offset, block, EXT2_BLOCK_SIZE(sb));
-            free(block);
-            block = ext2_read_block(
-                node->direct_blocks[block_index + blocks_offset], sb);
-            blocks_offset++;
-
-            buf_offset += EXT2_BLOCK_SIZE(sb);
-        }
-
-        /* uint bytes_remaining = buf_len - read_size; */
-        /* uint bytes_remaining = buf_len - buf_offset; */
-        uint bytes_remaining = buf_len % EXT2_BLOCK_SIZE(sb);
-        if (bytes_remaining < EXT2_BLOCK_SIZE(sb))
-        {
-            free(block);
-            block = ext2_read_block(
-                node->direct_blocks[block_index + blocks_offset - 1], sb);
-
-            memcpy(buf + buf_offset, block, bytes_remaining);
-            return;
-        }
-
-        /* printf("remaining: %d\n", bytes_remaining); */
-        for (size_t i = 0x9ab; i < 0x9ab + 10; i++)
-        {
-            /* printf("%p ", buf[i]); */
-        }
+        return;
     }
-    else
+
+    int read_size = EXT2_BLOCK_SIZE(sb) - (index % EXT2_BLOCK_SIZE(sb));
+    memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb), read_size);
+
+    buf_offset += read_size;
+
+    block =
+        ext2_read_block(node->direct_blocks[block_index + blocks_offset], sb);
+    blocks_offset++;
+
+    while (buf_offset < ((buf_len / EXT2_BLOCK_SIZE(sb)) * EXT2_BLOCK_SIZE(sb)))
+    {
+        memcpy(buf + buf_offset, block, EXT2_BLOCK_SIZE(sb));
+        free(block);
+        block = ext2_read_block(
+            node->direct_blocks[block_index + blocks_offset], sb);
+        blocks_offset++;
+
+        buf_offset += EXT2_BLOCK_SIZE(sb);
+    }
+
+    /* uint bytes_remaining = buf_len - read_size; */
+    /* uint bytes_remaining = buf_len - buf_offset; */
+    uint bytes_remaining = buf_len % EXT2_BLOCK_SIZE(sb);
+    if (bytes_remaining < EXT2_BLOCK_SIZE(sb))
+    {
+        free(block);
+        block = ext2_read_block(
+            node->direct_blocks[block_index + blocks_offset - 1], sb);
+
+        memcpy(buf + buf_offset, block, bytes_remaining);
+        return;
+    }
+
+    printf("THE INDEX IS:%d\n", index);
+    if (index > EXT2_BLOCK_SIZE(sb) * 12)
     {
         /* TODO: implement */
         /* printf("NOT IMPLEMENTED!!! (ext2)\n"); */
 
+        printf("reading from node:%p\n", node);
         ext2_read_inode_block(node->singly_indirect_block_pointer, buf, buf_len,
                               index, sb);
     }

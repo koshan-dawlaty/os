@@ -1,5 +1,4 @@
 #include "multiboot.h"
-#include "wait_queue.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>
@@ -52,6 +51,7 @@
 #include <userspace/mouse.h>
 #include <utils.h>
 #include <vfs.h>
+#include <wait_queue.h>
 
 #include <scheduler.h>
 #include <unistd.h>
@@ -194,6 +194,12 @@ void kmain()
                                    (int_handler_flags){.is_user = true});
     })
 
+    int fd = open("/elf_test", O_RDONLY);
+    size_t len = 16;
+    char *buf = malloc(len);
+    off_t offset = 16384;
+    pread(fd, buf, len, offset);
+
     /* printf("%p\n", kernel_syscall(SYS_exit, 1, (ptr) "abc", 3, 4, 5)); */
     /* printf("%d\n", user_addr_is_valid(kmain)); */
 
@@ -224,9 +230,9 @@ void kmain()
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
     printf("starting shell\n");
-    execv("/elf_test", (char *[]){"elf_test", NULL});
-    /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
-    int err = execv("/wm", (char *[]){"wm", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    int err = execv("/elf_test", (char *[]){"/elf_test", NULL});
+    /* int err = execv("/wm", (char *[]){"wm", NULL}); */
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
 
     if (err < 0)

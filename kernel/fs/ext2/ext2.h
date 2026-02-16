@@ -53,7 +53,7 @@ static inline struct ext2_superblock *EXT2_SB(superblock *sb)
 
 #define EXT2_GROUP_DESCRIPTOR_TABLE(sb) EXT2_SB(sb)->group_descriptor_table
 
-typedef struct __packed
+typedef struct ext2_inode
 {
     uint16_t type;
     uint16_t user_id;
@@ -76,12 +76,12 @@ typedef struct __packed
     uint32_t size_high;
     uint32_t block_addr;
     uint8_t os_specific2[12];
-} ext2_inode;
+} __packed ext2_inode;
 
 #define EXT2_INODE_FILE 0x8000
 #define EXT2_INODE_DIR 0x4000
 
-static inline ext2_inode *EXT2_INODE(inode *i)
+static inline struct ext2_inode *EXT2_INODE(inode *i)
 {
     return i->fs_private;
 }

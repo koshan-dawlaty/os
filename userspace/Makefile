@@ -22,7 +22,7 @@ CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas  -Oz
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra  -Wno-unknown-pragmas  
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
@@ -84,8 +84,8 @@ all : $(BINARIES_BIN)
 
 $(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o $(BIN)/wm_lib.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	# $(CC) -Ttext=0x600000  -o $@ $^ $(CFLAGS)  -nostdlib -lgcc -Oz
-	$(CC) -o $@ $^ $(CFLAGS)  -nostdlib -lgcc -Oz
+	$(CC) -Ttext=0x600000  -o $@ $^ $(CFLAGS)  -nostdlib -lgcc 
+	# $(CC) -o $@ $^ $(CFLAGS)  -nostdlib -lgcc 
 	# $(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/elf_test2 : $(OBJS_START_BIN) $(BIN)/elf_test2.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
@@ -129,7 +129,7 @@ $(BIN)/%.o: %.S
 
 $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) 
 
 
 ifdef CONFIG_x86_32

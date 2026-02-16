@@ -1,6 +1,7 @@
 #include "bdev.h"
 #include "err.h"
 #include "ext2.h"
+#include "panic.h"
 #include "string.h"
 #include <ata/ata.h>
 #include <kernel/utils.h>
@@ -85,6 +86,7 @@ u8 *ext2_read_block(size_t index, superblock *sb)
 
 void ext2_write_block(u8 *buffer, size_t index, superblock *sb)
 {
+
     u64 offset = (index * (EXT2_BLOCK_SIZE(sb)));
     bdev_write(sb->dev, buffer, EXT2_BLOCK_SIZE(sb), offset);
 }

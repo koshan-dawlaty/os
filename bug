@@ -1,10 +1,3 @@
-after "waiting for input" is printed for the 3rd time, break on the unix_socket_recv
-
-it seems like current_task gets set to null after the second reasignment in remove_task()
-
-its not in the second "waiting for input" recv
-
-when list_push is called in task_queue_push it seems like it can remove the initial kernel task
-
-2nd task_queue_push is when bug occurs
-the task being removed is in the scheduler list
+asjlkdfaskjdflk
+i hate gcc!!!!!!
+it makes a program header that is 4096-12284 (ext2 breaks with this)
