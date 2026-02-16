@@ -28,7 +28,7 @@ void init_pit()
     /* outb(PIT_CHANNEL0, 0); */
 }
 
-ISR(pit_handler, {
+INT_HANDLER(pit_handler, {
     pit_time++;
     if (pit_time % 10 == 0)
     {
