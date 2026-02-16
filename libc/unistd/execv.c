@@ -1,10 +1,11 @@
-#include "utils.h"
+#include "sys/syscall.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <kernel_syscall.h>
 #include <stdint.h>
 #include <syscall.h>
 #include <unistd.h>
+#include <utils.h>
 
 #ifdef __is_libk
 #include <elf.h>
@@ -57,6 +58,10 @@ int execv(const char *path, char *const argv[])
 #endif
 }
 
+SYSCALL_DEFINE2(SYS_execv, int, const char *, path, char **, argv)
+{
+    return execv(path, argv);
+}
 #ifdef __is_libk
 int execv_stdio(const char *path, char *const argv[], int stdin, int stdout)
 {
@@ -108,5 +113,15 @@ int execv_stdio(const char *path, char *const argv[], int stdin, int stdout)
 }
 #endif
 
-SYSCALL_DEFINE4(execv_stdio, SYS_execv_stdio);
-SYSCALL_DEFINE2(execv, SYS_execv);
+/* TODO: */
+/* SYSCALL_DEFINE4(execv_stdio, SYS_execv_stdio); */
+
+SYSCALL_DEFINE4(SYS_execv_stdio, int, const char *, path, char **, argv, int,
+                stdin, int, stdout)
+{
+#ifdef __is_libk
+    return execv_stdio(path, argv, stdin, stdout);
+#endif
+
+    return 0;
+}

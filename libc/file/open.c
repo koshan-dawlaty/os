@@ -33,4 +33,7 @@ int open(const char *path, int flags)
 #endif
 }
 
-SYSCALL_DEFINE2(open, SYS_open)
+SYSCALL_DEFINE2(SYS_open, int, const char *, path, int, flags)
+{
+    return open(path, flags);
+}

@@ -1,7 +1,7 @@
 #include "utils.h"
 #include <errno.h>
-#include <sys/syscall.h>
 #include <kernel_syscall.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 
 #ifdef __is_libk
@@ -25,4 +25,7 @@ off_t lseek(int fd, off_t offset, int whence)
 #endif
 }
 
-SYSCALL_DEFINE3(lseek, SYS_lseek);
+SYSCALL_DEFINE3(SYS_lseek, off_t, int, fd, off_t, offset, int, whence)
+{
+    return lseek(fd, offset, whence);
+}

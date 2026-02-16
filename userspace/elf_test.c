@@ -11,7 +11,6 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <unistd.h>
-
 int pipe(int fds[2])
 {
     return syscall_wrapper_asm(SYS_pipe, (ptr)fds, 0, 0, 0, 0);
@@ -35,7 +34,7 @@ int main()
 
     if (font == NULL)
     {
-        /* printf("font was invalid\n"); */
+        printf("font was invalid\n");
         exit(1);
     }
 

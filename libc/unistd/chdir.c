@@ -1,7 +1,7 @@
+#include <kernel_syscall.h>
+#include <syscall.h>
 #include <unistd.h>
 #include <utils.h>
-#include <syscall.h>
-#include <kernel_syscall.h>
 
 #ifdef __is_libk
 #include <err.h>
@@ -29,8 +29,10 @@ int chdir(const char *path)
     return syscall_wrapper_asm(SYS_chdir, (uintptr_t)path, 0, 0, 0, 0);
 #endif
 
-    
     return 0;
 }
- 
-SYSCALL_DEFINE1(chdir, SYS_chdir);
+
+SYSCALL_DEFINE1(SYS_chdir, int, const char *, path)
+{
+    return chdir(path);
+}

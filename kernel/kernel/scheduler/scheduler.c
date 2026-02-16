@@ -205,12 +205,13 @@ struct task *user_thread_alloc(ptr ip)
     return out;
 }
 
-void syscall_clone(ptr ip)
+/* TODO: */
+SYSCALL_DEFINE1(SYS_clone, int, ptr, ip)
 {
     add_task(user_thread_alloc(ip));
-}
 
-SYSCALL_DEFINE1(syscall_clone, SYS_clone)
+    return 0;
+}
 
 /*
 struct task *new_task(ptr ip)

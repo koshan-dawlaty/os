@@ -10,6 +10,7 @@
 #include <drivers/character/terminal.h>
 #include <endian.h>
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <gdt.h>
 #include <interrupts/idt.h>
@@ -24,6 +25,7 @@
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
 #include <kernel/types.h>
+#include <kernel/userspace.h>
 #include <lib/array.h>
 #include <lib/binary_tree.h>
 #include <lib/list.h>
@@ -157,31 +159,6 @@ void kernel_init()
 #endif
 }
 
-struct mutex testing_mutex = MUTEX_INIT();
-struct wait_queue testing_wait_queue = WAIT_QUEUE_INIT();
-
-void t1(void *a)
-{
-    struct file *pipe = a;
-    write_file(pipe, "abc", 4, 0);
-}
-
-void t2(void *a)
-{
-    struct file *pipe = a;
-    char *buf = malloc(4);
-    read_file(pipe, buf, 4, 0);
-    printf("read:%s\n", buf);
-}
-
-void t3(void *a)
-{
-    int m = open("/mouse", O_RDONLY);
-    struct mouse_event *ev = malloc(sizeof(struct mouse_event));
-    read(m, ev, sizeof(struct mouse_event));
-    printf("x change: %d\n", ev->x_change);
-}
-
 extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
 
 void kmain()
@@ -192,29 +169,10 @@ void kmain()
                                    (int_handler_flags){.is_user = true});
     })
 
-    struct addr_space addr_sp = addr_space_alloc();
-    /* printf("%p\n", addr_sp.dir); */
-    /* addr_space_load(addr_sp); */
+    /* printf("%p\n", kernel_syscall(SYS_exit, 1, (ptr) "abc", 3, 4, 5)); */
+    /* printf("%d\n", user_addr_is_valid(kmain)); */
 
-    /* void *addr = (void *)0xB00000000; */
-
-    /* addr_space_map(&addr_sp, addr, 10, PAGING_PRESENT | PAGING_WRITEABLE); */
-    /* for (size_t i = 0; i < 100; i++) */
-    /* { */
-    /*     ((char *)(addr + 9 * PAGE_SIZE))[i] = (i % 10 + 0x30); */
-    /* } */
-
-    /* printf("%s\n", addr + 9 * PAGE_SIZE); */
-
-    /* addr_space_unmap(&addr_sp, addr, 10); */
-
-    for (size_t i = 0; i < memory_regions_len(); i++)
-    {
-        struct memory_region region = memory_regions_get(i);
-        printf("memory from: %p-%p\n", region.start, region.start + region.len);
-    }
-
-    printf("%p\n", malloc(10));
+    /* return; */
 
     /* open("/one", O_RDONLY); */
 

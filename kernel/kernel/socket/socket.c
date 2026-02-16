@@ -136,24 +136,24 @@ int unix_socket_connect(struct unix_socket *client, struct unix_socket *server)
     return 0;
 }
 
-int socket_create()
-{
-    struct unix_socket *s = unix_socket_alloc();
-    return unix_socket_add_array(s);
-}
-
-int syscall_socket_send(int socket, void *buf, size_t len)
+SYSCALL_DEFINE3(SYS_send, int, int, socket, void *, buf, size_t, len)
 {
     struct unix_socket *s = unix_socket_lookup(socket);
     return unix_socket_send(s, (void *)buf, len);
 }
 
-int syscall_socket_recv(int socket, void *buf, size_t len)
+SYSCALL_DEFINE3(SYS_recv, int, int, socket, void *, buf, size_t, len)
 {
     struct unix_socket *s = unix_socket_lookup(socket);
     return unix_socket_recv(s, (void *)buf, len);
 }
 
-SYSCALL_DEFINE0(socket_create, SYS_create_socket)
-SYSCALL_DEFINE3(syscall_socket_send, SYS_send)
-SYSCALL_DEFINE3(syscall_socket_recv, SYS_recv)
+SYSCALL_DEFINE0(SYS_create_socket, int)
+{
+    struct unix_socket *s = unix_socket_alloc();
+    return unix_socket_add_array(s);
+}
+
+/* SYSCALL_DEFINE0(socket_create, SYS_create_socket) */
+/* SYSCALL_DEFINE3(syscall_socket_send, SYS_send) */
+/* SYSCALL_DEFINE3(syscall_socket_recv, SYS_recv) */

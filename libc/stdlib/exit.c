@@ -30,4 +30,8 @@ void exit(int status)
 #endif
 }
 
-SYSCALL_DEFINE1(exit, SYS_exit);
+SYSCALL_DEFINE1(SYS_exit, int, int, status)
+{
+    exit(status);
+    return 0;
+}

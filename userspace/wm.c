@@ -200,7 +200,7 @@ void mouse_thread()
 
         if (size != sizeof(struct mouse_event))
         {
-            printf("reading from the mouse returned invalid size!\n");
+            /* printf("reading from the mouse returned invalid size!\n"); */
         }
 
         if (ev->x_change < 0)
@@ -266,7 +266,7 @@ void mouse_thread()
 
 void thread1()
 {
-    printf("thread\n");
+    /* printf("thread\n"); */
 
     while (1)
     {

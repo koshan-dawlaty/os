@@ -1,5 +1,6 @@
 #include "lib/array.h"
 #include "scheduler.h"
+#include "sys/syscall.h"
 #include <fcntl.h>
 #include <kernel_syscall.h>
 #include <lib/array.h>
@@ -98,4 +99,7 @@ int syscall_pipe(int fds[2])
     return 0;
 }
 
-SYSCALL_DEFINE1(syscall_pipe, SYS_pipe);
+SYSCALL_DEFINE1(SYS_pipe, int, int *, fds)
+{
+    return syscall_pipe(fds);
+}

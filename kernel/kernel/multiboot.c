@@ -82,8 +82,8 @@ void multiboot_parse_memory_map(struct multiboot_info *info)
         multiboot_memory_map_t *mmmt =
             (multiboot_memory_map_t *)(memory_map + i);
 
-        printf("Start Addr: %p | Length: %p | Size: %p | Type: %d\n",
-               mmmt->addr, mmmt->len, mmmt->size, mmmt->type);
+        /* printf("Start Addr: %p | Length: %p | Size: %p | Type: %d\n", */
+        /*        mmmt->addr, mmmt->len, mmmt->size, mmmt->type); */
         if (mmmt->type == MULTIBOOT_MEMORY_AVAILABLE)
         {
         }
@@ -111,7 +111,7 @@ struct framebuffer *multiboot_init()
              PAGING_PRESENT | PAGING_WRITEABLE);
     if ((info->flags >> 6 & 0x1))
     {
-        multiboot_parse_memory_map(info);
+        /* multiboot_parse_memory_map(info); */
     }
     else
     {
