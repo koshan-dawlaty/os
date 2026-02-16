@@ -2,10 +2,11 @@
 #define MOUSE_H
 #include <compiler.h>
 #include <interrupts/idt.h>
+#include <kernel/interrupts.h>
 #include <lib/list.h>
 #include <userspace/mouse.h>
 
-ISR_ATTRIBUTE void mouse_interrupt_handler(struct interrupt_frame *frame);
+void __int_handler mouse_interrupt_handler(struct interrupt_frame *frame);
 struct device *mouse_get();
 
 #endif

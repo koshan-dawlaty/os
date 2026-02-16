@@ -159,7 +159,32 @@ void kernel_init()
 #endif
 }
 
-extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
+struct mutex testing_mutex = MUTEX_INIT();
+struct wait_queue testing_wait_queue = WAIT_QUEUE_INIT();
+
+void t1(void *a)
+{
+    struct file *pipe = a;
+    write_file(pipe, "abc", 4, 0);
+}
+
+void t2(void *a)
+{
+    struct file *pipe = a;
+    char *buf = malloc(4);
+    read_file(pipe, buf, 4, 0);
+    printf("read:%s\n", buf);
+}
+
+void t3(void *a)
+{
+    int m = open("/mouse", O_RDONLY);
+    struct mouse_event *ev = malloc(sizeof(struct mouse_event));
+    read(m, ev, sizeof(struct mouse_event));
+    printf("x change: %d\n", ev->x_change);
+}
+
+extern __int_handler void syscall_handler_asm(struct interrupt_frame *frame);
 
 void kmain()
 {

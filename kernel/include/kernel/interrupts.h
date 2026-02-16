@@ -1,9 +1,16 @@
 #ifndef INTERRUPTS_H
 #define INTERRUPTS_H
+
+#include <interrupts/arch_interrupts.h>
 #include <types.h>
 
-/* TODO: make architecture specific macro definitions for numbers, like
- * INT_SYSCALL is 0x80 on x86 */
+#define __int_handler ARCH_INTERRUPT_ATTRIBUTE
+
+/*
+ * defines a function called name that is an interrupt handler.
+ * to use the function in a header file use __int_handler when defining it.
+ */
+#define INT_HANDLER(name, body) ARCH_INTERRUPT_HANDLER_DEFINE(name, body)
 
 typedef struct
 {
