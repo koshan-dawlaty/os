@@ -120,6 +120,7 @@ void draw_background(struct framebuffer *f)
     framebuffer_draw_rect(f, 700, 300, 100, 100, 0x0000ff);
 }
 
+extern __int_handler void syscall_handler_asm(struct interrupt_frame *frame);
 void kernel_init()
 {
 
@@ -154,6 +155,11 @@ void kernel_init()
 
     call_constructors();
 
+    IRQ_OFF({
+        register_interrupt_handler(0x80, syscall_handler_asm,
+                                   (int_handler_flags){.is_user = true});
+    })
+
 #ifdef TESTS
     run_tests();
 #endif
@@ -184,23 +190,31 @@ void t3(void *a)
     printf("x change: %d\n", ev->x_change);
 }
 
-extern __int_handler void syscall_handler_asm(struct interrupt_frame *frame);
-
 void kmain()
 {
 
-    IRQ_OFF({
-        register_interrupt_handler(0x80, syscall_handler_asm,
-                                   (int_handler_flags){.is_user = true});
-    })
+    irq_disable();
 
-    int fd = open("/elf_test", O_RDONLY);
-    size_t len = 16;
-    char *buf = malloc(len);
-    off_t offset = 16384;
-    pread(fd, buf, len, offset);
+    /* malloc(1000000); */
+    /* malloc(1000000); */
+    /* malloc(1000000); */
 
-    /* printf("%p\n", kernel_syscall(SYS_exit, 1, (ptr) "abc", 3, 4, 5)); */
+    /* for (size_t i = 0; i < 100; i++) */
+    /* { */
+    /*     malloc(10); */
+    /*     free(malloc(10)); */
+    /* } */
+
+    printf("DONE IWTH MALLOC()\n");
+
+    /* int fd = open("/elf_test", O_RDONLY); */
+    /* size_t len = 16; */
+    /* char *buf = malloc(len); */
+    /* off_t offset = 16384; */
+    /* pread(fd, buf, len, offset); */
+
+    /* printf("%p\n", kernel_syscall(SYS_exit, 1, (ptr) "abc", 3, 4, 5));
+     */
     /* printf("%d\n", user_addr_is_valid(kmain)); */
 
     /* return; */
@@ -243,8 +257,8 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("/elf_test", (char *[]){"elf_test", NULL});
     while (1)
     {
         schedule();

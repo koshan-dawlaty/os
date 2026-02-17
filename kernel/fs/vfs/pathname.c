@@ -16,7 +16,6 @@ static dentry *parse_dentries_component(dentry *dir, const char *component)
 {
 
     struct dir_context context = DIR_CONTEXT_INIT();
-
     struct dentry *ent = dir_readdir(dir, &context);
 
     while (ent != NULL && !IS_ERR(ent))

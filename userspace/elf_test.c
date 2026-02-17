@@ -104,48 +104,50 @@ int main()
         }
     }
 
-    int stdout_pipe[2];
-    pipe(stdout_pipe);
+    /* int stdout_pipe[2]; */
+    /* pipe(stdout_pipe); */
 
-    int stdin_pipe[2];
-    pipe(stdin_pipe);
-    /* execv("/ls", (char *[]){"ls", NULL}); */
-    /* execv("/ksh", (char *[]){"ksh", NULL}); */
-    execv_stdio("/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0], stdout_pipe[1]);
-    /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); */
+    /* int stdin_pipe[2]; */
+    /* pipe(stdin_pipe); */
+    /* /1* execv("/ls", (char *[]){"ls", NULL}); *1/ */
+    /* /1* execv("/ksh", (char *[]){"ksh", NULL}); *1/ */
+    /* execv_stdio("/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0],
+     * stdout_pipe[1]); */
+    /* /1* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); *1/ */
 
-    size_t len = 100;
-    char *buf = malloc(len);
-    read(stdout_pipe[0], buf, len);
-    printf("read:%s\n", buf);
+    /* size_t len = 100; */
+    /* char *buf = malloc(len); */
+    /* read(stdout_pipe[0], buf, len); */
+    /* printf("read:%s\n", buf); */
 
-    const char *str = "\neno tac";
-    write(stdin_pipe[1], str, strlen(str));
+    /* const char *str = "\neno tac"; */
+    /* write(stdin_pipe[1], str, strlen(str)); */
 
-    read(stdout_pipe[0], buf, len);
-    printf("read:%s\n", buf);
+    /* read(stdout_pipe[0], buf, len); */
+    /* printf("read:%s\n", buf); */
 
-    struct tga_header header;
-    u8 *img_data = parse_tga_image("osdev.tga", &header);
+    /* struct tga_header header; */
+    /* u8 *img_data = parse_tga_image("osdev.tga", &header); */
 
-    for (size_t y = 0; y < header.h; y++)
-    {
-        for (size_t x = 0; x < header.w; x++)
-        {
-            size_t index = (x + (y * header.w)) * (header.bpp / 8);
+    /* for (size_t y = 0; y < header.h; y++) */
+    /* { */
+    /*     for (size_t x = 0; x < header.w; x++) */
+    /*     { */
+    /*         size_t index = (x + (y * header.w)) * (header.bpp / 8); */
 
-            u8 *pixel = img_data + index;
+    /*         u8 *pixel = img_data + index; */
 
-            u8 b = pixel[0];
-            u8 g = pixel[1];
-            u8 r = pixel[2];
-            u8 a = pixel[3];
+    /*         u8 b = pixel[0]; */
+    /*         u8 g = pixel[1]; */
+    /*         u8 r = pixel[2]; */
+    /*         u8 a = pixel[3]; */
 
-            u32 color = (a << 24) | (r << 16) | (g << 8) | b;
+    /*         u32 color = (a << 24) | (r << 16) | (g << 8) | b; */
 
-            client_draw_pixel(&client.win, x, y, *((u32 *)(img_data + index)));
-        }
-    }
+    /*         /1* client_draw_pixel(&client.win, x, y, *((u32 *)(img_data + */
+    /*          * index))); *1/ */
+    /*     } */
+    /* } */
 
     int pos = 10;
     size_t x = 1;

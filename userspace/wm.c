@@ -111,7 +111,7 @@ void process_connection()
     struct wm_connection *conn = wm_connection_alloc(socket, client_buf);
 
     struct window *w = new_window(400 + x, x, win_info.width, win_info.height);
-    x += 75;
+    x += 10;
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
     ent->list = LIST2_INIT();

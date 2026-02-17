@@ -101,7 +101,7 @@ struct wm_client wm_client_connect()
     int server_sock;
     recv(0, &server_sock, sizeof(int));
 
-    struct wm_inital win = {.height = 200, .width = 600};
+    struct wm_inital win = {.height = 175, .width = 600};
     send(server_sock, &win, sizeof(struct wm_inital));
 
     /* TODO: make this a recv() acknowledge like for rendering */
