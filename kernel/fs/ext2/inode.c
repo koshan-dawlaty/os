@@ -81,61 +81,86 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
                      ext2_inode_index index, superblock *sb)
 {
 
-    u8 *block;
-    size_t buf_offset = 0;
+    /*
+u8 *block;
+size_t buf_offset = 0;
 
-    size_t blocks_offset = 0;
-    uint block_index = index / EXT2_BLOCK_SIZE(sb);
+size_t blocks_offset = 0;
+uint block_index = index / EXT2_BLOCK_SIZE(sb);
 
-    /* printf("%p\n", node->direct_blocks); */
-    /* printf("%d\n", node->direct_blocks[block_index]); */
+u32 block_num = ext2_inode_get_block(node, block_index, sb);
+block = ext2_read_block(block_num, sb);
+block_index++;
 
-    u32 block_num = ext2_inode_get_block(node, block_index, sb);
-    block = ext2_read_block(block_num, sb);
-    block_index++;
+if (buf_len + (index % EXT2_BLOCK_SIZE(sb)) < EXT2_BLOCK_SIZE(sb))
+{
+    memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb), buf_len);
 
-    if (buf_len + (index % EXT2_BLOCK_SIZE(sb)) < EXT2_BLOCK_SIZE(sb))
-    {
-        memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb), buf_len);
+    free(block);
 
-        free(block);
+    return;
+}
 
-        return;
-    }
+int read_size = EXT2_BLOCK_SIZE(sb) - (index % EXT2_BLOCK_SIZE(sb));
+memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb), read_size);
 
-    int read_size = EXT2_BLOCK_SIZE(sb) - (index % EXT2_BLOCK_SIZE(sb));
-    memcpy(buf + buf_offset, block + index % EXT2_BLOCK_SIZE(sb), read_size);
+buf_offset += read_size;
 
-    buf_offset += read_size;
+block_num = ext2_inode_get_block(node, block_index, sb);
+block = ext2_read_block(block_num, sb);
+block_index++;
+
+while (buf_offset < ((buf_len / EXT2_BLOCK_SIZE(sb)) * EXT2_BLOCK_SIZE(sb)))
+{
+    memcpy(buf + buf_offset, block, EXT2_BLOCK_SIZE(sb));
+    free(block);
 
     block_num = ext2_inode_get_block(node, block_index, sb);
     block = ext2_read_block(block_num, sb);
     block_index++;
 
-    while (buf_offset < ((buf_len / EXT2_BLOCK_SIZE(sb)) * EXT2_BLOCK_SIZE(sb)))
-    {
-        memcpy(buf + buf_offset, block, EXT2_BLOCK_SIZE(sb));
-        free(block);
+    buf_offset += EXT2_BLOCK_SIZE(sb);
+}
 
-        block_num = ext2_inode_get_block(node, block_index, sb);
-        block = ext2_read_block(block_num, sb);
+uint bytes_remaining = buf_len - buf_offset;
+
+if (bytes_remaining < EXT2_BLOCK_SIZE(sb))
+{
+    free(block);
+
+    block_num = ext2_inode_get_block(node, block_index, sb);
+    block = ext2_read_block(block_num, sb);
+    blocks_offset++;
+
+    memcpy(buf + buf_offset, block, bytes_remaining);
+
+    free(block);
+    return;
+}
+    */
+
+    size_t block_index = index / EXT2_BLOCK_SIZE(sb);
+    size_t current_offset = index % EXT2_BLOCK_SIZE(sb);
+    size_t buf_offset = 0;
+
+    while (buf_offset < buf_len)
+    {
+        u32 block_num = ext2_inode_get_block(node, block_index, sb);
+        u8 *block = ext2_read_block(block_num, sb);
         block_index++;
 
-        buf_offset += EXT2_BLOCK_SIZE(sb);
-    }
+        size_t max_bytes = EXT2_BLOCK_SIZE(sb) - current_offset;
+        size_t read_size = buf_len - buf_offset;
 
-    /* uint bytes_remaining = buf_len - read_size; */
-    /* uint bytes_remaining = buf_len - buf_offset; */
-    uint bytes_remaining = buf_len % EXT2_BLOCK_SIZE(sb);
-    if (bytes_remaining < EXT2_BLOCK_SIZE(sb))
-    {
+        if (read_size > max_bytes)
+        {
+            read_size = max_bytes;
+        }
+        memcpy(buf + buf_offset, block + current_offset, read_size);
+
         free(block);
 
-        block_num = ext2_inode_get_block(node, block_index, sb);
-        block = ext2_read_block(block_num, sb);
-        blocks_offset++;
-
-        memcpy(buf + buf_offset, block, bytes_remaining);
-        return;
+        buf_offset += read_size;
+        current_offset = 0;
     }
 }

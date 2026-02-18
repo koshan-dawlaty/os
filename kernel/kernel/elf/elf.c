@@ -49,6 +49,9 @@ struct task *load_elf(elf *elf, int argc, char **argv)
         if (header->type == 1)
         {
 
+            /* printf("mapping:%p-%p\n", header->virtual_addr, */
+            /*        header->virtual_addr + ((header->size_file + PAGE_SIZE)));
+             */
             for (size_t i = 0; i <= header->size_memory + PAGE_SIZE;
                  i += PAGE_SIZE)
             {

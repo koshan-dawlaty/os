@@ -39,7 +39,7 @@ export CC="$CC --sysroot=$SYSROOT"
 
 
 QEMU_FLAGS=" -cdrom os.iso
--m 512M
+-m 1G
 -machine pc
 -d int
 -D log.txt

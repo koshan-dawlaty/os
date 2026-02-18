@@ -60,11 +60,8 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
     load_pgdir(a->dir);
     for (size_t i = 0; i < num_pages; i++)
     {
-        /* printf("physical address:%p\n", get_free_phys_page()); */
-        /* printf("physical address:%p\n", get_free_phys_page()); */
-        /* printf("physical address:%p\n", get_free_phys_page()); */
-
         void *phys = get_free_phys_page();
+        /* printf("physaddr:%p\n", phys); */
         write_pagedir(a->dir, phys, addr + (i * PAGE_SIZE),
                       PAGING_PRESENT | PAGING_WRITEABLE | flags);
     }

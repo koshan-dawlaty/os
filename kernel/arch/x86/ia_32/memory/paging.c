@@ -1,13 +1,13 @@
-#include "kernel/paging.h"
-#include "gdt.h"
+#include <gdt.h>
+#include <kernel/paging.h>
 
-#include "interrupts/idt.h"
-#include "kernel/tty.h"
-#include "kernel/utils.h"
-#include "memory/paging_flags.h"
+#include <interrupts/idt.h>
+#include <kernel/tty.h>
+#include <kernel/utils.h>
+#include <memory/paging_flags.h>
 
-#include "multiboot.h"
-#include "vga.h"
+#include <multiboot.h>
+#include <vga.h>
 
 #include <kernel/paging.h>
 #include <stdbool.h>

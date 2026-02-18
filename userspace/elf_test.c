@@ -126,28 +126,28 @@ int main()
     /* read(stdout_pipe[0], buf, len); */
     /* printf("read:%s\n", buf); */
 
-    /* struct tga_header header; */
-    /* u8 *img_data = parse_tga_image("osdev.tga", &header); */
+    struct tga_header header;
+    u8 *img_data = parse_tga_image("osdev.tga", &header);
 
-    /* for (size_t y = 0; y < header.h; y++) */
-    /* { */
-    /*     for (size_t x = 0; x < header.w; x++) */
-    /*     { */
-    /*         size_t index = (x + (y * header.w)) * (header.bpp / 8); */
+    for (size_t y = 0; y < header.h; y++)
+    {
+        for (size_t x = 0; x < header.w; x++)
+        {
+            size_t index = (x + (y * header.w)) * (header.bpp / 8);
 
-    /*         u8 *pixel = img_data + index; */
+            u8 *pixel = img_data + index;
 
-    /*         u8 b = pixel[0]; */
-    /*         u8 g = pixel[1]; */
-    /*         u8 r = pixel[2]; */
-    /*         u8 a = pixel[3]; */
+            u8 b = pixel[0];
+            u8 g = pixel[1];
+            u8 r = pixel[2];
+            u8 a = pixel[3];
 
-    /*         u32 color = (a << 24) | (r << 16) | (g << 8) | b; */
+            u32 color = (a << 24) | (r << 16) | (g << 8) | b;
 
-    /*         /1* client_draw_pixel(&client.win, x, y, *((u32 *)(img_data + */
-    /*          * index))); *1/ */
-    /*     } */
-    /* } */
+            client_draw_pixel(&client.win, x + 100, y,
+                              *((u32 *)(img_data + index)));
+        }
+    }
 
     int pos = 10;
     size_t x = 1;
@@ -156,7 +156,7 @@ int main()
         wm_render(client);
 
         char c = wm_get_key(client);
-        client_draw_char(&client.win, font, c, x, 50);
+        client_draw_char(&client.win, font, c, x, 150);
         x += font->header.width;
     }
 

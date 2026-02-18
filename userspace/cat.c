@@ -11,6 +11,8 @@
 int main(int argc, char **argv)
 {
     init_libc();
+    char *str = "cat start\n";
+    puts(str);
     printf("cat start\n");
 
     if (argc <= 1)
@@ -56,5 +58,9 @@ int main(int argc, char **argv)
     buf[buf_offset + bytes_read] = 0;
     printf("%s\n", buf);
     close(fd);
+
+    while (1)
+    {
+    }
     exit(0);
 }
