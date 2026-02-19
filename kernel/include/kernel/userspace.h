@@ -29,4 +29,13 @@ static inline size_t copy_to_user(void * user, const void * kernel, size_t n) {
     return 0;
 }
 
+
+static inline size_t copy_from_user(void * kernel, const void * user, size_t n) {
+    if (!user_addr_is_valid(user, n)) {
+        return 1;
+    }
+    memcpy(kernel, user, n);
+    return 0;
+}
+
 #endif
