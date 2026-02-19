@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <kernel/usermode.h>
 
 #ifdef __is_libk
 #include <kernel/syscall.h>
@@ -33,5 +34,12 @@ int read(int fd, void *buf, size_t n)
 
 SYSCALL_DEFINE3(SYS_read, int, int, fd, void *, buf, size_t, n)
 {
-    return read(fd, buf, n);
+    void* kernel = malloc(n);
+    size_t retval = read(fd, kernel, n);
+    if(copy_to_user(buf, kernel, n)) {
+        return -EFAULT;
+    }
+    
+    return retval;
+
 }
