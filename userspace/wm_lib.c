@@ -95,13 +95,13 @@ char wm_get_key(struct wm_client client)
     return out;
 }
 
-struct wm_client wm_client_connect()
+struct wm_client wm_client_connect(size_t height, size_t width)
 {
     /* TODO: assumes socket is 0, make it something in the fs */
     int server_sock;
     recv(0, &server_sock, sizeof(int));
 
-    struct wm_inital win = {.height = 175, .width = 600};
+    struct wm_inital win = {.height = height, .width = width};
     send(server_sock, &win, sizeof(struct wm_inital));
 
     /* TODO: make this a recv() acknowledge like for rendering */
@@ -111,7 +111,9 @@ struct wm_client wm_client_connect()
     recv(server_sock, &second_message, sizeof(int));
 
     void *framebuffer;
+    printf("%d\n", second_message.mem_id);
     shared_mem_get(second_message.mem_id, &framebuffer);
+    printf("framebuffer:%p\n", framebuffer);
 
     struct client_window w = {
         .w = win.width, .h = win.height, .buffer = framebuffer};

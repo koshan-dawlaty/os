@@ -110,6 +110,7 @@ void process_connection()
 
     struct wm_connection *conn = wm_connection_alloc(socket, client_buf);
 
+    printf("%d, %d\n", win_info.width, win_info.height);
     struct window *w = new_window(400, x, win_info.width, win_info.height);
     x += 175;
 
@@ -139,10 +140,17 @@ void process_connection()
         case WM_RES_RENDER:
         {
 
-            /* printf("rendering!!\n"); */
-            for (size_t y = 0; y < w->h; y++)
+            for (size_t y = 0; y < w->h - 1; y++)
             {
                 size_t offset = y * w->w * 4;
+
+                if (w->h == 100)
+                {
+                    if (*(u32 *)(client_buf + offset) != 0)
+                    {
+                        /* printf("TEST\n"); */
+                    }
+                }
 
                 memcpy(w->buffer + offset, client_buf + offset, w->w * 4);
             }

@@ -205,8 +205,6 @@ void kmain()
     /*     free(malloc(10)); */
     /* } */
 
-    printf("DONE IWTH MALLOC()\n");
-
     /* int fd = open("/elf_test", O_RDONLY); */
     /* size_t len = 16; */
     /* char *buf = malloc(len); */
@@ -259,7 +257,9 @@ void kmain()
     irq_enable();
     schedule();
     execv("/elf_test", (char *[]){"elf_test", NULL});
-    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    execv("imgview", (char *[]){"imgview", "stupid.tga", NULL});
+    execv("imgview", (char *[]){"imgview", "dog.tga", NULL});
     while (1)
     {
         schedule();

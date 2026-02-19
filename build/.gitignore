@@ -14,5 +14,7 @@ fs-root/cat
 fs-root/touch
 fs-root/rm
 fs-root/ls
+fs-root/imgview
 fs-root/wm
 *.psfu
+fs-root/*.tga

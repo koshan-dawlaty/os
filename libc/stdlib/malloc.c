@@ -93,9 +93,10 @@ void *malloc_get_pages(size_t num, struct malloc_zone *zone)
 #ifdef __is_libk
     return get_free_pages_zone(num, zone->zone);
 #else
-    user_malloc_addr += 4096;
-    void *out = mmap(user_malloc_addr, num * 4096, 0, 0, 0);
-    user_malloc_addr += num * 4096;
+    user_malloc_offset += 4096;
+    void *out =
+        mmap(user_malloc_addr + user_malloc_offset, num * 4096, 0, 0, 0);
+    user_malloc_offset += num * 4096;
     return out;
 #endif
 }

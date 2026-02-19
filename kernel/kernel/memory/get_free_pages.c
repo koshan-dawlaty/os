@@ -25,7 +25,7 @@ struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
 #endif
     /* TODO: FIXME: THIS IS SO STUPID, YOU RUN INTO THIS ADDR AFTER ALLOCATING A
        FEW WINDOW MANAGER DATA STRUCTURES STOP JUST INCREMENTING IT */
-    .physical = 0x900000,
+    .physical = 0x1000000,
     .size = DEFAULT_BITMAP_SIZE,
     .bitmap = gfp_kernel_bitmap,
     .pg_flags = PAGING_WRITEABLE,

@@ -71,6 +71,7 @@ BINARIES=\
 	touch \
 	ksh \
 	cat \
+	imgview \
 	rm \
 	ls \
 	wm \
@@ -117,6 +118,10 @@ $(BIN)/touch : $(OBJS_START_BIN) $(BIN)/touch.o ../libc/libc.a $(START_OBJ)  $(O
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/wm : $(OBJS_START_BIN) $(BIN)/wm.o $(BIN)/wm_lib.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+
+$(BIN)/imgview : $(OBJS_START_BIN) $(BIN)/imgview.o $(BIN)/wm_lib.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
 

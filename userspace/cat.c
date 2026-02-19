@@ -59,8 +59,5 @@ int main(int argc, char **argv)
     printf("%s\n", buf);
     close(fd);
 
-    while (1)
-    {
-    }
     exit(0);
 }
