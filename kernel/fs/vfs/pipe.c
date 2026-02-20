@@ -25,7 +25,7 @@ int pipe_read(struct file *file, char *buf, size_t n, size_t off)
     struct pipe *pipe = file->file_private;
     struct pipe *write = pipe->other;
 
-    printf("len:%p\n", write->buffer.len);
+    /* printf("len:%p\n", write->buffer.len); */
     if (write->buffer.len == 0)
     {
         wait_queue_wait(&write->queue);
@@ -40,7 +40,7 @@ int pipe_read(struct file *file, char *buf, size_t n, size_t off)
     void *result = array_pop(&write->buffer, read_size);
     memcpy(buf, result, read_size);
 
-    return 0;
+    return read_size;
 }
 
 int pipe_write(struct file *file, const char *buf, size_t n, size_t off)
@@ -56,7 +56,7 @@ int pipe_write(struct file *file, const char *buf, size_t n, size_t off)
         wait_queue_done(&pipe->queue);
     }
 
-    return 0;
+    return n;
 }
 
 const struct file_operations pipe_operations = {.read = pipe_read,

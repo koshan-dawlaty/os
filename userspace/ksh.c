@@ -9,10 +9,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syscall.h>
 #include <unistd.h>
 
 typedef uintptr_t ptr;
 extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);
+
+int execv_stdio(const char *path, char *const argv[], int in, int out)
+{
+    return syscall_wrapper_asm(SYS_execv_stdio, (ptr)path, (ptr)argv, in, out,
+                               0);
+}
 
 int main()
 {
@@ -69,7 +76,8 @@ int main()
             }
             else
             {
-                int err = execv(args[0], args);
+                /* TODO: the new process should inherit file descriptors */
+                int err = execv_stdio(args[0], args, stdin->fd, stdout->fd);
                 if (err < 0)
                 {
                     printf("could not execute\nerror:%s", strerror(err));

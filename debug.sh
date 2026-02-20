@@ -23,8 +23,8 @@ rm -f qemu.img
 # gdb -ex "set \$flags=$QEMU_FLAGS" -x debug.gdb
 #
 
-USER_EXECUTABLE="fs-root/wm"
-USER_EXECUTABLE2="fs-root/elf_test"
+USER_EXECUTABLE="fs-root/ls"
+USER_EXECUTABLE2="fs-root/elf_test2"
 
 KERNEL_ADDR=objdump -h isodir/boot/os.kernel | grep \ .text\  | awk '{print $4}'
 USERSPACE_ADDR=objdump -h $USER_EXECUTABLE | grep \ .text\  | awk '{print $4}'

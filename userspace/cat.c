@@ -11,8 +11,6 @@
 int main(int argc, char **argv)
 {
     init_libc();
-    char *str = "cat start\n";
-    puts(str);
     printf("cat start\n");
 
     if (argc <= 1)

@@ -99,7 +99,7 @@ $(BIN)/ksh : $(OBJS_START_BIN) $(BIN)/ksh.o ../libc/libc.a $(START_OBJ)  $(OBJS_
 
 $(BIN)/ls : $(OBJS_START_BIN) $(BIN)/ls.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+	$(CC) -Ttext=0x800000  -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/overwrite : $(OBJS_START_BIN) $(BIN)/overwrite.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
