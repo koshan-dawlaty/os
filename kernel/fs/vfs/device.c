@@ -69,7 +69,7 @@ struct file *create_device(char *name, struct device *dev)
 
     if (IS_ERR(entry))
     {
-        return ERR_PTR(entry);
+        return (void *)entry;
     }
 
     entry->type = DENTRY_DEVICE;

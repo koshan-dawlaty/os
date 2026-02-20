@@ -242,7 +242,7 @@ void kmain()
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
     printf("starting shell\n");
-    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
     int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
@@ -256,8 +256,8 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("imgview", (char *[]){"imgview", "stupid.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     while (1)

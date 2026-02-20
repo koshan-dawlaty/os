@@ -6,6 +6,7 @@
 
 #ifdef __is_libk
 #include <err.h>
+#include <kernel/userspace.h>
 #include <vfs.h>
 #endif
 
@@ -33,7 +34,15 @@ int open(const char *path, int flags)
 #endif
 }
 
+#ifdef __is_libk
 SYSCALL_DEFINE2(SYS_open, int, const char *, path, int, flags)
 {
-    return open(path, flags);
+
+    char *kpath = get_user_pathname(path);
+    int retval = open(kpath, flags);
+    free(kpath);
+
+    return retval;
 }
+
+#endif
