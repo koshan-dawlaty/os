@@ -162,7 +162,7 @@ struct file *open_file(const char *path, int flags)
 
     if (IS_ERR(dentry))
     {
-        return ERR_PTR(dentry);
+        return (void *)dentry;
     }
 
     struct file *out = new_file(dentry, flags);
@@ -280,7 +280,7 @@ struct file *create_file(char *name)
 
     if (IS_ERR(new))
     {
-        return ERR_PTR(new);
+        return (void *)new;
     }
 
     /* TODO */
