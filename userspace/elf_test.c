@@ -30,6 +30,8 @@ int main()
 
     init_libc();
 
+    /* *(char *)(0x1234) = 'a'; */
+
     struct wm_client client = wm_client_connect(175, 600);
 
     int font_fd = open("/font.psfu", O_RDONLY);
