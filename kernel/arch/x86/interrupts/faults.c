@@ -3,11 +3,12 @@
 
 #include "interrupts/idt.h"
 #include "kernel/types.h"
+#include <kernel/faults.h>
 
 #include <stdint.h>
 #include <stdio.h>
 
-extern int get_cr2();
+extern ptr get_cr2();
 
 void fault_handler_wait()
 {
@@ -50,11 +51,24 @@ ISR_ATTRIBUTE void page_fault_handler(struct interrupt_frame *frame,
 { /* this is to prevent the unused parameter warning */
     (void)frame;
 
-    printf("page fault\n");
-    printf("addr:%p\n", get_cr2());
-    printf("error code:%p\n", error_code);
-    printf("instruction pointer:%p\n", frame->ip);
-    fault_handler_wait();
+    /* printf("page fault\n"); */
+    void *addr = (void *)get_cr2();
+    /* printf("addr:%p\n", addr); */
+    /* printf("error code:%p\n", error_code); */
+    /* printf("instruction pointer:%p\n", frame->ip); */
+
+    bool not_present = (error_code & (1 << 0)) != 0;
+    bool is_user = (error_code & (1 << 2)) != 0;
+    bool instruction = (error_code & (1 << 4)) != 0;
+    bool reserved = (error_code & (1 << 3)) != 0;
+
+    page_fault(addr, (void *)frame->ip,
+               (struct page_fault_flags){.not_present = not_present,
+                                         .user = is_user,
+                                         .instruction = instruction,
+                                         .other = reserved});
+
+    /* fault_handler_wait(); */
 }
 _Pragma("clang diagnostic pop");
 
