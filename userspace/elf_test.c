@@ -80,12 +80,12 @@ int main()
     /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); */
 
     size_t len = 100;
-    char *buf = malloc(len);
-    read(stdout_pipe[0], buf, len);
-    printf("read:%s\n", buf);
+    /* char *buf = malloc(len); */
+    /* read(stdout_pipe[0], buf, len); */
+    /* printf("read:%s\n", buf); */
 
-    const char *str = "\neno tac";
-    write(stdin_pipe[1], str, strlen(str));
+    /* const char *str = "\neno tac"; */
+    /* write(stdin_pipe[1], str, strlen(str)); */
 
     /* read(stdout_pipe[0], buf, len); */
     /* printf("read:%s\n", buf); */
@@ -103,7 +103,7 @@ int main()
         size_t res = read(stdout_pipe[0], buf, 100);
 
         /* printf("size:%d\n", res); */
-        /* printf("%s\n", buf); */
+        printf("%s\n", buf);
 
         for (size_t i = 0; i < res; i++)
         {
@@ -117,6 +117,7 @@ int main()
                 break;
 
             case '\b':
+                printf("test\n");
                 x = 0;
                 y = 0;
 
@@ -130,6 +131,7 @@ int main()
                 }
                 break;
             default:
+                /* printf("%d, %d\n", x, y); */
                 client_draw_char(&client.win, font, c, x, y);
                 x += font->header.width;
                 if (x > client.win.w)

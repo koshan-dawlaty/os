@@ -1,6 +1,8 @@
 #include "assert.h"
+#include <kernel/types.h>
 #include <lib/array.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -15,6 +17,30 @@ int array_add(struct array *array, const void *data, size_t size)
     array->len += size;
 
     return (array->len - size) / size;
+}
+
+/* invalidates indexes of everything else in the array */
+void array_push(struct array *array, const void *data, size_t size)
+{
+    if (array->len + size > array->capacity)
+    {
+        array->capacity += array->len + size - array->capacity;
+        array->data = realloc(array->data, array->capacity);
+    }
+
+    u8 *dest = array->data + size;
+    u8 *src = array->data;
+    if (array->len != 0)
+    {
+        /* overlapping copy */
+        for (size_t i = array->len; i > 0; i--)
+        {
+            dest[i - 1] = src[i - 1];
+        }
+    }
+
+    memcpy(array->data, data, size);
+    array->len += size;
 }
 
 void *array_get(struct array *array, size_t index, size_t item_len)

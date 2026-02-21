@@ -49,6 +49,7 @@ int pipe_write(struct file *file, const char *buf, size_t n, size_t off)
     struct pipe *pipe = file->file_private;
     struct pipe *read = pipe->other;
 
+    /* printf("buf:%s\n", buf); */
     array_add(&pipe->buffer, buf, n);
 
     if (!WAIT_QUEUE_EMPTY(pipe->queue))

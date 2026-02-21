@@ -21,4 +21,7 @@ int array_add(struct array *array, const void *data, size_t size);
 void *array_get(struct array *array, size_t index, size_t item_len);
 void *array_pop(struct array *array, size_t len);
 
+/* invalidates indexes of everything else in the array */
+void array_push(struct array *array, const void *data, size_t size);
+
 #endif

@@ -109,6 +109,6 @@ int main()
         }
 
         putchar('\b');
-        printf(">%s\n", input);
+        printf(">>%s\n", input);
     }
 }
