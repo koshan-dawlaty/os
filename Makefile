@@ -16,9 +16,9 @@ export ARCH := $(shell ./build/default-host.sh)
 export CFLAGS :=  -DMYOS1234 -Werror -Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) 
 
 
-QEMU_COMMAND := qemu-system-$(shell ./build/qemu-arch.sh $(ARCH))
+export QEMU_COMMAND := qemu-system-$(shell ./build/qemu-arch.sh $(ARCH))
 
-QEMU_FLAGS :=  -cdrom build/os.iso \
+export QEMU_FLAGS :=  -cdrom build/os.iso \
 -m 512M \
 -machine pc \
 -d int \
@@ -30,7 +30,8 @@ QEMU_FLAGS :=  -cdrom build/os.iso \
 
 ISO=build/os.iso
 
-.PHONY: all clean $(SUBDIRS)
+
+.PHONY: all debug test clean $(SUBDIRS)
 
 all: $(ISO)
 
@@ -81,11 +82,14 @@ qemu : $(ISO)
 	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
 	$(QEMU_COMMAND) -monitor stdio $(QEMU_FLAGS)
 
-
-
-
-
 clean:
 	for dir in $(SUBDIRS); do \
 		$(MAKE) -C $$dir clean; \
 	done
+
+debug : $(ISO)
+	./build/debug.sh
+
+test : CFLAGS += -DTESTS
+test : clean $(ISO) 
+	./build/test.sh

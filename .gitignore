@@ -1,2 +1,3 @@
 .cache/
 config
+compile_commands.json

@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
+set -e
 
 if [[  $# -ge 1  ]] && [[ $1 == "num_failed"  ]] ; then
 # exec 3>&1 &>/dev/null
 echo 
 fi
 
-set -e
-./clean.sh
-cd build
 
 
 
@@ -40,24 +38,16 @@ echo $TESTS_EXTRA_TESTS_CFLAGS
 
 CFLAGS="${CFLAGS} -DTESTS $TESTS_EXTRA_TESTS_CFLAGS "
 
-ISO="test.iso"
+ISO="build/os.iso"
 
-IMAGE_FILE="test.img"
+IMAGE_FILE="build/test.img"
 
 export CFLAGS
 export ISO
 
-# bad 
-. ./iso.sh
-./get-ext2-image.sh "$IMAGE_FILE" fs-root 
 
+./build/get-ext2-image.sh "$IMAGE_FILE" build/fs-root 
 
-QEMU_FLAGS=" -cdrom ${ISO}
--machine pc
--d int
--D log.txt
--boot d 
--drive file=${IMAGE_FILE},format=raw,if=ide,index=0"
 
 # qemu-system-$(./target-triplet-to-arch.sh $HOST) -cdrom os.iso -nographic console=ttyS0
 
@@ -98,7 +88,7 @@ FILE_NAME="$SERIAL_PIPE.out"
 while [[ ! -p "$FILE_NAME" ]]; do
     sleep 0.05
 done
-cat "$FILE_NAME" 2>/dev/null | python3 tap.py 
+cat "$FILE_NAME" 2>/dev/null | python3 build/tap.py 
 
 kill $QEMU_PID 2>/dev/null
 
