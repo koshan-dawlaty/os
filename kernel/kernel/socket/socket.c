@@ -54,6 +54,7 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
     /* TODO: this should remove data and not go out of bounds */
     void *sent = array_pop(&sock->buffer, len);
     memcpy(buf, sent, len);
+    free(sent);
 
     return 0;
 }

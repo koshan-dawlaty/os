@@ -39,6 +39,7 @@ int pipe_read(struct file *file, char *buf, size_t n, size_t off)
 
     void *result = array_pop(&write->buffer, read_size);
     memcpy(buf, result, read_size);
+    free(result);
 
     return read_size;
 }
