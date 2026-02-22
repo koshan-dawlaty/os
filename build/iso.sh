@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
-. ./build.sh
+# . ./build.sh
+cd build
+
+ls
+echo $(pwd)
 
 mkdir -p isodir
 mkdir -p isodir/boot
@@ -31,4 +35,4 @@ menuentry "os" {
 }
 EOF
 # grub-mkrescue -o os.iso isodir
-grub-mkrescue --modules="vbe gfxterm multiboot normal iso9660 biosdisk" -o "$ISO" isodir 
+grub-mkrescue --modules="vbe gfxterm multiboot normal iso9660 biosdisk" -o "os.iso" isodir 

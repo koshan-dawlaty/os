@@ -1,5 +1,4 @@
 #include <err.h>
-#include <kernel/tty.h>
 #include <lib/list.h>
 #include <stdio.h>
 #include <stdlib.h>
