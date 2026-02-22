@@ -166,10 +166,10 @@ void process_connection()
 
         case WM_RES_KEY:
         {
-            char input = 'a';
+            char input;
             /* printf("waiting for input\n"); */
             recv(conn->input_socket, &input, sizeof(char));
-            /* printf("got input %c, sending\n", input); */
+            printf("%c", input);
             send(socket, &input, sizeof(char));
             /* printf("sent it\n"); */
             break;

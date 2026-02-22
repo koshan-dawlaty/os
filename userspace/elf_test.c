@@ -103,7 +103,6 @@ int main()
         size_t res = read(stdout_pipe[0], buf, 100);
 
         /* printf("size:%d\n", res); */
-        printf("%s\n", buf);
 
         for (size_t i = 0; i < res; i++)
         {
@@ -117,7 +116,7 @@ int main()
                 break;
 
             case '\b':
-                printf("test\n");
+
                 x = 0;
                 y = 0;
 
@@ -145,7 +144,10 @@ int main()
 
         char c = wm_get_key(client);
         /* const char *str = "\neno tac"; */
-        /* write(stdin_pipe[1], str, strlen(str)); */
+        /* const char *str = "cat one"; */
+        /* write(stdin_pipe[1], (char[]){'a', 'b'}, 2); */
+        /* write(stdin_pipe[1], (char[]){'c', 'd'}, 2); */
+        /* printf("%c", c); */
         write(stdin_pipe[1], &c, 1);
     }
 

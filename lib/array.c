@@ -79,3 +79,28 @@ void *array_pop(struct array *array, size_t len)
 
     return out;
 }
+
+void *array_pop2(struct array *array, size_t len)
+{
+    if (array->len < len)
+    {
+        printf("array length too high %d > %d\n", len, array->len);
+    }
+
+    void *out = malloc(len);
+    memcpy(out, array->data, len);
+
+    /* we cant just increment the pointer because it will be passed to realloc()
+     * later */
+    /* array->data += len; */
+    /* TODO: do a overlapping copy */
+    void *temp = malloc(array->len);
+    memcpy(temp, array->data, array->len);
+    memcpy(array->data, temp + len, array->len - len);
+
+    /* printf("read:%s, %d, %s, %s\n", array->data, array->len, temp, out); */
+    /* printf("read:%s, %d\n", array->data, len); */
+    array->len -= len;
+
+    return out;
+}
