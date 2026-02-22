@@ -1,7 +1,5 @@
 #include <errno.h>
 #include <extension.h>
-#include <kernel/tty.h>
-#include <kernel/types.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>

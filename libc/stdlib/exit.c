@@ -3,10 +3,10 @@
 #include <stdlib.h>
 #include <sys/syscall.h>
 #include <utils.h>
-#include <vfs.h>
 
 #ifdef __is_libk
 #include <scheduler.h>
+#include <vfs.h>
 #endif
 
 void exit(int status)

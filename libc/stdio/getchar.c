@@ -1,7 +1,10 @@
 #include "utils.h"
-#include <kernel/keyboard.h>
 #include <stdio.h>
 #include <unistd.h>
+
+#ifdef __is_libk
+#include <kernel/keyboard.h>
+#endif
 
 char getchar()
 {

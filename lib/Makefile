@@ -9,10 +9,11 @@ LDFLAGS?=
 LIBS?=
 
 DESTDIR?=
-PREFIX?=/usr/local
+PREFIX?=/usr
 EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
+LIBDIR?=$(PREFIX)/lib
 
 # CFLAGS:=-ffreestanding -Wall -Wextra  -Wno-unknown-pragmas -fstack-protector-all -D__is_libk \
 # 		$(CFLAGS) \
@@ -54,6 +55,7 @@ install: install-lib
 install-lib: $(LIB_BINARY)
 	mkdir -p $(DESTDIR)$(LIBDIR)
 	cp $(LIB_BINARY) $(DESTDIR)$(LIBDIR)
+	@echo "TEST"
 
 install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)

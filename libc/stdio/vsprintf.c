@@ -9,7 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __is_libk
 #include <kernel/tty.h>
+#endif
 
 // TODO: kinda slow
 char *int_to_string_unsigned(uintmax_t in, long base)

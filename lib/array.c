@@ -1,10 +1,10 @@
 #include "assert.h"
-#include <kernel/types.h>
 #include <lib/array.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <types.h>
 
 int array_add(struct array *array, const void *data, size_t size)
 {
@@ -82,6 +82,7 @@ void *array_pop_end(struct array *array, size_t len)
 
 void *array_pop(struct array *array, size_t len)
 {
+    /* *(char *)0x1 = 'a'; */
     if (array->len < len)
     {
         printf("array length too high %d > %d\n", len, array->len);

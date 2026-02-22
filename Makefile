@@ -3,6 +3,9 @@ SUBDIRS := lib libc kernel userspace
 
 .PHONY: all clean $(SUBDIRS)
 
+CONFIG_FILE_RAW!=cat config
+CONFIG_FLAGS=$(shell echo $(CONFIG_FILE_RAW) | sed "s/^/-DCONFIG_/")
+
 export SYSROOT := $(shell pwd)/build/sysroot
 export FS_ROOT := fs-root
 
@@ -33,7 +36,6 @@ $(ISO) : $(SUBDIRS)
 	./build/iso.sh
 
 $(SUBDIRS):
-	@echo $(ARCH)
 	mkdir -p "$(SYSROOT)"
 	set -e
 	for dir in $(SUBDIRS); do \
