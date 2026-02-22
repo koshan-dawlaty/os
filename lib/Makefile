@@ -37,10 +37,12 @@ OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
 
 LIB_BINARY=$(BIN)/libutil.a
+.PHONY : all install install-headers install-lib clean
 
-all : install
+all : $(LIB_BINARY)
 
 $(LIB_BINARY) : $(OBJS_BIN)
+	@mkdir -p $(BIN)
 	$(AR) rcs $@ $(OBJS_BIN)
 
 
@@ -48,14 +50,12 @@ $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-.PHONY : install install-headers install-lib clean
 
 install: install-lib
 
 install-lib: $(LIB_BINARY)
 	mkdir -p $(DESTDIR)$(LIBDIR)
 	cp $(LIB_BINARY) $(DESTDIR)$(LIBDIR)
-	@echo "TEST"
 
 install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)

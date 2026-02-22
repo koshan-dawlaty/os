@@ -83,6 +83,11 @@ void *array_pop_end(struct array *array, size_t len)
 void *array_pop(struct array *array, size_t len)
 {
     /* *(char *)0x1 = 'a'; */
+    /* *(char *)0x1 = 'a'; */
+    /* *(char *)0x1 = 'a'; */
+    /* *(char *)0x1 = 'a'; */
+    /* *(char *)0x1 = 'a'; */
+    /* *(char *)0x1 = 'a'; */
     if (array->len < len)
     {
         printf("array length too high %d > %d\n", len, array->len);

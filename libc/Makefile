@@ -129,8 +129,8 @@ install-headers:
 install-libs: $(BINARIES)
 	mkdir -p $(DESTDIR)$(LIBDIR)
 	cp $(BINARIES) $(DESTDIR)$(LIBDIR)
-	@echo $(DESTDIR)$(LIBDIR)
-	@exit 1
+	# @echo $(DESTDIR)$(LIBDIR)
+	# @exit 1
 
 -include $(BIN)/$(OBJS:.o=.d)
 -include $(BIN)/$(LIBK_OBJS:.o=.libk.d)

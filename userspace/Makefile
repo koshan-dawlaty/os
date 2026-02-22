@@ -78,50 +78,52 @@ BINARIES=\
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
+DEPENDENCIES=../libc/libc.a ../lib/bin/libutil.a
+
 .PHONY : all clean install install-binaries install-headers
 
 all : $(BINARIES_BIN)
 	$(CC) -o $(BIN)/$
 
-$(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o $(BIN)/wm_lib.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o $(BIN)/wm_lib.o  $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x600000  -o $@ $^ $(CFLAGS)  -nostdlib -lgcc 
 	# $(CC) -o $@ $^ $(CFLAGS)  -nostdlib -lgcc 
 	# $(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/elf_test2 : $(OBJS_START_BIN) $(BIN)/elf_test2.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/elf_test2 : $(OBJS_START_BIN) $(BIN)/elf_test2.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x600000 -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
 	# $(CC) -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
-$(BIN)/ksh : $(OBJS_START_BIN) $(BIN)/ksh.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/ksh : $(OBJS_START_BIN) $(BIN)/ksh.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/ls : $(OBJS_START_BIN) $(BIN)/ls.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/ls : $(OBJS_START_BIN) $(BIN)/ls.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x800000  -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/overwrite : $(OBJS_START_BIN) $(BIN)/overwrite.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/overwrite : $(OBJS_START_BIN) $(BIN)/overwrite.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/cat : $(OBJS_START_BIN) $(BIN)/cat.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/cat : $(OBJS_START_BIN) $(BIN)/cat.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/rm : $(OBJS_START_BIN) $(BIN)/rm.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/rm : $(OBJS_START_BIN) $(BIN)/rm.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/touch : $(OBJS_START_BIN) $(BIN)/touch.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/touch : $(OBJS_START_BIN) $(BIN)/touch.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/wm : $(OBJS_START_BIN) $(BIN)/wm.o $(BIN)/wm_lib.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/wm : $(OBJS_START_BIN) $(BIN)/wm.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
 
-$(BIN)/imgview : $(OBJS_START_BIN) $(BIN)/imgview.o $(BIN)/wm_lib.o ../libc/libc.a $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/imgview : $(OBJS_START_BIN) $(BIN)/imgview.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
 

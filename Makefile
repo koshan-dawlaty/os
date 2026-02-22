@@ -30,20 +30,50 @@ QEMU_FLAGS :=  -cdrom build/os.iso \
 
 ISO=build/os.iso
 
+.PHONY: all clean $(SUBDIRS)
+
 all: $(ISO)
 
 $(ISO) : $(SUBDIRS)
 	./build/iso.sh
 
-$(SUBDIRS):
-	mkdir -p "$(SYSROOT)"
-	set -e
-	for dir in $(SUBDIRS); do \
-		$(MAKE) -C $$dir install-headers; \
-	done
-	for dir in $(SUBDIRS); do \
-		$(MAKE) -C $$dir install; \
-	done
+# $(SUBDIRS):
+# 	mkdir -p "$(SYSROOT)"
+# 	$(MAKE) -C $@ install-headers
+# 	$(MAKE) -C $@ install
+# 	@echo $@
+# 	@exit 1
+
+# Final artifact
+build: $(ISO)
+
+$(ISO): kernel userspace
+	./build/iso.sh
+
+# Directory rules
+lib:
+	@echo building lib
+	$(MAKE) -C lib install
+	# @exit 1
+
+libc:
+	$(MAKE) -C libc install
+
+kernel: lib libc
+	$(MAKE) -C kernel install
+
+userspace: lib libc
+	$(MAKE) -C userspace install
+
+# $(SUBDIRS):
+# 	mkdir -p "$(SYSROOT)"
+# 	set -e
+# 	for dir in $(SUBDIRS); do \
+# 		$(MAKE) -C $$dir install-headers; \
+# 	done
+# 	for dir in $(SUBDIRS); do \
+# 		$(MAKE) -C $$dir install; \
+# 	done
 
 
 qemu : $(ISO)
