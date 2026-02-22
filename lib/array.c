@@ -61,7 +61,7 @@ void *array_get(struct array *array, size_t index, size_t item_len)
     return array->data + index * item_len;
 }
 
-void *array_pop(struct array *array, size_t len)
+void *array_pop_end(struct array *array, size_t len)
 {
     /* this should remove from the start of the array */
     /* TODO: get assertions working for utils */
@@ -80,7 +80,7 @@ void *array_pop(struct array *array, size_t len)
     return out;
 }
 
-void *array_pop2(struct array *array, size_t len)
+void *array_pop(struct array *array, size_t len)
 {
     if (array->len < len)
     {

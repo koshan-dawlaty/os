@@ -37,7 +37,7 @@ int pipe_read(struct file *file, char *buf, size_t n, size_t off)
 
     size_t read_size = MIN(n, write->buffer.len);
 
-    void *result = array_pop2(&write->buffer, read_size);
+    void *result = array_pop(&write->buffer, read_size);
     memcpy(buf, result, read_size);
 
     return read_size;

@@ -20,14 +20,14 @@ int array_add(struct array *array, const void *data, size_t size);
  */
 void *array_get(struct array *array, size_t index, size_t item_len);
 
-/* this actually removes from the end of the array, therefore this does not
- * invalidate indexes    */
-void *array_pop(struct array *array, size_t len);
+/* this removes from the end of the array, therefore this does not
+ * invalidate indexes, and it returns a pointer inside the array */
+void *array_pop_end(struct array *array, size_t len);
 /*
  * this removes from the start of the array and invalidates indexes
  * returns a heap pointer
  */
-void *array_pop2(struct array *array, size_t len);
+void *array_pop(struct array *array, size_t len);
 
 /* invalidates indexes of everything else in the array */
 void array_push(struct array *array, const void *data, size_t size);
