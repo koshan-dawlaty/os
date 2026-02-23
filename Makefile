@@ -45,26 +45,53 @@ $(ISO) : $(SUBDIRS)
 # 	@echo $@
 # 	@exit 1
 
-# Final artifact
 build: $(ISO)
 
 $(ISO): kernel userspace
 	./build/iso.sh
 
-# Directory rules
-lib:
+lib: headers
 	@echo building lib
+	mkdir -p "$(SYSROOT)"
 	$(MAKE) -C lib install
 	# @exit 1
 
-libc:
+libc: headers
+	mkdir -p "$(SYSROOT)"
 	$(MAKE) -C libc install
 
-kernel: lib libc
+kernel: headers lib libc
+	mkdir -p "$(SYSROOT)"
 	$(MAKE) -C kernel install
 
-userspace: lib libc
+userspace: headers lib libc
+	mkdir -p "$(SYSROOT)"
 	$(MAKE) -C userspace install
+
+headers: lib-headers libc-headers kernel-headers userspace-headers
+	
+
+lib-headers:
+	@echo building lib
+	mkdir -p "$(SYSROOT)"
+	$(MAKE) -C lib install-headers
+
+libc-headers:
+	@echo building libc
+	mkdir -p "$(SYSROOT)"
+	$(MAKE) -C libc install-headers
+
+kernel-headers:
+	@echo building kernel
+	mkdir -p "$(SYSROOT)"
+	$(MAKE) -C kernel install-headers
+
+userspace-headers:
+	@echo building userspace
+	mkdir -p "$(SYSROOT)"
+	$(MAKE) -C userspace install-headers
+
+
 
 # $(SUBDIRS):
 # 	mkdir -p "$(SYSROOT)"
@@ -83,6 +110,7 @@ qemu : $(ISO)
 	$(QEMU_COMMAND) -monitor stdio $(QEMU_FLAGS)
 
 clean:
+	$(RM) -r $(SYSROOT)
 	for dir in $(SUBDIRS); do \
 		$(MAKE) -C $$dir clean; \
 	done

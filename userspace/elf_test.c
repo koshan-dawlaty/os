@@ -2,6 +2,7 @@
 #include <compiler.h>
 #include <fcntl.h>
 #include <init.h>
+#include <lib/terminal.h>
 #include <sched.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -93,6 +94,8 @@ int main()
     /* printf("%p-%p\n", client.win.buffer, */
     /*        client.win.buffer + (client.win.h * client.win.w * 4)); */
 
+    struct terminal *term = terminal_alloc();
+
     int pos = 10;
     size_t x = 1;
     size_t y = 0;
@@ -107,6 +110,7 @@ int main()
         for (size_t i = 0; i < res; i++)
         {
             char c = buf[i];
+            /* terminal_addchar(term, c); */
             switch (c)
             {
             case '\n':
