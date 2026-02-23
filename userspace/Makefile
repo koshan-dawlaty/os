@@ -93,11 +93,11 @@ $(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o $(BIN)/wm_lib.o  $(DEPENDE
 
 $(BIN)/elf_test2 : $(OBJS_START_BIN) $(BIN)/elf_test2.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x600000 -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
+	$(CC) -Ttext=0x700000 -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
 	# $(CC) -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
 $(BIN)/ksh : $(OBJS_START_BIN) $(BIN)/ksh.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+	$(CC) -Ttext=0x900000  -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/ls : $(OBJS_START_BIN) $(BIN)/ls.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
@@ -113,7 +113,7 @@ $(BIN)/cat : $(OBJS_START_BIN) $(BIN)/cat.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS
 
 $(BIN)/rm : $(OBJS_START_BIN) $(BIN)/rm.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+	$(CC) -Ttext=0x800000  -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/touch : $(OBJS_START_BIN) $(BIN)/touch.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)

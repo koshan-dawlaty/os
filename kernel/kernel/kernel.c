@@ -28,7 +28,6 @@
 #include <lib/array.h>
 #include <lib/binary_tree.h>
 #include <lib/list.h>
-#include <lib/terminal.h>
 #include <malloc_internal.h>
 #include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>
@@ -196,8 +195,6 @@ void kmain()
 
     irq_disable();
 
-    struct terminal *term = terminal_alloc();
-
     /* malloc(1000000); */
     /* malloc(1000000); */
     /* malloc(1000000); */
@@ -260,7 +257,7 @@ void kmain()
     irq_enable();
     schedule();
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "stupid.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     while (1)

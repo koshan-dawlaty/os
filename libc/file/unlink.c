@@ -1,18 +1,24 @@
-#include "errno.h"
 #include <fcntl.h>
 #include <kernel_syscall.h>
+#include <scheduler.h>
 #include <stdbool.h>
 #include <sys/syscall.h>
 #include <utils.h>
 
 #ifdef __is_libk
+#include <err.h>
+#include <errno.h>
 #include <vfs.h>
 #endif
 
 int unlink(const char *path)
 {
 #ifdef __is_libk
-    dentry *entry = lookup_path(path, PATHNAME_LOOKUP_FIND);
+    struct dentry *entry = lookup_path(path, PATHNAME_LOOKUP_FIND);
+    if (IS_ERR(entry))
+    {
+        return -GET_ERR(entry);
+    }
     return delete_dentry(entry);
 #else
     return syscall_wrapper_asm(SYS_unlink, (uintptr_t)path, 0, 0, 0, 0);
