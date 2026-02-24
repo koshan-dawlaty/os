@@ -79,7 +79,6 @@ int main()
     execv_stdio("/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0], stdout_pipe[1]);
     /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); */
 
-    size_t len = 100;
     /* char *buf = malloc(len); */
     /* read(stdout_pipe[0], buf, len); */
     /* printf("read:%s\n", buf); */
@@ -93,7 +92,6 @@ int main()
     /* printf("%p-%p\n", client.win.buffer, */
     /*        client.win.buffer + (client.win.h * client.win.w * 4)); */
 
-    int pos = 10;
     size_t x = 1;
     size_t y = 0;
     while (1)

@@ -74,7 +74,7 @@ end:
 int mouse_read(struct cdev *dev, u8 *buf, size_t len)
 {
 
-    if (MOUSE_EVENT_EMPTY(ps2_mouse_event))
+    if ((ps2_mouse_event.x_change == 0 && ps2_mouse_event.y_change == 0))
     {
         wait_queue_wait(&mouse_waitqueue);
     }

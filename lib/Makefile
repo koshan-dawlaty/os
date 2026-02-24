@@ -31,7 +31,6 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 OBJS=\
 	list.o \
-	term.o \
 	array.o \
 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))

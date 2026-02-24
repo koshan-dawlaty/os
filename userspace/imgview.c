@@ -1,4 +1,5 @@
 #include "sched.h"
+#include "sys/types.h"
 #include "wm_lib.h"
 #include <fcntl.h>
 #include <init.h>

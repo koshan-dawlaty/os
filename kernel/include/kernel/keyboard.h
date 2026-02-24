@@ -10,6 +10,7 @@ static char keyboard_buffer[KEYBOARD_BUFFER_SIZE];
 extern volatile int key_available;
 
 char pop_keyboard_buffer();
+char keyboard_getchar();
 
 void keyboard_set_default();
 void keyboard_reset();

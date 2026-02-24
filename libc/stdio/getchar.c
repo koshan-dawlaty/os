@@ -12,16 +12,16 @@ char getchar()
 
     /* printf("test\n"); */
     /* printf("%d\n", key_available); */
-    while (!is_key_available())
-    {
-        /* printf("test\n"); */
-        asm volatile("hlt");
-        /* sched_yield(); */
-    }
-    /* printf("test\n"); */
+    /* while (!is_key_available()) */
+    /* { */
+    /*     /1* printf("test\n"); *1/ */
+    /*     asm volatile("hlt"); */
+    /*     /1* sched_yield(); *1/ */
+    /* } */
+    /* /1* printf("test\n"); *1/ */
 
-    key_available = 0;
-    char c = pop_keyboard_buffer();
+    /* key_available = 0; */
+    char c = keyboard_getchar();
 
     return c;
 

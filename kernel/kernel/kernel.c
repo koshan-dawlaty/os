@@ -256,12 +256,12 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
+    execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    /* execv("imgview", (char *[]){"imgview", "stupid.tga", NULL}); */
+    execv("imgview", (char *[]){"imgview", "osdev.tga", NULL});
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
-    while (1)
-    {
-        schedule();
-    }
+    /* while (1) */
+    /* { */
+    /*     schedule(); */
+    /* } */
 }

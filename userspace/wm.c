@@ -112,7 +112,7 @@ void process_connection()
 
     printf("%d, %d\n", win_info.width, win_info.height);
     struct window *w = new_window(400, x, win_info.width, win_info.height);
-    x += 175;
+    x += win_info.height - 10;
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
     ent->list = LIST2_INIT();
@@ -197,6 +197,8 @@ void keyboard_thread()
     }
 }
 
+int drag_count = 0;
+
 void mouse_thread()
 {
 
@@ -228,8 +230,10 @@ void mouse_thread()
             mouse->y = 0;
         }
 
-        if (ev->buttons.left_click)
+        if (ev->buttons.left_click && drag_count < 3)
         {
+
+            drag_count++;
 
             /* TODO: this should be its own function that traverses the list
              * backwards */
@@ -257,10 +261,23 @@ void mouse_thread()
 
             if (focused != NULL)
             {
-                memset(focused->win->buffer, 127, focused->win->w * 4 * 10);
+                /* memset(focused->win->buffer, 127, focused->win->w * 4 * 10);
+                 */
                 /* memset(focused->win->buffer, 0, */
                 /*        focused->win->w * focused->win->h * 4); */
             }
+        }
+        else if (ev->buttons.left_click)
+        {
+            if (focused != NULL)
+            {
+                focused->win->x += ev->x_change;
+                focused->win->y += ev->y_change;
+            }
+        }
+        else
+        {
+            drag_count = 0;
         }
 
         /* printf("%d, %d\n", mouse->x, mouse->y); */

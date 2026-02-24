@@ -3,6 +3,7 @@
 #include "keyboard_map.h"
 #include "spinlock.h"
 #include "vfs.h"
+#include "wait_queue.h"
 #include "x86_keyboard.h"
 #include <kernel/keyboard.h>
 #include <stdbool.h>
@@ -19,6 +20,7 @@ uint8_t keyboard_buffer_head = 0;
 uint8_t keyboard_buffer_tail = 0;
 
 struct mutex keyboard_mutex = MUTEX_INIT();
+struct wait_queue keyboard_queue = WAIT_QUEUE_INIT();
 
 void push_keyboard_buffer(char c)
 {
@@ -53,6 +55,25 @@ char pop_keyboard_buffer()
     return c;
 }
 
+char keyboard_getchar()
+{
+
+    mutex_lock(&keyboard_mutex);
+    if (keyboard_buffer_head == keyboard_buffer_tail)
+    {
+        mutex_unlock(&keyboard_mutex);
+        wait_queue_wait(&keyboard_queue);
+        mutex_lock(&keyboard_mutex);
+    }
+
+    char c = keyboard_buffer[keyboard_buffer_tail];
+    keyboard_buffer_tail = (keyboard_buffer_tail + 1) % KEYBOARD_BUFFER_SIZE;
+
+    mutex_unlock(&keyboard_mutex);
+
+    return c;
+}
+
 void keyboard_isr_enable()
 {
     IRQ_clear_mask(1);
@@ -70,6 +91,11 @@ INT_HANDLER(keyboard_interrupt_handler, {
 
         key_available = 1;
         push_keyboard_buffer(c);
+
+        if (!WAIT_QUEUE_EMPTY(keyboard_queue))
+        {
+            wait_queue_done(&keyboard_queue);
+        }
     }
 
     PIC_sendEOI(1);
