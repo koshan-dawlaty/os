@@ -321,6 +321,10 @@ int main()
 
     buffer = framebuffer_alloc();
     int socket = socket_create();
+
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("imgview", (char *[]){"imgview", "osdev.tga", NULL});
     while (true)
     {
 

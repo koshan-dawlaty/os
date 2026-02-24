@@ -170,24 +170,33 @@ struct wait_queue testing_wait_queue = WAIT_QUEUE_INIT();
 
 void t1(void *a)
 {
-    struct file *pipe = a;
-    write_file(pipe, "abc", 4, 0);
+    for (;;)
+    {
+        int fd = open("/one", O_RDONLY);
+        char *buf = malloc(100);
+        read(fd, buf, 100);
+        printf("t1\n");
+        free(buf);
+        close(fd);
+    }
 }
 
 void t2(void *a)
 {
-    struct file *pipe = a;
-    char *buf = malloc(4);
-    read_file(pipe, buf, 4, 0);
-    printf("read:%s\n", buf);
+
+    for (;;)
+    {
+        int fd = open("/one", O_RDONLY);
+        char *buf = malloc(100);
+        read(fd, buf, 100);
+        printf("t2\n");
+        free(buf);
+        close(fd);
+    }
 }
 
 void t3(void *a)
 {
-    int m = open("/mouse", O_RDONLY);
-    struct mouse_event *ev = malloc(sizeof(struct mouse_event));
-    read(m, ev, sizeof(struct mouse_event));
-    printf("x change: %d\n", ev->x_change);
 }
 
 void kmain()
@@ -231,9 +240,9 @@ void kmain()
 
     /* printf("%p, %p\n", read, write); */
 
-    /* ktask_run(t2, read); */
-    /* ktask_run(t1, write); */
-    /* ktask_run(t3, NULL); */
+    /* ktask_run(t2, NULL); */
+    /* ktask_run(t1, NULL); */
+    /* /1* ktask_run(t3, NULL); *1/ */
     /* enable_scheduler(); */
     /* irq_enable(); */
     /* schedule(); */
@@ -242,7 +251,6 @@ void kmain()
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
     printf("starting shell\n");
-    execv("/elf_test", (char *[]){"elf_test", NULL});
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
     int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
@@ -256,9 +264,9 @@ void kmain()
     enable_scheduler();
     irq_enable();
     schedule();
-    execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    execv("imgview", (char *[]){"imgview", "osdev.tga", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* while (1) */
     /* { */
