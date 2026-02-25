@@ -94,6 +94,7 @@ int main()
 
     size_t x = 1;
     size_t y = 0;
+    printf("elf_test main loop\n");
     while (1)
     {
 

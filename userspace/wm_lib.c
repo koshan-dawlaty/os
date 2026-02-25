@@ -111,9 +111,7 @@ struct wm_client wm_client_connect(size_t height, size_t width)
     recv(server_sock, &second_message, sizeof(int));
 
     void *framebuffer;
-    printf("%d\n", second_message.mem_id);
     shared_mem_get(second_message.mem_id, &framebuffer);
-    printf("framebuffer:%p\n", framebuffer);
 
     struct client_window w = {
         .w = win.width, .h = win.height, .buffer = framebuffer};

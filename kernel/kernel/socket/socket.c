@@ -23,7 +23,6 @@ int unix_socket_add_array(struct unix_socket *sock)
 {
     int retval =
         array_add(&unix_socket_array, &sock, sizeof(struct unix_socket *));
-    printf("created socket number:%d\n", retval);
 
     return retval;
 }

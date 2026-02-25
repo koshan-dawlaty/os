@@ -310,7 +310,7 @@ int main()
 
     mouse = new_window(0, 0, 10, 10);
 
-    /* memset(mouse->buffer, 255, 10 * 10 * 4); */
+    memset(mouse->buffer, 255, 10 * 10 * 4);
 
     /* this might be bad because this is a stack allocation */
     struct window_queue_entry mouse_ent = {.win = mouse, .list = LIST2_INIT()};
