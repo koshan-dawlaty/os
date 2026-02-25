@@ -13,8 +13,8 @@ struct rect
 
 static inline bool rect_intersect(struct rect one, struct rect two)
 {
-    return (one.x >= two.x && one.x + one.w <= two.x && one.y >= two.y &&
-            one.y + one.h <= two.y);
+    return (one.x >= two.x) && (one.x + one.w <= two.x + two.w) &&
+           (one.y >= two.y) && (one.y + one.h <= two.y + two.h);
 }
 
 #endif

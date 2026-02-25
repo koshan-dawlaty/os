@@ -14,4 +14,9 @@ void exit(int status);
 
 void init_heap();
 
+static inline int abs(int x)
+{
+    return (x < 0) ? -x : x;
+}
+
 #endif

@@ -5,6 +5,7 @@
 #include <lib/array.h>
 #include <lib/list.h>
 #include <lib/rect.h>
+#include <lib/utils.h>
 #include <sched.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -33,12 +34,49 @@ struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf)
     return conn;
 }
 
+static inline size_t get_framebuffer_y(struct framebuffer *f,
+                                       struct window *win, size_t y)
+{
+    return ((y + win->r.y) * f->pitch);
+}
+
 struct window_queue_entry
 {
     struct window *win;
     struct wm_connection *conn;
     struct list2 list;
 };
+
+/*
+ * @win the lowest window that needs to be updated
+ */
+void update_area_up(struct window_queue_entry *ent, struct rect area,
+                    struct framebuffer *fb)
+{
+
+    struct list2 *pos;
+    list2_for_each(pos, &ent->list)
+    {
+        struct window_queue_entry *ent =
+            containerof(pos, struct window_queue_entry, list);
+
+        /* printf("%d, %d, %d, %d\n", ent->win->r.x, ent->win->r.w, area.x, */
+        /*        area.w); */
+        if (rect_intersect(ent->win->r, area))
+        {
+            struct window *win = ent->win;
+            size_t draw_height = MIN(area.h, win->r.h);
+            size_t draw_width = MIN(area.w, win->r.w);
+
+            for (size_t y = 0; y < draw_height; y++)
+            {
+                size_t y_pixel = get_framebuffer_y(fb, win, y);
+                memcpy(fb->buffer + (y_pixel + (win->r.x * fb->pixel_width)),
+                       win->buffer + (y * win->r.w * 4), draw_width * 4);
+            }
+        }
+    }
+}
 
 struct window_queue_entry *focused = NULL;
 
@@ -167,7 +205,7 @@ void process_connection()
             char input;
             /* printf("waiting for input\n"); */
             recv(conn->input_socket, &input, sizeof(char));
-            printf("%c", input);
+            /* printf("%c", input); */
             send(socket, &input, sizeof(char));
             /* printf("sent it\n"); */
             break;
@@ -271,6 +309,16 @@ void mouse_thread()
             {
                 focused->win->r.x += ev->x_change;
                 focused->win->r.y += ev->y_change;
+
+                struct rect move_area = {
+                    .x = focused->win->r.x,
+                    .y = focused->win->r.y,
+                    .w = abs(ev->x_change + focused->win->r.w),
+                    .h = abs(ev->y_change + focused->win->r.h),
+                };
+                /* printf("%d ", move_area.h); */
+
+                update_area_up(focused, move_area, buffer);
             }
         }
         else
@@ -281,7 +329,7 @@ void mouse_thread()
         /* printf("%d, %d\n", mouse->x, mouse->y); */
 
         /* draw_window(buffer, mouse); */
-        draw_windows(buffer);
+        /* draw_windows(buffer); */
 
         free(ev);
     }
