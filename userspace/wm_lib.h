@@ -12,11 +12,7 @@
 
 struct window
 {
-    size_t x;
-    size_t y;
-    size_t w;
-    size_t h;
-
+    struct rect r;
     void *buffer;
 };
 

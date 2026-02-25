@@ -40,10 +40,6 @@ struct window_queue_entry
     struct list2 list;
 };
 
-void update_area(struct window_queue_entry win, struct rect area)
-{
-}
-
 struct window_queue_entry *focused = NULL;
 
 char current_keyboard_char;
@@ -53,10 +49,7 @@ struct list2 *window_queue;
 struct window *new_window(size_t x, size_t y, size_t w, size_t h)
 {
     struct window *out = malloc(sizeof(struct window));
-    out->x = x;
-    out->y = y;
-    out->w = w;
-    out->h = h;
+    out->r = (struct rect){x, y, w, h};
 
     out->buffer = malloc(w * h * 4);
 
@@ -68,11 +61,11 @@ struct framebuffer *buffer;
 void draw_window(struct framebuffer *b, struct window *win)
 {
 
-    for (size_t y = 0; y < win->h - 1; y++)
+    for (int y = 0; y < win->r.h - 1; y++)
     {
         memcpy(b->buffer +
-                   (((y + win->y) * b->pitch) + (win->x * b->pixel_width)),
-               win->buffer + (y * win->w * 4), win->w * 4);
+                   (((y + win->r.y) * b->pitch) + (win->r.x * b->pixel_width)),
+               win->buffer + (y * win->r.w * 4), win->r.w * 4);
     }
 }
 
@@ -145,11 +138,11 @@ void process_connection()
         case WM_RES_RENDER:
         {
 
-            for (size_t y = 0; y < w->h - 1; y++)
+            for (int y = 0; y < w->r.h - 1; y++)
             {
-                size_t offset = y * w->w * 4;
+                size_t offset = y * w->r.w * 4;
 
-                if (w->h == 100)
+                if (w->r.h == 100)
                 {
                     if (*(u32 *)(client_buf + offset) != 0)
                     {
@@ -157,7 +150,7 @@ void process_connection()
                     }
                 }
 
-                memcpy(w->buffer + offset, client_buf + offset, w->w * 4);
+                memcpy(w->buffer + offset, client_buf + offset, w->r.w * 4);
             }
 
             draw_windows(buffer);
@@ -222,17 +215,17 @@ void mouse_thread()
         {
         }
 
-        mouse->x += ev->x_change;
-        mouse->y += ev->y_change;
+        mouse->r.x += ev->x_change;
+        mouse->r.y += ev->y_change;
 
-        if ((int)mouse->x < 0)
+        if ((int)mouse->r.x < 0)
         {
-            mouse->x = 0;
+            mouse->r.x = 0;
         }
 
-        if ((int)mouse->y < 0)
+        if ((int)mouse->r.y < 0)
         {
-            mouse->y = 0;
+            mouse->r.y = 0;
         }
 
         if (ev->buttons.left_click && drag_count < 3)
@@ -256,8 +249,8 @@ void mouse_thread()
                     LIST_ENTRY(pos, struct window_queue_entry, list);
                 struct window *win = queue_ent->win;
 
-                if (mouse->x > win->x && mouse->x < win->x + win->w &&
-                    mouse->y > win->y && mouse->y < win->y + win->h)
+                if (mouse->r.x > win->r.x && mouse->r.x < win->r.x + win->r.w &&
+                    mouse->r.y > win->r.y && mouse->r.y < win->r.y + win->r.h)
                 {
                     focused = queue_ent;
                     break;
@@ -276,8 +269,8 @@ void mouse_thread()
         {
             if (focused != NULL)
             {
-                focused->win->x += ev->x_change;
-                focused->win->y += ev->y_change;
+                focused->win->r.x += ev->x_change;
+                focused->win->r.y += ev->y_change;
             }
         }
         else
