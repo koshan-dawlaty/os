@@ -4,6 +4,7 @@
 #include <init.h>
 #include <lib/array.h>
 #include <lib/list.h>
+#include <lib/rect.h>
 #include <sched.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -38,6 +39,10 @@ struct window_queue_entry
     struct wm_connection *conn;
     struct list2 list;
 };
+
+void update_area(struct window_queue_entry win, struct rect area)
+{
+}
 
 struct window_queue_entry *focused = NULL;
 

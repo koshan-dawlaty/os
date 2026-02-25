@@ -1,6 +1,8 @@
 #ifndef WM_LIB_H
 #define WM_LIB_H
 
+#include <lib/rect.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
