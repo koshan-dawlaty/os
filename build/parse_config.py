@@ -3,7 +3,12 @@
 import sys
 
 def main():
-    for line in sys.stdin:
+    config_file = open("config")
+    lines = config_file.readlines()
+
+    for line in lines:
+        line = line.strip()
+        
         if (line[0] == '#'):
             continue
 

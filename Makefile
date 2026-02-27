@@ -3,9 +3,8 @@ SUBDIRS := lib libc kernel userspace
 
 .PHONY: all clean $(SUBDIRS)
 
-CONFIG_FILE_RAW!=cat config
 # CONFIG_FLAGS=$(shell echo $(CONFIG_FILE_RAW) | sed "s/^/-DCONFIG_/")
-CONFIG_FLAGS=$(shell echo $(CONFIG_FILE_RAW) | ./build/parse_config.py)
+CONFIG_FLAGS=$(shell ./build/parse_config.py)
 
 export SYSROOT := $(shell pwd)/build/sysroot
 export FS_ROOT := fs-root
