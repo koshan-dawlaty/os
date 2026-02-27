@@ -206,7 +206,7 @@ void kmain()
 
     irq_disable();
 
-    log("abc");
+    logi("abc %d", 134);
 
     /* malloc(1000000); */
     /* malloc(1000000); */

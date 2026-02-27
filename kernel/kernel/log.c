@@ -1,4 +1,5 @@
 #include <extension.h>
+#include <kernel/log.h>
 #include <serial.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -21,15 +22,14 @@ void log_writestring(const char *str)
     serial_writestring(str, strlen(str), LOG_SERIAL_PORT);
 }
 
-void log(const char *str, ...)
+void vlog_level(struct log_level level, const char *str, va_list parameters)
 {
-    va_list parameters;
-    va_start(parameters, str);
-
     char *s = vrprintf(str, parameters);
 
+    log_writechar('[');
+    log_writestring(level.str);
+    log_writechar(']');
+    log_writechar(' ');
     log_writestring(s);
     log_writechar('\n');
-
-    va_end(parameters);
 }
