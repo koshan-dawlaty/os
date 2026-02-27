@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "serial.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>
@@ -17,6 +18,7 @@
 #include <kernel/graphics.h>
 #include <kernel/interrupts.h>
 #include <kernel/keyboard.h>
+#include <kernel/log.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/ps2.h>
@@ -203,6 +205,8 @@ void kmain()
 {
 
     irq_disable();
+
+    log("abc");
 
     /* malloc(1000000); */
     /* malloc(1000000); */

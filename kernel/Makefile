@@ -48,6 +48,7 @@ $(KERNEL_ARCH_OBJS) \
 $(KERNEL_TEST_OBJS) \
 $(KERNEL_ARCH_TEST_OBJS) \
 kernel/kernel.o \
+kernel/log.o \
 kernel/addr_space.o \
 kernel/utils.o \
 kernel/panic.o \

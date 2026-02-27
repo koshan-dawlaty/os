@@ -8,7 +8,7 @@
 
 void serial_write(uint16_t port, uint8_t data);
 void serial_init(uint16_t port);
-void serial_writestring(char *str, size_t len, u16 port);
+void serial_writestring(const char *str, size_t len, u16 port);
 ISR_ATTRIBUTE void com1_interrupt_handler(struct interrupt_frame *frame);
 
 #endif
