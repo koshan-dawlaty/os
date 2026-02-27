@@ -110,7 +110,8 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
 
     if ((pml4_entry & 1) == 0)
     {
-        pml4[pml4_index] = (u64)get_free_phys_page() | 0x3 | flags;
+        void *page = get_free_phys_page();
+        pml4[pml4_index] = (u64)page | 0x3 | flags;
     }
 
     /* TODO: math might be wrong */
@@ -121,7 +122,8 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
 
     if ((pdpt_entry & 1) == 0)
     {
-        pdpt[pdpt_index] = (u64)get_free_phys_page() | 0x3 | flags;
+        void *page = get_free_phys_page();
+        pdpt[pdpt_index] = (u64)page | 0x3 | flags;
     }
 
     u64 *pdt_physical = (void *)((pdpt[pdpt_index]) & ~0xFFF);

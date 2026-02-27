@@ -1,5 +1,6 @@
 #include "wm_lib.h"
 #include <compiler.h>
+#include <err.h>
 #include <fcntl.h>
 #include <init.h>
 #include <sched.h>
@@ -38,9 +39,9 @@ int main()
     struct PSF_font *font = font_parse(font_fd);
     /* printf("%d\n", font->header.bytes_per_glyph); */
 
-    if (font == NULL)
+    if (IS_ERR(font))
     {
-        printf("font was invalid\n");
+        printf("font was invalid, error:%s\n", strerror(GET_ERR(font)));
         exit(1);
     }
 
@@ -76,7 +77,9 @@ int main()
     pipe(stdin_pipe);
     /* execv("/ls", (char *[]){"ls", NULL}); */
     /* execv("/ksh", (char *[]){"ksh", NULL}); */
+    printf("execv\n");
     execv_stdio("/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0], stdout_pipe[1]);
+    printf("execv end\n");
     /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); */
 
     /* char *buf = malloc(len); */
@@ -99,6 +102,7 @@ int main()
     {
 
         char *buf = malloc(100);
+        printf("reading from pipe\n");
         size_t res = read(stdout_pipe[0], buf, 100);
 
         /* printf("size:%d\n", res); */

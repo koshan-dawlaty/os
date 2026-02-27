@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "serial.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>

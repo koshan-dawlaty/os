@@ -22,6 +22,12 @@ const char *strerror(int errnum)
         return "not executable";
     case EACCES:
         return "permission denied";
+    case EWRONGSIZE:
+        return "invalid size";
+    case EINVAL:
+        return "EINVAL, invalid argument";
+    case EBADF:
+        return "bad file descriptor";
     default:
         return "no error message for this";
     }
