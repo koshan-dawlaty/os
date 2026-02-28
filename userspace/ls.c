@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 
         /* printf("%p\n", malloc(10)); */
     }
-    printf("\n");
+    /* printf("\n"); */
 
     exit(0);
 }

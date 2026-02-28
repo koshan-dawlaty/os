@@ -102,8 +102,14 @@ int main()
     {
 
         char *buf = malloc(100);
+    read_and_draw_char:;
+        bool need_to_read_more = false;
         /* printf("reading from pipe\n"); */
         size_t res = read(stdout_pipe[0], buf, 100);
+        if (res == 100)
+        {
+            need_to_read_more = true;
+        }
 
         /* printf("size:%d\n", res); */
 
@@ -143,6 +149,10 @@ int main()
                     y += font->header.height;
                 }
             }
+        }
+        if (need_to_read_more)
+        {
+            goto read_and_draw_char;
         }
         wm_render(client);
 
