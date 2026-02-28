@@ -40,12 +40,41 @@ static inline size_t get_framebuffer_y(struct framebuffer *f,
     return ((y + win->r.y) * f->pitch);
 }
 
+struct window *mouse;
+
 struct window_queue_entry
 {
     struct window *win;
     struct wm_connection *conn;
     struct list2 list;
 };
+
+struct list2 *window_queue;
+
+void win_draw_rect(struct window *win, struct rect area, struct framebuffer *fb)
+{
+
+    size_t x1 = MAX(win->r.x, area.x);
+    size_t y1 = MAX(win->r.y, area.y);
+
+    size_t x2 = MIN(win->r.x + win->r.w, area.x + area.w);
+    size_t y2 = MIN(win->r.y + win->r.h, area.y + area.h);
+
+    size_t draw_height = y2 - y1;
+    size_t draw_width = x2 - x1;
+    for (size_t y = 0; y < draw_height; y++)
+    {
+        size_t fb_y = y1 + y;
+        size_t win_y = (fb_y - win->r.y);
+
+        size_t fb_offset = (fb_y * fb->pitch) + (x1 * fb->pixel_width);
+
+        size_t win_offset = (win_y * win->r.w + (x1 - win->r.x)) * 4;
+
+        memcpy(fb->buffer + fb_offset, win->buffer + win_offset,
+               draw_width * 4);
+    }
+}
 
 /*
  * @win the lowest window that needs to be updated
@@ -55,25 +84,15 @@ void update_area_up(struct window_queue_entry *ent, struct rect area,
 {
 
     struct list2 *pos;
-    list2_for_each(pos, &ent->list)
+    /* list2_for_each(pos, &ent->list) */
+    list2_for_each(pos, window_queue)
     {
         struct window_queue_entry *ent =
             containerof(pos, struct window_queue_entry, list);
 
-        /* printf("%d, %d, %d, %d\n", ent->win->r.x, ent->win->r.w, area.x, */
-        /*        area.w); */
         if (rect_intersect(ent->win->r, area))
         {
-            struct window *win = ent->win;
-            size_t draw_height = MIN(area.h, win->r.h);
-            size_t draw_width = MIN(area.w, win->r.w);
-
-            for (size_t y = 0; y < draw_height; y++)
-            {
-                size_t y_pixel = get_framebuffer_y(fb, win, y);
-                memcpy(fb->buffer + (y_pixel + (win->r.x * fb->pixel_width)),
-                       win->buffer + (y * win->r.w * 4), draw_width * 4);
-            }
+            win_draw_rect(ent->win, area, fb);
         }
     }
 }
@@ -81,8 +100,6 @@ void update_area_up(struct window_queue_entry *ent, struct rect area,
 struct window_queue_entry *focused = NULL;
 
 char current_keyboard_char;
-
-struct list2 *window_queue;
 
 struct window *new_window(size_t x, size_t y, size_t w, size_t h)
 {
@@ -120,8 +137,6 @@ void draw_windows(struct framebuffer *b)
 }
 
 int current_client = 1;
-
-struct window *mouse;
 
 size_t x = 10;
 
@@ -266,6 +281,8 @@ void mouse_thread()
             mouse->r.y = 0;
         }
 
+        draw_window(buffer, mouse);
+
         if (ev->buttons.left_click && drag_count < 3)
         {
 
@@ -307,6 +324,8 @@ void mouse_thread()
         {
             if (focused != NULL)
             {
+                struct rect old_area = focused->win->r;
+
                 focused->win->r.x += ev->x_change;
                 focused->win->r.y += ev->y_change;
 
@@ -317,8 +336,17 @@ void mouse_thread()
                     .h = abs(ev->y_change + focused->win->r.h),
                 };
                 /* printf("%d ", move_area.h); */
+                /* printf("%d, %d\n", old_area.x, focused->win->r.x); */
 
-                update_area_up(focused, move_area, buffer);
+                /* update_area_up(focused, move_area, buffer); */
+                update_area_up(focused, focused->win->r, buffer);
+                /* update_area_up(focused, old_area, buffer); */
+                update_area_up(focused,
+                               (struct rect){.x = 0,
+                                             .y = 0,
+                                             .h = buffer->height,
+                                             .w = buffer->width},
+                               buffer);
             }
         }
         else
