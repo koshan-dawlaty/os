@@ -1,3 +1,4 @@
+#include "kernel/log.h"
 #include <kernel/syscall.h>
 #include <lib/array.h>
 #include <lib/list.h>

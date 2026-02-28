@@ -26,10 +26,25 @@ static inline void log_level(struct log_level level, const char *str, ...)
 #define LOG_ERROR LOG_LEVEL_INIT("ERROR")
 #define LOG_DEFAULT LOG_DEBUG
 
-#define log(str, ...) log_level(LOG_DEFAULT, str, __VA_ARGS__)
-#define logd(str, ...) log_level(LOG_DEBUG, str, __VA_ARGS__)
-#define logi(str, ...) log_level(LOG_INFO, str, __VA_ARGS__)
-#define logw(str, ...) log_level(LOG_WARN, str, __VA_ARGS__)
-#define loge(str, ...) log_level(LOG_ERROR, str, __VA_ARGS__)
+#define log_macro(level, str, ...)                                             \
+    log_level(level, str __VA_OPT__(, ) __VA_ARGS__)
+
+#ifdef CONFIG_LOG
+
+#define log(str, ...) log_macro(LOG_DEFAULT, str, __VA_ARGS__)
+#define logd(str, ...) log_macro(LOG_DEBUG, str, __VA_ARGS__)
+#define logi(str, ...) log_macro(LOG_INFO, str, __VA_ARGS__)
+#define logw(str, ...) log_macro(LOG_WARN, str, __VA_ARGS__)
+#define loge(str, ...) log_macro(LOG_ERROR, str, __VA_ARGS__)
+
+#else
+
+#define log(str, ...)
+#define logd(str, ...)
+#define logi(str, ...)
+#define logw(str, ...)
+#define loge(str, ...)
+
+#endif
 
 #endif

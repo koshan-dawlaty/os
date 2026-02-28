@@ -162,6 +162,8 @@ void kernel_init()
                                    (int_handler_flags){.is_user = true});
     })
 
+    logi("kernel init done");
+
 #ifdef TESTS
     run_tests();
 #endif
@@ -205,8 +207,6 @@ void kmain()
 {
 
     irq_disable();
-
-    logi("abc %d", 134);
 
     /* malloc(1000000); */
     /* malloc(1000000); */
@@ -254,7 +254,7 @@ void kmain()
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
-    printf("starting shell\n");
+    logi("starting init process");
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
     int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */

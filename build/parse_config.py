@@ -12,7 +12,7 @@ def main():
         if (line[0] == '#'):
             continue
 
-        sys.stdout.write("-DCONFIG_" + line)
+        sys.stdout.write("-DCONFIG_" + line + " ")
 
 if __name__ == "__main__":
     main()
