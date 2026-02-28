@@ -35,7 +35,6 @@ static inline void log_level(struct log_level level, const char *str, ...)
 
 #if defined(CONFIG_LOG) && !defined(TESTS)
 
-#define log(str, ...) log_macro(LOG_DEFAULT, str, __VA_ARGS__)
 #define logd(str, ...) log_macro(LOG_DEBUG, str, __VA_ARGS__)
 #define logi(str, ...) log_macro(LOG_INFO, str, __VA_ARGS__)
 #define logw(str, ...) log_macro(LOG_WARN, str, __VA_ARGS__)

@@ -102,7 +102,7 @@ int main()
     {
 
         char *buf = malloc(100);
-        printf("reading from pipe\n");
+        /* printf("reading from pipe\n"); */
         size_t res = read(stdout_pipe[0], buf, 100);
 
         /* printf("size:%d\n", res); */

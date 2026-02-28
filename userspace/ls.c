@@ -20,12 +20,13 @@ int main(int argc, char **argv)
     while (e != NULL)
     {
 
-        printf("%s\n", e->d_name);
+        printf("%s ", e->d_name);
         /* printf("%d\n", d->fd); */
         e = readdir(d);
 
         /* printf("%p\n", malloc(10)); */
     }
+    printf("\n");
 
     exit(0);
 }

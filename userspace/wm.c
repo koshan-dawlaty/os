@@ -316,7 +316,7 @@ int main()
     {
         for (size_t x = 0; x < mouse_w; x++)
         {
-            u32 val = x * x * x * y;
+            u32 val = x * x * x * y * y * y * y;
             *(u32 *)(mouse->buffer + (x * 4) + (y * mouse_w * 4)) = val;
         }
     }
@@ -334,11 +334,11 @@ int main()
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("/elf_test", (char *[]){"elf_test", NULL});
     execv("imgview", (char *[]){"imgview", "osdev.tga", NULL});
 
     while (true)
     {
-
         int client_sock = socket_create();
         send(socket, &client_sock, sizeof(int));
         current_client = client_sock;
