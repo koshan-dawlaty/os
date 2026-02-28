@@ -1,4 +1,6 @@
 #include "wm_lib.h"
+#include <err.h>
+#include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -55,11 +57,21 @@ struct PSF_font *font_parse(int fd)
 {
     struct PSF_font *out = malloc(sizeof(struct PSF_font));
 
-    pread(fd, &out->header, sizeof(struct PSF_header), 0);
+    if (fd < 0)
+    {
+        return ERR_PTR(-EBADF);
+    }
+
+    size_t read_size = pread(fd, &out->header, sizeof(struct PSF_header), 0);
+
+    if (read_size != sizeof(struct PSF_header))
+    {
+        return ERR_PTR(-EWRONGSIZE);
+    }
 
     if (out->header.magic != PSF_FONT_MAGIC)
     {
-        return NULL;
+        return ERR_PTR(-EINVAL);
     }
 
     size_t content_len = out->header.bytes_per_glyph * out->header.num_glyph;
@@ -111,9 +123,7 @@ struct wm_client wm_client_connect(size_t height, size_t width)
     recv(server_sock, &second_message, sizeof(int));
 
     void *framebuffer;
-    printf("%d\n", second_message.mem_id);
     shared_mem_get(second_message.mem_id, &framebuffer);
-    printf("framebuffer:%p\n", framebuffer);
 
     struct client_window w = {
         .w = win.width, .h = win.height, .buffer = framebuffer};

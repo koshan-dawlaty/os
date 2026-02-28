@@ -5,6 +5,7 @@
 #include <utils.h>
 
 #ifdef __is_libk
+#include <kernel/addr_space.h>
 #include <kernel/paging.h>
 #include <memory/paging_flags.h>
 #endif
@@ -16,8 +17,11 @@ void *mmap(void *addr, size_t len, int prot, int flags, off_t off)
 #ifdef __is_libk
     for (size_t i = 0; i < (len / 4096) + 1; i++)
     {
-        map_page(get_free_phys_page(), (void *)addr + (i * 4096),
-                 PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+        /* TODO: make a function to map to the current addr_space because this
+         * is stupid and will probably break if current_addr_space is not
+         * updated correctly */
+        addr_space_map(&current_addr_space, (void *)addr + (i * 4096), 1,
+                       PAGING_USER | PAGING_WRITEABLE);
     }
     return addr;
 #else

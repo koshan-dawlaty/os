@@ -2,6 +2,7 @@
 #define ATA_H
 
 // #include "interrupts/idt.h"
+#include "vfs.h"
 #include <bdev.h>
 #include <kernel/types.h>
 #include <stddef.h>
@@ -54,7 +55,7 @@ void write_ata_pio(uint16_t io_offset, uint16_t control_offset, uint32_t lba,
 
 extern uint16_t ata_bus_master_register;
 
-typedef struct
+typedef struct ata_drive
 {
     struct
     {
@@ -66,6 +67,8 @@ typedef struct
 
     uint16_t io_offset;
     uint16_t control_offset;
+
+    struct mutex lock;
 
 } ata_drive;
 

@@ -1,6 +1,7 @@
 #include "ata/ata.h"
 #include "ata_utils.h"
 #include "utils.h"
+#include "vfs.h"
 #include <bdev.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -93,13 +94,16 @@ int send_identify(uint16_t io_offset, uint16_t control_offset,
 
 int ata_read_bdev(struct bdev *dev, u8 *buffer, size_t amount, u64 offset)
 {
-    ata_drive *drive = ATA_DRIVE(dev);
+    struct ata_drive *drive = ATA_DRIVE(dev);
+
+    mutex_lock(&drive->lock);
 
     /* if (!drive->is_dma) */
     /* { */
     read_ata_pio(buffer, drive->io_offset, drive->control_offset, amount,
                  offset);
     /* } */
+    mutex_unlock(&drive->lock);
 
     /* TODO: return value */
     return 1234;
@@ -107,13 +111,15 @@ int ata_read_bdev(struct bdev *dev, u8 *buffer, size_t amount, u64 offset)
 
 int ata_write_bdev(struct bdev *dev, u8 *buffer, size_t buffer_size, u64 offset)
 {
-    ata_drive *drive = ATA_DRIVE(dev);
+    struct ata_drive *drive = ATA_DRIVE(dev);
 
+    mutex_lock(&drive->lock);
     /* if (!drive->is_dma) */
     /* { */
     write_ata_pio(drive->io_offset, drive->control_offset, offset, buffer,
                   buffer_size * 512);
     /* } */
+    mutex_unlock(&drive->lock);
 
     /* TODO: return value */
     return 1234;
@@ -121,7 +127,7 @@ int ata_write_bdev(struct bdev *dev, u8 *buffer, size_t buffer_size, u64 offset)
 
 void ata_free_bdev(struct bdev *dev)
 {
-    ata_drive *drive = ATA_DRIVE(dev);
+    struct ata_drive *drive = ATA_DRIVE(dev);
     free(drive);
 }
 
@@ -132,7 +138,8 @@ struct bdev_functions ata_bdev_functions = {.write_blocks = ata_write_bdev,
 struct bdev *get_ata_drive(u8 drive_num)
 {
 
-    ata_drive *drive = malloc(sizeof(ata_drive));
+    struct ata_drive *drive = malloc(sizeof(ata_drive));
+    drive->lock = MUTEX_INIT();
 
     if ((drive_num) % 2 == 0)
     {
