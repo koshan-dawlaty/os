@@ -26,8 +26,7 @@ export QEMU_FLAGS :=  -cdrom build/os.iso \
 -boot d  \
 -vga std \
 -display default,show-cursor=on \
--drive file=build/qemu.img,format=raw,if=ide,index=0  \
--serial stdio
+-drive file=build/qemu.img,format=raw,if=ide,index=0
 
 ISO=build/os.iso
 
@@ -108,7 +107,7 @@ userspace-headers:
 qemu : $(ISO)
 	rm -f build/qemu.img
 	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
-	$(QEMU_COMMAND) $(QEMU_FLAGS)
+	$(QEMU_COMMAND) -serial stdio $(QEMU_FLAGS)
 
 clean:
 	$(RM) -r $(SYSROOT)
