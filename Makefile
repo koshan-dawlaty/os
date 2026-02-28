@@ -3,8 +3,8 @@ SUBDIRS := lib libc kernel userspace
 
 .PHONY: all clean $(SUBDIRS)
 
-CONFIG_FILE_RAW!=cat config
-CONFIG_FLAGS=$(shell echo $(CONFIG_FILE_RAW) | sed "s/^/-DCONFIG_/")
+# CONFIG_FLAGS=$(shell echo $(CONFIG_FILE_RAW) | sed "s/^/-DCONFIG_/")
+CONFIG_FLAGS=$(shell ./build/parse_config.py)
 
 export SYSROOT := $(shell pwd)/build/sysroot
 export FS_ROOT := fs-root
@@ -26,7 +26,7 @@ export QEMU_FLAGS :=  -cdrom build/os.iso \
 -boot d  \
 -vga std \
 -display default,show-cursor=on \
--drive file=build/qemu.img,format=raw,if=ide,index=0 
+-drive file=build/qemu.img,format=raw,if=ide,index=0
 
 ISO=build/os.iso
 
@@ -107,7 +107,7 @@ userspace-headers:
 qemu : $(ISO)
 	rm -f build/qemu.img
 	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
-	$(QEMU_COMMAND) -monitor stdio $(QEMU_FLAGS)
+	$(QEMU_COMMAND) -serial stdio $(QEMU_FLAGS)
 
 clean:
 	$(RM) -r $(SYSROOT)

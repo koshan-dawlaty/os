@@ -97,7 +97,7 @@ $(BIN)/elf_test2 : $(OBJS_START_BIN) $(BIN)/elf_test2.o $(DEPENDENCIES) $(START_
 	# $(CC) -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
 $(BIN)/ksh : $(OBJS_START_BIN) $(BIN)/ksh.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x900000  -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+	$(CC) -Ttext=0xb00000  -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/ls : $(OBJS_START_BIN) $(BIN)/ls.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)

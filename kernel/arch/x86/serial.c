@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void serial_writestring(char *str, size_t len, u16 port)
+void serial_writestring(const char *str, size_t len, u16 port)
 {
     for (size_t i = 0; i < len; i++)
     {

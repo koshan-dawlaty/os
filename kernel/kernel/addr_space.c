@@ -1,11 +1,13 @@
 #include <errno.h>
 #include <kernel/addr_space.h>
+#include <kernel/log.h>
 #include <kernel/paging.h>
 #include <kernel/utils.h>
 #include <lib/list.h>
 #include <memory/paging_flags.h>
 #include <panic.h>
 #include <stdlib.h>
+#include <utils.h>
 extern struct pagedir init_pgdir;
 
 struct addr_space current_addr_space = {.dir = &init_pgdir, .list_head = NULL};
@@ -55,6 +57,7 @@ void addr_space_free(struct addr_space a)
 int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
                    int flags)
 {
+    irq_state_t state = irq_save_disable();
     /* printf("start:%p\n", a->list_head); */
     struct pagedir *prev_dir = get_current_pagedir();
     load_pgdir(a->dir);
@@ -80,6 +83,7 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
 
     load_pgdir(prev_dir);
 
+    irq_restore(state);
     /* printf("%p\n", a->list_head); */
 
     return 0;
@@ -87,6 +91,9 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
 
 int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages)
 {
+
+    irq_state_t state = irq_save_disable();
+
     struct pagedir *prev_dir = get_current_pagedir();
     load_pgdir(a->dir);
 
@@ -104,6 +111,7 @@ int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages)
 
     if (pg == NULL)
     {
+        irq_restore(state);
         return -ENOENT;
     }
 
@@ -116,6 +124,8 @@ int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages)
     free(pg);
 
     load_pgdir(prev_dir);
+
+    irq_restore(state);
 
     return 0;
 }

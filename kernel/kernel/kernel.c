@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "serial.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>
@@ -17,6 +18,7 @@
 #include <kernel/graphics.h>
 #include <kernel/interrupts.h>
 #include <kernel/keyboard.h>
+#include <kernel/log.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/ps2.h>
@@ -160,6 +162,8 @@ void kernel_init()
                                    (int_handler_flags){.is_user = true});
     })
 
+    logi("kernel init done");
+
 #ifdef TESTS
     run_tests();
 #endif
@@ -250,7 +254,7 @@ void kmain()
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
-    printf("starting shell\n");
+    logi("starting init process");
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
     int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */

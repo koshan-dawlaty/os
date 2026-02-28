@@ -46,7 +46,7 @@ def parse_plan(s: str) -> typing.Tuple[int, int]:
     match1 = re.search(r"\d+", plan)
 
     if match1 == None:
-        print("first value in plan was invalid")
+        print(f"first value in plan: {match1} was invalid")
         exit(1)
     min_str = match1.group()
 

@@ -354,8 +354,18 @@ int main()
     /* printf("window manager\n"); */
     /* clone((ptr)thread1); */
 
-    mouse = new_window(0, 0, 10, 10);
+    size_t mouse_w = 10;
+    size_t mouse_h = 10;
+    mouse = new_window(0, 0, mouse_w, mouse_h);
 
+    for (size_t y = 0; y < mouse_h; y++)
+    {
+        for (size_t x = 0; x < mouse_w; x++)
+        {
+            u32 val = x * x * x * y * y * y * y;
+            *(u32 *)(mouse->buffer + (x * 4) + (y * mouse_w * 4)) = val;
+        }
+    }
     /* memset(mouse->buffer, 255, 10 * 10 * 4); */
 
     /* this might be bad because this is a stack allocation */
@@ -368,12 +378,13 @@ int main()
     buffer = framebuffer_alloc();
     int socket = socket_create();
 
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     execv("/elf_test", (char *[]){"elf_test", NULL});
     execv("/elf_test", (char *[]){"elf_test", NULL});
     execv("imgview", (char *[]){"imgview", "osdev.tga", NULL});
+
     while (true)
     {
-
         int client_sock = socket_create();
         send(socket, &client_sock, sizeof(int));
         current_client = client_sock;
