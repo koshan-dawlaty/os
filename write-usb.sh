@@ -1,7 +1,8 @@
 #!/bin/sh
 
 #TODO:(maybe) this does not build the os
-DEVICE="/dev/sda"
+#DEVICE="/dev/sda"
+DEVICE=$1
 echo "starting to write to $DEVICE"
 
 if findmnt -n -o TARGET "$DEVICE" > /dev/null; then

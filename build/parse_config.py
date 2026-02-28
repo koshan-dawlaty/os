@@ -3,7 +3,7 @@
 import sys
 
 def main():
-    config_file = open("config")
+    config_file = open(sys.argv[1])
     lines = config_file.readlines()
 
     for line in lines:
