@@ -62,6 +62,12 @@ void win_draw_rect(struct window *win, struct rect area, struct framebuffer *fb)
 
     size_t draw_height = y2 - y1;
     size_t draw_width = x2 - x1;
+
+    if (x1 >= x2 || y1 >= y2)
+    {
+        return;
+    }
+
     for (size_t y = 0; y < draw_height; y++)
     {
         size_t fb_y = y1 + y;
@@ -73,6 +79,7 @@ void win_draw_rect(struct window *win, struct rect area, struct framebuffer *fb)
 
         memcpy(fb->buffer + fb_offset, win->buffer + win_offset,
                draw_width * 4);
+        /* memset(fb->buffer + fb_offset, 127, draw_width * 4); */
     }
 }
 
@@ -87,12 +94,23 @@ void update_area_up(struct window_queue_entry *ent, struct rect area,
     /* list2_for_each(pos, &ent->list) */
     list2_for_each(pos, window_queue)
     {
-        struct window_queue_entry *ent =
+        struct window_queue_entry *ent2 =
             containerof(pos, struct window_queue_entry, list);
 
-        if (rect_intersect(ent->win->r, area))
+        /* if (ent2->win == mouse) */
+        /* { */
+        /*     return; */
+        /* } */
+
+        struct window *win = ent2->win;
+
+        if (rect_intersect(win->r, area))
         {
-            win_draw_rect(ent->win, area, fb);
+            if (win != ent->win && win != mouse)
+            {
+                /* printf("intersect\n"); */
+            }
+            win_draw_rect(ent2->win, area, fb);
         }
     }
 }
@@ -336,17 +354,16 @@ void mouse_thread()
                     .h = abs(ev->y_change + focused->win->r.h),
                 };
                 /* printf("%d ", move_area.h); */
-                /* printf("%d, %d\n", old_area.x, focused->win->r.x); */
 
                 /* update_area_up(focused, move_area, buffer); */
                 update_area_up(focused, focused->win->r, buffer);
-                /* update_area_up(focused, old_area, buffer); */
-                update_area_up(focused,
-                               (struct rect){.x = 0,
-                                             .y = 0,
-                                             .h = buffer->height,
-                                             .w = buffer->width},
-                               buffer);
+                update_area_up(focused, old_area, buffer);
+                /* update_area_up(focused, */
+                /*                (struct rect){.x = 0, */
+                /*                              .y = 0, */
+                /*                              .h = buffer->height, */
+                /*                              .w = buffer->width}, */
+                /*                buffer); */
             }
         }
         else
@@ -407,9 +424,9 @@ int main()
     int socket = socket_create();
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    execv("/elf_test", (char *[]){"elf_test", NULL});
-    execv("/elf_test", (char *[]){"elf_test", NULL});
     execv("imgview", (char *[]){"imgview", "osdev.tga", NULL});
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("/elf_test", (char *[]){"elf_test", NULL});
 
     while (true)
     {
