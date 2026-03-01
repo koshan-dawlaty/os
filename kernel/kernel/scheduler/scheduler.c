@@ -331,47 +331,52 @@ void task_queue_add_current(struct task_queue *queue)
 
 void remove_task(struct task *task)
 {
-    irq_state_t irq_state = irq_save_disable();
 
-    if (!init_task_exists())
-    {
-        printf("INIT TASK IS GONE!!\n");
-    }
-    task_queue_remove(&scheduler_queue, task);
-
-    /* printf("this is the  sched queue head:%p\n", scheduler_queue.head); */
-
-    if (task == current_task)
-    {
-        current_task = LIST_ENTRY(current_task->list.next, struct task, list);
-        if (current_task == NULL)
+    IRQ_OFF({
+        if (!init_task_exists())
         {
-            current_task = LIST_ENTRY(scheduler_queue.head, struct task, list);
+            printf("INIT TASK IS GONE!! in remove_task()\n");
+        }
+        task_queue_remove(&scheduler_queue, task);
 
+        /* printf("this is the  sched queue head:%p\n", scheduler_queue.head);
+         */
+
+        if (task == current_task)
+        {
+            current_task =
+                LIST_ENTRY(current_task->list.next, struct task, list);
             if (current_task == NULL)
             {
-                printf("why is this null:%p\n", scheduler_queue.head);
+                current_task =
+                    LIST_ENTRY(scheduler_queue.head, struct task, list);
+
+                if (current_task == NULL)
+                {
+                    printf("why is this null:%p\n", scheduler_queue.head);
+                }
             }
         }
-    }
 
-    irq_restore(irq_state);
-    if (current_task->addr_space.dir != NULL)
-    {
-        addr_space_load(current_task->addr_space);
-    }
-    set_kernel_stack((ptr)current_task->stack);
-    load_registers(&current_task->regs);
+        if (current_task->addr_space.dir != NULL)
+        {
+            addr_space_load(current_task->addr_space);
+        }
+        set_kernel_stack((ptr)current_task->stack);
+        load_registers(&current_task->regs);
+    })
 }
 
 void add_task(struct task *task)
 {
-    if (current_task == NULL)
-    {
-        current_task = task;
-    }
+    IRQ_OFF({
+        if (current_task == NULL)
+        {
+            current_task = task;
+        }
 
-    IRQ_OFF({ task_queue_push(&scheduler_queue, task); })
+        task_queue_push(&scheduler_queue, task);
+    })
 }
 
 int num_task_switches = 0;

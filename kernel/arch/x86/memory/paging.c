@@ -9,6 +9,8 @@
 #include <memory/get_free_pages.h>
 
 #include "multiboot.h"
+#include "spinlock.h"
+#include "vfs.h"
 #include "vga.h"
 
 #include <kernel/paging.h>
@@ -42,10 +44,13 @@ uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
 void *phys_page_start = (void *)0x200000;
 
+struct spinlock phys_page_lock = SPINLOCK_INIT();
+
 struct pagedir init_pgdir;
 struct pagedir *current_pagedir = &init_pgdir;
 void *get_free_phys_page_dir(struct pagedir dir)
 {
+    spinlock_lock(&phys_page_lock);
     ptr i = 0;
 
     while (i < NUM_PAGES)
@@ -69,6 +74,8 @@ void *get_free_phys_page_dir(struct pagedir dir)
 #ifdef CONFIG_x86_64
     /* memset(addr + 0xffffc00000000000, 0, PAGE_SIZE); */
 #endif
+
+    spinlock_unlock(&phys_page_lock);
 
     return addr;
 }
