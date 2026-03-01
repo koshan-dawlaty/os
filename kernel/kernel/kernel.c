@@ -208,6 +208,10 @@ void kmain()
 
     irq_disable();
 
+    printf("w:%d, h:%d, bpp:%d, %d\n", 123, 123, 12, 2);
+    printf("w:%d, h:%d, bpp:%d, %d\n", 123, 123, 12, 2);
+    printf("w:%d, h:%d, bpp:%d, %d\n", 123, 123, 12, 2);
+
     /* malloc(1000000); */
     /* malloc(1000000); */
     /* malloc(1000000); */
