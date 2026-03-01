@@ -161,12 +161,22 @@ int ps2_init()
         }
     }
 
+    printf("%d\n", has_two_ports);
+
     /* enable interrupts for device 1 */
     outb(PS2_COMMAND, 0x20);
     u8 command = inb(PS2_RESPONSE);
+    printf("command:%p\n", command);
     command &= ~(1 | (1 << 1));
     outb(PS2_COMMAND, 0x60);
     outb(PS2_DATA, command);
+    printf("%p\n", command);
+
+    printf("identifying\n");
+    printf("one:%p\n", ps2_identify_dev(false));
+    printf("two:%p\n", ps2_identify_dev(true));
+
+    printf("done\n");
 
     /* outb(PS2_COMMAND, 0xAE); */
 
@@ -175,9 +185,11 @@ int ps2_init()
 
     outb(PS2_COMMAND, 0x20);
     u8 command2 = inb(PS2_RESPONSE);
+    printf("command:%p\n", command2);
     command2 |= (1 | (1 << 1));
     outb(PS2_COMMAND, 0x60);
     outb(PS2_DATA, command2);
+    printf("%p\n", command2);
 
     return 0;
 }

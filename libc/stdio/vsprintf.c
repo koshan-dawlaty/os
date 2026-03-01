@@ -1,3 +1,5 @@
+#include "stdio.h"
+#include "sys/types.h"
 #include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -6,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 
 #ifdef __is_libk
 #include <kernel/tty.h>
@@ -34,7 +35,7 @@ char *int_to_string_unsigned(uintmax_t in, long base)
         in_temp /= base;
     }
 
-    size_t buf_size = digits_len + 1;
+    size_t buf_size = digits_len * sizeof(char);
 
     char *buf = malloc(buf_size);
 
@@ -63,7 +64,7 @@ char *int_to_string_unsigned(uintmax_t in, long base)
 
     /* printf("%c\n", buf[0]); */
     /* printf("test:%c\n", (buf[0] == '\0') + 0x30); */
-    buf[buf_size - 1] = 0;
+    buf[buf_size] = 0;
     return buf;
 }
 
@@ -94,7 +95,7 @@ char *int_to_string(intmax_t in, int base)
         in_temp /= base;
     }
 
-    size_t buf_size = digits_len + 1;
+    size_t buf_size = digits_len * sizeof(char);
     if (negative)
     {
         buf_size++;
@@ -132,7 +133,7 @@ char *int_to_string(intmax_t in, int base)
 
     /* printf("%c\n", buf[0]); */
     /* printf("test:%c\n", (buf[0] == '\0') + 0x30); */
-    buf[buf_size - 1] = 0;
+    buf[buf_size] = 0;
     return buf;
 }
 const size_t buf_increment = 10;
