@@ -13,6 +13,12 @@ struct rect
     int h;
 };
 
+#define RECT_INIT(_x, _y, _w, _h)                                              \
+    (struct rect)                                                              \
+    {                                                                          \
+        .x = _x, .y = _y, .w = _w, .h = _h                                     \
+    }
+
 static inline bool rect_intersect(struct rect one, struct rect two)
 {
 
