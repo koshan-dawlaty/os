@@ -1,5 +1,6 @@
 #include "sys/types.h"
 #include "wm_lib.h"
+#include <container_of.h>
 #include <fcntl.h>
 #include <init.h>
 #include <lib/array.h>
@@ -213,14 +214,6 @@ void process_connection()
             {
                 size_t offset = y * w->r.w * 4;
 
-                if (w->r.h == 100)
-                {
-                    if (*(u32 *)(client_buf + offset) != 0)
-                    {
-                        /* printf("TEST\n"); */
-                    }
-                }
-
                 memcpy(w->buffer + offset, client_buf + offset, w->r.w * 4);
             }
 
@@ -256,12 +249,34 @@ void keyboard_thread()
     {
         char c = getchar();
 
-        if (focused != NULL)
+        if (c == '\t')
         {
-            struct wm_connection *conn = focused->conn;
-            current_keyboard_char = c;
+            struct list2 *next = focused->list.next;
+            if (next == NULL)
+            {
+                next = window_queue;
+            }
+            struct window_queue_entry *ent =
+                containerof(next, struct window_queue_entry, list);
 
-            send(conn->input_socket, &c, sizeof(char));
+            if (ent->win == mouse)
+            {
+                ent =
+                    containerof(window_queue, struct window_queue_entry, list);
+            }
+
+            focused = ent;
+        }
+        else
+        {
+
+            if (focused != NULL)
+            {
+                struct wm_connection *conn = focused->conn;
+                current_keyboard_char = c;
+
+                send(conn->input_socket, &c, sizeof(char));
+            }
         }
     }
 }
