@@ -15,6 +15,7 @@ enum socket_state
 struct unix_socket
 {
     enum socket_state state;
+    bool is_closing;
     union
     {
         struct

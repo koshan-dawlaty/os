@@ -1,4 +1,6 @@
 #include "kernel/log.h"
+#include "panic.h"
+#include <errno.h>
 #include <kernel/syscall.h>
 #include <lib/array.h>
 #include <lib/list.h>
@@ -36,6 +38,8 @@ struct unix_socket *unix_socket_alloc()
     out->send_queue = WAIT_QUEUE_INIT();
     out->recv_queue = WAIT_QUEUE_INIT();
 
+    out->is_closing = false;
+
     return out;
 }
 
@@ -45,6 +49,10 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
     if (WAIT_QUEUE_EMPTY(sock->send_queue))
     {
         wait_queue_wait(&sock->recv_queue);
+        if (sock->is_closing)
+        {
+            return -ENOTSOCK;
+        }
     }
     else
     {
@@ -65,11 +73,35 @@ int unix_socket_send(struct unix_socket *sock, void *buf, size_t len)
     if (WAIT_QUEUE_EMPTY(sock->recv_queue))
     {
         wait_queue_wait(&sock->send_queue);
+        if (sock->is_closing)
+        {
+            return -ENOTSOCK;
+        }
     }
     else
     {
         wait_queue_done(&sock->recv_queue);
     }
+
+    return 0;
+}
+
+int unix_socket_close(int socket_num)
+{
+    struct unix_socket *sock = unix_socket_lookup(socket_num);
+
+    void *new_ptr = NULL;
+    array_set(&unix_socket_array, socket_num, &new_ptr,
+              sizeof(struct unix_socket *));
+    sock->is_closing = true;
+
+    wait_queue_wake_all(&sock->recv_queue);
+    wait_queue_wake_all(&sock->send_queue);
+    /* TODO: we want to free the socket, but need to wait for everyone waiting
+     * on the queue to be done */
+    /* this could cause issues */
+    /* array_free(&sock->buffer); */
+    /* free(sock); */
 
     return 0;
 }
@@ -140,12 +172,20 @@ int unix_socket_connect(struct unix_socket *client, struct unix_socket *server)
 SYSCALL_DEFINE3(SYS_send, int, int, socket, void *, buf, size_t, len)
 {
     struct unix_socket *s = unix_socket_lookup(socket);
+    if (s == NULL)
+    {
+        return -ENOTSOCK;
+    }
     return unix_socket_send(s, (void *)buf, len);
 }
 
 SYSCALL_DEFINE3(SYS_recv, int, int, socket, void *, buf, size_t, len)
 {
     struct unix_socket *s = unix_socket_lookup(socket);
+    if (s == NULL)
+    {
+        return -ENOTSOCK;
+    }
     return unix_socket_recv(s, (void *)buf, len);
 }
 
@@ -153,6 +193,11 @@ SYSCALL_DEFINE0(SYS_create_socket, int)
 {
     struct unix_socket *s = unix_socket_alloc();
     return unix_socket_add_array(s);
+}
+
+SYSCALL_DEFINE1(SYS_close_socket, int, int, socket)
+{
+    return unix_socket_close(socket);
 }
 
 /* SYSCALL_DEFINE0(socket_create, SYS_create_socket) */

@@ -91,6 +91,9 @@ void *array_pop(struct array *array, size_t len)
     if (array->len < len)
     {
         printf("array length too high %d > %d\n", len, array->len);
+        while (1)
+        {
+        }
     }
 
     void *out = malloc(len);

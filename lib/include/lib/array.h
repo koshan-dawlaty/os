@@ -2,6 +2,9 @@
 #define ARRAY_H
 
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 struct array
 {
     size_t capacity;
@@ -31,5 +34,24 @@ void *array_pop(struct array *array, size_t len);
 
 /* invalidates indexes of everything else in the array */
 void array_push(struct array *array, const void *data, size_t size);
+
+/*
+ * does not assume @array is a heap pointer
+ */
+static inline void array_free(struct array *array)
+{
+    free(array->data);
+}
+
+static inline void array_set(struct array *array, size_t index, void *data,
+                             size_t len)
+{
+    size_t index_real = (index + 1) * len;
+    if (array->len < index_real)
+    {
+        printf("index %d out of bounds for len %d\n", index_real, array->len);
+    }
+    memcpy(array->data + index_real, data, len);
+}
 
 #endif

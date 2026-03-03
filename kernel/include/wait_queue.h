@@ -1,6 +1,7 @@
 #ifndef WAIT_QUEUE_H
 #define WAIT_QUEUE_H
 
+#include <stdlib.h>
 #include <task_queue.h>
 
 struct wait_queue
@@ -11,7 +12,7 @@ struct wait_queue
 
 #define WAIT_QUEUE_INIT() ((struct wait_queue){.queue = TASK_QUEUE_INIT()})
 
-#define WAIT_QUEUE_EMPTY(q) (q.queue.head == NULL)
+#define WAIT_QUEUE_EMPTY(q) ((q).queue.head == NULL)
 
 /*
  * adds the current task to the queue
@@ -23,5 +24,13 @@ void wait_queue_wait(struct wait_queue *);
  * removes a task from the queue and makes it run again
  */
 void wait_queue_done(struct wait_queue *);
+
+static inline void wait_queue_wake_all(struct wait_queue *queue)
+{
+    while (!WAIT_QUEUE_EMPTY(*queue))
+    {
+        wait_queue_done(queue);
+    }
+}
 
 #endif

@@ -1,6 +1,7 @@
 #include "sys/types.h"
 #include "wm_lib.h"
 #include <container_of.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <init.h>
 #include <lib/array.h>
@@ -270,7 +271,11 @@ void process_connection()
             draw_windows(buffer);
 
             int ack_code = 3;
-            send(socket, &ack_code, sizeof(int));
+            int retval = send(socket, &ack_code, sizeof(int));
+            if (retval == -ENOTSOCK)
+            {
+                goto disconnect;
+            }
 
             /* draw_window(buffer, w); */
             break;
@@ -280,16 +285,35 @@ void process_connection()
         {
             char input;
             /* printf("waiting for input\n"); */
-            recv(conn->input_socket, &input, sizeof(char));
+            int retval = recv(conn->input_socket, &input, sizeof(char));
+            if (retval == -ENOTSOCK)
+            {
+                goto disconnect;
+            }
             /* printf("%c", input); */
-            send(socket, &input, sizeof(char));
+            retval = send(socket, &input, sizeof(char));
+            if (retval == -ENOTSOCK)
+            {
+                goto disconnect;
+            }
             /* printf("sent it\n"); */
             break;
         }
         }
         /* printf("waiting for next code\n"); */
-        recv(socket, &code, sizeof(int));
+        int retval = recv(socket, &code, sizeof(int));
+        if (retval == -ENOTSOCK)
+        {
+            goto disconnect;
+        }
     }
+
+disconnect:;
+    printf("disconnect!\n");
+
+    list2_remove(&ent->list, &window_queue);
+
+    exit(1);
 }
 
 void keyboard_thread()

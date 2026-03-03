@@ -85,8 +85,15 @@ int main(int argc, char **argv)
     while (1)
     {
         wm_render(client);
-        wm_get_key(client);
+        char c = wm_get_key(client);
+        if (c == 'q')
+        {
+            break;
+        }
     }
+
+    syscall_wrapper_asm(SYS_close_socket, client.socket, 0, 0, 0, 0);
+    printf("closed\n");
 
     exit(0);
 }
