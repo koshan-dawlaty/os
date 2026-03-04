@@ -309,7 +309,22 @@ void process_connection()
     }
 
 disconnect:;
-    printf("disconnect!\n");
+
+    printf("disconnect\n");
+
+    for (int y = 0; y < w->r.h; y++)
+    {
+        if (y % 20 == 0)
+        {
+
+            update_area_up(
+                ent,
+                (struct rect){.h = y, .w = w->r.w, .x = w->r.x, .y = w->r.y},
+                buffer);
+            sleep(1);
+        }
+        memset(w->buffer + (y * w->r.w * 4), 0, w->r.w * 4);
+    }
 
     list2_remove(&ent->list, &window_queue);
 

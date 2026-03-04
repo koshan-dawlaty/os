@@ -32,5 +32,6 @@
 #define SYS_execv_stdio 30
 
 #define SYS_close_socket 31
+#define SYS_sleep 32
 
 #endif
