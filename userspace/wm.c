@@ -248,6 +248,7 @@ void process_connection()
 
     focused = ent;
 
+    printf("input socket:%d\n", conn->input_socket);
     int code;
     recv(socket, &code, sizeof(int));
     while (true)
@@ -290,7 +291,7 @@ void process_connection()
             {
                 goto disconnect;
             }
-            /* printf("%c", input); */
+            /* printf("sending %c\n", input); */
             retval = send(socket, &input, sizeof(char));
             if (retval == -ENOTSOCK)
             {
@@ -323,7 +324,7 @@ disconnect:;
                 buffer);
             sleep(1);
         }
-        memset(w->buffer + (y * w->r.w * 4), 0, w->r.w * 4);
+        memset(w->buffer + (y * w->r.w * 4), 255, w->r.w * 4);
     }
 
     list2_remove(&ent->list, &window_queue);

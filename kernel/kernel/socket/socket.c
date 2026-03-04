@@ -1,5 +1,6 @@
 #include "kernel/log.h"
 #include "panic.h"
+#include "unistd.h"
 #include <errno.h>
 #include <kernel/syscall.h>
 #include <lib/array.h>
@@ -88,11 +89,19 @@ int unix_socket_send(struct unix_socket *sock, void *buf, size_t len)
 
 int unix_socket_close(int socket_num)
 {
+    printf("closing:%d\n", socket_num);
     struct unix_socket *sock = unix_socket_lookup(socket_num);
 
     void *new_ptr = NULL;
     array_set(&unix_socket_array, socket_num, &new_ptr,
               sizeof(struct unix_socket *));
+
+    void *should_be_null = unix_socket_lookup(socket_num);
+    if (should_be_null != NULL)
+    {
+        printf("NOT NULL\n");
+    }
+
     sock->is_closing = true;
 
     wait_queue_wake_all(&sock->recv_queue);
