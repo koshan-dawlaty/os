@@ -98,7 +98,7 @@ write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
         }
     }
 
-    create_userspace_stack(t->addr_space.dir);
+    create_userspace_stack(&t->addr_space);
 
     /* *(char ***)(0xBFFEF000 + sizeof(ptr)) = args; */
     /* *(int *)(0xBFFEF000) = argc; */

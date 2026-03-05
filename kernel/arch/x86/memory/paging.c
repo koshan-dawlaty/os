@@ -1,6 +1,7 @@
 #include "kernel/paging.h"
 #include "gdt.h"
 #include "interrupts/idt.h"
+#include "kernel/addr_space.h"
 #include "kernel/multiboot.h"
 #include "kernel/tty.h"
 #include "kernel/utils.h"
@@ -211,7 +212,7 @@ void init_paging()
 #define USER_STACK_SIZE 0x4000
 uint32_t user_stack_physical = 0x300000;
 
-void create_userspace_stack(struct pagedir *pgdir)
+void create_userspace_stack(struct addr_space *a)
 {
     /* printf("new userspace stack at %p\n", USER_STACK_PHYSICAL); */
     for (ptr i = USER_STACK_BASE - USER_STACK_SIZE; i < USER_STACK_BASE;
@@ -226,8 +227,11 @@ void create_userspace_stack(struct pagedir *pgdir)
         /* void *page = get_free_phys_page_dir(*pgdir); */
         /* printf("%p\n", page); */
 
-        write_pagedir(pgdir, get_free_phys_page_dir(*pgdir), (void *)i,
-                      PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+        /* write_pagedir(pgdir, get_free_phys_page_dir(*pgdir), (void *)i, */
+        /*               PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
+
+        addr_space_map(a, (void *)i, 1,
+                       PAGING_PRESENT | PAGING_USER | PAGING_WRITEABLE);
         /* write_pagedir(pgdir, (void *)user_stack_physical, (void *)i, */
         /*               PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
         /* user_stack_physical += PAGE_SIZE; */

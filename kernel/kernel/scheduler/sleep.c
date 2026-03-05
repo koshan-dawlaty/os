@@ -27,6 +27,8 @@ void add_sleep_queue(struct task *task, size_t time)
     irq_state_t irq_state = irq_save_disable();
 
     struct sleep_queue_entry *new = malloc(sizeof(struct sleep_queue_entry));
+    new->l = LIST2_INIT();
+    save_registers(&get_current_task()->regs);
 
     size_t ticks = time;
 
@@ -70,7 +72,6 @@ void add_sleep_queue(struct task *task, size_t time)
 
     IRQ_OFF({
         /* TODO: remove_task() should really be the one to call this */
-        save_registers(&get_current_task()->regs);
 
         /* print_sleep_queue(); */
 
@@ -84,41 +85,44 @@ void add_sleep_queue(struct task *task, size_t time)
 void increment_sleep_queue()
 {
 
-    if (sleep_queue_head == NULL)
-    {
-        return;
-    }
+    IRQ_OFF({
+        if (sleep_queue_head == NULL)
+        {
+            return;
+        }
 
-    struct sleep_queue_entry *head =
-        LIST_ENTRY(sleep_queue_head, struct sleep_queue_entry, l);
+        struct sleep_queue_entry *head =
+            LIST_ENTRY(sleep_queue_head, struct sleep_queue_entry, l);
 
-    if (head->task == NULL)
-    {
-        return;
-    }
+        if (head->task == NULL)
+        {
+            return;
+        }
 
-    if ((int)head->ticks > 0)
-    {
-        /* printf("ticks:%d\n", head->ticks); */
-    }
+        if ((int)head->ticks > 0)
+        {
+            /* printf("ticks:%d\n", head->ticks); */
+        }
 
-    if (head->ticks == 0)
-    {
+        if (head->ticks == 0)
+        {
 
-        /* printf("head:%p\n", sleep_queue_head); */
-        /* printf("next:%p\n", sleep_queue_head->next); */
+            /* printf("head:%p\n", sleep_queue_head); */
+            /* printf("next:%p\n", sleep_queue_head->next); */
 
-        /* MIGHT NOT WORK */
-        list2_remove(sleep_queue_head, &sleep_queue_head);
-        add_task(head->task);
+            /* MIGHT NOT WORK */
+            /* list2_remove(sleep_queue_head, &sleep_queue_head); */
+            list2_pop(&sleep_queue_head);
+            add_task(head->task);
 
-        /* printf("after:%p\n", sleep_queue_head); */
-        /* if (sleep_queue_head != NULL) */
-        /* { */
-        /*     printf("next:%p\n\n", sleep_queue_head->next); */
-        /* } */
+            /* printf("after:%p\n", sleep_queue_head); */
+            /* if (sleep_queue_head != NULL) */
+            /* { */
+            /*     printf("next:%p\n\n", sleep_queue_head->next); */
+            /* } */
 
-        free(head);
-    }
-    head->ticks--;
+            free(head);
+        }
+        head->ticks--;
+    })
 }

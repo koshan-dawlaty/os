@@ -204,7 +204,8 @@ void draw_windows(struct framebuffer *b)
 
 int current_client = 1;
 
-size_t x = 10;
+size_t y = 10;
+size_t x = 400;
 
 void process_connection()
 {
@@ -228,9 +229,9 @@ void process_connection()
     struct wm_connection *conn = wm_connection_alloc(socket, client_buf);
 
     printf("%d, %d\n", win_info.width, win_info.height);
-    struct window *w =
-        new_client_window(400, x, win_info.width, win_info.height);
-    x += win_info.height + 20;
+    struct window *w = new_client_window(x, y, win_info.width, win_info.height);
+    y += win_info.height - 30;
+    x += 40;
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
     ent->list = LIST2_INIT();
@@ -324,11 +325,22 @@ disconnect:;
                 buffer);
             sleep(1);
         }
-        memset(w->buffer + (y * w->r.w * 4), 255, w->r.w * 4);
+        if (y % 2 == 0)
+        {
+            memset(w->buffer + (y * w->r.w * 4), 255, w->r.w * 4);
+        }
+        else
+        {
+            memset(w->buffer + (y * w->r.w * 4), 0, w->r.w * 4);
+        }
     }
 
     list2_remove(&ent->list, &window_queue);
 
+    while (1)
+    {
+        sched_yield();
+    }
     exit(1);
 }
 
@@ -525,7 +537,7 @@ int main()
             *(u32 *)(mouse->buffer + (x * 4) + (y * mouse_w * 4)) = val;
         }
     }
-    /* memset(mouse->buffer, 255, 10 * 10 * 4); */
+    memset(mouse->buffer, 255, 10 * 10 * 4);
 
     /* this might be bad because this is a stack allocation */
     struct window_queue_entry mouse_ent = {.win = mouse, .list = LIST2_INIT()};

@@ -3,8 +3,6 @@ set -e
 # . ./build.sh
 cd build
 
-ls
-echo $(pwd)
 
 mkdir -p isodir
 mkdir -p isodir/boot

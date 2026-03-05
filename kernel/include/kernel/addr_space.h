@@ -33,4 +33,9 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
                    int flags);
 int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages);
 
+/*
+ * creates a new userspace stack and writes it to the addr_space
+ */
+void create_userspace_stack(struct addr_space *a);
+
 #endif

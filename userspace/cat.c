@@ -11,7 +11,6 @@
 int main(int argc, char **argv)
 {
     init_libc();
-    printf("cat start\n");
 
     if (argc <= 1)
     {

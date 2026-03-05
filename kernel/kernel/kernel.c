@@ -110,16 +110,16 @@ void draw_background(struct framebuffer *f)
             u8 b = x * y;
 
             int color = r | (g << 8) | (b << 16);
-            framebuffer_put_pixel(f, color, x, y);
+            /* framebuffer_put_pixel(f, color, x, y); */
             /* framebuffer_put_pixel(f, (x + y) % 2 == 0 ? 0xFFFFFF : 0, x, y);
              */
-            /* framebuffer_put_pixel(f, 0xFFFFFF, x, y); */
+            framebuffer_put_pixel(f, 0x0F0F0F, x, y);
         }
     }
 
-    framebuffer_draw_rect(f, 600, 200, 100, 100, 0xff0000);
-    framebuffer_draw_rect(f, 650, 250, 100, 100, 0x00ff00);
-    framebuffer_draw_rect(f, 700, 300, 100, 100, 0x0000ff);
+    /* framebuffer_draw_rect(f, 600, 200, 100, 100, 0xff0000); */
+    /* framebuffer_draw_rect(f, 650, 250, 100, 100, 0x00ff00); */
+    /* framebuffer_draw_rect(f, 700, 300, 100, 100, 0x0000ff); */
 }
 
 extern __int_handler void syscall_handler_asm(struct interrupt_frame *frame);
