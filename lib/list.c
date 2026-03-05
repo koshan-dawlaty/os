@@ -165,3 +165,17 @@ struct list2 *list2_pop(struct list2 **head)
 
     return retval;
 }
+
+void list2c_push(struct list2c *new, struct list2c *head) {
+    struct list2c * temp = head.next;
+    head.next = new;
+    new.prev = head;
+    new.next = temp;
+}
+
+struct list2c * list2c_pop(struct list2c * head) {
+    struct list2c * out = head.next;
+    out.prev = head;
+    head.next = out.next;
+    return out;
+}
