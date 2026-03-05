@@ -175,7 +175,12 @@ void list2c_push(struct list2c *new, struct list2c *head) {
 
 struct list2c * list2c_pop(struct list2c * head) {
     struct list2c * out = head.next;
-    out.prev = head;
+    
     head.next = out.next;
+    head.next.prev = head;
+    
+    out.next = NULL;
+    out.prev = NULL;
+    
     return out;
 }
