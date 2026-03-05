@@ -101,10 +101,10 @@ struct wm_client wm_client_connect(size_t height, size_t width)
     void *framebuffer;
     shared_mem_get(second_message.mem_id, &framebuffer);
 
-    size_t fb_width = win.width * 4;
-    struct wm_client out = {.fb =
-                                FRAMEBUFFER_INIT(fb_width, win.height, fb_width,
-                                                 32, 4, framebuffer),
+    size_t fb_width = win.width;
+    struct wm_client out = {.fb = FRAMEBUFFER_INIT(fb_width, win.height,
+                                                   fb_width * 4, 32, 4,
+                                                   framebuffer),
                             .socket = server_sock};
 
     return out;

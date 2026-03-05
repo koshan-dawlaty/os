@@ -33,7 +33,8 @@ int main()
 
     /* *(char *)(0x1234) = 'a'; */
 
-    struct wm_client client = wm_client_connect(175, 600);
+    /* struct wm_client client = wm_client_connect(175, 600); */
+    struct wm_client client = wm_client_connect(175, 220);
 
     int font_fd = open("/font.psfu", O_RDONLY);
     struct PSF_font *font = font_parse(font_fd);

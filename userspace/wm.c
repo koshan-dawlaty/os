@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <init.h>
 #include <lib/array.h>
+#include <lib/framebuffer.h>
 #include <lib/list.h>
 #include <lib/rect.h>
 #include <lib/utils.h>
@@ -39,7 +40,7 @@ struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf)
 static inline size_t get_framebuffer_y(struct framebuffer *f,
                                        struct window *win, size_t y)
 {
-    return ((y + win->r.y) * f->pitch);
+    return ((y + WIN_Y(win)) * f->pitch);
 }
 
 struct window *mouse;
@@ -57,11 +58,11 @@ struct framebuffer *buffer;
 void win_draw_rect(struct window *win, struct rect area, struct framebuffer *fb)
 {
 
-    size_t x1 = MAX(win->r.x, area.x);
-    size_t y1 = MAX(win->r.y, area.y);
+    size_t x1 = MAX(WIN_X(win), area.x);
+    size_t y1 = MAX(WIN_Y(win), area.y);
 
-    size_t x2 = MIN(win->r.x + win->r.w, area.x + area.w);
-    size_t y2 = MIN(win->r.y + win->r.h, area.y + area.h);
+    size_t x2 = MIN(WIN_X(win) + WIN_W(win), area.x + area.w);
+    size_t y2 = MIN(WIN_Y(win) + WIN_H(win), area.y + area.h);
 
     size_t draw_height = y2 - y1;
     size_t draw_width = x2 - x1;
@@ -74,13 +75,13 @@ void win_draw_rect(struct window *win, struct rect area, struct framebuffer *fb)
     for (size_t y = 0; y < draw_height; y++)
     {
         size_t fb_y = y1 + y;
-        size_t win_y = (fb_y - win->r.y);
+        size_t win_y = (fb_y - WIN_Y(win));
 
         size_t fb_offset = (fb_y * fb->pitch) + (x1 * fb->pixel_width);
 
-        size_t win_offset = (win_y * win->r.w + (x1 - win->r.x)) * 4;
+        size_t win_offset = (win_y * WIN_W(win) + (x1 - WIN_X(win))) * 4;
 
-        memcpy(fb->buffer + fb_offset, win->buffer + win_offset,
+        memcpy(fb->buffer + fb_offset, win->fb.buffer + win_offset,
                draw_width * 4);
         /* memset(fb->buffer + fb_offset, 127, draw_width * 4); */
     }
@@ -107,7 +108,10 @@ void update_area_up(struct window_queue_entry *ent, struct rect area,
 
         struct window *win = ent2->win;
 
-        if (rect_intersect(win->r, area))
+        /* TODO: struct framebuffer (or struct window) should have a member of
+         * type struct rect */
+        struct rect win_rect = WIN_RECT(win);
+        if (rect_intersect(win_rect, area))
         {
             /* if (win != ent->win && win != mouse) */
             /* { */
@@ -127,13 +131,13 @@ void change_focus(struct window_queue_entry *new_focus)
 
     for (size_t y = 0; y < WINDOW_DECORATION_ROWS; y++)
     {
-        for (int x = 0; x < new_focus->win->r.w; x++)
+        for (size_t x = 0; x < WIN_W(new_focus->win); x++)
         {
-            *(u32 *)(new_focus->win->buffer + y * new_focus->win->r.w * 4 +
+            *(u32 *)(new_focus->win->fb.buffer + y * WIN_W(new_focus->win) * 4 +
                      (x * 4)) = 0xFF00FF;
         }
     }
-    struct rect new_rect = new_focus->win->r;
+    struct rect new_rect = WIN_RECT(new_focus->win);
     update_area_up(
         new_focus,
         RECT_INIT(new_rect.x, new_rect.y, new_rect.w, WINDOW_DECORATION_ROWS),
@@ -141,14 +145,14 @@ void change_focus(struct window_queue_entry *new_focus)
 
     for (size_t y = 0; y < WINDOW_DECORATION_ROWS; y++)
     {
-        for (int x = 0; x < focused->win->r.w; x++)
+        for (size_t x = 0; x < WIN_W(focused->win); x++)
         {
-            *(u32 *)(focused->win->buffer + y * focused->win->r.w * 4 +
+            *(u32 *)(focused->win->fb.buffer + y * WIN_W(focused->win) * 4 +
                      (x * 4)) = 0;
         }
     }
 
-    struct rect prev_rect = focused->win->r;
+    struct rect prev_rect = WIN_RECT(focused->win);
     update_area_up(focused,
                    RECT_INIT(prev_rect.x, prev_rect.y, prev_rect.w,
                              WINDOW_DECORATION_ROWS),
@@ -162,9 +166,9 @@ char current_keyboard_char;
 struct window *new_window(size_t x, size_t y, size_t w, size_t h)
 {
     struct window *out = malloc(sizeof(struct window));
-    out->r = (struct rect){x, y, w, h};
-
-    out->buffer = malloc(w * h * 4);
+    out->x = x;
+    out->y = y;
+    out->fb = FRAMEBUFFER_INIT(w, h, w * 4, 32, 4, malloc(w * h * 4));
 
     return out;
 }
@@ -172,21 +176,23 @@ struct window *new_window(size_t x, size_t y, size_t w, size_t h)
 struct window *new_client_window(size_t x, size_t y, size_t w, size_t h)
 {
     struct window *out = malloc(sizeof(struct window));
-    out->r = (struct rect){x, y, w, h + WINDOW_DECORATION_ROWS};
+    out->x = x;
+    out->y = y;
 
     /* allocate extra space for decorations */
-    out->buffer = malloc(w * (out->r.h) * 4);
+    size_t height = h + WINDOW_DECORATION_ROWS;
+    out->fb = FRAMEBUFFER_INIT(w, height, w * 4, 32, 4, malloc(w * height * 4));
 
     return out;
 }
 
 void draw_window(struct framebuffer *b, struct window *win)
 {
-    for (int y = 0; y < win->r.h - 1; y++)
+    for (size_t y = 0; y < WIN_H(win) - 1; y++)
     {
-        memcpy(b->buffer +
-                   (((y + win->r.y) * b->pitch) + (win->r.x * b->pixel_width)),
-               win->buffer + (y * win->r.w * 4), win->r.w * 4);
+        memcpy(b->buffer + (((y + WIN_Y(win)) * b->pitch) +
+                            (WIN_X(win) * b->pixel_width)),
+               win->fb.buffer + (y * WIN_W(win) * 4), WIN_W(win) * 4);
     }
 }
 
@@ -228,7 +234,6 @@ void process_connection()
 
     struct wm_connection *conn = wm_connection_alloc(socket, client_buf);
 
-    printf("%d, %d\n", win_info.width, win_info.height);
     struct window *w = new_client_window(x, y, win_info.width, win_info.height);
     y += win_info.height - 30;
     x += 40;
@@ -260,14 +265,14 @@ void process_connection()
         case WM_RES_RENDER:
         {
 
-            for (int y = 0; y < (w->r.h - WINDOW_DECORATION_ROWS) - 1; y++)
+            for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_ROWS) - 1; y++)
             {
                 size_t server_offset =
-                    (y + WINDOW_DECORATION_ROWS) * w->r.w * 4;
-                size_t client_offset = y * w->r.w * 4;
+                    (y + WINDOW_DECORATION_ROWS) * WIN_W(w) * 4;
+                size_t client_offset = y * WIN_W(w) * 4;
 
-                memcpy(w->buffer + server_offset, client_buf + client_offset,
-                       w->r.w * 4);
+                memcpy(w->fb.buffer + server_offset, client_buf + client_offset,
+                       WIN_W(w) * 4);
             }
 
             draw_windows(buffer);
@@ -314,24 +319,23 @@ disconnect:;
 
     printf("disconnect\n");
 
-    for (int y = 0; y < w->r.h; y++)
+    for (size_t y = 0; y < WIN_H(w); y++)
     {
         if (y % 20 == 0)
         {
+            struct rect area = WIN_RECT(w);
+            area.h = y;
 
-            update_area_up(
-                ent,
-                (struct rect){.h = y, .w = w->r.w, .x = w->r.x, .y = w->r.y},
-                buffer);
+            update_area_up(ent, area, buffer);
             sleep(1);
         }
         if (y % 2 == 0)
         {
-            memset(w->buffer + (y * w->r.w * 4), 255, w->r.w * 4);
+            memset(w->fb.buffer + (y * WIN_W(w) * 4), 255, WIN_W(w) * 4);
         }
         else
         {
-            memset(w->buffer + (y * w->r.w * 4), 0, w->r.w * 4);
+            memset(w->fb.buffer + (y * WIN_W(w) * 4), 0, WIN_W(w) * 4);
         }
     }
 
@@ -402,23 +406,24 @@ void mouse_thread()
         {
         }
 
-        struct rect old_mouse = mouse->r;
-        mouse->r.x += ev->x_change;
-        mouse->r.y += ev->y_change;
+        struct rect old_mouse = WIN_RECT(mouse);
 
-        if ((int)mouse->r.x < 0)
+        WIN_X(mouse) += ev->x_change;
+        WIN_Y(mouse) += ev->y_change;
+
+        if ((int)WIN_X(mouse) < 0)
         {
-            mouse->r.x = 0;
+            WIN_X(mouse) = 0;
         }
 
-        if ((int)mouse->r.y < 0)
+        if ((int)WIN_Y(mouse) < 0)
         {
-            mouse->r.y = 0;
+            WIN_Y(mouse) = 0;
         }
 
         draw_window(buffer, mouse);
         /* TODO: dont pass null */
-        update_area_up(NULL, mouse->r, buffer);
+        update_area_up(NULL, WIN_RECT(mouse), buffer);
         update_area_up(NULL, old_mouse, buffer);
 
         if (ev->buttons.left_click && drag_count < 3)
@@ -444,8 +449,10 @@ void mouse_thread()
                     LIST_ENTRY(pos, struct window_queue_entry, list);
                 struct window *win = queue_ent->win;
 
-                if (mouse->r.x > win->r.x && mouse->r.x < win->r.x + win->r.w &&
-                    mouse->r.y > win->r.y && mouse->r.y < win->r.y + win->r.h)
+                if (WIN_X(mouse) > WIN_X(win) &&
+                    WIN_X(mouse) < WIN_X(win) + WIN_W(win) &&
+                    WIN_Y(mouse) > WIN_Y(win) &&
+                    WIN_Y(mouse) < WIN_Y(win) + WIN_H(win))
                 {
                     new_focus = queue_ent;
                     break;
@@ -468,21 +475,22 @@ void mouse_thread()
         {
             if (focused != NULL)
             {
-                struct rect old_area = focused->win->r;
+                struct window *win = focused->win;
+                struct rect old_area = WIN_RECT(win);
 
-                focused->win->r.x += ev->x_change;
-                focused->win->r.y += ev->y_change;
+                WIN_X(win) += ev->x_change;
+                WIN_Y(win) += ev->y_change;
 
                 struct rect move_area = {
-                    .x = focused->win->r.x,
-                    .y = focused->win->r.y,
-                    .w = abs(ev->x_change + focused->win->r.w),
-                    .h = abs(ev->y_change + focused->win->r.h),
+                    .x = WIN_X(win),
+                    .y = WIN_Y(win),
+                    .w = abs(ev->x_change + WIN_W(win)),
+                    .h = abs(ev->y_change + WIN_H(win)),
                 };
                 /* printf("%d ", move_area.h); */
 
                 /* update_area_up(focused, move_area, buffer); */
-                update_area_up(focused, focused->win->r, buffer);
+                update_area_up(focused, WIN_RECT(win), buffer);
                 update_area_up(focused, old_area, buffer);
                 /* update_area_up(focused, */
                 /*                (struct rect){.x = 0, */
@@ -533,11 +541,17 @@ int main()
     {
         for (size_t x = 0; x < mouse_w; x++)
         {
-            u32 val = x * x * x * y * y * y * y;
-            *(u32 *)(mouse->buffer + (x * 4) + (y * mouse_w * 4)) = val;
+            /* u32 val = x * x * x * y * y * y * y; */
+            u32 val = 0xFF;
+            framebuffer_put_pixel(&mouse->fb, val, x, y);
+            /* *(u32 *)(mouse->fb.buffer + (x * 4) + (y * mouse_w * 4)) = val;
+             */
         }
     }
-    memset(mouse->buffer, 255, 10 * 10 * 4);
+    /* memset(mouse->fb.buffer, 255, 10 * 10 * 4); */
+
+    buffer = framebuffer_alloc();
+    draw_window(buffer, mouse);
 
     /* this might be bad because this is a stack allocation */
     struct window_queue_entry mouse_ent = {.win = mouse, .list = LIST2_INIT()};
@@ -546,7 +560,6 @@ int main()
     clone((ptr)mouse_thread);
     clone((ptr)keyboard_thread);
 
-    buffer = framebuffer_alloc();
     int socket = socket_create();
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */

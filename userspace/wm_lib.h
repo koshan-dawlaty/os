@@ -13,9 +13,18 @@
 
 struct window
 {
-    struct rect r;
-    void *buffer;
+    size_t x;
+    size_t y;
+    struct framebuffer fb;
 };
+
+#define WIN_X(win) (win->x)
+#define WIN_Y(win) (win->y)
+#define WIN_W(win) (win->fb.width)
+#define WIN_H(win) (win->fb.height)
+
+#define WIN_RECT(win)                                                          \
+    (RECT_INIT(WIN_X(win), WIN_Y(win), WIN_W(win), WIN_H(win)))
 
 struct client_window
 {
