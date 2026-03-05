@@ -29,16 +29,13 @@ struct tga_header
 void *parse_tga_image(const char *path, struct tga_header *header)
 {
     int fd = open(path, O_RDONLY);
-    printf("%d\n", fd);
     pread(fd, header, sizeof(struct tga_header), 0);
 
-    printf("w:%d h:%d, bpp:%d, %d\n", header->w, header->h, header->bpp,
-           header->encoding);
+    /* printf("w:%d h:%d, bpp:%d, %d\n", header->w, header->h, header->bpp, */
+    /*        header->encoding); */
 
     size_t data_size = header->h * header->w * (header->bpp / 8);
-    printf("size:%d\n", data_size);
     void *data = malloc(data_size);
-    printf("%p\n", data);
 
     pread(fd, data, data_size, sizeof(struct tga_header));
 
@@ -76,7 +73,7 @@ int main(int argc, char **argv)
 
             u32 color = (a << 24) | (r << 16) | (g << 8) | b;
 
-            client_draw_pixel(&client.win, x, y, *((u32 *)(img_data + index)));
+            client_draw_pixel(client, x, y, *((u32 *)(img_data + index)));
         }
     }
 

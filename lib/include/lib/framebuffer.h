@@ -15,6 +15,14 @@ struct framebuffer
     void *buffer;
 } __packed;
 
+#define FRAMEBUFFER_INIT(w, h, _pitch, _depth, _pixel_width, _buffer)          \
+    ((struct framebuffer){.width = w,                                          \
+                          .height = h,                                         \
+                          .pitch = _pitch,                                     \
+                          .depth = _depth,                                     \
+                          .pixel_width = _pixel_width,                         \
+                          .buffer = _buffer})
+
 void framebuffer_put_pixel(struct framebuffer *f, int color, int x, int y);
 void framebuffer_pixel_write(struct framebuffer *f, u8 *pixel, int color);
 void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,

@@ -62,11 +62,11 @@ int main()
 
     /* memset(w.buffer, 127, win.width * win.height * 4); */
     size_t y2;
-    for (y2 = 0; y2 < client.win.h; y2++)
+    for (y2 = 0; y2 < WM_CLIENT_HEIGHT(client); y2++)
     {
-        for (size_t x = 0; x < client.win.w; x++)
+        for (size_t x = 0; x < WM_CLIENT_WIDTH(client); x++)
         {
-            client_draw_pixel(&client.win, x, y2, color);
+            client_draw_pixel(client, x, y2, color);
         }
     }
 
@@ -131,19 +131,19 @@ int main()
                 y = 0;
 
                 size_t y2;
-                for (y2 = 0; y2 < client.win.h; y2++)
+                for (y2 = 0; y2 < WM_CLIENT_HEIGHT(client); y2++)
                 {
-                    for (size_t x = 0; x < client.win.w; x++)
+                    for (size_t x = 0; x < WM_CLIENT_WIDTH(client); x++)
                     {
-                        client_draw_pixel(&client.win, x, y2, color);
+                        client_draw_pixel(client, x, y2, color);
                     }
                 }
                 break;
             default:
                 /* printf("%d, %d\n", x, y); */
-                client_draw_char(&client.win, font, c, x, y);
+                client_draw_char(client, font, c, x, y);
                 x += font->header.width;
-                if (x > client.win.w)
+                if (x > WM_CLIENT_WIDTH(client))
                 {
                     x = 0;
                     y += font->header.height;

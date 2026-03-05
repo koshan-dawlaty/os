@@ -1,6 +1,7 @@
 #ifndef WM_LIB_H
 #define WM_LIB_H
 
+#include <lib/framebuffer.h>
 #include <lib/rect.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -24,28 +25,28 @@ struct client_window
     void *buffer;
 };
 
-static inline void client_draw_pixel(struct client_window *w, size_t x,
+struct wm_client
+{
+    int socket;
+    struct framebuffer fb;
+};
+
+#define WM_CLIENT_WIDTH(client) (client.fb.width)
+#define WM_CLIENT_HEIGHT(client) (client.fb.height)
+
+static inline void client_draw_pixel(struct wm_client client, size_t x,
                                      size_t y, uint32_t color)
 {
-    size_t location = y * w->w * 4 + x * 4;
 
-    uint8_t *pixel = (uint8_t *)w->buffer + location;
-    pixel[0] = color & 255;         // BLUE
-    pixel[1] = (color >> 8) & 255;  // GREEN
-    pixel[2] = (color >> 16) & 255; // RED
+    framebuffer_put_pixel(&client.fb, color, x, y);
+    // w->buffer
+    // size_t location = y * w->w * 4 + x * 4;
+
+    // uint8_t *pixel = (uint8_t *)w->buffer + location;
+    // pixel[0] = color & 255;         // BLUE
+    // pixel[1] = (color >> 8) & 255;  // GREEN
+    // pixel[2] = (color >> 16) & 255; // RED
 }
-
-/* this is copied from the kernel definition, it might change and break
- * everything and that would be bad */
-struct framebuffer
-{
-    size_t width;
-    size_t height;
-    size_t pitch;
-    size_t depth;
-    size_t pixel_width; /* bytes */
-    void *buffer;
-} __packed;
 
 struct wm_inital
 {
@@ -91,7 +92,7 @@ struct PSF_font
     uint8_t *content;
 };
 
-void client_draw_char(struct client_window *w, struct PSF_font *font, char c,
+void client_draw_char(struct wm_client client, struct PSF_font *font, char c,
                       size_t x, size_t y);
 struct PSF_font *font_parse(int fd);
 
@@ -150,12 +151,6 @@ static inline void user_mutex_unlock(int mutex)
 {
     syscall_wrapper_asm(SYS_mutex_unlock, mutex, 0, 0, 0, 0);
 }
-
-struct wm_client
-{
-    int socket;
-    struct client_window win;
-};
 
 void wm_render(struct wm_client client);
 char wm_get_key(struct wm_client client);

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void client_draw_char(struct client_window *w, struct PSF_font *font, char c,
+void client_draw_char(struct wm_client client, struct PSF_font *font, char c,
                       size_t x, size_t y)
 {
     struct PSF_header header = font->header;
@@ -18,7 +18,7 @@ void client_draw_char(struct client_window *w, struct PSF_font *font, char c,
         {
             if (char_start[y_pos - y] & (1 << (7 - (x_pos - x))))
             {
-                client_draw_pixel(w, x_pos + 4, y_pos, 0xFFFFFF);
+                client_draw_pixel(client, x_pos + 4, y_pos, 0xFFFFFF);
             }
             else
             {
@@ -101,10 +101,11 @@ struct wm_client wm_client_connect(size_t height, size_t width)
     void *framebuffer;
     shared_mem_get(second_message.mem_id, &framebuffer);
 
-    struct client_window w = {
-        .w = win.width, .h = win.height, .buffer = framebuffer};
-
-    struct wm_client out = {.win = w, .socket = server_sock};
+    size_t fb_width = win.width * 4;
+    struct wm_client out = {.fb =
+                                FRAMEBUFFER_INIT(fb_width, win.height, fb_width,
+                                                 32, 4, framebuffer),
+                            .socket = server_sock};
 
     return out;
 }
