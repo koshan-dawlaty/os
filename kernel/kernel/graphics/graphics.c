@@ -73,39 +73,6 @@ void framebuffer_draw_char(struct framebuffer *f, char c, size_t x, size_t y)
     }
 }
 
-void framebuffer_pixel_write(struct framebuffer *f, u8 *pixel, int color)
-{
-    pixel[0] = color & 255;         // BLUE
-    pixel[1] = (color >> 8) & 255;  // GREEN
-    pixel[2] = (color >> 16) & 255; // RED
-}
-
-void framebuffer_put_pixel(struct framebuffer *f, int color, int x, int y)
-{
-    size_t location = y * f->pitch + x * f->pixel_width;
-
-    u8 *pixel = f->buffer + location;
-
-    framebuffer_pixel_write(f, pixel, color);
-}
-
-void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
-                           size_t width, size_t height, int color)
-{
-    size_t location = y * f->pitch + x * f->pixel_width;
-
-    for (size_t y_pos = y; y_pos < height + y; y_pos++)
-    {
-        for (size_t x_pos = x; x_pos < width + x; x_pos++)
-        {
-            u8 *pixel = f->buffer + location;
-            framebuffer_pixel_write(f, pixel, color);
-            location += f->pixel_width;
-        }
-        location = y_pos * f->pitch + x * f->pixel_width;
-    }
-}
-
 /* TODO: should be inline */
 struct framebuffer *get_current_framebuffer()
 {
@@ -120,7 +87,6 @@ struct framebuffer *framebuffer_alloc_user(struct framebuffer *buffer)
     /* TODO: this should probably not just map this with a bitmap allocator */
     void *user_buffer = get_free_pages_unmmaped(num_pages, &gfp_user_zone);
 
-    printf("starting at:%p\n", user_buffer);
     for (size_t i = 0; i < num_pages; i++)
     {
         map_page((void *)(ptr)physaddr + (i * PAGE_SIZE),

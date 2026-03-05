@@ -1,3 +1,0 @@
-gpf at cs = 0xF ... 801034AE (unmap_page)
-gpf at cs = 0xF ... 8011B212 (list2_remove) (probably at 334 in wm.c)
-

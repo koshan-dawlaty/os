@@ -32,6 +32,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 OBJS=\
 	list.o \
 	array.o \
+	framebuffer.o \
 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
