@@ -7,4 +7,5 @@ TEST_OBJS+=\
 		   $(CURRENT_DIR)/drivers/bdev/ram/ramdisk_tests.o \
 		   $(CURRENT_DIR)/kernel_lib/lru_tests.o \
 		   $(CURRENT_DIR)/kernel_lib/array_tests.o \
+		   $(CURRENT_DIR)/kernel_lib/list_tests.o \
 		   $(CURRENT_DIR)/kernel_lib/binary_tree_tests.o

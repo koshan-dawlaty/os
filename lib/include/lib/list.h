@@ -63,4 +63,21 @@ void list2_insert_end(list2 *new, list2 **head);
 
 struct list2 *list2_pop(struct list2 **head);
 
+struct list2c
+{
+    struct list2c *prev, *next;
+};
+
+#define LIST2C_HEAD_INIT(name) ((struct list2c){.prev = name, .next = name})
+#define LIST2C_INIT_HEAD(name)                                                 \
+    struct list2c name;                                                        \
+    name = LIST2C_HEAD_INIT(&name);
+#define LIST2C_INIT() ((struct list2c){.prev = NULL, .next = NULL})
+
+void list2c_push(struct list2c *new, struct list2c *head);
+struct list2c *list2c_pop(struct list2c *head);
+
+#define list2c_for_each(pos, head)                                             \
+    for (pos = (head)->next; pos != (head); pos = pos->next)
+
 #endif
