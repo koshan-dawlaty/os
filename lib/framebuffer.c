@@ -33,3 +33,12 @@ void framebuffer_put_pixel(struct framebuffer *f, int color, int x, int y)
 
     framebuffer_pixel_write(f, pixel, color);
 }
+
+u32 framebuffer_get_pixel(struct framebuffer *fb, size_t x, size_t y)
+{
+    size_t location = y * fb->pitch + x * fb->pixel_width;
+
+    u8 *pixel = fb->buffer + location;
+
+    return *(u32 *)(pixel);
+}

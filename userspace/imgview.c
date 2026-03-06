@@ -90,12 +90,6 @@ int main(int argc, char **argv)
     }
 
     syscall_wrapper_asm(SYS_close_socket, client.socket, 0, 0, 0, 0);
-    printf("closed\n");
-
-    while (1)
-    {
-        sched_yield();
-    }
 
     exit(0);
 }

@@ -68,6 +68,7 @@ void *get_free_phys_page_dir(struct pagedir dir)
 
     dir.physical_pagetables[i] =
         ((ptr)phys_page_start + (i * PAGE_SIZE)) | 0x03;
+
     /* printf("test\n"); */
 
     void *addr = (void *)(phys_page_start + (i * PAGE_SIZE));
@@ -145,7 +146,9 @@ struct pagedir *new_pagedir()
     struct pagedir *out = malloc(sizeof(struct pagedir));
     out->pgdir_virtual = get_free_pages(1);
     out->pgdir = get_physaddr(out->pgdir_virtual);
-    out->physical_pagetables = get_free_pages(1);
+    /* TODO: FIXME: TODO: FIXME: make this dynamic, it runs out of space and
+     * breaks everything */
+    out->physical_pagetables = get_free_pages(4);
     out->pagetable = get_free_pages(1);
 
 #ifdef CONFIG_x86_32

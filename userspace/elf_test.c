@@ -33,8 +33,8 @@ int main()
 
     /* *(char *)(0x1234) = 'a'; */
 
-    /* struct wm_client client = wm_client_connect(175, 600); */
-    struct wm_client client = wm_client_connect(175, 220);
+    struct wm_client client = wm_client_connect(175, 600);
+    /* struct wm_client client = wm_client_connect(175, 220); */
 
     int font_fd = open("/font.psfu", O_RDONLY);
     struct PSF_font *font = font_parse(font_fd);
@@ -158,6 +158,10 @@ int main()
         wm_render(client);
 
         char c = wm_get_key(client);
+        if (c == '\\')
+        {
+            break;
+        }
         /* const char *str = "\neno tac"; */
         /* const char *str = "cat one"; */
         /* write(stdin_pipe[1], (char[]){'a', 'b'}, 2); */
@@ -165,6 +169,7 @@ int main()
         /* printf("%c", c); */
         write(stdin_pipe[1], &c, 1);
     }
+    syscall_wrapper_asm(SYS_close_socket, client.socket, 0, 0, 0, 0);
 
     exit(0);
 }

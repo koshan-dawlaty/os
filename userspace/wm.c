@@ -208,6 +208,66 @@ void draw_windows(struct framebuffer *b)
     }
 }
 
+static void disconnect_flip_image_w(struct window_queue_entry *ent,
+                                    size_t num_pixels, size_t sleep_ticks)
+{
+
+    struct window *w = ent->win;
+    for (size_t y = 0; y < WIN_H(w); y++)
+    {
+        if (y % num_pixels == 0)
+        {
+            struct rect area = WIN_RECT(w);
+            area.h = y;
+
+            update_area_up(ent, area, buffer);
+            sleep(sleep_ticks);
+        }
+
+        for (size_t x = 0; x < WIN_W(w) / 2; x++)
+        {
+            size_t reverse_x = WIN_W(w) - x;
+            u32 reverse_color = framebuffer_get_pixel(&w->fb, reverse_x, y);
+            u32 color = framebuffer_get_pixel(&w->fb, x, y);
+            framebuffer_put_pixel(&w->fb, color, reverse_x, y);
+            framebuffer_put_pixel(&w->fb, reverse_color, x, y);
+        }
+    }
+}
+static void disconnect_flip_image_h(struct window_queue_entry *ent,
+                                    size_t num_pixels, size_t sleep_ticks)
+{
+
+    struct window *w = ent->win;
+    for (size_t y = 0; y < WIN_H(w); y++)
+    {
+        if (y % num_pixels == 0)
+        {
+            struct rect area = WIN_RECT(w);
+            area.h = y;
+
+            update_area_up(ent, area, buffer);
+            sleep(sleep_ticks);
+        }
+
+        if (y > WIN_H(w) / 2)
+        {
+            continue;
+        }
+
+        for (size_t x = 0; x < WIN_W(w); x++)
+        {
+            size_t reverse_y = WIN_H(w) - y;
+            u32 reverse_color = framebuffer_get_pixel(&w->fb, x, reverse_y);
+            u32 color = framebuffer_get_pixel(&w->fb, x, y);
+            framebuffer_put_pixel(&w->fb, color, x, reverse_y);
+            framebuffer_put_pixel(&w->fb, reverse_color, x, y);
+        }
+
+        /* memset(w->fb.buffer + (y * WIN_W(w) * 4), 0, WIN_W(w) * 4); */
+    }
+}
+
 int current_client = 1;
 
 size_t y = 10;
@@ -317,27 +377,18 @@ void process_connection()
 
 disconnect:;
 
-    printf("disconnect\n");
+    size_t num_pixels = WIN_H(w) - 1;
+    size_t sleep_ticks = 3;
 
-    for (size_t y = 0; y < WIN_H(w); y++)
-    {
-        if (y % 20 == 0)
-        {
-            struct rect area = WIN_RECT(w);
-            area.h = y;
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks);
 
-            update_area_up(ent, area, buffer);
-            sleep(1);
-        }
-        if (y % 2 == 0)
-        {
-            memset(w->fb.buffer + (y * WIN_W(w) * 4), 255, WIN_W(w) * 4);
-        }
-        else
-        {
-            memset(w->fb.buffer + (y * WIN_W(w) * 4), 0, WIN_W(w) * 4);
-        }
-    }
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks);
 
     list2_remove(&ent->list, &window_queue);
 

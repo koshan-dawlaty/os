@@ -28,4 +28,10 @@ void framebuffer_pixel_write(struct framebuffer *f, u8 *pixel, int color);
 void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
                            size_t width, size_t height, int color);
 
+/*
+ * gets a pixel from a framebuffer
+ * note that this might be VERY slow if the framebuffer is video memory
+ */
+u32 framebuffer_get_pixel(struct framebuffer *fb, size_t x, size_t y);
+
 #endif
