@@ -472,3 +472,5 @@ void print_tasks()
     }
     printf("\n");
 }
+
+int preempt_disable_count = 0;

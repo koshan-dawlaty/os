@@ -1,6 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
+#include "utils.h"
 #include <compiler.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
@@ -115,5 +116,25 @@ struct task *new_task_args(ptr ip, void *args);
 void ktask_run(void (*task)(void *), void *args);
 /* TODO: make this a good api */
 void remove_task_add_queue(struct task *task, struct task_queue *queue);
+
+extern int preempt_disable_count;
+static inline void preempt_disable()
+{
+    if (preempt_disable_count <= 0)
+    {
+        printf("disabling\n");
+        irq_disable();
+    }
+    preempt_disable_count++;
+}
+static inline void preempt_enable()
+{
+    preempt_disable_count--;
+    if (preempt_disable_count <= 0)
+    {
+        printf("enabling\n");
+        irq_enable();
+    }
+}
 
 #endif
