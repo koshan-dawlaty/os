@@ -172,16 +172,22 @@ void kernel_init()
 struct mutex testing_mutex = MUTEX_INIT();
 struct wait_queue testing_wait_queue = WAIT_QUEUE_INIT();
 
+void *d = NULL;
+
 void t1(void *a)
 {
     for (;;)
     {
-        int fd = open("/one", O_RDONLY);
-        char *buf = malloc(100);
-        read(fd, buf, 100);
-        printf("t1\n");
-        free(buf);
-        close(fd);
+        mutex_lock(&testing_mutex);
+
+        schedule();
+        memcpy(d, "one", 4);
+        if (strcmp(d, "one"))
+        {
+            logi("one:%s\n", d);
+        }
+
+        mutex_unlock(&testing_mutex);
     }
 }
 
@@ -190,17 +196,34 @@ void t2(void *a)
 
     for (;;)
     {
-        int fd = open("/one", O_RDONLY);
-        char *buf = malloc(100);
-        read(fd, buf, 100);
-        printf("t2\n");
-        free(buf);
-        close(fd);
+        mutex_lock(&testing_mutex);
+
+        schedule();
+        memcpy(d, "two", 4);
+        if (strcmp(d, "two"))
+        {
+            logi("two:%s\n", d);
+        }
+
+        mutex_unlock(&testing_mutex);
     }
 }
 
 void t3(void *a)
 {
+    for (;;)
+    {
+        mutex_lock(&testing_mutex);
+
+        schedule();
+        memcpy(d, "333", 4);
+        if (strcmp(d, "333"))
+        {
+            logi("333:%s\n", d);
+        }
+
+        mutex_unlock(&testing_mutex);
+    }
 }
 
 void kmain()
@@ -244,13 +267,14 @@ void kmain()
 
     /* printf("%p, %p\n", read, write); */
 
-    /* ktask_run(t2, NULL); */
-    /* ktask_run(t1, NULL); */
-    /* /1* ktask_run(t3, NULL); *1/ */
-    /* enable_scheduler(); */
-    /* irq_enable(); */
-    /* schedule(); */
-    /* return; */
+    d = malloc(10);
+    ktask_run(t2, NULL);
+    ktask_run(t1, NULL);
+    ktask_run(t3, NULL);
+    enable_scheduler();
+    irq_enable();
+    schedule();
+    return;
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 

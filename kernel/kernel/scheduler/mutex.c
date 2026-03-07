@@ -31,9 +31,9 @@ void mutex_lock(struct mutex *m)
         struct task *current = get_current_task();
         /* printf("before:\n"); */
 
-        save_registers(&current->regs);
         task_queue_push(&m->queue, current);
 
+        save_registers(&current->regs);
         remove_task(current);
 
         /* display_queue(); */

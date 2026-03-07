@@ -1,3 +1,4 @@
+#include "kernel/log.h"
 #include "panic.h"
 #include <lib/list.h>
 #include <scheduler.h>
@@ -9,6 +10,8 @@
 extern struct task_queue scheduler_queue;
 void task_queue_push(struct task_queue *queue, struct task *t)
 {
+
+    logd("%p", t->start_addr);
 
     if (t->list.next != NULL)
     {

@@ -113,7 +113,4 @@ struct task *new_task_args(ptr ip, void *args);
 
 void ktask_run(void (*task)(void *), void *args);
 
-struct task_queue;
-void task_queue_add_current(struct task_queue *queue);
-
 #endif

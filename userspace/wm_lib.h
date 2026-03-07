@@ -146,21 +146,6 @@ static inline int shared_mem_get(int id, void **p)
     return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
 }
 
-static inline int user_mutex_create()
-{
-    return syscall_wrapper_asm(SYS_mutex_create, 0, 0, 0, 0, 0);
-}
-
-static inline void user_mutex_lock(int mutex)
-{
-    syscall_wrapper_asm(SYS_mutex_lock, mutex, 0, 0, 0, 0);
-}
-
-static inline void user_mutex_unlock(int mutex)
-{
-    syscall_wrapper_asm(SYS_mutex_unlock, mutex, 0, 0, 0, 0);
-}
-
 void wm_render(struct wm_client client);
 char wm_get_key(struct wm_client client);
 struct wm_client wm_client_connect(size_t height, size_t width);

@@ -315,20 +315,6 @@ bool init_task_exists()
     return false;
 }
 
-void task_queue_add_current(struct task_queue *queue)
-{
-
-    if (!init_task_exists())
-    {
-        printf("INIT TASK IS GONE!!\n");
-    }
-    task_queue_remove(&scheduler_queue, current_task);
-    save_registers(&current_task->regs);
-    struct task *prev = current_task;
-    switch_tasks();
-    task_queue_push(queue, prev);
-}
-
 void remove_task(struct task *task)
 {
 
@@ -343,8 +329,10 @@ void remove_task(struct task *task)
         printf("INIT TASK IS GONE!! in remove_task()\n");
         while (1)
         {
+            irq_wait();
         }
     }
+    /* save_registers(&current_task->regs); */
     task_queue_remove(&scheduler_queue, task);
 
     /* printf("this is the  sched queue head:%p\n", scheduler_queue.head);

@@ -277,12 +277,14 @@ int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
 static inline int inode_read(struct inode *node, u8 *buf, size_t n, size_t off)
 {
 
+    // logd("inode read sb:%p", node->sb);
+    // logd("inode read sb type:%p", node->sb->type);
+    // logd("inode read sb funcs:%p", &node->sb->type->inode_functions);
+    // logd("inode read ptr:%p", node->sb->type->inode_functions.read_inode);
     if (node->sb->type->inode_functions.read_inode == NULL)
     {
         printf("inode read was null\n");
     }
-    // logd("inode read sb:%p", node->sb);
-    // logd("inode read ptr:%p", node->sb->type->inode_functions.read_inode);
     node->sb->type->inode_functions.read_inode(node, buf, n, off);
 
     return 0;

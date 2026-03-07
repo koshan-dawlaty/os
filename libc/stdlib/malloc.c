@@ -1,4 +1,5 @@
 #include "sys/mman.h"
+#include <extension.h>
 #include <malloc_internal.h>
 #include <sched.h>
 #include <stdarg.h>
@@ -291,18 +292,44 @@ end:
 }
 
 #ifdef __is_libk
-struct spinlock *heap_mutex = NULL;
+struct spinlock *heap_lock = NULL;
+#else
+int heap_mutex = -1;
 #endif
+
+static inline void lock_heap()
+{
+#ifdef __is_libk
+    if (heap_lock != NULL)
+    {
+        spinlock_lock(heap_lock);
+    }
+#else
+    if (heap_mutex != -1)
+    {
+        user_mutex_lock(heap_mutex);
+    }
+#endif
+}
+static inline void unlock_heap()
+{
+#ifdef __is_libk
+    if (heap_lock != NULL)
+    {
+        spinlock_unlock(heap_lock);
+    }
+#else
+    if (heap_mutex != -1)
+    {
+        user_mutex_unlock(heap_mutex);
+    }
+#endif
+}
 
 void *malloc(size_t size)
 {
 
-#ifdef __is_libk
-    if (heap_mutex != NULL)
-    {
-        lock_spinlock(heap_mutex);
-    }
-#endif
+    lock_heap();
 
 #ifdef __is_libk
     void *retval;
@@ -318,12 +345,7 @@ void *malloc(size_t size)
     void *retval = malloc_zone(size, &libc_malloc_zone);
 #endif
 
-#ifdef __is_libk
-    if (heap_mutex != NULL)
-    {
-        release_spinlock(heap_mutex);
-    }
-#endif
+    unlock_heap();
 
     return retval;
 }
@@ -331,12 +353,7 @@ void *malloc(size_t size)
 void free(void *ptr)
 {
 
-#ifdef __is_libk
-    if (heap_mutex != NULL)
-    {
-        lock_spinlock(heap_mutex);
-    }
-#endif
+    lock_heap();
 
 #ifdef __is_libk
 
@@ -352,12 +369,7 @@ void free(void *ptr)
 
     free_zone(ptr, &libc_malloc_zone);
 #endif
-#ifdef __is_libk
-    if (heap_mutex != NULL)
-    {
-        release_spinlock(heap_mutex);
-    }
-#endif
+    unlock_heap();
 }
 
 void *realloc_zone(void *ptr, size_t new_size, struct malloc_zone *zone)
@@ -368,12 +380,7 @@ void *realloc_zone(void *ptr, size_t new_size, struct malloc_zone *zone)
         return malloc(new_size);
     }
 
-#ifdef __is_libk
-    if (heap_mutex != NULL)
-    {
-        lock_spinlock(heap_mutex);
-    }
-#endif
+    lock_heap();
 
     void *new_ptr = malloc_zone(new_size, zone);
 
@@ -386,12 +393,7 @@ void *realloc_zone(void *ptr, size_t new_size, struct malloc_zone *zone)
 
     free_zone(ptr, zone);
 
-#ifdef __is_libk
-    if (heap_mutex != NULL)
-    {
-        release_spinlock(heap_mutex);
-    }
-#endif
+    unlock_heap();
 
     return retval;
 }
@@ -415,7 +417,9 @@ void *realloc(void *ptr, size_t new_size)
 void init_heap()
 {
 #ifdef __is_libk
-    heap_mutex = new_spinlock();
+    heap_lock = new_spinlock();
+#else
+    heap_mutex = user_mutex_create();
 #endif
 }
 
