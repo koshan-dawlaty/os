@@ -53,6 +53,7 @@ struct window_queue_entry
 };
 
 struct list2 *window_queue;
+int window_queue_mutex = -1;
 struct framebuffer *buffer;
 
 void win_draw_rect(struct window *win, struct rect area, struct framebuffer *fb)
@@ -93,6 +94,7 @@ void win_draw_rect(struct window *win, struct rect area, struct framebuffer *fb)
 void update_area_up(struct window_queue_entry *ent, struct rect area,
                     struct framebuffer *fb)
 {
+    user_mutex_lock(window_queue_mutex);
 
     struct list2 *pos;
     /* list2_for_each(pos, &ent->list) */
@@ -120,6 +122,7 @@ void update_area_up(struct window_queue_entry *ent, struct rect area,
             win_draw_rect(ent2->win, area, fb);
         }
     }
+    user_mutex_unlock(window_queue_mutex);
 }
 
 #define WINDOW_DECORATION_ROWS 10
@@ -209,7 +212,8 @@ void draw_windows(struct framebuffer *b)
 }
 
 static void disconnect_flip_image_w(struct window_queue_entry *ent,
-                                    size_t num_pixels, size_t sleep_ticks)
+                                    size_t num_pixels, size_t sleep_ticks,
+                                    int pixel_factor)
 {
 
     struct window *w = ent->win;
@@ -227,15 +231,17 @@ static void disconnect_flip_image_w(struct window_queue_entry *ent,
         for (size_t x = 0; x < WIN_W(w) / 2; x++)
         {
             size_t reverse_x = WIN_W(w) - x;
-            u32 reverse_color = framebuffer_get_pixel(&w->fb, reverse_x, y);
-            u32 color = framebuffer_get_pixel(&w->fb, x, y);
+            u32 reverse_color =
+                framebuffer_get_pixel(&w->fb, reverse_x, y) * pixel_factor;
+            u32 color = framebuffer_get_pixel(&w->fb, x, y) * pixel_factor;
             framebuffer_put_pixel(&w->fb, color, reverse_x, y);
             framebuffer_put_pixel(&w->fb, reverse_color, x, y);
         }
     }
 }
 static void disconnect_flip_image_h(struct window_queue_entry *ent,
-                                    size_t num_pixels, size_t sleep_ticks)
+                                    size_t num_pixels, size_t sleep_ticks,
+                                    int pixel_factor)
 {
 
     struct window *w = ent->win;
@@ -258,8 +264,9 @@ static void disconnect_flip_image_h(struct window_queue_entry *ent,
         for (size_t x = 0; x < WIN_W(w); x++)
         {
             size_t reverse_y = WIN_H(w) - y;
-            u32 reverse_color = framebuffer_get_pixel(&w->fb, x, reverse_y);
-            u32 color = framebuffer_get_pixel(&w->fb, x, y);
+            u32 reverse_color =
+                framebuffer_get_pixel(&w->fb, x, reverse_y) * pixel_factor;
+            u32 color = framebuffer_get_pixel(&w->fb, x, y) * pixel_factor;
             framebuffer_put_pixel(&w->fb, color, x, reverse_y);
             framebuffer_put_pixel(&w->fb, reverse_color, x, y);
         }
@@ -303,6 +310,7 @@ void process_connection()
     ent->win = w;
     ent->conn = conn;
 
+    user_mutex_lock(window_queue_mutex);
     if (window_queue == NULL)
     {
         window_queue = &ent->list;
@@ -311,10 +319,10 @@ void process_connection()
     {
         list2_add_front(&ent->list, &window_queue);
     }
+    user_mutex_unlock(window_queue_mutex);
 
     focused = ent;
 
-    printf("input socket:%d\n", conn->input_socket);
     int code;
     recv(socket, &code, sizeof(int));
     while (true)
@@ -335,7 +343,8 @@ void process_connection()
                        WIN_W(w) * 4);
             }
 
-            draw_windows(buffer);
+            update_area_up(ent, WIN_RECT(w), buffer);
+            /* draw_windows(buffer); */
 
             int ack_code = 3;
             int retval = send(socket, &ack_code, sizeof(int));
@@ -380,17 +389,25 @@ disconnect:;
     size_t num_pixels = WIN_H(w) - 1;
     size_t sleep_ticks = 3;
 
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 4);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, -5);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 8);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
 
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 4);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 2);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 4);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
 
+    user_mutex_lock(window_queue_mutex);
     list2_remove(&ent->list, &window_queue);
+    user_mutex_unlock(window_queue_mutex);
 
     while (1)
     {
@@ -484,6 +501,7 @@ void mouse_thread()
 
             /* TODO: this should be its own function that traverses the list
              * backwards */
+            user_mutex_lock(window_queue_mutex);
             struct list2 *pos;
             struct list2 *prev = NULL;
             list2_for_each(pos, window_queue)
@@ -509,6 +527,7 @@ void mouse_thread()
                     break;
                 }
             }
+            user_mutex_unlock(window_queue_mutex);
 
             if (new_focus != NULL)
             {
@@ -583,6 +602,8 @@ int main()
 
     /* printf("window manager\n"); */
     /* clone((ptr)thread1); */
+
+    window_queue_mutex = user_mutex_create();
 
     size_t mouse_w = 10;
     size_t mouse_h = 10;

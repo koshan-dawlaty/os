@@ -1,3 +1,4 @@
+#include "kernel/log.h"
 #include "lib/array.h"
 #include "unistd.h"
 #include <fcntl.h>
@@ -21,7 +22,6 @@ void mutex_lock(struct mutex *m)
 
     if (!m->locked)
     {
-        /* printf("lock 1, %p\n", get_current_task()); */
         m->locked = true;
     }
     else
@@ -40,8 +40,6 @@ void mutex_lock(struct mutex *m)
         /* display_queue(); */
         /* printf("after:\n"); */
         /* display_queue(); */
-
-        sched_yield();
     }
 
     irq_restore(state);

@@ -1,5 +1,6 @@
 #ifndef VFS_H
 #define VFS_H
+#include "kernel/log.h"
 #include "mutex.h"
 #include "spinlock.h"
 #include <device.h>
@@ -275,6 +276,13 @@ int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
 /* TODO: these should return bytes read or something in the future*/
 static inline int inode_read(struct inode *node, u8 *buf, size_t n, size_t off)
 {
+
+    if (node->sb->type->inode_functions.read_inode == NULL)
+    {
+        printf("inode read was null\n");
+    }
+    // logd("inode read sb:%p", node->sb);
+    // logd("inode read ptr:%p", node->sb->type->inode_functions.read_inode);
     node->sb->type->inode_functions.read_inode(node, buf, n, off);
 
     return 0;

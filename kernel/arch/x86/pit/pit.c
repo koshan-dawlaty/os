@@ -16,7 +16,8 @@ volatile uint64_t pit_time = 0;
 #define PIT_REAL_FREQUENCY 1193180
 
 /* should not be lower than 19 */
-#define PIT_FREQUENCY 50
+/* #define PIT_FREQUENCY 50 */
+#define PIT_FREQUENCY 30
 /* #define PIT_FREQUENCY 20 */
 
 void init_pit()

@@ -142,9 +142,11 @@ static int write_file_fs(struct file *file, const char *buf, size_t n,
                          size_t off)
 {
 
-    inode *node = file->entry->inode;
+    struct inode *node = file->entry->inode;
+    mutex_lock(&node->lock);
     size_t write_size = n;
     inode_write(node, (const u8 *)buf, write_size, off);
+    mutex_unlock(&node->lock);
     add_file_offset(file, write_size);
     return write_size;
 }

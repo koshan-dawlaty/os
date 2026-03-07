@@ -11,6 +11,7 @@
 
 #include "multiboot.h"
 #include "spinlock.h"
+#include "utils.h"
 #include "vfs.h"
 #include "vga.h"
 
@@ -148,7 +149,7 @@ struct pagedir *new_pagedir()
     out->pgdir = get_physaddr(out->pgdir_virtual);
     /* TODO: FIXME: TODO: FIXME: make this dynamic, it runs out of space and
      * breaks everything */
-    out->physical_pagetables = get_free_pages(4);
+    out->physical_pagetables = get_free_pages(10);
     out->pagetable = get_free_pages(1);
 
 #ifdef CONFIG_x86_32
@@ -224,19 +225,23 @@ void create_userspace_stack(struct addr_space *a)
     {
 
         /* printf("user stack:\n"); */
-        /* printf("physical:%p, virtual:%p\n", user_stack_physical, (void *)i);
+        /* printf("physical:%p, virtual:%p\n", user_stack_physical, (void
+         * *)i);
          */
 
         /* void *page = get_free_phys_page_dir(*pgdir); */
         /* printf("%p\n", page); */
 
-        /* write_pagedir(pgdir, get_free_phys_page_dir(*pgdir), (void *)i, */
-        /*               PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
+        /* write_pagedir(pgdir, get_free_phys_page_dir(*pgdir), (void *)i,
+         */
+        /*               PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+         */
 
         addr_space_map(a, (void *)i, 1,
                        PAGING_PRESENT | PAGING_USER | PAGING_WRITEABLE);
         /* write_pagedir(pgdir, (void *)user_stack_physical, (void *)i, */
-        /*               PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT); */
+        /*               PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT);
+         */
         /* user_stack_physical += PAGE_SIZE; */
     }
 }
