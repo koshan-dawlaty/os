@@ -111,10 +111,10 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
     if ((pml4_entry & 1) == 0)
     {
         void *page = get_free_phys_page();
-        
-        void * pg_virtual = get_virtual_addr(page);
+
+        void *pg_virtual = get_virtual_addr(page);
         bzero(pg_virtual, PAGE_SIZE);
-        
+
         pml4[pml4_index] = (u64)page | 0x3 | flags;
     }
 
@@ -127,9 +127,9 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
     if ((pdpt_entry & 1) == 0)
     {
         void *page = get_free_phys_page();
-               void * pg_virtual = get_virtual_addr(page);
+        void *pg_virtual = get_virtual_addr(page);
         bzero(pg_virtual, PAGE_SIZE);
-        
+
         pdpt[pdpt_index] = (u64)page | 0x3 | flags;
     }
 
@@ -139,8 +139,8 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
 
     if ((pdt_entry & 1) == 0)
     {
-        void * page = get_free_phys_page();
-               void * pg_virtual = get_virtual_addr(page);
+        void *page = get_free_phys_page();
+        void *pg_virtual = get_virtual_addr(page);
         bzero(pg_virtual, PAGE_SIZE);
         pdt[pdt_index] = (u64)page | 0x3 | flags;
     }

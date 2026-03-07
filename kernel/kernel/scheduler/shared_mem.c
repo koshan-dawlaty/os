@@ -1,6 +1,7 @@
 #include "kernel/utils.h"
 #include "memory/get_free_pages.h"
 #include "memory/paging_flags.h"
+#include "spinlock.h"
 #include <kernel/paging.h>
 #include <kernel/syscall.h>
 #include <stdio.h>
@@ -15,6 +16,7 @@ struct shared_memory_entry
 /* TODO: make this dynamic */
 #define SHARED_MEMORY_MAX 100
 struct shared_memory_entry shared_memory_list[SHARED_MEMORY_MAX];
+struct spinlock shared_mem_lock = SPINLOCK_INIT();
 size_t shared_memory_list_index = 0;
 
 #define SHARED_MEMORY_START (void *)0x30000000
@@ -22,6 +24,7 @@ size_t shared_memory_offset = 0;
 
 int shared_mem_alloc(void **addr, size_t len)
 {
+    spinlock_lock(&shared_mem_lock);
 
     void *memory = SHARED_MEMORY_START + shared_memory_offset;
     size_t mem_len = ((len / PAGE_SIZE) + 1) * PAGE_SIZE;
@@ -44,12 +47,14 @@ int shared_mem_alloc(void **addr, size_t len)
 
     *addr = memory;
 
+    spinlock_unlock(&shared_mem_lock);
     return shared_memory_list_index - 1;
 }
 
 int shared_mem_get(int id, void **p)
 {
 
+    spinlock_lock(&shared_mem_lock);
     struct shared_memory_entry ent = shared_memory_list[id];
 
     void *memory = SHARED_MEMORY_START + shared_memory_offset;
@@ -65,6 +70,7 @@ int shared_mem_get(int id, void **p)
     }
 
     *p = memory;
+    spinlock_unlock(&shared_mem_lock);
 
     return 0;
 }

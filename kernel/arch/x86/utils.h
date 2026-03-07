@@ -67,20 +67,33 @@ static inline void irq_disable()
     asm("cli");
 }
 
+static inline ptr save_eflags(void)
+{
+    ptr flags;
+    __asm__ volatile("pushfq\n\t"
+                     "pop %0"
+                     : "=r"(flags)
+                     :
+                     : "memory");
+    return flags;
+}
+static inline void restore_eflags(ptr flags)
+{
+    __asm__ volatile("push %0\n\t"
+                     "popfq"
+                     :
+                     : "r"(flags)
+                     : "memory", "cc");
+}
+
 typedef bool irq_state_t;
 static inline irq_state_t irq_save()
 {
-    ptr flags;
-    asm volatile("pushf\n\t"
-                 "pop %0"
-                 : "=r"(flags)
-
-                 :
-                 : "memory"
-
-    );
+    ptr flags = save_eflags();
     ptr is_set = (flags & (1 << 9)) != 0;
     irq_state_t irq_state = (bool)(is_set);
+    restore_eflags(flags);
+
     return irq_state;
 }
 

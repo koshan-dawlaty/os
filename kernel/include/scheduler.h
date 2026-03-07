@@ -1,8 +1,8 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include "kernel/addr_space.h"
 #include <compiler.h>
+#include <kernel/addr_space.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
 #include <lib/list.h>

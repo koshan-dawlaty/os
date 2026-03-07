@@ -10,6 +10,7 @@
 #include <memory/get_free_pages.h>
 
 #include "multiboot.h"
+#include "scheduler.h"
 #include "spinlock.h"
 #include "utils.h"
 #include "vfs.h"
@@ -149,7 +150,7 @@ struct pagedir *new_pagedir()
     out->pgdir = get_physaddr(out->pgdir_virtual);
     /* TODO: FIXME: TODO: FIXME: make this dynamic, it runs out of space and
      * breaks everything */
-    out->physical_pagetables = get_free_pages(10);
+    out->physical_pagetables = get_free_pages(1);
     out->pagetable = get_free_pages(1);
 
 #ifdef CONFIG_x86_32

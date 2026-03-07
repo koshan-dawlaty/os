@@ -129,3 +129,14 @@ int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages)
 
     return 0;
 }
+
+void addr_space_load(struct addr_space a)
+{
+    current_addr_space = a;
+    /* struct task *current = get_current_task(); */
+    /* if (current != NULL) */
+    /* { */
+    /*     current->addr_space = a; */
+    /* } */
+    load_pgdir(a.dir);
+}

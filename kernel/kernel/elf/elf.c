@@ -1,5 +1,7 @@
+#include "fcntl.h"
 #include "gdt.h"
 #include "kernel/addr_space.h"
+#include "kernel/log.h"
 #include "kernel/paging.h"
 #include "kernel/utils.h"
 #include "memory/paging_flags.h"
@@ -7,6 +9,7 @@
 #include "scheduler.h"
 #include "strings.h"
 #include "sys/types.h"
+#include "utils.h"
 #include <elf.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -38,9 +41,7 @@ struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
     struct task *t = new_task_user(elf->entry_point, 0xBFFEF000, argc, argv);
-    struct pagedir *temp_pgdir = get_current_pagedir();
 
-    addr_space_load(t->addr_space);
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
 
@@ -73,9 +74,11 @@ write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
 
             pread(elf->fd, buf, header->size_file, header->file_offset);
 
+            irq_state_t state = irq_save_disable();
+            struct pagedir *temp_pgdir = get_current_pagedir();
+            addr_space_load(t->addr_space);
             if (header->size_memory > header->size_file)
             {
-
                 for (size_t i = 0; i < header->size_memory - header->size_file;
                      i++)
                 {
@@ -90,6 +93,8 @@ write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
 
                 dest[i] = buf[i];
             }
+            load_pgdir(temp_pgdir);
+            irq_restore(state);
         }
         else
         {
@@ -103,7 +108,7 @@ write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
     /* *(char ***)(0xBFFEF000 + sizeof(ptr)) = args; */
     /* *(int *)(0xBFFEF000) = argc; */
 
-    load_pgdir(temp_pgdir);
+    /* load_pgdir(temp_pgdir); */
 
     return t;
 }

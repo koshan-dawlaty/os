@@ -23,11 +23,7 @@ void addr_space_free(struct addr_space a);
 
 extern struct addr_space current_addr_space;
 
-static inline void addr_space_load(struct addr_space a)
-{
-    current_addr_space = a;
-    load_pgdir(a.dir);
-}
+void addr_space_load(struct addr_space a);
 
 int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
                    int flags);
