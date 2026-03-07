@@ -11,7 +11,8 @@ extern struct task_queue scheduler_queue;
 void task_queue_push(struct task_queue *queue, struct task *t)
 {
 
-    logd("%p", t->start_addr);
+    /* logd("%p", t->start_addr); */
+    /* printf("start:%p\n", t->start_addr); */
 
     if (t->list.next != NULL)
     {

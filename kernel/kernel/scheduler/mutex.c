@@ -1,9 +1,11 @@
 #include "kernel/log.h"
 #include "lib/array.h"
 #include "unistd.h"
+#include <container_of.h>
 #include <fcntl.h>
 #include <kernel/syscall.h>
 #include <lib/array.h>
+#include <lib/list.h>
 #include <mutex.h>
 #include <panic.h>
 #include <sched.h>
@@ -29,11 +31,31 @@ void mutex_lock(struct mutex *m)
         printf("removing task\n");
         /* printf("lock 2, %p\", get_current_task()); */
         struct task *current = get_current_task();
+
+        save_registers(&current->regs);
+        remove_task_add_queue(current, &m->queue);
+
+        irq_restore(state);
+        return;
         /* printf("before:\n"); */
+
+        struct list *pos;
+        list_for_each(pos, m->queue.head)
+        {
+            struct task *t = containerof(pos, struct task, list);
+            printf("%p ", t->start_addr);
+        }
+        printf("\n");
 
         task_queue_push(&m->queue, current);
 
-        save_registers(&current->regs);
+        list_for_each(pos, m->queue.head)
+        {
+            struct task *t = containerof(pos, struct task, list);
+            printf("%p ", t->start_addr);
+        }
+        printf("\n");
+
         remove_task(current);
 
         /* display_queue(); */

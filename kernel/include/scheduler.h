@@ -8,6 +8,7 @@
 #include <lib/list.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <task_queue.h>
 #include <vfs.h>
 
 /* TODO: mabye do the architecture specific part of this architecture
@@ -112,5 +113,7 @@ void add_sleep_queue(struct task *task, size_t time);
 struct task *new_task_args(ptr ip, void *args);
 
 void ktask_run(void (*task)(void *), void *args);
+/* TODO: make this a good api */
+void remove_task_add_queue(struct task *task, struct task_queue *queue);
 
 #endif

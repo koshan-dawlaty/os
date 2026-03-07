@@ -315,7 +315,7 @@ bool init_task_exists()
     return false;
 }
 
-void remove_task(struct task *task)
+static void remove_task_sched_queue(struct task *task)
 {
 
     if ((ptr)task->start_addr == 0xDEADBEEF)
@@ -356,7 +356,10 @@ void remove_task(struct task *task)
     {
         printf("INIT TASK IS GONE!! in remove_task() second one\n");
     }
+}
 
+static void remove_task_load(struct task *task)
+{
     if (current_task->addr_space.dir != NULL)
     {
         addr_space_load(current_task->addr_space);
@@ -364,6 +367,24 @@ void remove_task(struct task *task)
     set_kernel_stack((ptr)current_task->stack);
 
     load_registers(&current_task->regs);
+}
+
+void remove_task_add_queue(struct task *task, struct task_queue *queue)
+{
+    IRQ_OFF({
+        remove_task_sched_queue(task);
+
+        task->list.next = NULL;
+        task_queue_push(queue, task);
+
+        remove_task_load(task);
+    })
+}
+
+void remove_task(struct task *task)
+{
+    remove_task_sched_queue(task);
+    remove_task_load(task);
 }
 
 void add_task(struct task *task)

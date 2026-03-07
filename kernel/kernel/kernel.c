@@ -267,14 +267,14 @@ void kmain()
 
     /* printf("%p, %p\n", read, write); */
 
-    d = malloc(10);
-    ktask_run(t2, NULL);
-    ktask_run(t1, NULL);
-    ktask_run(t3, NULL);
-    enable_scheduler();
-    irq_enable();
-    schedule();
-    return;
+    /* d = malloc(10); */
+    /* ktask_run(t2, NULL); */
+    /* ktask_run(t1, NULL); */
+    /* ktask_run(t3, NULL); */
+    /* enable_scheduler(); */
+    /* irq_enable(); */
+    /* schedule(); */
+    /* return; */
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
