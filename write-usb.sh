@@ -5,6 +5,11 @@
 DEVICE=$1
 echo "starting to write to $DEVICE"
 
+if (( $# <= 0 )); then
+	echo "need arguments"
+	exit 1
+fi
+
 if findmnt -n -o TARGET "$DEVICE" > /dev/null; then
   echo "$DEVICE is mounted!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!!!!!111!!!1!!!!!!!!!!!!!!!!!"
   echo "cant run script it mighgt corrupt data !!1 this writes the os iso image to the usb device"

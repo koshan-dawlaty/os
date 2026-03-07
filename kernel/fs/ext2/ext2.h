@@ -1,7 +1,6 @@
 #ifndef EXT2_H
 #define EXT2_H
 #include "compiler.h"
-#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <vfs.h>

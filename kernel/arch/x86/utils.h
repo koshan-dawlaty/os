@@ -67,6 +67,7 @@ static inline void irq_disable()
     asm("cli");
 }
 
+#ifdef CONFIG_x86_64
 static inline ptr save_eflags(void)
 {
     ptr flags;
@@ -85,6 +86,28 @@ static inline void restore_eflags(ptr flags)
                      : "r"(flags)
                      : "memory", "cc");
 }
+#elif defined(CONFIG_x86_32)
+
+static inline ptr save_eflags(void)
+{
+    ptr flags;
+    __asm__ volatile("pushf\n\t"
+                     "pop %0"
+                     : "=r"(flags)
+                     :
+                     : "memory");
+    return flags;
+}
+static inline void restore_eflags(ptr flags)
+{
+    __asm__ volatile("push %0\n\t"
+                     "popf"
+                     :
+                     : "r"(flags)
+                     : "memory", "cc");
+}
+
+#endif
 
 typedef bool irq_state_t;
 static inline irq_state_t irq_save()
