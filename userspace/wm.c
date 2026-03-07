@@ -643,6 +643,7 @@ int main()
     while (true)
     {
         int client_sock = socket_create();
+        printf("socket num:%d\n", client_sock);
         send(socket, &client_sock, sizeof(int));
         current_client = client_sock;
 

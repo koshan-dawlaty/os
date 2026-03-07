@@ -1,5 +1,6 @@
 #include "kernel/log.h"
 #include "panic.h"
+#include "spinlock.h"
 #include "unistd.h"
 #include <errno.h>
 #include <kernel/syscall.h>
@@ -7,6 +8,7 @@
 #include <lib/list.h>
 #include <sched.h>
 #include <socket.h>
+#include <spinlock.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/syscall.h>
@@ -16,17 +18,23 @@
 #include <wait_queue.h>
 
 struct array unix_socket_array = ARRAY_INIT();
+struct spinlock unix_socket_array_lock = SPINLOCK_INIT();
 
 struct unix_socket *unix_socket_lookup(int id)
 {
-    return *(struct unix_socket **)array_get(&unix_socket_array, id,
-                                             sizeof(struct unix_socket *));
+    spinlock_lock(&unix_socket_array_lock);
+    struct unix_socket *out = *(struct unix_socket **)array_get(
+        &unix_socket_array, id, sizeof(struct unix_socket *));
+    spinlock_unlock(&unix_socket_array_lock);
+    return out;
 }
 
 int unix_socket_add_array(struct unix_socket *sock)
 {
+    spinlock_lock(&unix_socket_array_lock);
     int retval =
         array_add(&unix_socket_array, &sock, sizeof(struct unix_socket *));
+    spinlock_unlock(&unix_socket_array_lock);
 
     return retval;
 }
@@ -60,7 +68,6 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
         wait_queue_done(&sock->send_queue);
     }
 
-    /* TODO: this should remove data and not go out of bounds */
     void *sent = array_pop(&sock->buffer, len);
     memcpy(buf, sent, len);
     free(sent);

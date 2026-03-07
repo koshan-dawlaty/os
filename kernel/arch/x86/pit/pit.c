@@ -17,6 +17,7 @@ volatile uint64_t pit_time = 0;
 
 /* should not be lower than 19 */
 #define PIT_FREQUENCY 50
+/* #define PIT_FREQUENCY 100 */
 /* #define PIT_FREQUENCY 50 */
 /* #define PIT_FREQUENCY 30 */
 /* #define PIT_FREQUENCY 20 */
