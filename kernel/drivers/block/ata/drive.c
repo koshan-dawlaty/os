@@ -139,7 +139,7 @@ struct bdev *get_ata_drive(u8 drive_num)
 {
 
     struct ata_drive *drive = malloc(sizeof(ata_drive));
-    drive->lock = MUTEX_INIT();
+    mutex_init(&drive->lock);
 
     if ((drive_num) % 2 == 0)
     {

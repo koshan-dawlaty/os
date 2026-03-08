@@ -1,4 +1,6 @@
 #include "gdt.h"
+#include "panic.h"
+#include <container_of.h>
 #include <scheduler.h>
 #include <task_queue.h>
 #include <utils.h>
@@ -8,22 +10,23 @@ extern struct task_queue scheduler_queue;
 extern struct task *current_task;
 extern void print_tasks();
 
+/* FIXME: might be duplicated somewhere */
 void wait_queue_wait(struct wait_queue *queue)
 {
-    irq_state_t state = irq_save_disable();
+    preempt_disable();
+
     struct task *current = get_current_task();
 
     save_registers(&current->regs);
 
     task_queue_remove(&scheduler_queue, current);
-
     if (current == current_task)
     {
-        current_task = LIST_ENTRY(current_task->list.next, struct task, list);
-        if (current_task == NULL)
+        current_task =
+            containerof(scheduler_queue.head.next, struct task, list);
+        if (&current_task->list == &scheduler_queue.head)
         {
-            current_task = LIST_ENTRY(scheduler_queue.head, struct task, list);
-
+            panic("task queue might be empty!");
             if (current_task == NULL)
             {
                 printf("why is this null:%p\n", scheduler_queue.head);
@@ -40,8 +43,10 @@ void wait_queue_wait(struct wait_queue *queue)
         addr_space_load(current_task->addr_space);
     }
     set_kernel_stack((ptr)current_task->stack);
+
+    /* FIXME: this should maybe be in load_registers() or something */
+    preempt_enable();
     load_registers(&current_task->regs);
-    irq_restore(state);
 }
 
 void wait_queue_done(struct wait_queue *queue)

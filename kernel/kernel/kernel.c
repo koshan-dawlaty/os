@@ -1,5 +1,6 @@
 #include "multiboot.h"
 #include "serial.h"
+#include "task_queue.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>
@@ -42,6 +43,7 @@
 #include <scheduler.h>
 #include <socket.h>
 #include <spinlock.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -169,13 +171,20 @@ void kernel_init()
 #endif
 }
 
-struct mutex testing_mutex = MUTEX_INIT();
-struct wait_queue testing_wait_queue = WAIT_QUEUE_INIT();
+WAIT_QUEUE_DEFINE(testing_wait_queue);
+MUTEX_DEFINE(testing_mutex);
 
 void *d = NULL;
 
 void t1(void *a)
 {
+    /* while (true) */
+    /* { */
+    /*     printf("task 1 is waiting\n"); */
+    /*     wait_queue_wait(&testing_wait_queue); */
+    /*     printf("task 1\n"); */
+    /* } */
+
     for (;;)
     {
         mutex_lock(&testing_mutex);
@@ -194,6 +203,18 @@ void t1(void *a)
 void t2(void *a)
 {
 
+    /* while (true) */
+    /* { */
+    /*     if (!WAIT_QUEUE_EMPTY(testing_wait_queue)) */
+    /*     { */
+    /*         wait_queue_done(&testing_wait_queue); */
+    /*         printf("task 2\n"); */
+    /*     } */
+    /*     else */
+    /*     { */
+    /*         /1* printf("task 2 not ready\n"); *1/ */
+    /*     } */
+    /* } */
     for (;;)
     {
         mutex_lock(&testing_mutex);
@@ -211,6 +232,11 @@ void t2(void *a)
 
 void t3(void *a)
 {
+    while (true)
+    {
+        wait_queue_wait(&testing_wait_queue);
+        printf("task 3\n");
+    }
     for (;;)
     {
         mutex_lock(&testing_mutex);
@@ -225,6 +251,8 @@ void t3(void *a)
         mutex_unlock(&testing_mutex);
     }
 }
+
+struct task_queue abc = TASK_QUEUE_INIT(abc);
 
 void kmain()
 {
@@ -256,6 +284,7 @@ void kmain()
     /* open("/one", O_RDONLY); */
 
     struct task *kernel_task = create_kernel_task();
+    printf("this is the initial kernel task:%p\n", kernel_task);
     add_task(kernel_task);
 
     create_device("/terminal", get_terminal());
@@ -270,7 +299,7 @@ void kmain()
     /* d = malloc(10); */
     /* ktask_run(t2, NULL); */
     /* ktask_run(t1, NULL); */
-    /* ktask_run(t3, NULL); */
+    /* /1* ktask_run(t3, NULL); *1/ */
     /* enable_scheduler(); */
     /* irq_enable(); */
     /* schedule(); */
@@ -283,6 +312,7 @@ void kmain()
 
     int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
+    struct task_queue abc = TASK_QUEUE_INIT(abc);
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 

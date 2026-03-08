@@ -19,7 +19,7 @@
 #include <utils.h>
 #include <wait_queue.h>
 
-struct wait_queue mouse_waitqueue = WAIT_QUEUE_INIT();
+WAIT_QUEUE_DEFINE(mouse_waitqueue);
 
 #define PS2_MOUSE_LEFT_CLICK (1 << 0)
 #define PS2_MOUSE_RIGHT_CLICK (1 << 1)

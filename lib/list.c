@@ -168,10 +168,13 @@ struct list2 *list2_pop(struct list2 **head)
 
 void list2c_push(struct list2c *new, struct list2c *head)
 {
+    /* printf("PUSH\n"); */
     struct list2c *temp = head->next;
-    head->next = new;
     new->prev = head;
     new->next = temp;
+
+    temp->prev = new;
+    head->next = new;
 }
 
 struct list2c *list2c_pop(struct list2c *head)
@@ -190,4 +193,14 @@ struct list2c *list2c_pop(struct list2c *head)
     out->prev = NULL;
 
     return out;
+}
+
+void list2c_remove(struct list2c *value)
+{
+    /* printf("REMOVE\n"); */
+    value->prev->next = value->next;
+    value->next->prev = value->prev;
+
+    value->next = NULL;
+    value->prev = NULL;
 }

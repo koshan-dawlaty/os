@@ -1,6 +1,8 @@
 #include "kernel/log.h"
 #include "lib/array.h"
 #include "unistd.h"
+#include "wait_queue.h"
+#include <assert.h>
 #include <container_of.h>
 #include <fcntl.h>
 #include <kernel/syscall.h>
@@ -20,7 +22,7 @@ extern void display_queue();
 
 void mutex_lock(struct mutex *m)
 {
-    irq_state_t state = irq_save_disable();
+    preempt_disable();
 
     if (!m->locked)
     {
@@ -28,43 +30,15 @@ void mutex_lock(struct mutex *m)
     }
     else
     {
-        printf("removing task\n");
+        logd("removing task");
         /* printf("lock 2, %p\", get_current_task()); */
         struct task *current = get_current_task();
 
         save_registers(&current->regs);
         remove_task_add_queue(current, &m->queue);
-
-        irq_restore(state);
-        return;
-        /* printf("before:\n"); */
-
-        struct list *pos;
-        list_for_each(pos, m->queue.head)
-        {
-            struct task *t = containerof(pos, struct task, list);
-            printf("%p ", t->start_addr);
-        }
-        printf("\n");
-
-        task_queue_push(&m->queue, current);
-
-        list_for_each(pos, m->queue.head)
-        {
-            struct task *t = containerof(pos, struct task, list);
-            printf("%p ", t->start_addr);
-        }
-        printf("\n");
-
-        remove_task(current);
-
-        /* display_queue(); */
-        /* display_queue(); */
-        /* printf("after:\n"); */
-        /* display_queue(); */
     }
 
-    irq_restore(state);
+    preempt_enable();
 }
 
 void mutex_unlock(struct mutex *m)
@@ -75,16 +49,19 @@ void mutex_unlock(struct mutex *m)
         panic("mutex unlock may have been called twice on the same mutex!");
     }
 
-    if (m->queue.head == NULL)
+    if (LIST2C_IS_EMPTY(m->queue.head))
     {
         /* printf("unlock 1, %p\n", get_current_task()); */
         m->locked = false;
     }
     else
     {
-        printf("adding task\n");
+        logd("adding task");
+        /* panic("unlock"); */
         /* printf("unlock 2, %p\n", get_current_task()); */
         struct task *temp = task_queue_pop(&m->queue);
+        ASSERT(temp != NULL, "mutex contended when task queue emtpy");
+
         add_task(temp);
         schedule();
     }
@@ -100,9 +77,10 @@ struct array user_mutex_array = ARRAY_INIT();
 
 SYSCALL_DEFINE0(SYS_mutex_create, int)
 {
-    struct mutex mutex = MUTEX_INIT();
     struct mutex *element = malloc(sizeof(struct mutex));
-    memcpy(element, &mutex, sizeof(struct mutex));
+
+    mutex_init(element);
+
     size_t index =
         array_add(&user_mutex_array, &element, sizeof(struct mutex *));
     return index;
@@ -112,6 +90,7 @@ SYSCALL_DEFINE1(SYS_mutex_lock, int, int, id)
 {
     struct mutex *mutex = *(struct mutex **)array_get(&user_mutex_array, id,
                                                       sizeof(struct mutex *));
+
     mutex_lock(mutex);
 
     return 0;

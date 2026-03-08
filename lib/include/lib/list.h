@@ -68,6 +68,7 @@ struct list2c
     struct list2c *prev, *next;
 };
 
+#define LIST2C_IS_EMPTY(head) (head.next == &head)
 #define LIST2C_HEAD_INIT(name) ((struct list2c){.prev = name, .next = name})
 #define LIST2C_INIT_HEAD(name)                                                 \
     struct list2c name;                                                        \
@@ -76,6 +77,8 @@ struct list2c
 
 void list2c_push(struct list2c *new, struct list2c *head);
 struct list2c *list2c_pop(struct list2c *head);
+// bool list2c_remove(struct list2c *value, struct list2c *head);
+void list2c_remove(struct list2c *value);
 
 #define list2c_for_each(pos, head)                                             \
     for (pos = (head)->next; pos != (head); pos = pos->next)

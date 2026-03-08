@@ -1,3 +1,4 @@
+#include "kernel/log.h"
 #include "kernel/syscall.h"
 #include "kmalloc.h"
 #include "sleep.h"
@@ -27,7 +28,7 @@
 #include <string.h>
 #include <task_queue.h>
 
-struct task_queue scheduler_queue = TASK_QUEUE_INIT();
+TASK_QUEUE_DEFINE(scheduler_queue);
 
 bool scheduler_enabled = false;
 struct task *current_task = NULL;
@@ -101,6 +102,8 @@ char **create_user_args(int argc, char **argv)
 struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 {
     struct task *out = malloc(sizeof(struct task));
+
+    out->list = LIST2C_INIT();
 
     out->start_addr = (void *)ip;
 
@@ -284,7 +287,7 @@ struct task *new_task(ptr ip)
     out->addr_space = (struct addr_space){.dir = NULL, .list_head = NULL};
 
     out->start_addr = (void *)ip;
-    out->list = LIST_INIT();
+    out->list = LIST2C_INIT();
 
     return out;
 }
@@ -303,8 +306,8 @@ struct task *create_kernel_task()
 
 bool init_task_exists()
 {
-    struct list *pos;
-    list_for_each(pos, scheduler_queue.head)
+    struct list2c *pos;
+    list2c_for_each(pos, &scheduler_queue.head)
     {
         struct task *t = containerof(pos, struct task, list);
         if (t->start_addr == (void *)0xDEADBEEF)
@@ -340,11 +343,11 @@ static void remove_task_sched_queue(struct task *task)
 
     if (task == current_task)
     {
-        current_task = LIST_ENTRY(current_task->list.next, struct task, list);
-        if (current_task == NULL)
+        current_task =
+            containerof(scheduler_queue.head.next, struct task, list);
+        if (&current_task->list == &scheduler_queue.head)
         {
-            current_task = LIST_ENTRY(scheduler_queue.head, struct task, list);
-
+            panic("task queue might be empty!");
             if (current_task == NULL)
             {
                 printf("why is this null:%p\n", scheduler_queue.head);
@@ -371,20 +374,24 @@ static void remove_task_load(struct task *task)
 
 void remove_task_add_queue(struct task *task, struct task_queue *queue)
 {
-    IRQ_OFF({
-        remove_task_sched_queue(task);
+    preempt_disable();
 
-        task->list.next = NULL;
-        task_queue_push(queue, task);
+    remove_task_sched_queue(task);
+    task->list.next = NULL;
+    task_queue_push(queue, task);
+    remove_task_load(task);
 
-        remove_task_load(task);
-    })
+    preempt_enable();
 }
 
 void remove_task(struct task *task)
 {
+    preempt_disable();
+
     remove_task_sched_queue(task);
     remove_task_load(task);
+
+    preempt_enable();
 }
 
 void add_task(struct task *task)
@@ -402,14 +409,29 @@ void add_task(struct task *task)
 int num_task_switches = 0;
 void switch_tasks()
 {
-    struct list *temp = current_task->list.next;
+    struct list2c *temp = current_task->list.next;
 
-    if (temp == NULL)
+    if (temp == &scheduler_queue.head)
     {
-        temp = scheduler_queue.head;
+        temp = scheduler_queue.head.next;
     }
+    /*     if (temp == NULL) */
+    /*     { */
+    /*         temp = &scheduler_queue.head; */
+    /*     } */
 
-    struct task *new_current = LIST_ENTRY(temp, struct task, list);
+    struct task *new_current = containerof(temp, struct task, list);
+    /*
+printf("START\n");
+printf("%p\n", new_current);
+printf("%p\n", &new_current->list);
+printf("shouldnt be true:%d\n",
+       &new_current->list == &scheduler_queue.head);
+printf("%p\n", new_current->list.next);
+printf("%p\n", new_current->list.next->next);
+printf("start_addr:%p\n", new_current->start_addr);
+    */
+
     current_task = new_current;
 }
 
@@ -464,8 +486,8 @@ void free_task(struct task *t)
 
 void print_tasks()
 {
-    struct list *pos;
-    list_for_each(pos, scheduler_queue.head)
+    struct list2c *pos;
+    list2c_for_each(pos, &scheduler_queue.head)
     {
         struct task *t = containerof(pos, struct task, list);
         printf("%p ", t->start_addr);
@@ -473,4 +495,5 @@ void print_tasks()
     printf("\n");
 }
 
+/* TODO: this is kinda in a stupid spot */
 int preempt_disable_count = 0;

@@ -19,8 +19,8 @@ volatile int key_available;
 uint8_t keyboard_buffer_head = 0;
 uint8_t keyboard_buffer_tail = 0;
 
-struct mutex keyboard_mutex = MUTEX_INIT();
-struct wait_queue keyboard_queue = WAIT_QUEUE_INIT();
+MUTEX_DEFINE(keyboard_mutex);
+WAIT_QUEUE_DEFINE(keyboard_queue);
 
 void push_keyboard_buffer(char c)
 {

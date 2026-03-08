@@ -14,48 +14,49 @@ void task_queue_push(struct task_queue *queue, struct task *t)
     /* logd("%p", t->start_addr); */
     /* printf("start:%p\n", t->start_addr); */
 
-    if (t->list.next != NULL)
-    {
-        struct task *next = containerof(t->list.next, struct task, list);
-        /* printf("%p\n", next->start_addr); */
-    }
-    if (queue->head == NULL)
-    {
-        queue->head = &t->list;
-        return;
-    }
-
-    list_push(&t->list, &queue->head);
+    list2c_push(&t->list, &queue->head);
 }
 
 struct task *task_queue_pop(struct task_queue *queue)
 {
-    if (queue->head == NULL)
+
+    if (LIST2C_IS_EMPTY(queue->head))
     {
         return NULL;
     }
 
-    struct list *list = list_pop(&queue->head);
+    /* struct list2c *pos; */
+    /* list2c_for_each(pos, &queue->head) */
+    /* { */
+    /*     printf("%p ", pos); */
+    /* } */
+    /* printf("\n"); */
+
+    struct list2c *list = list2c_pop(&queue->head);
+
+    if (list == NULL)
+    {
+        return NULL;
+    }
     struct task *out = LIST_ENTRY(list, struct task, list);
 
     /* the caller might have not done this themselves */
-    list->next = NULL;
+    /* list->next = NULL; */
 
     return out;
 }
 
 void task_queue_remove(struct task_queue *queue, struct task *t)
 {
-    if (queue->head == NULL)
+    if (LIST2C_IS_EMPTY(queue->head))
     {
         printf("task queue empty\n");
         return; /* TODO: this is probably an error */
     }
 
-    if (!list_remove(&t->list, &queue->head))
-    {
-        printf("task not in task queue\n");
-    }
+    /* TODO: maybe have a debug assertion to ensure that the task is in the
+     * queue */
+    list2c_remove(&t->list);
 
     t->list.next = NULL;
 }

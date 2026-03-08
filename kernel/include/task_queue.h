@@ -7,14 +7,16 @@ struct task;
 
 struct task_queue
 {
-    struct list *head;
+    struct list2c head;
 };
 
-#define TASK_QUEUE_INIT()                                                      \
+#define TASK_QUEUE_INIT(name)                                                  \
     (struct task_queue)                                                        \
     {                                                                          \
-        .head = NULL                                                           \
+        .head = LIST2C_HEAD_INIT(&name.head)                                   \
     }
+
+#define TASK_QUEUE_DEFINE(name) struct task_queue name = TASK_QUEUE_INIT(name)
 
 void task_queue_push(struct task_queue *queue, struct task *t);
 struct task *task_queue_pop(struct task_queue *queue);

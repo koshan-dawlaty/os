@@ -147,7 +147,7 @@ struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
     out->fs_private = fs_private;
 
     out->sb = sb;
-    out->lock = MUTEX_INIT();
+    mutex_init(&out->lock);
 
     return out;
 }

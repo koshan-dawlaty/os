@@ -44,8 +44,8 @@ struct unix_socket *unix_socket_alloc()
     struct unix_socket *out = malloc(sizeof(struct unix_socket));
 
     out->buffer = ARRAY_INIT();
-    out->send_queue = WAIT_QUEUE_INIT();
-    out->recv_queue = WAIT_QUEUE_INIT();
+    wait_queue_init(&out->send_queue);
+    wait_queue_init(&out->recv_queue);
 
     out->is_closing = false;
 

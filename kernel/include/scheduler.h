@@ -39,7 +39,7 @@ struct registers
 
 struct task
 {
-    struct list list;
+    struct list2c list;
 
     struct addr_space addr_space;
 
@@ -122,7 +122,6 @@ static inline void preempt_disable()
 {
     if (preempt_disable_count <= 0)
     {
-        printf("disabling\n");
         irq_disable();
     }
     preempt_disable_count++;
@@ -132,7 +131,6 @@ static inline void preempt_enable()
     preempt_disable_count--;
     if (preempt_disable_count <= 0)
     {
-        printf("enabling\n");
         irq_enable();
     }
 }

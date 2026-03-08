@@ -73,13 +73,14 @@ int pipe_open(struct file **read_ptr, struct file **write_ptr)
     struct file *write = *write_ptr;
 
     struct pipe *read_pipe = malloc(sizeof(struct pipe));
-    read_pipe->queue = WAIT_QUEUE_INIT();
+
+    wait_queue_init(&read_pipe->queue);
     read_pipe->buffer = ARRAY_INIT();
     read->file_private = read_pipe;
     read->operations = pipe_operations;
 
     struct pipe *write_pipe = malloc(sizeof(struct pipe));
-    write_pipe->queue = WAIT_QUEUE_INIT();
+    wait_queue_init(&write_pipe->queue);
     write_pipe->buffer = ARRAY_INIT();
     write->file_private = write_pipe;
     write->operations = pipe_operations;
