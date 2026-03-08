@@ -168,9 +168,9 @@ load_registers:
 	mov 0xA0(%rcx), %r15
 	mov 0x50(%rcx), %rcx
 
-	pushf
-	or $(1 << 9), 0(%rsp)
-	popf
+	# pushf
+	# or $(1 << 9), 0(%rsp)
+	# popf
 
 
 

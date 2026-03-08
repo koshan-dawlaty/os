@@ -468,6 +468,8 @@ void schedule()
 
     PIC_sendEOI(0);
     load_registers(&current_task->regs);
+
+    irq_enable();
 }
 
 struct task *get_current_task()
