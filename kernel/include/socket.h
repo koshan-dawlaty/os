@@ -45,4 +45,9 @@ int unix_socket_send(struct unix_socket *sock, const void *buf, size_t len);
 int unix_socket_add_array(struct unix_socket *sock);
 struct unix_socket *unix_socket_lookup(int id);
 
+/* FIXME: this is very stupid and only called by pathname lookup */
+struct dentry *dentry_socket_alloc(const char *name, struct dentry *parent,
+                                   struct unix_socket *socket);
+extern struct file_operations socket_operations;
+
 #endif

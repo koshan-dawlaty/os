@@ -1,6 +1,7 @@
 #ifndef WM_LIB_H
 #define WM_LIB_H
 
+#include <fcntl.h>
 #include <lib/framebuffer.h>
 #include <lib/rect.h>
 #include <stdbool.h>
@@ -8,6 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/syscall.h>
+#include <unistd.h>
 
 #define __packed __attribute__((packed))
 
@@ -126,12 +128,12 @@ static inline int socket_create()
 
 static inline int send(int socket, void *buf, size_t len)
 {
-    return syscall_wrapper_asm(SYS_send, socket, (ptr)buf, len, 0, 0);
+    return write(socket, buf, len);
 }
 
 static inline int recv(int socket, void *buf, size_t len)
 {
-    return syscall_wrapper_asm(SYS_recv, socket, (ptr)buf, len, 0, 0);
+    return read(socket, buf, len);
 }
 
 static inline int clone(ptr ip)

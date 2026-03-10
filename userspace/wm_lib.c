@@ -1,4 +1,5 @@
 #include "wm_lib.h"
+#include "fcntl.h"
 #include <err.h>
 #include <errno.h>
 #include <stddef.h>
@@ -96,9 +97,11 @@ char wm_get_key_nonblock(struct wm_client client)
 static struct wm_client wm_client_connect_impl(size_t height, size_t width,
                                                bool is_nonblock)
 {
-    /* TODO: assumes socket is 0, make it something in the fs */
+    printf("opening\n");
+    int server = open("/wm_socket", O_RDONLY);
+    printf("got:%d\n", server);
     int server_sock;
-    recv(0, &server_sock, sizeof(int));
+    read(server, &server_sock, sizeof(int));
 
     struct wm_inital win = {
         .height = height, .width = width, .is_nonblock = is_nonblock};

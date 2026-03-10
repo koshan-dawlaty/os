@@ -628,9 +628,13 @@ void thread1()
 int main()
 {
     init_libc();
+    printf("test\n");
 
     /* printf("window manager\n"); */
     /* clone((ptr)thread1); */
+
+    int server_sock = syscall_wrapper_asm(SYS_create_socket_fs,
+                                          (ptr) "wm_socket", 0, 0, 0, 0);
 
     window_queue_mutex = user_mutex_create();
 
@@ -663,19 +667,18 @@ int main()
     clone((ptr)mouse_thread);
     clone((ptr)keyboard_thread);
 
-    int socket = socket_create();
-
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    execv("tron", (char *[]){"imgview", "osdev.tga", NULL});
+    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* execv("tron", (char *[]){"imgview", "osdev.tga", NULL}); */
 
     while (true)
     {
         int client_sock = socket_create();
         printf("socket num:%d\n", client_sock);
-        send(socket, &client_sock, sizeof(int));
+        send(server_sock, &client_sock, sizeof(int));
+        printf("sent\n");
         current_client = client_sock;
 
         clone((ptr)(process_connection));

@@ -1,9 +1,12 @@
 #include "fcntl.h"
 #include "kernel/log.h"
+#include "kernel/userspace.h"
 #include "panic.h"
 #include "scheduler.h"
 #include "spinlock.h"
+#include "sys/types.h"
 #include "unistd.h"
+#include <err.h>
 #include <errno.h>
 #include <kernel/syscall.h>
 #include <lib/array.h>
@@ -130,11 +133,14 @@ static inline int unix_socket_fs_write(struct file *f, const char *buf,
     return unix_socket_send(socket, buf, n);
 }
 
-static struct file_operations socket_operations = {
+struct file_operations socket_operations = {
     .read = unix_socket_fs_read,
     .write = unix_socket_fs_write,
 };
 
+/*
+ * creates a socket that an anonymous file (not associated with a dentry)
+ */
 struct file *unix_socket_create()
 {
     /* TODO: dont use new_file for this, as it takes a struct dentry as a
@@ -142,6 +148,39 @@ struct file *unix_socket_create()
     struct file *out = new_file(NULL, O_RDWR);
     out->file_private = unix_socket_alloc();
     out->operations = socket_operations;
+
+    return out;
+}
+
+/*
+ * creates a socket that is associated with a dentry
+ */
+struct file *unix_socket_create_fs(const char *path)
+{
+    /* FIXME: this should not make a new dentry like this */
+    struct pathname_lookup_flags flags = {
+        .create = true,
+        .type = DENTRY_SOCKET, /* TODO: dentry type here is bad */
+    };
+    struct unix_socket *socket = unix_socket_alloc();
+    struct dentry *entry = lookup_path(path, flags);
+    printf("%p\n", entry);
+    entry->socket = socket;
+    struct file *file = new_file(entry, O_RDWR);
+    file->operations = socket_operations;
+    file->file_private = socket;
+
+    return file;
+}
+
+struct dentry *dentry_socket_alloc(const char *name, struct dentry *parent,
+                                   struct unix_socket *socket)
+{
+    struct dentry *out = malloc(sizeof(struct dentry));
+    out->name = (char *)name;
+    out->parent = parent;
+    out->type = DENTRY_SOCKET;
+    out->socket = socket;
 
     return out;
 }
@@ -169,9 +208,7 @@ SYSCALL_DEFINE3(SYS_recv, int, int, socket, void *, buf, size_t, len)
 SYSCALL_DEFINE0(SYS_create_socket, int)
 {
     struct file *f = unix_socket_create();
-    logd("socket_create:%p", f);
     int fd = fdlist_add(get_current_task()->descriptors, f);
-    logd("socket_create:%d", fd);
 
     return fd;
 }
@@ -179,6 +216,20 @@ SYSCALL_DEFINE0(SYS_create_socket, int)
 SYSCALL_DEFINE1(SYS_close_socket, int, int, socket)
 {
     return unix_socket_close(socket);
+}
+
+SYSCALL_DEFINE1(SYS_create_socket_fs, int, const char *, pathname)
+{
+    const char *path = get_user_pathname(pathname);
+    if (IS_ERR(path))
+    {
+        return GET_ERR(path);
+    }
+    struct file *f = unix_socket_create_fs(path);
+
+    int fd = fdlist_add(get_current_task()->descriptors, f);
+
+    return fd;
 }
 
 /* SYSCALL_DEFINE0(socket_create, SYS_create_socket) */

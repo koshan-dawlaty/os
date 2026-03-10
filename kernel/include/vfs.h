@@ -2,6 +2,7 @@
 #define VFS_H
 #include "kernel/log.h"
 #include "mutex.h"
+#include "socket.h"
 #include "spinlock.h"
 #include <device.h>
 #include <dirent.h>
@@ -72,6 +73,8 @@ typedef enum dentry_type
 
     DENTRY_MOUNT_POINT,
     DENTRY_DEVICE,
+
+    DENTRY_SOCKET
 } dentry_type;
 
 /*
@@ -91,6 +94,8 @@ typedef struct dentry
                        * mounted filesystem
                        */
         struct device *dev; /* type == DENTRY_DEVICE  */
+
+        struct unix_socket *socket;
     };
 
     dentry_type type;
@@ -260,6 +265,8 @@ struct fdlist *new_fdlist();
  */
 int fdlist_add(struct fdlist *list, struct file *f);
 struct file *fdlist_lookup(struct fdlist *list, int fd);
+
+void fdlist_set(struct fdlist *list, size_t pos, struct file *f);
 
 void fdlist_free(struct fdlist *list);
 

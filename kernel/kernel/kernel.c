@@ -308,9 +308,9 @@ void kmain()
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
     logi("starting init process");
-    int err = execv("/elf_test", (char *[]){"/elf_test", NULL});
+    /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
 
-    /* int err = execv("/wm", (char *[]){"wm", NULL}); */
+    int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
     struct task_queue abc = TASK_QUEUE_INIT(abc);
 

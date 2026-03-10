@@ -152,9 +152,10 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     const char *keyboard_path = "/keyboard";
     /* TODO: maybe have a function to index into the fdlist, like dup2() */
     /* TODO: maybe make stdin/out not readable/writeable in the kernel */
-    fdlist_add(out->descriptors, open_device(keyboard_path)); /* 0, stdin */
-    fdlist_add(out->descriptors, open_device(term_path));     /* 1, stdout */
-    fdlist_add(out->descriptors, open_device(term_path));     /* 2, stderr */
+
+    fdlist_set(out->descriptors, 0, open_device(keyboard_path));
+    fdlist_set(out->descriptors, 1, open_device(term_path));
+    fdlist_set(out->descriptors, 2, open_device(term_path));
 
     return out;
 }
@@ -204,9 +205,16 @@ struct task *user_thread_alloc(ptr ip)
     const char *keyboard_path = "/keyboard";
     /* TODO: maybe have a function to index into the fdlist, like dup2() */
     /* TODO: maybe make stdin/out not readable/writeable in the kernel */
-    fdlist_add(out->descriptors, open_device(keyboard_path)); /* 0, stdin */
-    fdlist_add(out->descriptors, open_device(term_path));     /* 1, stdout */
-    fdlist_add(out->descriptors, open_device(term_path));     /* 2, stderr */
+    /* fdlist_add(out->descriptors, open_device(keyboard_path)); /1* 0, stdin
+     * *1/ */
+    /* fdlist_add(out->descriptors, open_device(term_path));     /1* 1, stdout
+     * *1/ */
+    /* fdlist_add(out->descriptors, open_device(term_path));     /1* 2, stderr
+     * *1/ */
+
+    fdlist_set(out->descriptors, 0, open_device(keyboard_path));
+    fdlist_set(out->descriptors, 1, open_device(term_path));
+    fdlist_set(out->descriptors, 2, open_device(term_path));
 
     return out;
 }

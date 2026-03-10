@@ -114,6 +114,7 @@ struct file *new_file(struct dentry *entry, int flags)
     {
         switch (entry->type)
         {
+        case DENTRY_SOCKET:
         case DENTRY_DEVICE:
         case DENTRY_FILE:
             break;

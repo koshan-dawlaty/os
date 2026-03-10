@@ -1,4 +1,7 @@
 #include "dcache.h"
+#include "socket.h"
+#include "spinlock.h"
+#include "sys/stat.h"
 #include "unistd.h"
 #include "vfs_internal.h"
 #include <assert.h>
@@ -57,6 +60,19 @@ int fdlist_add(struct fdlist *list, file *f)
     int retval = list->len - 1;
     release_spinlock(&list->lock);
     return retval;
+}
+
+void fdlist_set(struct fdlist *list, size_t pos, struct file *f)
+{
+    spinlock_lock(&list->lock);
+
+    if (pos > list->len)
+    {
+        list->len = pos + 1;
+        list->files = realloc(list->files, list->len * sizeof(struct file *));
+    }
+    list->files[pos] = f;
+    spinlock_unlock(&list->lock);
 }
 
 struct file *fdlist_lookup(struct fdlist *list, int fd)
@@ -178,6 +194,11 @@ struct file *open_file(const char *path, int flags)
         break;
     case DENTRY_DEVICE:
         out->operations = device_operations;
+        break;
+    case DENTRY_SOCKET:
+        out->operations = socket_operations;
+        out->file_private = dentry->socket;
+
         break;
 
     case DENTRY_INVALID:

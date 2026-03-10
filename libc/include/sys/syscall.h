@@ -34,4 +34,6 @@
 #define SYS_close_socket 31
 #define SYS_sleep 32
 
+#define SYS_create_socket_fs 33
+
 #endif

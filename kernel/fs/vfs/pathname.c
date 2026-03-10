@@ -3,6 +3,7 @@
 #include "vfs.h"
 #include "vfs_internal.h"
 #include <err.h>
+#include <socket.h>
 
 #include <errno.h>
 #include <kernel/types.h>
@@ -87,6 +88,11 @@ static size_t parse_component(const char *path, dentry **current_dir,
                     entry = new_dentry_dev(strdup(component), *current_dir,
                                            flags.dev);
                 }
+                else if (flags.type == DENTRY_SOCKET)
+                {
+                    entry = dentry_socket_alloc(strdup(component), *current_dir,
+                                                unix_socket_alloc());
+                }
             }
             else
             {
@@ -127,6 +133,13 @@ static size_t parse_component(const char *path, dentry **current_dir,
     else if (entry->type == DENTRY_MOUNT_POINT)
     {
         /* TODO */
+    }
+    else if (entry->type == DENTRY_SOCKET)
+    {
+        if (!final_component)
+        {
+            goto not_dir;
+        }
     }
     else if (entry->type == DENTRY_INVALID)
     {

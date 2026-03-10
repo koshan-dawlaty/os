@@ -24,7 +24,6 @@ int read(int fd, void *buf, size_t n)
 #ifdef __is_libk
 
     struct file *f = lookup_descriptor(fd);
-    logd("read():%p", f);
     if (f == NULL)
     {
         return -EBADF;
