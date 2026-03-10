@@ -66,7 +66,7 @@ void fdlist_set(struct fdlist *list, size_t pos, struct file *f)
 {
     spinlock_lock(&list->lock);
 
-    if (pos > list->len)
+    if (pos >= list->len)
     {
         list->len = pos + 1;
         list->files = realloc(list->files, list->len * sizeof(struct file *));

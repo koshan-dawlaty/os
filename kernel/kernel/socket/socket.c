@@ -1,3 +1,4 @@
+#include "assert.h"
 #include "fcntl.h"
 #include "kernel/log.h"
 #include "kernel/userspace.h"
@@ -164,13 +165,64 @@ struct file *unix_socket_create_fs(const char *path)
     };
     struct unix_socket *socket = unix_socket_alloc();
     struct dentry *entry = lookup_path(path, flags);
-    printf("%p\n", entry);
+
     entry->socket = socket;
+    socket->connection.task = get_current_task();
+    wait_queue_init(&socket->connection.connect_queue);
+    wait_queue_init(&socket->connection.accept_queue);
+
     struct file *file = new_file(entry, O_RDWR);
     file->operations = socket_operations;
     file->file_private = socket;
 
     return file;
+}
+
+/*
+ * establishes a connection with a filesystem socket
+ * returns the new socket for the client, not the server
+ */
+int unix_socket_connect(struct dentry *entry)
+{
+    struct unix_socket *socket = entry->socket;
+
+    struct file *new_sock = unix_socket_create();
+
+    struct task *current = get_current_task();
+    int fd = fdlist_add(current->descriptors, new_sock);
+    struct task *other_task = socket->connection.task;
+    int other_fd = fdlist_add(other_task->descriptors, new_sock);
+
+    if (WAIT_QUEUE_EMPTY(socket->connection.accept_queue))
+    {
+        wait_queue_wait(&socket->connection.connect_queue);
+    }
+    else
+    {
+        socket->connection.current_connection = other_fd;
+        wait_queue_done(&socket->connection.accept_queue);
+
+        /* /1* FIXME *1/ */
+        /* UNREACHABLE("TODO"); */
+    }
+
+    return fd;
+}
+
+int unix_socket_accept(struct dentry *entry)
+{
+    struct unix_socket *socket = entry->socket;
+
+    if (WAIT_QUEUE_EMPTY(socket->connection.connect_queue))
+    {
+        wait_queue_wait(&socket->connection.accept_queue);
+    }
+    else
+    {
+        wait_queue_done(&socket->connection.connect_queue);
+    }
+
+    return socket->connection.current_connection;
 }
 
 struct dentry *dentry_socket_alloc(const char *name, struct dentry *parent,
@@ -181,6 +233,30 @@ struct dentry *dentry_socket_alloc(const char *name, struct dentry *parent,
     out->parent = parent;
     out->type = DENTRY_SOCKET;
     out->socket = socket;
+
+    return out;
+}
+
+SYSCALL_DEFINE1(SYS_accept, int, int, fd)
+{
+    struct file *f = lookup_descriptor(fd);
+    struct dentry *entry = f->entry;
+    ASSERT(entry->type == DENTRY_SOCKET,
+           "accept needs to be called on a socket dentry");
+
+    int out = unix_socket_accept(entry);
+
+    return out;
+}
+
+SYSCALL_DEFINE1(SYS_connect, int, int, fd)
+{
+    struct file *f = lookup_descriptor(fd);
+    struct dentry *entry = f->entry;
+    ASSERT(entry->type == DENTRY_SOCKET,
+           "accept needs to be called on a socket dentry");
+
+    int out = unix_socket_connect(entry);
 
     return out;
 }

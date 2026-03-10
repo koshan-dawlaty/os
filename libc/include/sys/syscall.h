@@ -36,4 +36,7 @@
 
 #define SYS_create_socket_fs 33
 
+#define SYS_connect 34
+#define SYS_accept 35
+
 #endif

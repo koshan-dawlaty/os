@@ -54,7 +54,8 @@ int main()
 
     /* memset(framebuffer, 'a', 10); */
 
-    int color = 0xFFFF00;
+    /* int color = 0xFFFF00; */
+    int color = 0x0000FF;
     switch (client.socket)
     {
     case 1:

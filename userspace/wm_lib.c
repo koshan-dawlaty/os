@@ -2,6 +2,7 @@
 #include "fcntl.h"
 #include <err.h>
 #include <errno.h>
+#include <sched.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -100,12 +101,13 @@ static struct wm_client wm_client_connect_impl(size_t height, size_t width,
     printf("opening\n");
     int server = open("/wm_socket", O_RDONLY);
     printf("got:%d\n", server);
-    int server_sock;
-    read(server, &server_sock, sizeof(int));
+    int server_sock = connect(server);
 
     struct wm_inital win = {
         .height = height, .width = width, .is_nonblock = is_nonblock};
+    printf("sending initial messsage\n");
     send(server_sock, &win, sizeof(struct wm_inital));
+    printf("inital messsage sent\n");
 
     /* TODO: make this a recv() acknowledge like for rendering */
     sched_yield();

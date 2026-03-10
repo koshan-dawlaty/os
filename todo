@@ -58,3 +58,6 @@ NEED USERMODE/SCHEDULER TESTS!!!
 cant make user threads with arguments
 
 wm should really use nonblocking socket 
+
+atomic access to waitqueue in some cases?
+	like in socket connect(), it uses the wait queue in 2 directions

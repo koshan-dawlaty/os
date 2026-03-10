@@ -625,6 +625,10 @@ void thread1()
     exit(0);
 }
 
+int accept(int socket)
+{
+    return syscall_wrapper_asm(SYS_accept, socket, 0, 0, 0, 0);
+}
 int main()
 {
     init_libc();
@@ -669,16 +673,17 @@ int main()
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    execv("/elf_test", (char *[]){"elf_test", NULL});
     execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("tron", (char *[]){"imgview", "osdev.tga", NULL}); */
 
     while (true)
     {
-        int client_sock = socket_create();
-        printf("socket num:%d\n", client_sock);
-        send(server_sock, &client_sock, sizeof(int));
-        printf("sent\n");
+        int client_sock = accept(server_sock);
+        printf("%d\n", client_sock);
+        /* printf("socket num:%d\n", client_sock); */
+        /* send(server_sock, &client_sock, sizeof(int)); */
+        /* printf("sent\n"); */
         current_client = client_sock;
 
         clone((ptr)(process_connection));

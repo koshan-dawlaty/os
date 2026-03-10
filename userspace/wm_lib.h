@@ -151,6 +151,11 @@ static inline int shared_mem_get(int id, void **p)
     return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
 }
 
+static inline int connect(int socket)
+{
+    return syscall_wrapper_asm(SYS_connect, socket, 0, 0, 0, 0);
+}
+
 void wm_render(struct wm_client client);
 char wm_get_key(struct wm_client client);
 char wm_get_key_nonblock(struct wm_client client);

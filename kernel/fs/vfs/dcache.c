@@ -1,7 +1,7 @@
+#include <container_of.h>
 #include <err.h>
 #include <errno.h>
 #include <kernel/utils.h>
-#include <container_of.h>
 #include <lib/list.h>
 #include <lib/lru.h>
 #include <lib/refcount.h>
@@ -221,7 +221,8 @@ void add_dcache(dentry *parent, dentry *new_entry)
 {
 
     if (new_entry->type == DENTRY_DEVICE ||
-        new_entry->type == DENTRY_MOUNT_POINT)
+        new_entry->type == DENTRY_MOUNT_POINT ||
+        new_entry->type == DENTRY_SOCKET)
     {
         add_dcache_permanent(parent, new_entry);
         return;

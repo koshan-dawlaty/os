@@ -6,28 +6,22 @@
 #include <vfs.h>
 #include <wait_queue.h>
 
-enum socket_state
-{
-    SOCKET_LISTEN,
-    SOCKET_CONNECTED,
-    SOCKET_DEFAULT,
-};
-
 struct unix_socket
 {
-    enum socket_state state;
     bool is_closing;
+
     union
     {
         struct
         {
-            size_t backlog;
-            struct unix_socket *waiting;
-        } listener;
-        struct
-        {
-            struct list2 list;
-        } connected;
+            struct task *task;
+            struct wait_queue connect_queue;
+            struct wait_queue accept_queue;
+            int current_connection; /* TODO: this is used to tell the socket
+                                        what the new socket is after it has
+                                        woken up from accept(), but it should be
+                                        message passing or something */
+        } connection; /* used if the socket exists on the filesystem */
     };
 
     struct array buffer;          /* buffer of things that has been sent */
