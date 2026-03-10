@@ -1,5 +1,7 @@
+#include "fcntl.h"
 #include "kernel/log.h"
 #include "panic.h"
+#include "scheduler.h"
 #include "spinlock.h"
 #include "unistd.h"
 #include <errno.h>
@@ -75,7 +77,7 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
     return 0;
 }
 
-int unix_socket_send(struct unix_socket *sock, void *buf, size_t len)
+int unix_socket_send(struct unix_socket *sock, const void *buf, size_t len)
 {
     array_add(&sock->buffer, buf, len);
     if (WAIT_QUEUE_EMPTY(sock->recv_queue))
@@ -96,18 +98,11 @@ int unix_socket_send(struct unix_socket *sock, void *buf, size_t len)
 
 int unix_socket_close(int socket_num)
 {
-    printf("closing:%d\n", socket_num);
     struct unix_socket *sock = unix_socket_lookup(socket_num);
 
     void *new_ptr = NULL;
     array_set(&unix_socket_array, socket_num, &new_ptr,
               sizeof(struct unix_socket *));
-
-    void *should_be_null = unix_socket_lookup(socket_num);
-    if (should_be_null != NULL)
-    {
-        printf("NOT NULL\n");
-    }
 
     sock->is_closing = true;
 
@@ -122,67 +117,33 @@ int unix_socket_close(int socket_num)
     return 0;
 }
 
-int unix_socket_listen(struct unix_socket *sock, size_t backlog)
+static inline int unix_socket_fs_read(struct file *f, char *buf, size_t n,
+                                      size_t off)
 {
-
-    if (sock->state != SOCKET_DEFAULT)
-    {
-        return -1; /* TODO: real error code */
-    }
-    sock->state = SOCKET_LISTEN;
-    sock->listener.backlog = backlog;
-
-    return 0;
+    struct unix_socket *socket = f->file_private;
+    return unix_socket_recv(socket, buf, n);
+}
+static inline int unix_socket_fs_write(struct file *f, const char *buf,
+                                       size_t n, size_t off)
+{
+    struct unix_socket *socket = f->file_private;
+    return unix_socket_send(socket, buf, n);
 }
 
-int unix_socket_accept(struct unix_socket *sock, struct unix_socket *client)
+static struct file_operations socket_operations = {
+    .read = unix_socket_fs_read,
+    .write = unix_socket_fs_write,
+};
+
+struct file *unix_socket_create()
 {
-    if (sock->state != SOCKET_LISTEN)
-    {
-        return -1;
-    }
+    /* TODO: dont use new_file for this, as it takes a struct dentry as a
+     * parameter */
+    struct file *out = new_file(NULL, O_RDWR);
+    out->file_private = unix_socket_alloc();
+    out->operations = socket_operations;
 
-    if (sock->listener.waiting == NULL)
-    {
-        return -1; /* TODO: maybe block? */
-    }
-
-    *client = *sock->listener.waiting;
-    struct list2 *list = &client->listener.waiting->connected.list;
-
-    if (list->next == NULL)
-    {
-        sock->listener.waiting = NULL;
-        return 0;
-    }
-
-    struct list2 *next = list->next;
-    sock->listener.waiting = LIST_ENTRY(
-        next, struct unix_socket,
-        connected.list); /* this might be incorrect way to use containerof() */
-
-    return 0;
-}
-
-int unix_socket_connect(struct unix_socket *client, struct unix_socket *server)
-{
-    if (client->state != SOCKET_DEFAULT)
-    {
-        return -1; /* TODO: real error code */
-    }
-    client->state = SOCKET_CONNECTED;
-    client->connected.list = LIST2_INIT();
-    struct unix_socket *waiting_queue_head = server->listener.waiting;
-    if (waiting_queue_head == NULL)
-    {
-        server->listener.waiting = client;
-        return 0;
-    }
-
-    client->connected.list.next = &waiting_queue_head->connected.list;
-    waiting_queue_head->connected.list.prev = &client->connected.list;
-
-    return 0;
+    return out;
 }
 
 SYSCALL_DEFINE3(SYS_send, int, int, socket, void *, buf, size_t, len)
@@ -207,8 +168,12 @@ SYSCALL_DEFINE3(SYS_recv, int, int, socket, void *, buf, size_t, len)
 
 SYSCALL_DEFINE0(SYS_create_socket, int)
 {
-    struct unix_socket *s = unix_socket_alloc();
-    return unix_socket_add_array(s);
+    struct file *f = unix_socket_create();
+    logd("socket_create:%p", f);
+    int fd = fdlist_add(get_current_task()->descriptors, f);
+    logd("socket_create:%d", fd);
+
+    return fd;
 }
 
 SYSCALL_DEFINE1(SYS_close_socket, int, int, socket)

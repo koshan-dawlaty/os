@@ -193,7 +193,7 @@ struct file *open_file(const char *path, int flags)
     return out;
 }
 
-file *lookup_descriptor(int fd)
+struct file *lookup_descriptor(int fd)
 {
     struct fdlist *list = get_current_fdlist();
     return fdlist_lookup(list, fd);

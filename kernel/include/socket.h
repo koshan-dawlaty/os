@@ -3,6 +3,7 @@
 
 #include <lib/array.h>
 #include <stddef.h>
+#include <vfs.h>
 #include <wait_queue.h>
 
 enum socket_state
@@ -37,7 +38,7 @@ struct unix_socket
 struct unix_socket *unix_socket_alloc();
 
 int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len);
-int unix_socket_send(struct unix_socket *sock, void *buf, size_t len);
+int unix_socket_send(struct unix_socket *sock, const void *buf, size_t len);
 
 /* TODO: these are just here so userspace works, they should be removed and
  * replaced with the actual api */

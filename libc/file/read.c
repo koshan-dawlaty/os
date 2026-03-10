@@ -23,7 +23,13 @@ int read(int fd, void *buf, size_t n)
 
 #ifdef __is_libk
 
-    file *f = lookup_descriptor(fd);
+    struct file *f = lookup_descriptor(fd);
+    logd("read():%p", f);
+    if (f == NULL)
+    {
+        return -EBADF;
+    }
+
     return read_file(f, buf, n, f->offset);
 #else
     int retval = syscall_wrapper_asm(SYS_read, fd, (uintptr_t)buf, n, 0, 0);

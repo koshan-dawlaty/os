@@ -195,6 +195,9 @@ struct task *user_thread_alloc(ptr ip)
     out->addr_space = current_addr_space;
 
     addr_space_load(out->addr_space);
+    struct fdlist *parent_fdlist = get_current_task()->descriptors;
+    /* FIXME: this might break something where stdio is not correct?  */
+    out->descriptors = parent_fdlist;
 
     /* TODO: this should duplicate file descriptors */
     const char *term_path = "/terminal";

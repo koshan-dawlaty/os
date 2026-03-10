@@ -26,10 +26,27 @@ int execv_stdio(const char *path, char *const argv[], int in, int out)
                                0);
 }
 
+int sock;
+void t1()
+{
+    char *buf = malloc(4);
+    read(sock, buf, 4);
+    printf("%s\n", buf);
+    exit(0);
+}
+
 int main()
 {
 
     init_libc();
+
+    sock = socket_create();
+
+    clone((ptr)t1);
+    printf("socket: %d\n", sock);
+    write(sock, "abc", 4);
+
+    exit(0);
 
     /* *(char *)(0x1234) = 'a'; */
 

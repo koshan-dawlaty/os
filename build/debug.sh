@@ -11,7 +11,7 @@ rm -f qemu.img
 # gdb -ex "set \$flags=$QEMU_FLAGS" -x debug.gdb
 #
 
-USER_EXECUTABLE="build/fs-root/wm"
+USER_EXECUTABLE="build/fs-root/elf_test"
 USER_EXECUTABLE2="build/fs-root/elf_test2"
 
 KERNEL_ADDR=objdump -h isodir/boot/os.kernel | grep \ .text\  | awk '{print $4}'
