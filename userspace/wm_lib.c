@@ -82,14 +82,26 @@ char wm_get_key(struct wm_client client)
 
     return out;
 }
+char wm_get_key_nonblock(struct wm_client client)
+{
+    int key_code = WM_RES_KEY_NONBLOCK;
+    send(client.socket, &key_code, sizeof(int));
 
-struct wm_client wm_client_connect(size_t height, size_t width)
+    char out;
+    recv(client.socket, &out, sizeof(char));
+
+    return out;
+}
+
+static struct wm_client wm_client_connect_impl(size_t height, size_t width,
+                                               bool is_nonblock)
 {
     /* TODO: assumes socket is 0, make it something in the fs */
     int server_sock;
     recv(0, &server_sock, sizeof(int));
 
-    struct wm_inital win = {.height = height, .width = width};
+    struct wm_inital win = {
+        .height = height, .width = width, .is_nonblock = is_nonblock};
     send(server_sock, &win, sizeof(struct wm_inital));
 
     /* TODO: make this a recv() acknowledge like for rendering */
@@ -108,4 +120,14 @@ struct wm_client wm_client_connect(size_t height, size_t width)
                             .socket = server_sock};
 
     return out;
+}
+
+struct wm_client wm_client_connect_nonblock(size_t height, size_t width)
+{
+    return wm_client_connect_impl(height, width, true);
+}
+
+struct wm_client wm_client_connect(size_t height, size_t width)
+{
+    return wm_client_connect_impl(height, width, false);
 }

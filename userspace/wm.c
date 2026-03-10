@@ -51,6 +51,14 @@ struct window_queue_entry
     struct window *win;
     struct wm_connection *conn;
     struct list2 list;
+
+    /* FIXME: stupid, should use O_NONBLOCK globally or just find a better way
+     * of doing this */
+    struct
+    {
+        char current_key;
+        bool is_nonblock;
+    } nonblock_info;
 };
 
 struct list2 *window_queue;
@@ -310,6 +318,9 @@ void process_connection()
     ent->list = LIST2_INIT();
     ent->win = w;
     ent->conn = conn;
+    printf("%d\n", win_info.is_nonblock);
+    ent->nonblock_info.is_nonblock = win_info.is_nonblock;
+    ent->nonblock_info.current_key = 0;
 
     user_mutex_lock(window_queue_mutex);
     if (window_queue == NULL)
@@ -375,6 +386,16 @@ void process_connection()
             }
             /* printf("sent it\n"); */
             break;
+        }
+        case WM_RES_KEY_NONBLOCK:
+        {
+            char c = 0;
+            if (ent->nonblock_info.current_key != 0)
+            {
+                c = ent->nonblock_info.current_key;
+                ent->nonblock_info.current_key = 0;
+            }
+            send(socket, &c, 1);
         }
         }
         /* printf("waiting for next code\n"); */
@@ -446,10 +467,17 @@ void keyboard_thread()
 
             if (focused != NULL)
             {
-                struct wm_connection *conn = focused->conn;
-                current_keyboard_char = c;
+                if (focused->nonblock_info.is_nonblock)
+                {
+                    focused->nonblock_info.current_key = c;
+                }
+                else
+                {
+                    struct wm_connection *conn = focused->conn;
+                    current_keyboard_char = c;
 
-                send(conn->input_socket, &c, sizeof(char));
+                    send(conn->input_socket, &c, sizeof(char));
+                }
             }
         }
     }
@@ -629,6 +657,8 @@ int main()
     /* this might be bad because this is a stack allocation */
     struct window_queue_entry mouse_ent = {.win = mouse, .list = LIST2_INIT()};
     window_queue = &mouse_ent.list;
+    mouse_ent.nonblock_info.is_nonblock = false;
+    mouse_ent.nonblock_info.current_key = 0;
 
     clone((ptr)mouse_thread);
     clone((ptr)keyboard_thread);
@@ -636,9 +666,10 @@ int main()
     int socket = socket_create();
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    execv("imgview", (char *[]){"imgview", "osdev.tga", NULL});
-    execv("/elf_test", (char *[]){"elf_test", NULL});
-    execv("/elf_test", (char *[]){"elf_test", NULL});
+    /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    execv("tron", (char *[]){"imgview", "osdev.tga", NULL});
 
     while (true)
     {

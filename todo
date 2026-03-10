@@ -52,41 +52,9 @@ ext2 dentry create makes a entry called '%' when it makes a dentry, its probably
 vfs probably has a sync bug
 readdir() reads from the filesystem alot and does not use dcache (this is also mentioned in another todo comment somewhere)
 
-
-IMPORTANT IMPORTANT IMPORTANT IMPORTANT!!!
-	TODO: the scheduler breaks at fast pit speeds,		
-		usermode tasks crash at addr zero when jumping to their entry point.
-		this seems to be happening when schedule() is called by the pit when the task is in new_task_usermode_start	
-		it seems to happen when it switches back to the shell task (the one that launched the crashing task)
-		
-		
-	other notes (addresses are probably wrong):
-				ls:
-					page fault:
-						addr: 0
-						code: 4 (only user set)
-						ip:0x401d70
-					backtrace:
-						40208a before fault handler
-						0x40208a seems to be the shell syscall handler interrupt
-
-				cat:
-					addr: 0
-					code: 4 (only user set)
-					ip:0x401daa
-
-				THE BINARY IS BEING LOADED WRONG
-					ALL ZEROS AT ENTRY POINT
-					maybe the pit timer switches away from the task as it is being loaded, making the timer longer seems to make things more stable 
-	other notes end
-	this could maybe be fixed by making the calling task block until new_task_usermode_start exits/ right before the call to jump_usermode_asm
-
-
 NEED USERMODE/SCHEDULER TESTS!!!
 
 
-
-
-
-
 cant make user threads with arguments
+
+wm should really use nonblocking socket 

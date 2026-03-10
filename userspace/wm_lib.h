@@ -61,6 +61,8 @@ struct wm_inital
 {
     size_t height;
     size_t width;
+    /* TODO: stupid, use good nonblocking socket implementation */
+    bool is_nonblock;
 } __packed;
 
 struct wm_second
@@ -71,6 +73,7 @@ struct wm_second
 /* TODO: some way of making these increment automatically? */
 #define WM_RES_RENDER 1
 #define WM_RES_KEY 2
+#define WM_RES_KEY_NONBLOCK 4
 
 typedef int wm_res_code;
 
@@ -148,6 +151,8 @@ static inline int shared_mem_get(int id, void **p)
 
 void wm_render(struct wm_client client);
 char wm_get_key(struct wm_client client);
+char wm_get_key_nonblock(struct wm_client client);
 struct wm_client wm_client_connect(size_t height, size_t width);
+struct wm_client wm_client_connect_nonblock(size_t height, size_t width);
 
 #endif
