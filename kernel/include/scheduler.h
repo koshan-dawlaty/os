@@ -49,6 +49,8 @@ struct task
     struct dentry *working_dir;
     struct fdlist *descriptors;
 
+    int preempt_count; /* using int makes it easier to see if it is negative */
+
     void *start_addr; /* used for debugging */
 };
 
@@ -117,19 +119,31 @@ void ktask_run(void (*task)(void *), void *args);
 /* TODO: make this a good api */
 void remove_task_add_queue(struct task *task, struct task_queue *queue);
 
-extern int preempt_disable_count;
 static inline void preempt_disable()
 {
-    if (preempt_disable_count <= 0)
+    struct task *task = get_current_task();
+    if (task == NULL)
+    {
+        return;
+    }
+
+    task->preempt_count--;
+    if (task->preempt_count <= 0)
     {
         irq_disable();
     }
-    preempt_disable_count++;
+    task->preempt_count++;
 }
 static inline void preempt_enable()
 {
-    preempt_disable_count--;
-    if (preempt_disable_count <= 0)
+    struct task *task = get_current_task();
+    if (task == NULL)
+    {
+        return;
+    }
+
+    task->preempt_count--;
+    if (task->preempt_count <= 0)
     {
         irq_enable();
     }

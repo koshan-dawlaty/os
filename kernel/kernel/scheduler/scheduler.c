@@ -102,6 +102,7 @@ char **create_user_args(int argc, char **argv)
 struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 {
     struct task *out = malloc(sizeof(struct task));
+    out->preempt_count = 0;
 
     out->list = LIST2C_INIT();
 
@@ -169,6 +170,7 @@ struct task *user_thread_alloc(ptr ip)
            "thread called this");
 
     struct task *out = malloc(sizeof(struct task));
+    out->preempt_count = 0;
 
     out->start_addr = (void *)ip;
 
@@ -282,6 +284,7 @@ struct task *new_task_args(ptr ip, void *args)
 struct task *new_task(ptr ip)
 {
     struct task *out = malloc(sizeof(struct task));
+    out->preempt_count = 0;
 
     out->descriptors = new_fdlist();
 
@@ -298,6 +301,7 @@ struct task *new_task(ptr ip)
 
     out->start_addr = (void *)ip;
     out->list = LIST2C_INIT();
+    out->preempt_count = 0;
 
     return out;
 }
@@ -506,6 +510,3 @@ void print_tasks()
     }
     printf("\n");
 }
-
-/* TODO: this is kinda in a stupid spot */
-int preempt_disable_count = 0;
