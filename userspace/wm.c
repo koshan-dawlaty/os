@@ -476,6 +476,7 @@ void keyboard_thread()
                     struct wm_connection *conn = focused->conn;
                     current_keyboard_char = c;
 
+                    /* printf("sending key to:%d\n", conn->input_socket); */
                     send(conn->input_socket, &c, sizeof(char));
                 }
             }
@@ -680,7 +681,7 @@ int main()
     while (true)
     {
         int client_sock = accept(server_sock);
-        printf("%d\n", client_sock);
+        printf("new client accepted:%d\n", client_sock);
         /* printf("socket num:%d\n", client_sock); */
         /* send(server_sock, &client_sock, sizeof(int)); */
         /* printf("sent\n"); */

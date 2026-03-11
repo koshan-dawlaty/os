@@ -193,17 +193,14 @@ int unix_socket_connect(struct dentry *entry)
     struct task *other_task = socket->connection.task;
     int other_fd = fdlist_add(other_task->descriptors, new_sock);
 
+    socket->connection.current_connection = other_fd;
     if (WAIT_QUEUE_EMPTY(socket->connection.accept_queue))
     {
         wait_queue_wait(&socket->connection.connect_queue);
     }
     else
     {
-        socket->connection.current_connection = other_fd;
         wait_queue_done(&socket->connection.accept_queue);
-
-        /* /1* FIXME *1/ */
-        /* UNREACHABLE("TODO"); */
     }
 
     return fd;
@@ -222,7 +219,9 @@ int unix_socket_accept(struct dentry *entry)
         wait_queue_done(&socket->connection.connect_queue);
     }
 
-    return socket->connection.current_connection;
+    int out = socket->connection.current_connection;
+
+    return out;
 }
 
 struct dentry *dentry_socket_alloc(const char *name, struct dentry *parent,

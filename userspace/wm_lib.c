@@ -98,16 +98,12 @@ char wm_get_key_nonblock(struct wm_client client)
 static struct wm_client wm_client_connect_impl(size_t height, size_t width,
                                                bool is_nonblock)
 {
-    printf("opening\n");
     int server = open("/wm_socket", O_RDONLY);
-    printf("got:%d\n", server);
     int server_sock = connect(server);
 
     struct wm_inital win = {
         .height = height, .width = width, .is_nonblock = is_nonblock};
-    printf("sending initial messsage\n");
     send(server_sock, &win, sizeof(struct wm_inital));
-    printf("inital messsage sent\n");
 
     /* TODO: make this a recv() acknowledge like for rendering */
     sched_yield();

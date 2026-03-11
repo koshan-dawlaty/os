@@ -1,6 +1,7 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 
+#include "spinlock.h"
 #include <lib/array.h>
 #include <stddef.h>
 #include <vfs.h>
@@ -17,6 +18,7 @@ struct unix_socket
             struct task *task;
             struct wait_queue connect_queue;
             struct wait_queue accept_queue;
+
             int current_connection; /* TODO: this is used to tell the socket
                                         what the new socket is after it has
                                         woken up from accept(), but it should be
