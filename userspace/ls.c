@@ -14,7 +14,13 @@ int main(int argc, char **argv)
 
     /* exit(0); */
 
-    DIR *d = opendir("/");
+    const char *path = "/";
+    if (argc >= 2)
+    {
+        path = argv[1];
+    }
+
+    DIR *d = opendir(path);
 
     struct dirent *e = readdir(d);
     while (e != NULL)

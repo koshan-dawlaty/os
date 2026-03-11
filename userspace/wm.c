@@ -633,7 +633,6 @@ int accept(int socket)
 int main()
 {
     init_libc();
-    printf("test\n");
 
     /* printf("window manager\n"); */
     /* clone((ptr)thread1); */

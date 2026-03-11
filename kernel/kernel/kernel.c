@@ -323,7 +323,7 @@ void kmain()
 
     enable_scheduler();
     irq_enable();
-    schedule();
+    /* schedule(); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */

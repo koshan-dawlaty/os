@@ -3,6 +3,7 @@
 #include <err.h>
 #include <fcntl.h>
 #include <init.h>
+#include <math.h>
 #include <sched.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -55,7 +56,9 @@ int main()
     /* memset(framebuffer, 'a', 10); */
 
     /* int color = 0xFFFF00; */
-    int color = 0x0000FF;
+    /* int color = 0x0000FF; */
+
+    u32 color = 0x4b3973;
     switch (client.socket)
     {
     case 1:

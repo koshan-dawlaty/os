@@ -204,8 +204,8 @@ load_registers:
 	mov 0x28(%ecx), %ecx
 
 	# re-enable interrupts, this could be bad
-	pushf
-	or $(1 << 9), 0(%esp)
-	popf
+	# pushf
+	# or $(1 << 9), 0(%esp)
+	# popf
 
 	ret
