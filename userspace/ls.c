@@ -1,8 +1,11 @@
 #include <dirent.h>
+#include <err.h>
+#include <errno.h>
 #include <init.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char **argv)
 {
@@ -21,10 +24,18 @@ int main(int argc, char **argv)
     }
 
     DIR *d = opendir(path);
-
     struct dirent *e = readdir(d);
+    if (errno != 0)
+    {
+        printf("ls error:%s\n", strerror(errno));
+    }
+
     while (e != NULL)
     {
+        if (errno != 0)
+        {
+            printf("ls error:%s\n", strerror(errno));
+        }
 
         printf("%s ", e->d_name);
         /* printf("%d\n", d->fd); */
@@ -32,7 +43,7 @@ int main(int argc, char **argv)
 
         /* printf("%p\n", malloc(10)); */
     }
-    /* printf("\n"); */
+    printf("\n");
 
     exit(0);
 }

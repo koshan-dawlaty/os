@@ -223,14 +223,17 @@ struct file *lookup_descriptor(int fd)
 int read_dir(struct file *dir, struct dirent *buf, size_t number)
 {
 
-    /* TODO: this should maybe be an error code as this is called by a syscall
-     */
-    NOT_NULL(dir, "directory should not be null");
+    if (dir == NULL)
+    {
+        return -ENOENT;
+    }
     NOT_NULL(dir->entry, "directory should not have null dentry");
 
-    ASSERT(dir->entry->type == DENTRY_DIR ||
-               dir->entry->type == DENTRY_MOUNT_POINT,
-           "the directory entry should represent a directory");
+    if (dir->entry->type != DENTRY_DIR &&
+        dir->entry->type != DENTRY_MOUNT_POINT)
+    {
+        return -ENOTDIR;
+    }
 
     /* assume buf has space for n * sizeof(dirent) */
 

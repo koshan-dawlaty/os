@@ -451,7 +451,6 @@ printf("start_addr:%p\n", new_current->start_addr);
 
 void schedule()
 {
-    printf("schedule\n");
 
     /* preempt_disable(); */
     irq_disable();
