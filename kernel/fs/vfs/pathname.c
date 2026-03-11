@@ -2,7 +2,7 @@
 #include "dcache.h"
 #include "vfs.h"
 #include "vfs_internal.h"
-#include <err.h>
+#include <err_ptr.h>
 #include <socket.h>
 
 #include <errno.h>

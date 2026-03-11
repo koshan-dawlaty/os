@@ -1,6 +1,6 @@
 #include "wm_lib.h"
 #include <compiler.h>
-#include <err.h>
+#include <err_ptr.h>
 #include <fcntl.h>
 #include <init.h>
 #include <math.h>

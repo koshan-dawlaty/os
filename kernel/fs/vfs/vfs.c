@@ -4,7 +4,7 @@
 #include "vfs_internal.h"
 #include <assert.h>
 #include <ata/ata.h>
-#include <err.h>
+#include <err_ptr.h>
 #include <fcntl.h>
 #include <scheduler.h>
 #include <stdio.h>

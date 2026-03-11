@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <err_ptr.h>
 #include <kernel_syscall.h>
 #include <sys/stat.h>
 #include <sys/types.h>

@@ -7,7 +7,7 @@
 #include "spinlock.h"
 #include "sys/types.h"
 #include "unistd.h"
-#include <err.h>
+#include <err_ptr.h>
 #include <errno.h>
 #include <kernel/syscall.h>
 #include <lib/array.h>

@@ -5,8 +5,8 @@
 #include <sys/syscall.h>
 #include <utils.h>
 
+#include <err_ptr.h>
 #ifdef __is_libk
-#include <err.h>
 #include <errno.h>
 #include <vfs.h>
 #endif

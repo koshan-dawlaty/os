@@ -1,6 +1,6 @@
 #include "wm_lib.h"
 #include "fcntl.h"
-#include <err.h>
+#include <err_ptr.h>
 #include <errno.h>
 #include <sched.h>
 #include <stddef.h>

@@ -10,7 +10,7 @@
 #include <cdev.h>
 #include <device.h>
 #include <dirent.h>
-#include <err.h>
+#include <err_ptr.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <interrupts/pic.h>

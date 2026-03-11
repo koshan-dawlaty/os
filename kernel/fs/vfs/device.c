@@ -1,7 +1,7 @@
 #include "assert.h"
 #include <bdev.h>
 #include <cdev.h>
-#include <err.h>
+#include <err_ptr.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <vfs.h>

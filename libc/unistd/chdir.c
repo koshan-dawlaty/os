@@ -3,8 +3,8 @@
 #include <unistd.h>
 #include <utils.h>
 
+#include <err_ptr.h>
 #ifdef __is_libk
-#include <err.h>
 #include <scheduler.h>
 #include <vfs.h>
 #endif

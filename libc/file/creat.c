@@ -1,4 +1,5 @@
 #include "sys/types.h"
+#include <err_ptr.h>
 #include <fcntl.h>
 #include <kernel_syscall.h>
 #include <sys/syscall.h>

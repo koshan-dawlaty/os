@@ -1,3 +1,4 @@
+#include <err_ptr.h>
 #include <errno.h>
 #include <stdint.h>
 #include <stdio.h>

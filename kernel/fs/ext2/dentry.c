@@ -1,5 +1,5 @@
 #include "ext2.h"
-#include <err.h>
+#include <err_ptr.h>
 #include <errno.h>
 #include <kernel/types.h>
 #include <kernel/utils.h>

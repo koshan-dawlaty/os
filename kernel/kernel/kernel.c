@@ -10,7 +10,7 @@
 #include <drivers/character/mouse.h>
 #include <drivers/character/terminal.h>
 #include <endian.h>
-#include <err.h>
+#include <err_ptr.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <gdt.h>

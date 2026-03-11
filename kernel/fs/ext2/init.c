@@ -1,9 +1,9 @@
 #include "bdev.h"
-#include "err.h"
 #include "ext2.h"
 #include "panic.h"
 #include "string.h"
 #include <ata/ata.h>
+#include <err_ptr.h>
 #include <kernel/utils.h>
 #include <stddef.h>
 #include <stdint.h>

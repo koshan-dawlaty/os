@@ -1,7 +1,7 @@
 #ifndef USERSPACE_H
 #define USERSPACE_H
 
-#include <err.h>
+#include <err_ptr.h>
 #include <errno.h>
 #include <lib/array.h>
 #include <stdbool.h>

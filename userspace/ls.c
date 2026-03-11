@@ -1,5 +1,5 @@
 #include <dirent.h>
-#include <err.h>
+#include <err_ptr.h>
 #include <errno.h>
 #include <init.h>
 #include <stdint.h>
