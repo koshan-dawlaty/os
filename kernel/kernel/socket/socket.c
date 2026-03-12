@@ -168,8 +168,9 @@ struct file *unix_socket_create_fs(const char *path)
 
     entry->socket = socket;
     socket->connection.task = get_current_task();
-    wait_queue_init(&socket->connection.connect_queue);
     wait_queue_init(&socket->connection.accept_queue);
+    mutex_init(&socket->connection.lock);
+    socket->connection.buffer = ARRAY_INIT();
 
     struct file *file = new_file(entry, O_RDWR);
     file->operations = socket_operations;
@@ -192,13 +193,11 @@ int unix_socket_connect(struct dentry *entry)
     int fd = fdlist_add(current->descriptors, new_sock);
     struct task *other_task = socket->connection.task;
     int other_fd = fdlist_add(other_task->descriptors, new_sock);
-
+    mutex_lock(&socket->connection.lock);
     socket->connection.current_connection = other_fd;
-    if (WAIT_QUEUE_EMPTY(socket->connection.accept_queue))
-    {
-        wait_queue_wait(&socket->connection.connect_queue);
-    }
-    else
+    mutex_unlock(&socket->connection.lock);
+    array_push(&socket->connection.buffer, &other_fd, sizeof(int));
+    if (!WAIT_QUEUE_EMPTY(socket->connection.accept_queue))
     {
         wait_queue_done(&socket->connection.accept_queue);
     }
@@ -210,18 +209,13 @@ int unix_socket_accept(struct dentry *entry)
 {
     struct unix_socket *socket = entry->socket;
 
-    if (WAIT_QUEUE_EMPTY(socket->connection.connect_queue))
+    if (ARRAY_LEN(socket->connection.buffer, sizeof(int)) == 0)
     {
         wait_queue_wait(&socket->connection.accept_queue);
     }
-    else
-    {
-        wait_queue_done(&socket->connection.connect_queue);
-    }
+    int *out_ptr = array_pop(&socket->connection.buffer, sizeof(int));
 
-    int out = socket->connection.current_connection;
-
-    return out;
+    return *out_ptr;
 }
 
 struct dentry *dentry_socket_alloc(const char *name, struct dentry *parent,

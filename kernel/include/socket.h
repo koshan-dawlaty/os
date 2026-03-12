@@ -16,8 +16,9 @@ struct unix_socket
         struct
         {
             struct task *task;
-            struct wait_queue connect_queue;
             struct wait_queue accept_queue;
+            struct array buffer;
+            struct mutex lock;
 
             int current_connection; /* TODO: this is used to tell the socket
                                         what the new socket is after it has

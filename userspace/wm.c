@@ -318,7 +318,6 @@ void process_connection()
     ent->list = LIST2_INIT();
     ent->win = w;
     ent->conn = conn;
-    printf("%d\n", win_info.is_nonblock);
     ent->nonblock_info.is_nonblock = win_info.is_nonblock;
     ent->nonblock_info.current_key = 0;
 
