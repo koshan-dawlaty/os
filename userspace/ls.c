@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 
     /* exit(0); */
 
-    const char *path = "/";
+    const char *path = ".";
     if (argc >= 2)
     {
         path = argv[1];
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
         /* printf("%p\n", malloc(10)); */
     }
-    printf("\n");
+    /* printf("\n"); */
 
     exit(0);
 }

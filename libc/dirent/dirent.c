@@ -34,7 +34,7 @@ SYSCALL_DEFINE3(SYS_getdents, long, int, fd, struct dirent *, buf, size_t, num)
 DIR *opendir(const char *name)
 {
     DIR *out = malloc(sizeof(DIR));
-    out->fd = open(name, 0);
+    out->fd = open(name, O_RDONLY);
     return out;
 }
 

@@ -449,9 +449,8 @@ printf("start_addr:%p\n", new_current->start_addr);
     current_task = new_current;
 }
 
-void schedule()
+void schedule_real()
 {
-
     /* preempt_disable(); */
     irq_disable();
 
@@ -481,8 +480,18 @@ void schedule()
 
     set_kernel_stack((ptr)current_task->stack);
 
-    PIC_sendEOI(0);
+    /* PIC_sendEOI(0); */
+
     load_registers(&current_task->regs);
+}
+
+void schedule()
+{
+
+    /* preempt_disable(); */
+    irq_disable();
+    schedule_real();
+    irq_enable();
 }
 
 struct task *get_current_task()

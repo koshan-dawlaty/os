@@ -140,7 +140,7 @@ save_registers:
 .global load_registers
 .type load_registers @function
 load_registers:
-
+	cli
 
 	mov %rdi, %rcx
 

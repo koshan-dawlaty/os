@@ -96,6 +96,8 @@ extern void load_registers(struct registers *regs);
 extern void jump_usermode_asm(ptr addr, struct registers *regs, ptr sp);
 
 void schedule();
+void schedule_real(); /* FIXME: stupid name */ /* TODO: stop adding _real to
+                                                  function implementations */
 
 void enable_scheduler();
 void disable_scheduler();

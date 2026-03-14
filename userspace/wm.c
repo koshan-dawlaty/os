@@ -674,7 +674,7 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     execv("/elf_test", (char *[]){"elf_test", NULL});
     execv("/elf_test", (char *[]){"elf_test", NULL});
-    /* execv("tron", (char *[]){"imgview", "osdev.tga", NULL}); */
+    execv("tron", (char *[]){"imgview", "osdev.tga", NULL});
 
     while (true)
     {
