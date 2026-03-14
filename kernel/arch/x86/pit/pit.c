@@ -18,14 +18,16 @@ volatile uint64_t pit_time = 0;
 
 /* should not be lower than 19 */
 /* #define PIT_FREQUENCY 50 */
-#define PIT_FREQUENCY 100
+/* #define PIT_FREQUENCY 100 */
 /* #define PIT_FREQUENCY 200 */
-/* #define PIT_FREQUENCY 1000 */
+#define PIT_FREQUENCY 1000
 /* #define PIT_FREQUENCY 5000 */
 /* #define PIT_FREQUENCY 10000 */
+/* #define PIT_FREQUENCY 100000 */
 /* #define PIT_FREQUENCY 50 */
 /* #define PIT_FREQUENCY 30 */
 /* #define PIT_FREQUENCY 20 */
+/* #define PIT_FREQUENCY PIT_REAL_FREQUENCY - 1 */
 
 void init_pit()
 {
@@ -41,10 +43,9 @@ INT_HANDLER(pit_handler, {
     pit_time++;
     if (likely(is_scheduler_enabled()))
     {
-        /* printf("AAAAAAAAAAAAA\n"); */
         if (pit_time % 1 == 0)
         {
-            schedule_real();
+            schedule_impl();
             PIC_sendEOI(0);
         }
     }

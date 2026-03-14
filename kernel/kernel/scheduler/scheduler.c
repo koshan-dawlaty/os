@@ -449,7 +449,7 @@ printf("start_addr:%p\n", new_current->start_addr);
     current_task = new_current;
 }
 
-void schedule_real()
+void schedule_impl()
 {
     /* preempt_disable(); */
     irq_disable();
@@ -490,7 +490,7 @@ void schedule()
 
     /* preempt_disable(); */
     irq_disable();
-    schedule_real();
+    schedule_impl();
     irq_enable();
 }
 
