@@ -13,7 +13,11 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    creat(argv[1], 000);
+    const char *file = argv[1];
+    creat(file, 000);
+    /* printf("created:%s\n", file); */
+    /* int fd = open(file, O_RDONLY); */
+    /* printf("opened as:%d\n", fd); */
 
     exit(0);
 }

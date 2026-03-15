@@ -76,8 +76,7 @@ int main()
             }
             else
             {
-                /* TODO: the new process should inherit file descriptors */
-                int err = execv_stdio(args[0], args, stdin->fd, stdout->fd);
+                int err = execv(args[0], args);
                 if (err < 0)
                 {
                     printf("could not execute\nerror:%s", strerror(err));

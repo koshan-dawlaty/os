@@ -154,9 +154,17 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     /* TODO: maybe have a function to index into the fdlist, like dup2() */
     /* TODO: maybe make stdin/out not readable/writeable in the kernel */
 
-    fdlist_set(out->descriptors, 0, open_device(keyboard_path));
-    fdlist_set(out->descriptors, 1, open_device(term_path));
-    fdlist_set(out->descriptors, 2, open_device(term_path));
+    struct task *current_task = get_current_task();
+    struct fdlist *current_fds = current_task->descriptors;
+    struct fdlist *out_fds = out->descriptors;
+
+    fdlist_copy_from_maybe(out_fds, current_fds, 0, open_device(keyboard_path));
+    fdlist_copy_from_maybe(out_fds, current_fds, 1, open_device(term_path));
+    fdlist_copy_from_maybe(out_fds, current_fds, 2, open_device(term_path));
+
+    /* fdlist_set(out->descriptors, 0, open_device(keyboard_path)); */
+    /* fdlist_set(out->descriptors, 1, open_device(term_path)); */
+    /* fdlist_set(out->descriptors, 2, open_device(term_path)); */
 
     return out;
 }

@@ -1,4 +1,5 @@
 #include "ext2.h"
+#include "kernel/log.h"
 #include "kernel/types.h"
 #include "kernel/utils.h"
 #include "panic.h"
@@ -237,6 +238,7 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
             break;
         }
         /* printf("name:%s\n", raw_entry + 8); */
+        logd("name:%s", raw_entry + 8);
 
         i += len;
     }
