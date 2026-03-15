@@ -1,17 +1,107 @@
 #include "../os_layer.h"
+#include "kernel/log.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
+#include "kernel/types.h"
 #include "kernel/utils.h"
 #include "memory/get_free_pages.h"
 #include "memory/paging_flags.h"
 #include "scheduler.h"
 #include "utils.h"
 #include <acpi.h>
+#include <ctype.h>
+#include <panic.h>
 #include <spinlock.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
+
+void AcpiOsVprintf(const char *format, va_list args)
+{
+    logd("i hate intel");
+    vlog_level(LOG_DEBUG, format, args);
+}
+
+void strcpy(char *dest, const char *src)
+{
+}
+
+int tolower(int c)
+{
+    return c - 'A';
+}
+int toupper(int c)
+{
+    return c + 'a';
+}
+
+int memcmp(const void *s1, const void *s2, size_t n)
+{
+
+    return 0;
+}
+
+const unsigned short int **__ctype_b_loc()
+{
+    return NULL;
+}
+
+ACPI_PHYSICAL_ADDRESS AcpiOsGetRootPointer()
+{
+    ACPI_PHYSICAL_ADDRESS Ret = 0;
+    AcpiFindRootPointer(&Ret);
+    return Ret;
+}
+
+void AcpiOsWaitEventsComplete()
+{
+}
+
+ACPI_STATUS AcpiOsWritePciConfiguration(ACPI_PCI_ID *PciId, UINT32 Register,
+                                        UINT64 Value, UINT32 Width)
+{
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsTableOverride(ACPI_TABLE_HEADER *ExistingTable,
+                                ACPI_TABLE_HEADER **NewTable)
+{
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsPhysicalTableOverride(ACPI_TABLE_HEADER *ExistingTable,
+                                        ACPI_PHYSICAL_ADDRESS *NewAddress,
+                                        UINT32 *NewTableLength)
+{
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsReadPciConfiguration(ACPI_PCI_ID *PciId, UINT32 Register,
+                                       UINT64 *Value, UINT32 Width)
+{
+    return AE_OK;
+}
+
+ACPI_STATUS AcpiOsEnterSleep(UINT8 SleepState, UINT32 RegaValue,
+                             UINT32 RegbValue)
+{
+    /* this is called right before entering acpi sleep */
+    return AE_OK;
+}
+
+ACPI_THREAD_ID AcpiOsGetThreadId()
+{
+
+    return 0;
+}
+
+UINT64 AcpiOsGetTimer()
+{
+    return 123456789;
+}
 
 ACPI_STATUS AcpiOsInitialize()
 {
@@ -35,6 +125,7 @@ void *AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS PhysicalAddress, ACPI_SIZE Length)
 
     for (size_t i = 0; i < amount; i++)
     {
+        logd("%d, %d", physical, pages);
         map_page(physical + (i * PAGE_SIZE), pages + (i * PAGE_SIZE),
                  PAGING_USER);
     }
@@ -81,7 +172,7 @@ void AcpiOsFree(void *Memory)
 ACPI_STATUS AcpiOsExecute(ACPI_EXECUTE_TYPE Type,
                           ACPI_OSD_EXEC_CALLBACK Function, void *Context)
 {
-    run_task(Function, Context);
+    ktask_run(Function, Context);
     return AE_OK;
 }
 
@@ -162,7 +253,7 @@ void ACPI_INTERNAL_VAR_XFACE AcpiOsPrintf(const char *Format, ...)
 
     va_list parameters;
     va_start(parameters, Format);
-    vprintf(Format, parameters);
+    vlog_level(LOG_DEBUG, Format, parameters);
 
     va_end(parameters);
 }
@@ -257,7 +348,7 @@ ACPI_STATUS
 AcpiOsPredefinedOverride(const ACPI_PREDEFINED_NAMES *PredefinedObject,
                          ACPI_STRING *NewValue)
 {
-
+    *NewValue = NULL;
     return AE_OK;
 }
 

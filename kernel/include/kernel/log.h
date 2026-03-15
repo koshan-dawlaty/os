@@ -1,6 +1,7 @@
 #ifndef KERNEL_LOG_H
 #define KERNEL_LOG_H
 
+#include <compiler.h>
 #include <kernel/types.h>
 #include <stdarg.h>
 struct log_level

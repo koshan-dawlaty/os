@@ -1,3 +1,4 @@
+#include "../acpi/acpica/acpi.h"
 #include "multiboot.h"
 #include "serial.h"
 #include "task_queue.h"
@@ -258,6 +259,13 @@ void kmain()
 {
 
     irq_disable();
+    ACPI_STATUS status;
+
+    status = AcpiInitializeSubsystem();
+    if (ACPI_FAILURE(status))
+    {
+        panic("ACPI init subsystem failed");
+    }
 
     /* malloc(1000000); */
     /* malloc(1000000); */

@@ -17,7 +17,7 @@ INCLUDEDIR?=$(PREFIX)/include
 
 CFLAGS:=-ffreestanding -Wall -Wextra  -Wno-unknown-pragmas -fstack-protector-all -D__is_libk \
 		$(CFLAGS) \
-		# -Iacpi/acpica/ # TODO: this is bad 
+		-Iacpi/acpica/ # TODO: this is bad 
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
@@ -40,6 +40,12 @@ TEST_OBJS=\
 		  tests/lib/tap.o 
 
 include tests/Makefile
+
+
+ACPICA_OBJ=acpi/acpica.o
+export ACPICA_OBJ
+include acpi/Makefile
+
 
 $(info $(TEST_OBJS))
 
@@ -99,7 +105,7 @@ drivers/character/terminal/device.o \
 drivers/character/keyboard/device.o \
 drivers/device.o \
 \
-# acpi/os_layer/os_layer.o \
+acpi/os_layer/os_layer.o \
 
 
 
@@ -110,7 +116,8 @@ $(KERNEL_OBJS) \
 $(TEST_OBJS) \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
  
-OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
+OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj)) \
+		   $(ACPICA_OBJ)
 
 
 LINK_LIST=\
@@ -122,7 +129,8 @@ $(LIBS) \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
 
 LINK_LIST_BIN = $(foreach obj,$(LINK_LIST),bin/$(obj)) \
-				# acpi/acpica.o \
+				$(ACPICA_OBJ)
+				
 
 BIN=bin
 
@@ -132,9 +140,9 @@ BIN=bin
 all: $(BIN)/os.kernel
 
 
+
 # ../libc/libk.a is bad
-$(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk.a  ../lib/bin/libutil.a
-	@echo $(CFLAGS)
+$(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk.a  ../lib/bin/libutil.a 
 	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -Wl,--whole-archive -lk -lutil -Wl,--no-whole-archive -lgcc
 	grub-file --is-x86-multiboot $(BIN)/os.kernel
 
@@ -152,7 +160,7 @@ $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-clean:
+clean: acpi-clean
 	$(RM) -r bin/*
 
 clean_tests:

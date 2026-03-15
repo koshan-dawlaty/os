@@ -21,5 +21,25 @@
 #define ACPI_USE_LOCAL_CACHE
 #define ACPI_USE_DEFAULT_ENV
 #define ACPI_USE_DEFAULT_ALLOCATES
+#define ACPI_USE_NATIVE_DIVIDE
+
+/* from
+ * https://www.intel.com/content/www/us/en/developer/topic-technology/open/acpica/documentation.html
+ */
+#ifdef CONFIG_x86_32
+#define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32)                           \
+    u32 _q, _r;                                                                \
+    __asm__ volatile("divl %4"                                                 \
+                     : "=a"(_q), "=d"(_r)                                      \
+                     : "a"(n_lo), "d"(n_hi), "r"(d32));                        \
+    (q32) = _q;                                                                \
+    (r32) = _r;
+#else
+#define ACPI_DIV_64_BY_32(n, n_hi, n_lo, d32, q32, r32)                        \
+    {                                                                          \
+        q32 = n / d32;                                                         \
+        r32 = n % d32;                                                         \
+    }
+#endif
 
 #endif
