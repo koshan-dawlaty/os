@@ -264,7 +264,33 @@ void kmain()
     status = AcpiInitializeSubsystem();
     if (ACPI_FAILURE(status))
     {
-        panic("ACPI init subsystem failed");
+        panic("ACPI subsystem init failed");
+    }
+
+    status = AcpiInitializeTables(NULL, 16, FALSE);
+    if (ACPI_FAILURE(status))
+    {
+        panic("ACPI table init failed");
+    }
+
+    printf("test\n");
+
+    status = AcpiLoadTables();
+    if (ACPI_FAILURE(status))
+    {
+        panic("ACPI load tables failed");
+    }
+
+    status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
+    if (ACPI_FAILURE(status))
+    {
+        panic("ACPI enable subsystem failed");
+    }
+
+    status = AcpiInitializeObjects(ACPI_FULL_INITIALIZATION);
+    if (ACPI_FAILURE(status))
+    {
+        panic("ACPI object init failed");
     }
 
     /* malloc(1000000); */
