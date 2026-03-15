@@ -1,6 +1,7 @@
 #include "wm_lib.h"
 #include <compiler.h>
 #include <err_ptr.h>
+#include <extension.h>
 #include <fcntl.h>
 #include <init.h>
 #include <math.h>
@@ -27,10 +28,25 @@ int execv_stdio(const char *path, char *const argv[], int in, int out)
                                0);
 }
 
+struct wm_client client;
+int pipe_write;
+int mutex; /* TODO: maybe have a mutex in the wm_client variable? */
+void key_thread()
+{
+    while (1)
+    {
+        user_mutex_lock(mutex);
+        char c = wm_get_key(client);
+        write(pipe_write, &c, 1);
+        user_mutex_unlock(mutex);
+    }
+}
+
 int main()
 {
 
     init_libc();
+    mutex = user_mutex_create();
 
     /* clone((ptr)t1); */
     /* printf("socket: %d\n", sock); */
@@ -40,7 +56,7 @@ int main()
 
     /* *(char *)(0x1234) = 'a'; */
 
-    struct wm_client client = wm_client_connect(175, 600);
+    client = wm_client_connect(175, 600);
     /* struct wm_client client = wm_client_connect(175, 220); */
 
     int font_fd = open("/font.psfu", O_RDONLY);
@@ -86,11 +102,15 @@ int main()
 
     int stdin_pipe[2];
     pipe(stdin_pipe);
+
     /* execv("/ls", (char *[]){"ls", NULL}); */
     /* execv("/ksh", (char *[]){"ksh", NULL}); */
     printf("execv\n");
     execv_stdio("/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0], stdout_pipe[1]);
     printf("execv end\n");
+
+    pipe_write = stdin_pipe[1];
+    clone((ptr)key_thread);
     /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); */
 
     /* char *buf = malloc(len); */
@@ -165,19 +185,9 @@ int main()
         {
             goto read_and_draw_char;
         }
+        user_mutex_lock(mutex);
         wm_render(client);
-
-        char c = wm_get_key(client);
-        if (c == '\\')
-        {
-            break;
-        }
-        /* const char *str = "\neno tac"; */
-        /* const char *str = "cat one"; */
-        /* write(stdin_pipe[1], (char[]){'a', 'b'}, 2); */
-        /* write(stdin_pipe[1], (char[]){'c', 'd'}, 2); */
-        /* printf("%c", c); */
-        write(stdin_pipe[1], &c, 1);
+        user_mutex_unlock(mutex);
     }
     syscall_wrapper_asm(SYS_close_socket, client.socket, 0, 0, 0, 0);
 

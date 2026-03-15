@@ -76,6 +76,7 @@ int main()
             }
             else
             {
+                printf("execv\n");
                 int err = execv(args[0], args);
                 if (err < 0)
                 {
