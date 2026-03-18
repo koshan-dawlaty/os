@@ -8,6 +8,7 @@
 #include <drivers/block/ram/ramdisk.h>
 #include <drivers/character/keyboard.h>
 #include <drivers/character/mouse.h>
+#include <drivers/character/serial.h>
 #include <drivers/character/terminal.h>
 #include <endian.h>
 #include <err_ptr.h>
@@ -290,6 +291,7 @@ void kmain()
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     create_device("/mouse", mouse_get());
+    create_device("/serial0", serial_cdev_create(0x3F8));
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */
