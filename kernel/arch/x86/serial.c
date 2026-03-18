@@ -3,6 +3,7 @@
 #include "utils.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <types.h>
 #include <stdio.h>
 
 void serial_writestring(const char *str, size_t len, u16 port)
@@ -45,6 +46,18 @@ void serial_write(uint16_t port, uint8_t data)
     while (!is_transmit_empty(port))
         ;
     outb(port, data);
+}
+
+int serial_recived(u16 port) {
+    return inb(port + 5) & 1;
+}
+
+u8 serial_read(u16 port) {
+    while (!serial_recived(port)) {
+        
+    }
+    
+    return inb(port);
 }
 
 ISR(com1_interrupt_handler, {
