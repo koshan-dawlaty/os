@@ -20,7 +20,7 @@ void client_draw_char(struct wm_client client, struct PSF_font *font, char c,
         {
             if (char_start[y_pos - y] & (1 << (7 - (x_pos - x))))
             {
-                client_draw_pixel(client, x_pos + 4, y_pos, 0xFFFFFF);
+                client_draw_pixel(client, x_pos, y_pos, 0xFFFFFF);
             }
             else
             {

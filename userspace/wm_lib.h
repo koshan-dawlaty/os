@@ -48,15 +48,13 @@ struct wm_client
 static inline void client_draw_pixel(struct wm_client client, size_t x,
                                      size_t y, uint32_t color)
 {
-
     framebuffer_put_pixel(&client.fb, color, x, y);
-    // w->buffer
-    // size_t location = y * w->w * 4 + x * 4;
+}
 
-    // uint8_t *pixel = (uint8_t *)w->buffer + location;
-    // pixel[0] = color & 255;         // BLUE
-    // pixel[1] = (color >> 8) & 255;  // GREEN
-    // pixel[2] = (color >> 16) & 255; // RED
+static inline void client_draw_rect(struct wm_client client, size_t x, size_t y,
+                                    size_t width, size_t height, u32 color)
+{
+    framebuffer_draw_rect(&client.fb, x, y, width, height, color);
 }
 
 struct wm_inital
