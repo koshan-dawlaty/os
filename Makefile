@@ -28,7 +28,8 @@ export QEMU_FLAGS :=  -cdrom build/os.iso \
 -boot d  \
 -vga std \
 -display default,show-cursor=on \
--drive file=build/qemu.img,format=raw,if=ide,index=0
+-drive file=build/qemu.img,format=raw,if=ide,index=0 \
+# -smp 1 \
 
 ISO=build/os.iso
 
