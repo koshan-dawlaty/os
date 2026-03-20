@@ -161,7 +161,7 @@ $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-clean: acpi-clean
+clean: 
 	$(RM) -r bin/*
 
 clean_tests:

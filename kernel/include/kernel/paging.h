@@ -1,5 +1,6 @@
 #ifndef PAGING_H
 #define PAGING_H
+#include "memory/get_free_pages.h"
 #include <kernel/types.h>
 #define PAGE_SIZE 4096
 
@@ -47,5 +48,19 @@ void write_kernel_page_tables(struct pagedir *pgdir);
 
 struct pagedir *get_current_pagedir();
 void *get_free_phys_pages(struct pagedir *dir, size_t amount);
+
+/*
+ * maps physical address to an arbitrary virtual address using flags
+ * @num_pages number of contiguous physical pages to map to contiguous virtual
+ * pages
+ */
+static inline void *map_physaddr(void *physaddr, size_t num_pages, uint flags)
+{
+    /* FIXME: this should use the binary tree allocation api */
+    void *virtual = get_free_pages_unmmaped(num_pages, &gfp_kernel_zone);
+    map_page(physaddr, virtual, flags);
+
+    return virtual;
+}
 
 #endif

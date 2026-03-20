@@ -339,6 +339,7 @@ void smp_init()
             printf("%d\n", entry->Length);
             printf("found an local apic\n");
             struct local_apic *local_ptr = (struct local_apic *)(entry + 1);
+
             printf("%d\n", local_ptr->apic_id);
 
             break;
@@ -347,6 +348,10 @@ void smp_init()
             printf("found the ioapic\n");
             struct io_apic *io_ptr = (struct io_apic *)(entry + 1);
             printf("addr:%p\n", io_ptr->apic_addr);
+            u32 *virtual = map_physaddr((void *)(ptr)io_ptr->apic_addr, 1,
+                                        PAGING_WRITEABLE | PAGING_PRESENT);
+            printf("read this:%p\n", *virtual);
+
             break;
 
         case ACPI_MADT_TYPE_INTERRUPT_OVERRIDE:
@@ -416,8 +421,8 @@ void kmain()
 
     logi("starting init process");
 
-    int err = execv("/elf_test", (char *[]){"/elf_test", NULL});
-    /* int err = execv("/wm", (char *[]){"wm", NULL}); */
+    /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
+    int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
 
     struct task_queue abc = TASK_QUEUE_INIT(abc);
