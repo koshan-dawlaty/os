@@ -52,5 +52,8 @@ void wait_queue_wait(struct wait_queue *queue)
 void wait_queue_done(struct wait_queue *queue)
 {
     struct task *t = task_queue_pop(&queue->queue);
-    add_task(t);
+    if (t != NULL)
+    {
+        add_task(t);
+    }
 }
