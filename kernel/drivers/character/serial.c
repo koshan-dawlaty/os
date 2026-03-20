@@ -1,6 +1,7 @@
 #include "serial.h"
 #include "device.h"
 #include <cdev.h>
+#include <stdio.h>
 #include <types.h>
 
 struct serial_cdev

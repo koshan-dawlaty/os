@@ -46,6 +46,16 @@ int main()
 {
 
     init_libc();
+
+    /* int serial = open("/serial0", O_RDWR); */
+
+    /* write(serial, "abc", 3); */
+    /* printf("done\n"); */
+
+    /* char *buf = malloc(4); */
+    /* read(serial, buf, 4); */
+    /* printf("read:%s\n", buf); */
+
     mutex = user_mutex_create();
 
     /* clone((ptr)t1); */

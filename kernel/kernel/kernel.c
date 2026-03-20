@@ -141,11 +141,20 @@ void kernel_init()
         graphics_init(f);
         draw_background(f);
     }
-
     malloc(10);
 
     init_gdt();
     init_idt();
+
+    serial_init(0x3f8);
+    /* irq_enable(); */
+    /* char *str = "asjdfakldf"; */
+    /* serial_writestring(str, strlen(str), 0x3f8); */
+    /* for (;;) */
+    /* { */
+    /*     u8 c = serial_read(0x3f8); */
+    /*     printf("%c\n", c); */
+    /* } */
 
     /* useless */
     keyboard_init();
@@ -310,10 +319,11 @@ void kmain()
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
     logi("starting init process");
-    /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
 
-    int err = execv("/wm", (char *[]){"wm", NULL});
+    int err = execv("/elf_test", (char *[]){"/elf_test", NULL});
+    /* int err = execv("/wm", (char *[]){"wm", NULL}); */
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
+
     struct task_queue abc = TASK_QUEUE_INIT(abc);
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
