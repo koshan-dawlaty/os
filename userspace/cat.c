@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     size_t bytes_read;
     while ((bytes_read = read(fd, buf + buf_offset, read_size)) >= read_size)
     {
-        if (bytes_read < 0)
+        if (bytes_read == 0)
         {
             printf("invalid fd\n");
         }

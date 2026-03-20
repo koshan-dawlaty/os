@@ -23,7 +23,7 @@
 
 void AcpiOsVprintf(const char *format, va_list args)
 {
-    vlog_level(LOG_DEBUG, format, args);
+    /* vlog_level(LOG_DEBUG, format, args); */
     /* vprintf(format, args); */
 }
 
@@ -32,7 +32,7 @@ void ACPI_INTERNAL_VAR_XFACE AcpiOsPrintf(const char *Format, ...)
 
     va_list parameters;
     va_start(parameters, Format);
-    vlog_level(LOG_DEBUG, Format, parameters);
+    /* vlog_level(LOG_DEBUG, Format, parameters); */
     /* vprintf(Format, parameters); */
     /* printf("%s\n", Format); */
 
@@ -41,7 +41,8 @@ void ACPI_INTERNAL_VAR_XFACE AcpiOsPrintf(const char *Format, ...)
 
 void strcpy(char *dest, const char *src)
 {
-    UNREACHABLE("not implemented");
+    size_t len = strlen(dest);
+    memcpy(dest + len, src, strlen(src));
 }
 
 int tolower(int c)

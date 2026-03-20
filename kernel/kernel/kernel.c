@@ -364,6 +364,35 @@ void smp_init()
 
 struct task_queue abc = TASK_QUEUE_INIT(abc);
 
+ACPI_STATUS DeviceCallback(ACPI_HANDLE object, UINT32 nesting_level,
+                           void *context, void **return_value)
+{
+    ACPI_DEVICE_INFO *info;
+
+    if (ACPI_SUCCESS(AcpiGetObjectInfo(object, &info)))
+    {
+
+        if (info->Valid & ACPI_VALID_HID)
+        {
+            logd("hid: %s", info->HardwareId.String);
+        }
+
+        if (info->Valid & ACPI_VALID_UID)
+        {
+            logd("uid: %s", info->UniqueId.String);
+        }
+
+        if (info->Valid & ACPI_VALID_CID)
+        {
+            logd("compatible id");
+        }
+
+        AcpiOsFree(info);
+    }
+
+    return AE_OK;
+}
+
 void kmain()
 {
 
@@ -372,6 +401,10 @@ void kmain()
     /* malloc(1000000); */
     /* malloc(1000000); */
     acpica_init();
+
+    AcpiWalkNamespace(ACPI_TYPE_DEVICE, ACPI_ROOT_OBJECT, 100, DeviceCallback,
+                      NULL, NULL, NULL);
+
     smp_init();
 
     /* for (size_t i = 0; i < 100; i++) */
