@@ -23,28 +23,6 @@
 #include <vfs.h>
 #include <wait_queue.h>
 
-struct array unix_socket_array = ARRAY_INIT();
-struct spinlock unix_socket_array_lock = SPINLOCK_INIT();
-
-struct unix_socket *unix_socket_lookup(int id)
-{
-    spinlock_lock(&unix_socket_array_lock);
-    struct unix_socket *out = *(struct unix_socket **)array_get(
-        &unix_socket_array, id, sizeof(struct unix_socket *));
-    spinlock_unlock(&unix_socket_array_lock);
-    return out;
-}
-
-int unix_socket_add_array(struct unix_socket *sock)
-{
-    spinlock_lock(&unix_socket_array_lock);
-    int retval =
-        array_add(&unix_socket_array, &sock, sizeof(struct unix_socket *));
-    spinlock_unlock(&unix_socket_array_lock);
-
-    return retval;
-}
-
 struct unix_socket *unix_socket_alloc()
 {
     struct unix_socket *out = malloc(sizeof(struct unix_socket));
@@ -252,37 +230,12 @@ SYSCALL_DEFINE1(SYS_connect, int, int, fd)
     return out;
 }
 
-SYSCALL_DEFINE3(SYS_send, int, int, socket, void *, buf, size_t, len)
-{
-    struct unix_socket *s = unix_socket_lookup(socket);
-    if (s == NULL)
-    {
-        return -ENOTSOCK;
-    }
-    return unix_socket_send(s, (void *)buf, len);
-}
-
-SYSCALL_DEFINE3(SYS_recv, int, int, socket, void *, buf, size_t, len)
-{
-    struct unix_socket *s = unix_socket_lookup(socket);
-    if (s == NULL)
-    {
-        return -ENOTSOCK;
-    }
-    return unix_socket_recv(s, (void *)buf, len);
-}
-
 SYSCALL_DEFINE0(SYS_create_socket, int)
 {
     struct file *f = unix_socket_create();
     int fd = fdlist_add(get_current_task()->descriptors, f);
 
     return fd;
-}
-
-SYSCALL_DEFINE1(SYS_close_socket, int, int, socket)
-{
-    return -ENOSYS;
 }
 
 SYSCALL_DEFINE1(SYS_create_socket_fs, int, const char *, pathname)
