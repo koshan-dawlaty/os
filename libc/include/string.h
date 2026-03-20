@@ -18,6 +18,9 @@ char *strcat(char *dest, const char *src);
 char *strtok(char *s, char *sep);
 char *strtok_r(char *s, char *sep, char **state);
 
+void strcpy(char *dest, const char *src);
+int memcmp(const void *s1, const void *s2, size_t n);
+
 /* errno.c */
 const char *strerror(int errnum);
 

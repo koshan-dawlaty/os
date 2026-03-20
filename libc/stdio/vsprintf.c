@@ -163,6 +163,8 @@ void append_buf(char **buf, size_t *buf_len, size_t *capacity, char new)
 /* not standard */
 char *vrprintf(const char *format, va_list list)
 {
+    /* puts((char *)format); */
+    /* puts("\n"); */
 
     char *out = malloc(buf_increment);
 
@@ -180,7 +182,6 @@ char *vrprintf(const char *format, va_list list)
 
     while (*format != '\0')
     {
-
         if (next_is_format)
         {
             next_is_format = 0;
@@ -254,7 +255,7 @@ that they will not work because the bootstrap has not initialized them
                         int i = va_arg(list, int);
                         str = int_to_string(i, 10);
                     }
-                    else if (*format == 'x')
+                    else if (*format == 'x' || *format == 'X')
                     {
                         int x = va_arg(list, int);
                         str = int_to_string(x, 16);
@@ -271,8 +272,27 @@ that they will not work because the bootstrap has not initialized them
                     }
                     else
                     {
+
                         /* TODO: error */
+                        /* str = malloc(3); */
+                        /* str[0] = '%'; */
+                        /* str[1] = *format; */
+                        /* str[2] = 0; */
+
+                        str = malloc(2);
+                        /* str[0] = *format; */
+                        str[0] = '-';
+                        str[1] = 0;
+
                         str = "";
+
+                        /* TODO: this is the case where we dont know what format
+                         * string was passed, however for the acpica code, their
+                         * logging printf function uses weird format specifers
+                         * that i dont want to support right now, so just assume
+                         * that there will be one at some point */
+
+                        next_is_format = 1;
                     }
                 }
 

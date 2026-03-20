@@ -2,19 +2,20 @@
 #define SEMAPHORE
 
 #include "spinlock.h"
+#include "task_queue.h"
 
-typedef struct
+typedef struct semaphore
 {
     int value;
 
-    struct task *queue;
+    struct task_queue queue;
 } semaphore;
 
-semaphore *new_semaphore(int max_value);
+struct semaphore *new_semaphore(int max_value);
 
-void wait_semaphore(semaphore *s);
-void release_semaphore(semaphore *s);
+void wait_semaphore(struct semaphore *s);
+void release_semaphore(struct semaphore *s);
 
-void free_semaphore(semaphore *s);
+void free_semaphore(struct semaphore *s);
 
 #endif

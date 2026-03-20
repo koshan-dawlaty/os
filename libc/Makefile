@@ -66,6 +66,7 @@ sched/sched_yield.o \
 dirent/dirent.o \
 init.o \
 errno.o \
+ctype.o \
 
 
 HOSTEDOBJS=\

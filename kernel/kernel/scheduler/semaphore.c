@@ -1,5 +1,8 @@
 /* TODO: this is currently broken */
+#include "assert.h"
+#include "kernel/log.h"
 #include "scheduler.h"
+#include "task_queue.h"
 #include <kernel/semaphore.h>
 #include <panic.h>
 #include <sched.h>
@@ -7,11 +10,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-semaphore *new_semaphore(int max_value)
+struct semaphore *new_semaphore(int max_value)
 {
-    semaphore *out = malloc(sizeof(semaphore));
+    struct semaphore *out = malloc(sizeof(struct semaphore));
     out->value = max_value;
-    out->queue = NULL;
+    task_queue_init(&out->queue);
 
     return out;
 }
@@ -19,28 +22,28 @@ semaphore *new_semaphore(int max_value)
 void wait_semaphore(semaphore *s)
 {
 
-    asm("cli");
+    preempt_disable();
 
     s->value--;
     /* printf("%d\n", s->value); */
 
     if (s->value < 0)
     {
-        struct task *current = get_current_task();
-        remove_task(current);
-        struct task *temp = s->queue;
-        s->queue = current;
+        logd("removing task");
         /* s->queue->next = temp; */
         /* add_task_queue(&s->queue, current); */
 
-        sched_yield();
+        struct task *current = get_current_task();
+
+        save_registers(&current->regs);
+        remove_task_add_queue(current, &s->queue);
     }
 
-    asm("sti");
+    preempt_enable();
 }
 void release_semaphore(semaphore *s)
 {
-    asm("cli");
+    preempt_disable();
 
     s->value++;
 
@@ -49,7 +52,13 @@ void release_semaphore(semaphore *s)
     if (s->value <= 0)
     {
 
-        struct task *temp = s->queue;
+        logd("adding task");
+
+        struct task *temp = task_queue_pop(&s->queue);
+        ASSERT(temp != NULL, "semaphore contended when task queue emtpy");
+
+        add_task(temp);
+        schedule();
         /* s->queue = temp->next; */
 
         /* remove_task_queue(&s->queue, task); */
@@ -57,7 +66,7 @@ void release_semaphore(semaphore *s)
         add_task(temp);
     }
 
-    asm("sti");
+    preempt_enable();
 }
 
 void free_semaphore(semaphore *s)
