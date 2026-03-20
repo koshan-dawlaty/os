@@ -10,7 +10,7 @@
 int close(int fd)
 {
 #ifdef __is_libk
-    file *f = lookup_descriptor(fd);
+    struct file *f = lookup_descriptor(fd);
     return close_file(f);
 
 #else

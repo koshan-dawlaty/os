@@ -100,13 +100,10 @@ int unix_socket_send(struct unix_socket *sock, const void *buf, size_t len)
     return 0;
 }
 
-int unix_socket_close(int socket_num)
+int unix_socket_close(struct file *f)
 {
-    struct unix_socket *sock = unix_socket_lookup(socket_num);
 
-    void *new_ptr = NULL;
-    array_set(&unix_socket_array, socket_num, &new_ptr,
-              sizeof(struct unix_socket *));
+    struct unix_socket *sock = f->file_private;
 
     sock->is_closing = true;
 
@@ -137,6 +134,7 @@ static inline int unix_socket_fs_write(struct file *f, const char *buf,
 struct file_operations socket_operations = {
     .read = unix_socket_fs_read,
     .write = unix_socket_fs_write,
+    .close = unix_socket_close,
 };
 
 /*
@@ -284,7 +282,7 @@ SYSCALL_DEFINE0(SYS_create_socket, int)
 
 SYSCALL_DEFINE1(SYS_close_socket, int, int, socket)
 {
-    return unix_socket_close(socket);
+    return -ENOSYS;
 }
 
 SYSCALL_DEFINE1(SYS_create_socket_fs, int, const char *, pathname)

@@ -23,7 +23,7 @@
 
 void AcpiOsVprintf(const char *format, va_list args)
 {
-    vlog_level(LOG_DEBUG, format, args);
+    /* vlog_level(LOG_DEBUG, format, args); */
     /* vprintf(format, args); */
 }
 
@@ -32,7 +32,7 @@ void ACPI_INTERNAL_VAR_XFACE AcpiOsPrintf(const char *Format, ...)
 
     va_list parameters;
     va_start(parameters, Format);
-    vlog_level(LOG_DEBUG, Format, parameters);
+    /* vlog_level(LOG_DEBUG, Format, parameters); */
     /* vprintf(Format, parameters); */
     /* printf("%s\n", Format); */
 
@@ -194,7 +194,8 @@ void *AcpiOsMapMemory(ACPI_PHYSICAL_ADDRESS PhysicalAddress, ACPI_SIZE Length)
 
     for (size_t i = 0; i < amount; i++)
     {
-        logd("%p, %p", physical + (i * PAGE_SIZE), pages + (i * PAGE_SIZE));
+        /* logd("%p, %p", physical + (i * PAGE_SIZE), pages + (i * PAGE_SIZE));
+         */
         map_page(physical + (i * PAGE_SIZE), pages + (i * PAGE_SIZE),
                  PAGING_WRITEABLE | PAGING_PRESENT);
     }

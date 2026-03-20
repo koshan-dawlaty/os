@@ -372,7 +372,7 @@ void kmain()
     /* malloc(1000000); */
     /* malloc(1000000); */
     acpica_init();
-    smp_init();
+    /* smp_init(); */
 
     /* for (size_t i = 0; i < 100; i++) */
     /* { */

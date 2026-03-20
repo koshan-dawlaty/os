@@ -124,15 +124,23 @@ static inline struct fdlist *get_current_fdlist()
 
 int close_file(file *f)
 {
+    int retval;
     struct fdlist *list = get_current_fdlist();
     if (f != NULL)
     {
-        return fdlist_close(list, f->descriptor);
+        retval = fdlist_close(list, f->descriptor);
     }
     else
     {
         return -EBADF;
     }
+
+    if (f->operations.close != NULL)
+    {
+        f->operations.close(f);
+    }
+
+    return retval;
 }
 
 static int read_file_fs(struct file *file, char *buf, size_t n, size_t off)

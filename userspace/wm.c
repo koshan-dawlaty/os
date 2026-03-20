@@ -408,7 +408,7 @@ void process_connection()
 disconnect:;
 
     size_t num_pixels = WIN_H(w) - 1;
-    size_t sleep_ticks = 3;
+    size_t sleep_ticks = 20;
 
     disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 4);
     disconnect_flip_image_h(ent, num_pixels, sleep_ticks, -5);
@@ -671,7 +671,7 @@ int main()
     clone((ptr)keyboard_thread);
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
+    execv("imgview", (char *[]){"imgview", "osdev.tga", NULL});
     execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("tron", (char *[]){"imgview", "osdev.tga", NULL}); */

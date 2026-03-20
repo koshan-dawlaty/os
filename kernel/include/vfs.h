@@ -139,6 +139,12 @@ struct file_operations
 {
     int (*read)(struct file *, char *buf, size_t n, size_t off);
     int (*write)(struct file *, const char *buf, size_t n, size_t off);
+    /*
+     * function to close a file. it can be assumed that the file will not be
+     * reopened while this is being called, the file is should be removed from
+     * the fdlist before this
+     */
+    int (*close)(struct file *);
 };
 
 #define FILE_OPERATIONS_EMPTY                                                  \

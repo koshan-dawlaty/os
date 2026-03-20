@@ -219,6 +219,7 @@ int main()
         for (size_t i = 0; i < res; i++)
         {
             char c = buf[i];
+
             /* printf("read:%c\n"); */
             draw_char(c);
 
@@ -232,7 +233,8 @@ int main()
         wm_render(client);
         user_mutex_unlock(mutex);
     }
-    syscall_wrapper_asm(SYS_close_socket, client.socket, 0, 0, 0, 0);
+
+    close(client.socket);
 
     exit(0);
 }

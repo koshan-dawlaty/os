@@ -89,7 +89,7 @@ int main(int argc, char **argv)
         }
     }
 
-    syscall_wrapper_asm(SYS_close_socket, client.socket, 0, 0, 0, 0);
+    close(client.socket);
 
     exit(0);
 }
