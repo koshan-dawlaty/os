@@ -36,13 +36,13 @@ int main()
     char *input = malloc(0);
     size_t input_len = 0;
 
+    printf(">");
     while (1)
     {
         char c = getchar();
 
         if (c == '\n')
         {
-
             input_len++;
             input = realloc(input, input_len);
             input[input_len - 1] = 0;
@@ -76,13 +76,13 @@ int main()
             }
             else
             {
-                printf("execv\n");
                 int err = execv(args[0], args);
                 if (err < 0)
                 {
                     printf("could not execute\nerror:%s", strerror(err));
                     printf("\n");
                 }
+                printf(">");
             }
             free(input);
             input = malloc(0);
@@ -108,7 +108,12 @@ int main()
             input[input_len] = 0;
         }
 
-        putchar('\b');
-        printf(">%s\n", input);
+        /* putchar(c); */
+
+        /* for (size_t i = 0; i < input_len + 1; i++) */
+        /* { */
+        /*     putchar('\b'); */
+        /* } */
+        /* printf(">%s", input); */
     }
 }

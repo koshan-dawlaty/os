@@ -1,5 +1,6 @@
 #include "wm_lib.h"
 #include <compiler.h>
+#include <container_of.h>
 #include <err_ptr.h>
 #include <extension.h>
 #include <fcntl.h>
@@ -28,9 +29,60 @@ int execv_stdio(const char *path, char *const argv[], int in, int out)
                                0);
 }
 
+size_t x = 0, y = 0;
+struct PSF_font *font;
 struct wm_client client;
 int pipe_write;
 int mutex; /* TODO: maybe have a mutex in the wm_client variable? */
+
+void draw_char(char c)
+{
+
+    switch (c)
+    {
+    case '\n':
+        y += font->header.height;
+        x = 0;
+
+        break;
+
+    case '\b':
+
+        x -= font->header.width;
+        client_draw_rect(client, x, y, font->header.width, font->header.height,
+                         0xFF00FF);
+        if (x == 0)
+        {
+            client_draw_rect(client, 0, y, WM_CLIENT_WIDTH(client),
+                             font->header.height, 0xFF00FF);
+            x = 0;
+            y -= font->header.height;
+        }
+
+        /* x = 0; */
+        /* y = 0; */
+
+        /* size_t y2; */
+        /* for (y2 = 0; y2 < WM_CLIENT_HEIGHT(client); y2++) */
+        /* { */
+        /*     for (size_t x = 0; x < WM_CLIENT_WIDTH(client); x++) */
+        /*     { */
+        /*         client_draw_pixel(client, x, y2, color); */
+        /*     } */
+        /* } */
+        break;
+    default:
+        /* printf("%d, %d\n", x, y); */
+        client_draw_char(client, font, c, x, y);
+        x += font->header.width;
+        if (x > WM_CLIENT_WIDTH(client))
+        {
+            x = 0;
+            y += font->header.height;
+        }
+    }
+}
+
 void key_thread()
 {
     while (1)
@@ -38,6 +90,11 @@ void key_thread()
         user_mutex_lock(mutex);
         char c = wm_get_key(client);
         write(pipe_write, &c, 1);
+        user_mutex_unlock(mutex);
+        printf("%c ", c);
+        draw_char(c);
+        user_mutex_lock(mutex);
+        wm_render(client);
         user_mutex_unlock(mutex);
     }
 }
@@ -70,7 +127,7 @@ int main()
     /* struct wm_client client = wm_client_connect(175, 220); */
 
     int font_fd = open("/font.psfu", O_RDONLY);
-    struct PSF_font *font = font_parse(font_fd);
+    font = font_parse(font_fd);
     /* printf("%d\n", font->header.bytes_per_glyph); */
 
     if (IS_ERR(font))
@@ -136,8 +193,8 @@ int main()
     /* printf("%p-%p\n", client.win.buffer, */
     /*        client.win.buffer + (client.win.h * client.win.w * 4)); */
 
-    size_t x = 1;
-    size_t y = 0;
+    x = 1;
+    y = 0;
     printf("elf_test main loop\n");
     while (1)
     {
@@ -147,6 +204,11 @@ int main()
         bool need_to_read_more = false;
         /* printf("reading from pipe\n"); */
         size_t res = read(stdout_pipe[0], buf, 100);
+
+        /* size_t res =0; */
+        /* buf = "abcdef\b\b"; */
+        /* res = strlen(buf); */
+
         if (res == 100)
         {
             need_to_read_more = true;
@@ -157,39 +219,10 @@ int main()
         for (size_t i = 0; i < res; i++)
         {
             char c = buf[i];
+            /* printf("read:%c\n"); */
+            draw_char(c);
+
             /* terminal_addchar(term, c); */
-            switch (c)
-            {
-            case '\n':
-                y += font->header.height;
-                x = 0;
-
-                break;
-
-            case '\b':
-
-                x = 0;
-                y = 0;
-
-                size_t y2;
-                for (y2 = 0; y2 < WM_CLIENT_HEIGHT(client); y2++)
-                {
-                    for (size_t x = 0; x < WM_CLIENT_WIDTH(client); x++)
-                    {
-                        client_draw_pixel(client, x, y2, color);
-                    }
-                }
-                break;
-            default:
-                /* printf("%d, %d\n", x, y); */
-                client_draw_char(client, font, c, x, y);
-                x += font->header.width;
-                if (x > WM_CLIENT_WIDTH(client))
-                {
-                    x = 0;
-                    y += font->header.height;
-                }
-            }
         }
         if (need_to_read_more)
         {
