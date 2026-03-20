@@ -23,7 +23,7 @@
 
 void AcpiOsVprintf(const char *format, va_list args)
 {
-    /* vlog_level(LOG_DEBUG, format, args); */
+    vlog_level(LOG_DEBUG, format, args);
     /* vprintf(format, args); */
 }
 
@@ -32,7 +32,7 @@ void ACPI_INTERNAL_VAR_XFACE AcpiOsPrintf(const char *Format, ...)
 
     va_list parameters;
     va_start(parameters, Format);
-    /* vlog_level(LOG_DEBUG, Format, parameters); */
+    vlog_level(LOG_DEBUG, Format, parameters);
     /* vprintf(Format, parameters); */
     /* printf("%s\n", Format); */
 
@@ -130,6 +130,7 @@ ACPI_STATUS AcpiOsWritePciConfiguration(ACPI_PCI_ID *PciId, UINT32 Register,
 ACPI_STATUS AcpiOsTableOverride(ACPI_TABLE_HEADER *ExistingTable,
                                 ACPI_TABLE_HEADER **NewTable)
 {
+    *NewTable = NULL;
     /* UNREACHABLE("not implemented"); */
     return AE_OK;
 }
@@ -138,7 +139,9 @@ ACPI_STATUS AcpiOsPhysicalTableOverride(ACPI_TABLE_HEADER *ExistingTable,
                                         ACPI_PHYSICAL_ADDRESS *NewAddress,
                                         UINT32 *NewTableLength)
 {
-    UNREACHABLE("not implemented");
+    *NewAddress = (ptr)NULL;
+    *NewTableLength = 0;
+
     return AE_OK;
 }
 
