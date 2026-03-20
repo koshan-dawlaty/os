@@ -22,7 +22,7 @@ int main()
 
     init_libc();
 
-    size_t w = 100, h = 100;
+    size_t w = 300, h = 300;
     size_t x = 0, y = 0;
     struct wm_client client = wm_client_connect_nonblock(h, w);
     enum player_dir dir = DIR_DOWN;

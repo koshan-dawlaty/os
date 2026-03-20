@@ -1,3 +1,4 @@
+#include "panic.h"
 #include <kernel/faults.h>
 #include <scheduler.h>
 #include <stdio.h>

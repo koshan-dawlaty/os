@@ -77,6 +77,30 @@ void win_draw_rect(struct window *win, struct rect area, struct framebuffer *fb)
     size_t draw_height = y2 - y1;
     size_t draw_width = x2 - x1;
 
+    if (draw_height + win->y > fb->height)
+    {
+        if (fb->height < win->y)
+        {
+            draw_height = 0;
+        }
+        else
+        {
+            draw_height = fb->height - win->y;
+        }
+    }
+
+    if (draw_width + win->x > fb->width)
+    {
+        if (fb->width < win->x)
+        {
+            draw_width = 0;
+        }
+        else
+        {
+            draw_width = fb->width - win->x;
+        }
+    }
+
     if (x1 >= x2 || y1 >= y2)
     {
         return;
@@ -408,7 +432,7 @@ void process_connection()
 disconnect:;
 
     size_t num_pixels = WIN_H(w) - 1;
-    size_t sleep_ticks = 20;
+    size_t sleep_ticks = 40;
 
     disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 4);
     disconnect_flip_image_h(ent, num_pixels, sleep_ticks, -5);
@@ -518,7 +542,7 @@ void mouse_thread()
             WIN_Y(mouse) = 0;
         }
 
-        draw_window(buffer, mouse);
+        win_draw_rect(mouse, WIN_RECT(mouse), buffer);
         /* TODO: dont pass null */
         update_area_up(NULL, WIN_RECT(mouse), buffer);
         update_area_up(NULL, old_mouse, buffer);
