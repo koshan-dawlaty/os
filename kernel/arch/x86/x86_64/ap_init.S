@@ -129,17 +129,31 @@ _L8060:
 GDT_END:
 
 
-
-
     lgdtl ((.Pointer - ap_trampoline) + 0x8000)
 
-	hlt
+	# mov $ap_stack_top, %esp
+	
+	# sub $10, %esp
+	# sgdt (%esp)
+	# hlt
 
-	ljmp $0x08, $ap_64
+	# hlt
+
+
+	# ljmp $0x08, $ap_64
+# 	ljmp $0x08, $ap_64
+
+	# mov $0x94, %ax
+	# mov %ax, 0x9000
+	# mov %ax, 0x9001
+	jmp 0x9000
+	# ljmp $0x08, $0x9000
+	
 
 	# should not get here
 	cli
 	hlt
+
 
 
 .section .ap_trampoline
@@ -147,6 +161,7 @@ GDT_END:
 .global ap_64
 .type ap_64, @function
 ap_64:
+	hlt
 	jmp ap_64_2
 
 .section .text
