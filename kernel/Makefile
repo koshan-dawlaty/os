@@ -41,10 +41,16 @@ TEST_OBJS=\
 
 include tests/Makefile
 
+ACPI_FLAG=-DCONFIG_ACPICA
 
+ifeq ($(findstring $(ACPI_FLAG), $(CFLAGS)), $(ACPI_FLAG))
 ACPICA_OBJ=acpi/acpica.o
 export ACPICA_OBJ
 include acpi/Makefile
+ACPI_OBJ_BIN=bin/acpi/acpica.o
+endif
+
+
 
 
 $(info $(TEST_OBJS))
@@ -110,6 +116,7 @@ acpi/os_layer/os_layer.o \
 
 
 
+
 OBJS=\
 $(ARCHDIR)/$(ARCHDIR_x86)/crti.o \
 $(ARCH_OBJS2) \
@@ -118,7 +125,8 @@ $(TEST_OBJS) \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
  
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj)) \
-		   $(ACPICA_OBJ)
+		   $(ACPICA_OBJ) \
+		$(ACPI_OBJ_BIN)
 
 
 LINK_LIST=\
@@ -161,7 +169,7 @@ $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-clean: 
+clean: acpi-clean 
 	$(RM) -r bin/*
 
 clean_tests:
