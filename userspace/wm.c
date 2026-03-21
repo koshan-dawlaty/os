@@ -89,7 +89,7 @@ void win_draw_rect(struct window *win, struct rect area, struct framebuffer *fb)
         }
     }
 
-    if (draw_width + win->x > fb->width)
+    if (draw_width + win->x >= fb->width)
     {
         if (fb->width < win->x)
         {
@@ -169,8 +169,11 @@ void change_focus(struct window_queue_entry *new_focus)
     {
         for (size_t x = 0; x < WIN_W(new_focus->win); x++)
         {
-            *(u32 *)(new_focus->win->fb.buffer + y * WIN_W(new_focus->win) * 4 +
-                     (x * 4)) = 0xFF00FF;
+            framebuffer_put_pixel(&new_focus->win->fb, 0xFF00FF, x, y);
+
+            /* *(u32 *)(new_focus->win->fb.buffer + y * WIN_W(new_focus->win) *
+             * 4 + */
+            /*          (x * 4)) = 0xFF00FF; */
         }
     }
     struct rect new_rect = WIN_RECT(new_focus->win);
@@ -183,8 +186,10 @@ void change_focus(struct window_queue_entry *new_focus)
     {
         for (size_t x = 0; x < WIN_W(focused->win); x++)
         {
-            *(u32 *)(focused->win->fb.buffer + y * WIN_W(focused->win) * 4 +
-                     (x * 4)) = 0;
+            /* *(u32 *)(focused->win->fb.buffer + y * WIN_W(focused->win) * 4 +
+             */
+            /*          (x * 4)) = 0; */
+            framebuffer_put_pixel(&focused->win->fb, 0xFF, x, y);
         }
     }
 

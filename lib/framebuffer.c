@@ -51,6 +51,12 @@ void framebuffer_put_pixel(struct framebuffer *f, int color, int x, int y)
 
 u32 framebuffer_get_pixel(struct framebuffer *fb, size_t x, size_t y)
 {
+    if (unlikely(x > fb->width || y > fb->height || x < 0 || y < 0))
+    {
+        /* for right now just ignore invalid positions */
+        return 0;
+    }
+
     size_t location = y * fb->pitch + x * fb->pixel_width;
 
     u8 *pixel = fb->buffer + location;
