@@ -313,6 +313,9 @@ void kmain()
     acpica_init();
     smp_init();
 
+    irq_disable();
+    irq_wait();
+
     /* for (size_t i = 0; i < 100; i++) */
     /* { */
     /*     malloc(10); */

@@ -2,8 +2,15 @@ ENTRY(_start)
 SECTIONS
 {
 
+	. = 0x9000;
+	.ap_trampoline ALIGN (4K) : {
+		*(.ap_trampoline)
+	}
+
 
     . = 0x00100000;
+
+
 	KERNEL_VMA = 0xffffffff80000000;
 	KERNEL_PHYSADDR = .;
 	LINKER_KERNEL_START = . + KERNEL_VMA;
