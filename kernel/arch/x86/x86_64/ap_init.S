@@ -67,11 +67,6 @@ _L8060:
     movw    $16, %ax
     movw    %ax, %ds
     movw    %ax, %ss
-    # get our Local APIC ID
-    mov     $1, %eax
-    cpuid
-    shrl    $24, %ebx
-    movl    %ebx, %edi
     # shll    $15, %ebx
     # movl    ap_stack_top, %esp
     # subl    %ebx, %esp
@@ -177,22 +172,25 @@ ap_64:
 	mov $ap_64_2, %rax
 	jmp %rax
 
-.global stack_top
-.section .stack
-.align 16
-ap_stack_bottom:
-.skip 16384
-ap_stack_top:
 
 .section .text
 .code64
+.extern ap_stacks
 .global ap_64_2
 .type ap_64_2, @function
 ap_64_2:
 
-	mov $ap_stack_top, %rsp
+    mov     $1, %eax
+    cpuid
+    shrl    $24, %ebx
+    movl    %ebx, %edi
 
-	# call hi
+	mov %rdi, %rcx
+	dec %rcx
+
+	mov $ap_stacks, %rdx
+	mov (%rdx), %rax
+	mov (%rax, %rcx, 8), %rsp
 
 # spinlock, wait for the BSP to finish
 1:  pause
@@ -200,10 +198,13 @@ ap_64_2:
 	jz      1b
 	lock    incb aprunning
 
+
+	call ap_started
+
+
 	5:
 	jmp 5b
 
 	
-
 
 
