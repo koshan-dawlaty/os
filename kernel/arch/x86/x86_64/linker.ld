@@ -3,9 +3,10 @@ SECTIONS
 {
 
 	. = 0x9000;
-	ap_trampoline ALIGN (4K) : {
-		*(ap_trampoline)
-	}
+	/* .ap_trampoline ALIGN (4K) : { */
+	/* 	ap_64 = .; */
+	/* 	*(.ap_trampoline) */
+	/* } */
 
 
     . = 0x00100000;

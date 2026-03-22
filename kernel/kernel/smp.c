@@ -33,8 +33,6 @@ bool bspdone;
 
 struct local_apic local_apics[16];
 
-extern void ap_trampoline();
-
 void hi()
 {
     printf("hi\n");
@@ -42,6 +40,9 @@ void hi()
     {
     }
 }
+
+extern void ap_trampoline();
+extern void ap_64();
 
 void bootstrap_init()
 {
@@ -52,9 +53,8 @@ void bootstrap_init()
     map_page((void *)0x8000, (void *)0x8000, PAGING_WRITEABLE | PAGING_PRESENT);
     map_page((void *)0x9000, (void *)0x9000, PAGING_WRITEABLE | PAGING_PRESENT);
     memcpy((void *)0x8000, &ap_trampoline, 4096);
-    /* map the 32 bit part of the bootstrap code */
-    map_page((void *)0x100000, (void *)0x100000,
-             PAGING_PRESENT | PAGING_WRITEABLE);
+    memcpy((void *)0x9000, &ap_64, 4096);
+    // *(u8 *)(0x9000) = 0xF4;
 
     for (size_t i = 0; i < num_cores; i++)
     {
@@ -64,14 +64,15 @@ void bootstrap_init()
             continue;
         }
 
-        *OFFSET_LAPIC(0x310) = *OFFSET_LAPIC(0x310) | (i << 24); /* select ap */
+        u8 id = local_apics[i].apic_id;
+
+        *OFFSET_LAPIC(0x310) = (id << 24); /* select ap */
         *OFFSET_LAPIC(0x300) = (*(OFFSET_LAPIC(0x300)) & 0xfff00000) | 0x00C500;
         do
         {
             asm volatile("pause" : : : "memory");
         } while (*OFFSET_LAPIC(0x300) & (1 << 12)); /* wait for delivery */
-        *(OFFSET_LAPIC(0x310)) =
-            (*(OFFSET_LAPIC(0x310))) | (i << 24); /* select ap */
+        *(OFFSET_LAPIC(0x310)) = (id << 24); /* select ap */
         *(OFFSET_LAPIC(0x300)) = (*(OFFSET_LAPIC(0x300)) & 0xfff00000) |
                                  0x008500; /* init level deassert, tell the ap
                                               to start running code */
@@ -89,9 +90,8 @@ void bootstrap_init()
         }
         for (size_t j = 0; j < 2; j++)
         {
-            *OFFSET_LAPIC(0x280) = 0; /* clear APIC errors */
-            *OFFSET_LAPIC(0x310) =
-                (*(OFFSET_LAPIC(0x310))) | (i << 24); /* select AP */
+            *OFFSET_LAPIC(0x280) = 0;          /* clear APIC errors */
+            *OFFSET_LAPIC(0x310) = (id << 24); /* select AP */
             *OFFSET_LAPIC(0x300) =
                 (*OFFSET_LAPIC(0x300) & 0xfff0f800) |
                 0x000608; /* trigger STARTUP IPI for 0800:0000 */
@@ -107,8 +107,8 @@ void bootstrap_init()
             } while (*((volatile uint32_t *)(OFFSET_LAPIC(0x300))) &
                      (1 << 12)); /* wait for delivery */
         }
-        bspdone = true;
     }
+    bspdone = true;
 }
 
 void smp_init()
@@ -138,24 +138,24 @@ void smp_init()
     {
         switch (entry->Type)
         {
-        case ACPI_MADT_TYPE_LOCAL_APIC:
-            printf("%d\n", entry->Length);
-            printf("found an local apic\n");
+        case ACPI_MADT_TYPE_LOCAL_APIC:;
+            /* printf("%d\n", entry->Length); */
+            /* printf("found an local apic\n"); */
             struct local_apic *local_ptr = (struct local_apic *)(entry + 1);
             local_apics[num_cores] = *local_ptr;
             num_cores++;
 
-            printf("apic id:%d\n", local_ptr->apic_id);
+            /* printf("apic id:%d\n", local_ptr->apic_id); */
 
             break;
 
-        case ACPI_MADT_TYPE_IO_APIC:
-            printf("found the ioapic\n");
+        case ACPI_MADT_TYPE_IO_APIC:;
+            /* printf("found the ioapic\n"); */
             struct io_apic *io_ptr = (struct io_apic *)(entry + 1);
-            printf("addr:%p\n", io_ptr->apic_addr);
+            /* printf("addr:%p\n", io_ptr->apic_addr); */
             u32 *virtual = map_physaddr((void *)(ptr)io_ptr->apic_addr, 1,
                                         PAGING_WRITEABLE | PAGING_PRESENT);
-            printf("read this:%p\n", *virtual);
+            /* printf("read this:%p\n", *virtual); */
 
             break;
 

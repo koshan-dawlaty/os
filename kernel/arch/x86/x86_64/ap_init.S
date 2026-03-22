@@ -9,11 +9,11 @@
 .set PAGING_PRESENT, 1
 .set PAGING_READABLE, 2
 
-.section .ap_trampoline
-.align 16
-ap_stack_bottom:
-.skip 16384
-ap_stack_top:
+# .section .ap_trampoline
+# .align 16
+# ap_stack_bottom:
+# .skip 16384
+# ap_stack_top:
 
 .set PRESENT,  1 << 7
 .set NOT_SYS,  1 << 4
@@ -72,11 +72,10 @@ _L8060:
     cpuid
     shrl    $24, %ebx
     movl    %ebx, %edi
-    # set up 32k stack, one for each core. It is important that all core must have its own stack
-    shll    $15, %ebx
-    movl    ap_stack_top, %esp
-    subl    %ebx, %esp
-    pushl   %edi
+    # shll    $15, %ebx
+    # movl    ap_stack_top, %esp
+    # subl    %ebx, %esp
+    # pushl   %edi
 
 
 	mov $(PML4_ADDR_PHYSICAL), %eax
@@ -105,31 +104,46 @@ _L8060:
 	mov %eax, %cr0
 
 	jmp GDT_END
- GDT:
-     .Null: 
-         .quad 0
-     .Code: 
-         .Code.limit_lo: .short 0xffff
-         .Code.base_lo: .short 0
-         .Code.base_mid: .byte 0
-         .Code.access: .byte PRESENT | NOT_SYS | EXEC | RW
-         .Code.flags: .byte GRAN_4K | LONG_MODE | 0xF   # Flags & Limit (high, bits 16-19)
-         .Code.base_hi: .byte 0
-     .Data: 
-         .Data.limit_lo: .short 0xffff
-         .Data.base_lo: .short 0
-         .Data.base_mid: .byte 0
-         .Data.access: .byte PRESENT | NOT_SYS | RW
-         .Data.Flags: .byte GRAN_4K | SZ_32 | 0xF       # Flags & Limit (high, bits 16-19)
-         .Data.base_hi: .byte 0
+#  GDT:
+#      .Null: 
+#          .quad 0
+#      .Code: 
+#          .Code.limit_lo: .short 0xffff
+#          .Code.base_lo: .short 0
+#          .Code.base_mid: .byte 0
+#          .Code.access: .byte PRESENT | NOT_SYS | EXEC | RW
+#          .Code.flags: .byte GRAN_4K | LONG_MODE | 0xF   # Flags & Limit (high, bits 16-19)
+#          .Code.base_hi: .byte 0
+#      .Data: 
+#          .Data.limit_lo: .short 0xffff
+#          .Data.base_lo: .short 0
+#          .Data.base_mid: .byte 0
+#          .Data.access: .byte PRESENT | NOT_SYS | RW
+#          .Data.Flags: .byte GRAN_4K | SZ_32 | 0xF       # Flags & Limit (high, bits 16-19)
+#          .Data.base_hi: .byte 0
+	GDT:
+    .quad 0x0000000000000000   # null
+    .quad 0x00209A0000000000   # 64-bit code
+    .quad 0x0000920000000000   # data
      .Pointer:
- 		.word 24
+ 		# .word 24
+ 		.word 23
          .quad ((GDT - ap_trampoline) + 0x8000 )
          # .quad GDT
 GDT_END:
+	# jmp ap_64
+	# hlt
 
+	lea ((.Pointer - ap_trampoline) + 0x8000), %ebx
+	lea (GDT - ap_trampoline), %eax
+	add $0x8000, %eax
 
-    lgdtl ((.Pointer - ap_trampoline) + 0x8000)
+	mov %eax, 2(%ebx)   # overwrite base at runtime
+
+	lgdt (%ebx)
+	# lgdt gdt_ptr
+
+	# lea (.Pointer - ap_trampoline + 0x8000), %eax
 
 	# mov $ap_stack_top, %esp
 	
@@ -137,16 +151,15 @@ GDT_END:
 	# sgdt (%esp)
 	# hlt
 
-	# hlt
 
-
+	
 	# ljmp $0x08, $ap_64
+	ljmp $0x08, $0x9000
 # 	ljmp $0x08, $ap_64
 
 	# mov $0x94, %ax
 	# mov %ax, 0x9000
 	# mov %ax, 0x9001
-	jmp 0x9000
 	# ljmp $0x08, $0x9000
 	
 
@@ -156,29 +169,41 @@ GDT_END:
 
 
 
-.section .ap_trampoline
+
 .code64
+.section .text
 .global ap_64
-.type ap_64, @function
 ap_64:
-	hlt
-	jmp ap_64_2
+	mov $ap_64_2, %rax
+	jmp %rax
+
+.global stack_top
+.section .stack
+.align 16
+ap_stack_bottom:
+.skip 16384
+ap_stack_top:
 
 .section .text
 .code64
 .global ap_64_2
 .type ap_64_2, @function
 ap_64_2:
+
+	mov $ap_stack_top, %rsp
+
 	# call hi
+
+# spinlock, wait for the BSP to finish
+1:  pause
+	cmpb    $0, bspdone
+	jz      1b
+	lock    incb aprunning
+
 	5:
 	jmp 5b
 
 	
 
 
-    # spinlock, wait for the BSP to finish
-# 	1:  pause
-# 		cmpb    $0, bspdone
-# 		jz      1b
-# 		lock    incb aprunning
 
