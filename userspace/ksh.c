@@ -114,6 +114,7 @@ int main()
         /* { */
         /*     putchar('\b'); */
         /* } */
+        /* printf("%s, %c\n", input, c); */
         /* printf(">%s", input); */
     }
 }

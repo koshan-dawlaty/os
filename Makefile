@@ -120,6 +120,8 @@ clean:
 	done
 
 debug : $(ISO)
+	rm -f build/qemu.img
+	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
 	./build/debug.sh
 
 test : CFLAGS += -DTESTS

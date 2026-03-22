@@ -1,8 +1,5 @@
 #!/bin/sh
 
-rm -f qemu.img
-./get-ext2-image.sh "qemu.img" fs-root
-
 # echo $QEMU_FLAGS
 
 # qemu-system-i386 -gdb tcp::1234 -S $QEMU_FLAGS &
@@ -11,12 +8,20 @@ rm -f qemu.img
 # gdb -ex "set \$flags=$QEMU_FLAGS" -x debug.gdb
 #
 
-USER_EXECUTABLE="build/fs-root/cat"
+USER_EXECUTABLE="build/fs-root/ksh"
 USER_EXECUTABLE2="build/fs-root/elf_test"
 
 KERNEL_ADDR=objdump -h isodir/boot/os.kernel | grep \ .text\  | awk '{print $4}'
 USERSPACE_ADDR=objdump -h $USER_EXECUTABLE | grep \ .text\  | awk '{print $4}'
 USERSPACE_ADDR=objdump -h $USER_EXECUTABLE2 | grep \ .text\  | awk '{print $4}'
+
+SERIAL_PIPE=$(mktemp /tmp/QEMU_SERIAL_PIPE_XXXXXXX)
+
+mkfifo "${SERIAL_PIPE}.in"
+mkfifo "${SERIAL_PIPE}.out"
+
+# -v is for vertial -b is for above current, -d is to keep old focus
+tmux split-window -v -b -d -t "$TMUX_PANE" "cat $SERIAL_PIPE.out"
 
 gdb \
 	-ex "source pretty-print.py" \
@@ -24,5 +29,13 @@ gdb \
 	-ex "add-symbol-file build/isodir/boot/os.kernel $KERNEL_ADDR" \
 	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
-	-ex "target remote | $QEMU_COMMAND -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")" \
+	-ex "b kernel_init" \
+	-ex "c" \
+	-ex "target remote | $QEMU_COMMAND -S -gdb stdio -serial pipe:$SERIAL_PIPE $(echo $QEMU_FLAGS | tr -d "\n")" \
 	-ex ""
+
+# cat $SERIAL_PIPE.out
+
+
+rm $SERIAL_PIPE.in
+rm $SERIAL_PIPE.out

@@ -176,7 +176,7 @@ void kernel_init()
                                    (int_handler_flags){.is_user = true});
     })
 
-    logi("kernel init done");
+    /* logi("kernel init done"); */
 
 #ifdef TESTS
     run_tests();
@@ -325,10 +325,32 @@ void kmain()
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
-    logi("starting init process");
+    /* logi("starting init process"); */
+
+    /* DIR *d = opendir("."); */
+    /* struct dirent *e = readdir(d); */
+    /* if (errno != 0) */
+    /* { */
+    /*     printf("ls error:%s\n", strerror(errno)); */
+    /* } */
+
+    /* while (e != NULL) */
+    /* { */
+    /*     if (errno != 0) */
+    /*     { */
+    /*         printf("ls error:%s\n", strerror(errno)); */
+    /*     } */
+
+    /*     printf("%s ", e->d_name); */
+    /*     /1* printf("%d\n", d->fd); *1/ */
+    /*     e = readdir(d); */
+
+    /*     /1* printf("%p\n", malloc(10)); *1/ */
+    /* } */
 
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
     int err = execv("/wm", (char *[]){"wm", NULL});
+
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
 
     struct task_queue abc = TASK_QUEUE_INIT(abc);
@@ -337,7 +359,7 @@ void kmain()
 
     if (err < 0)
     {
-        printf("did not find shell\n");
+        printf("error when opening init process:%s\n", strerror(-err));
     }
 
     enable_scheduler();

@@ -79,6 +79,7 @@ mkfifo "${SERIAL_PIPE}.out"
 $QEMU_COMMAND -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE  2>/dev/null &  
 QEMU_PID=$!
 
+tmux split-window -h "echo test; cat"
 
 
 echo $SERIAL_PIPE.out
