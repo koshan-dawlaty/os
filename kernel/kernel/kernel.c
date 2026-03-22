@@ -142,12 +142,13 @@ void kernel_init()
         graphics_init(f);
         draw_background(f);
     }
-    malloc(10);
 
     init_gdt();
     init_idt();
 
+#ifndef CONFIG_PLEASE_DONT_USE_THE_SERIAL_PORT
     serial_init(0x3f8);
+#endif
     /* irq_enable(); */
     /* char *str = "asjdfakldf"; */
     /* serial_writestring(str, strlen(str), 0x3f8); */
@@ -304,7 +305,9 @@ void kmain()
     create_device("/terminal", get_terminal());
     create_device("/keyboard", get_keyboard());
     create_device("/mouse", mouse_get());
+#ifndef CONFIG_PLEASE_DONT_USE_THE_SERIAL_PORT
     create_device("/serial0", serial_cdev_create(0x3F8));
+#endif
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */

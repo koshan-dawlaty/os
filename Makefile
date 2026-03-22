@@ -4,6 +4,7 @@ SUBDIRS := lib libc kernel userspace
 .PHONY: all clean $(SUBDIRS)
 
 CONFIG?=config
+# CONFIG?=sony_vaio.conf
 
 # CONFIG_FLAGS=$(shell echo $(CONFIG_FILE_RAW) | sed "s/^/-DCONFIG_/")
 CONFIG_FLAGS=$(shell ./build/parse_config.py $(CONFIG))

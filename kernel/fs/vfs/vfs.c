@@ -16,7 +16,6 @@
 #include "../tmpfs/tmpfs.h"
 
 struct fdlist *basic_open_files = NULL;
-
 struct dentry *rootdir = NULL;
 
 struct dentry *get_root_dir()
@@ -81,7 +80,9 @@ dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type)
 
     return out;
 }
-dentry *dentry_mount_point_alloc(struct superblock *sb, struct inode *root)
+
+struct dentry *dentry_mount_point_alloc(struct superblock *sb,
+                                        struct inode *root)
 {
     struct dentry *out = malloc(sizeof(struct dentry));
     out->type = DENTRY_MOUNT_POINT;
