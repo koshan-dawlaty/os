@@ -1,6 +1,8 @@
 #include "../acpi/acpica/acpi.h"
+#include "interrupts/pic.h"
 #include "kernel/log.h"
 #include "kernel/multiboot.h"
+#include "kernel/types.h"
 #include "memory/get_free_pages.h"
 #include "memory/paging_flags.h"
 #include "panic.h"
@@ -18,13 +20,21 @@ struct local_apic
     u32 flags;
 } __packed;
 
-struct io_apic
+struct acpi_io_apic
 {
     u8 apic_id;
     u8 reserved;
     u32 apic_addr;
     u32 global_interrupt_base;
 } __packed;
+
+struct io_apic
+{
+    u8 version;
+    u8 max_irqs;
+    ptr addr;
+    u32 global_interrupt_base;
+};
 
 ptr lapic;
 #define OFFSET_LAPIC(offset) ((volatile uint32_t *)(lapic + offset))
@@ -36,10 +46,11 @@ struct local_apic local_apics[16];
 
 void ap_started()
 {
+    printf("a\n");
     irq_enable();
-    printf("a");
     while (1)
     {
+        irq_wait();
     }
 }
 
@@ -138,7 +149,68 @@ void bootstrap_init()
     bspdone = true;
 }
 
-void apic_init()
+u32 ioapic_read(ptr base, ptr offset)
+{
+    *(volatile u32 *)(base) = offset;
+    return *(volatile u32 *)(base + 0x10);
+}
+
+void ioapic_write(ptr base, ptr offset, u32 value)
+{
+    *(volatile u32 *)(base) = offset;
+    *(volatile u32 *)(base + 0x10) = value;
+}
+
+struct io_apic io_apic;
+
+union redirection_entry
+{
+    struct
+    {
+        /* TODO: check if this bitfield order is consistent */
+        u64 vector : 8;
+        u64 delv_mode : 3;
+        u64 dest_mode : 1;
+        u64 delv_status : 1;
+        u64 pin_polarity : 1;
+        u64 remote_irr : 1;
+        u64 trigger_mode : 1;
+        u64 mask : 1;
+        u64 reserved : 39;
+        u64 destination : 8;
+    } __packed;
+    struct
+    {
+        u32 low;
+        u32 high;
+    } __packed;
+};
+
+union redirection_entry ioapic_get_redir_entry(struct io_apic apic, u8 irq)
+{
+    if (irq > apic.max_irqs)
+    {
+        logd("irq %d too high", irq);
+    }
+    size_t offset = 0x10 + 2 * irq;
+    u32 low = ioapic_read(apic.addr, offset);
+    u32 high = ioapic_read(apic.addr, offset + 1);
+    return (union redirection_entry){.high = high, .low = low};
+}
+
+void ioapic_write_redir_entry(struct io_apic apic, u8 irq,
+                              union redirection_entry ent)
+{
+    if (irq > apic.max_irqs)
+    {
+        logd("irq %d too high", irq);
+    }
+    size_t offset = 0x10 + 2 * irq;
+    ioapic_write(apic.addr, offset, ent.low);
+    ioapic_write(apic.addr, offset + 1, ent.high);
+}
+
+void smp_acpi_init()
 {
     ACPI_STATUS status;
 
@@ -178,11 +250,22 @@ void apic_init()
 
         case ACPI_MADT_TYPE_IO_APIC:;
             /* printf("found the ioapic\n"); */
-            struct io_apic *io_ptr = (struct io_apic *)(entry + 1);
+            struct acpi_io_apic *io_ptr = (struct acpi_io_apic *)(entry + 1);
             /* printf("addr:%p\n", io_ptr->apic_addr); */
-            u32 *virtual = map_physaddr((void *)(ptr)io_ptr->apic_addr, 1,
-                                        PAGING_WRITEABLE | PAGING_PRESENT);
-            /* printf("read this:%p\n", *virtual); */
+            ptr ioapic_base =
+                (ptr)map_physaddr((void *)(ptr)io_ptr->apic_addr, 1,
+                                  PAGING_WRITEABLE | PAGING_PRESENT);
+
+            u32 apic_version = ioapic_read(ioapic_base, 1);
+            u8 version = apic_version & 0xFF;
+            u8 max_irqs = (apic_version >> 16) + 1;
+
+            io_apic = (struct io_apic){
+                .version = version,
+                .max_irqs = max_irqs,
+                .addr = ioapic_base,
+                .global_interrupt_base = io_ptr->global_interrupt_base,
+            };
 
             break;
 
@@ -196,7 +279,25 @@ void apic_init()
 
 void smp_init()
 {
-    apic_init();
+    smp_acpi_init();
+
+    /* for (size_t i = 0; i < io_apic.max_irqs; i++) */
+    /* { */
+    /*     union redirection_entry ent = ioapic_redir_entry(io_apic, i); */
+    /*     printf("%p\n", ent.mask); */
+    /* } */
 
     bootstrap_init();
+
+    /* PIC_mask_all(); */
+
+    /* union redirection_entry ent = ioapic_get_redir_entry(io_apic, 0); */
+    /* ent.mask = 0; */
+    /* ent.vector = 32; */
+    /* ent.delv_mode = 0; */
+    /* ent.pin_polarity = 0; */
+    /* ent.trigger_mode = 0; */
+    /* ent.dest_mode = 0; */
+    /* ent.destination = 1; */
+    /* ioapic_write_redir_entry(io_apic, 0, ent); */
 }

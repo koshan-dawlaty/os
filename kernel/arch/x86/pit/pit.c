@@ -1,4 +1,5 @@
 #include "pit.h"
+#include "kernel/log.h"
 #include <compiler.h>
 #include <interrupts/idt.h>
 #include <interrupts/pic.h>
@@ -40,6 +41,7 @@ void init_pit()
 }
 
 INT_HANDLER(pit_handler, {
+    printf("hi\n");
     pit_time++;
     if (likely(is_scheduler_enabled()))
     {

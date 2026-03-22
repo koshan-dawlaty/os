@@ -106,3 +106,9 @@ void PIC_sendEOI(uint8_t irq)
 
     outb(PIC1_COMMAND, PIC_EOI);
 }
+
+void PIC_mask_all()
+{
+    outb(0xFF, 0x21);
+    outb(0xFF, 0xA1);
+}
