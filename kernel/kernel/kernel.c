@@ -176,7 +176,7 @@ void kernel_init()
                                    (int_handler_flags){.is_user = true});
     })
 
-    /* logi("kernel init done"); */
+    logi("kernel init done");
 
 #ifdef TESTS
     run_tests();
@@ -314,41 +314,8 @@ void kmain()
 
     /* printf("%p, %p\n", read, write); */
 
-    /* d = malloc(10); */
-    /* ktask_run(t2, NULL); */
-    /* ktask_run(t1, NULL); */
-    /* /1* ktask_run(t3, NULL); *1/ */
-    /* enable_scheduler(); */
-    /* irq_enable(); */
-    /* schedule(); */
-    /* return; */
-
-    /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
-
-    /* logi("starting init process"); */
-
-    /* DIR *d = opendir("."); */
-    /* struct dirent *e = readdir(d); */
-    /* if (errno != 0) */
-    /* { */
-    /*     printf("ls error:%s\n", strerror(errno)); */
-    /* } */
-
-    /* while (e != NULL) */
-    /* { */
-    /*     if (errno != 0) */
-    /*     { */
-    /*         printf("ls error:%s\n", strerror(errno)); */
-    /*     } */
-
-    /*     printf("%s ", e->d_name); */
-    /*     /1* printf("%d\n", d->fd); *1/ */
-    /*     e = readdir(d); */
-
-    /*     /1* printf("%p\n", malloc(10)); *1/ */
-    /* } */
-
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
+    logi("starting init task");
     int err = execv("/wm", (char *[]){"wm", NULL});
 
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */

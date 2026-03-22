@@ -662,6 +662,8 @@ int main()
 {
     init_libc();
 
+    write(3, "abc", 4);
+
     /* printf("window manager\n"); */
     /* clone((ptr)thread1); */
 

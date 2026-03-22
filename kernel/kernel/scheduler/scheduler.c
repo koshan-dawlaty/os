@@ -150,7 +150,7 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     load_pgdir(temp);
 
     const char *term_path = "/terminal";
-    /* const char *term_path = "/serial0"; */
+    const char *serial_path = "/serial0";
     const char *keyboard_path = "/keyboard";
     /* TODO: maybe have a function to index into the fdlist, like dup2() */
     /* TODO: maybe make stdin/out not readable/writeable in the kernel */
@@ -164,16 +164,20 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
         struct fdlist *current_fds = current_task->descriptors;
         struct fdlist *out_fds = out->descriptors;
 
+        /* FIXME: the open_device calls get evaluated */
         fdlist_copy_from_maybe(out_fds, current_fds, 0,
                                open_device(keyboard_path));
         fdlist_copy_from_maybe(out_fds, current_fds, 1, open_device(term_path));
         fdlist_copy_from_maybe(out_fds, current_fds, 2, open_device(term_path));
+        fdlist_copy_from_maybe(out_fds, current_fds, 3,
+                               open_device(serial_path));
     }
     else
     {
         fdlist_set(out->descriptors, 0, open_device(keyboard_path));
         fdlist_set(out->descriptors, 1, open_device(term_path));
         fdlist_set(out->descriptors, 2, open_device(term_path));
+        fdlist_set(out->descriptors, 3, open_device(serial_path));
     }
 
     return out;
@@ -222,6 +226,7 @@ struct task *user_thread_alloc(ptr ip)
     /* TODO: this should duplicate file descriptors */
     const char *term_path = "/terminal";
     const char *keyboard_path = "/keyboard";
+    const char *serial_path = "/serial0";
     /* TODO: maybe have a function to index into the fdlist, like dup2() */
     /* TODO: maybe make stdin/out not readable/writeable in the kernel */
     /* fdlist_add(out->descriptors, open_device(keyboard_path)); /1* 0, stdin
@@ -231,9 +236,30 @@ struct task *user_thread_alloc(ptr ip)
     /* fdlist_add(out->descriptors, open_device(term_path));     /1* 2, stderr
      * *1/ */
 
-    fdlist_set(out->descriptors, 0, open_device(keyboard_path));
-    fdlist_set(out->descriptors, 1, open_device(term_path));
-    fdlist_set(out->descriptors, 2, open_device(term_path));
+    /* fdlist_set(out->descriptors, 0, open_device(keyboard_path)); */
+    /* fdlist_set(out->descriptors, 1, open_device(term_path)); */
+    /* fdlist_set(out->descriptors, 2, open_device(term_path)); */
+
+    if (current_task->start_addr != (void *)0xDEADBEEF)
+    {
+        struct fdlist *current_fds = current_task->descriptors;
+        struct fdlist *out_fds = out->descriptors;
+
+        /* FIXME: the open_device calls get evaluated */
+        fdlist_copy_from_maybe(out_fds, current_fds, 0,
+                               open_device(keyboard_path));
+        fdlist_copy_from_maybe(out_fds, current_fds, 1, open_device(term_path));
+        fdlist_copy_from_maybe(out_fds, current_fds, 2, open_device(term_path));
+        fdlist_copy_from_maybe(out_fds, current_fds, 3,
+                               open_device(serial_path));
+    }
+    else
+    {
+        fdlist_set(out->descriptors, 0, open_device(keyboard_path));
+        fdlist_set(out->descriptors, 1, open_device(term_path));
+        fdlist_set(out->descriptors, 2, open_device(term_path));
+        fdlist_set(out->descriptors, 3, open_device(serial_path));
+    }
 
     return out;
 }
