@@ -1,5 +1,4 @@
 #include "ext2.h"
-#include "kernel/log.h"
 #include "kernel/types.h"
 #include "kernel/utils.h"
 #include "panic.h"

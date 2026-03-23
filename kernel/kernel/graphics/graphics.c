@@ -1,4 +1,3 @@
-#include "kernel/log.h"
 #include "psu_font.h"
 #include <compiler.h>
 #include <kernel/graphics.h>

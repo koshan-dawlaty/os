@@ -1,6 +1,5 @@
 #include "../os_layer.h"
 #include "assert.h"
-#include "kernel/log.h"
 #include "kernel/paging.h"
 #include "kernel/semaphore.h"
 #include "kernel/types.h"
@@ -12,6 +11,7 @@
 #include "utils.h"
 #include <acpi.h>
 #include <ctype.h>
+#include <lib/log.h>
 #include <panic.h>
 #include <spinlock.h>
 #include <stdarg.h>

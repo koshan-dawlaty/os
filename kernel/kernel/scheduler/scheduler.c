@@ -1,4 +1,3 @@
-#include "kernel/log.h"
 #include "kernel/syscall.h"
 #include "kmalloc.h"
 #include "sleep.h"

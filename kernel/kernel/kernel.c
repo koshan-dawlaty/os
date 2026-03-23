@@ -21,7 +21,6 @@
 #include <kernel/graphics.h>
 #include <kernel/interrupts.h>
 #include <kernel/keyboard.h>
-#include <kernel/log.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/ps2.h>
@@ -33,6 +32,7 @@
 #include <lib/array.h>
 #include <lib/binary_tree.h>
 #include <lib/list.h>
+#include <lib/log.h>
 #include <malloc_internal.h>
 #include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>

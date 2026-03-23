@@ -8,6 +8,7 @@
 #include <lib/array.h>
 #include <lib/framebuffer.h>
 #include <lib/list.h>
+#include <lib/log.h>
 #include <lib/rect.h>
 #include <lib/utils.h>
 #include <sched.h>
@@ -662,8 +663,6 @@ int main()
 {
     init_libc();
 
-    write(3, "abc", 4);
-
     /* printf("window manager\n"); */
     /* clone((ptr)thread1); */
 
@@ -706,6 +705,8 @@ int main()
     execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("tron", (char *[]){"imgview", "osdev.tga", NULL}); */
+
+    logd("test:%d", 1234);
 
     while (true)
     {

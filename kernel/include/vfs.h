@@ -1,13 +1,13 @@
 #ifndef VFS_H
 #define VFS_H
-#include "kernel/log.h"
-#include "mutex.h"
-#include "socket.h"
-#include "spinlock.h"
 #include <device.h>
 #include <dirent.h>
 #include <kernel/types.h>
+#include <lib/log.h>
+#include <mutex.h>
 #include <scheduler.h>
+#include <socket.h>
+#include <spinlock.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/types.h>

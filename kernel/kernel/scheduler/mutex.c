@@ -1,4 +1,3 @@
-#include "kernel/log.h"
 #include "lib/array.h"
 #include "unistd.h"
 #include "wait_queue.h"
@@ -8,6 +7,7 @@
 #include <kernel/syscall.h>
 #include <lib/array.h>
 #include <lib/list.h>
+#include <lib/log.h>
 #include <mutex.h>
 #include <panic.h>
 #include <sched.h>

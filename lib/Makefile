@@ -33,30 +33,45 @@ OBJS=\
 	list.o \
 	array.o \
 	framebuffer.o \
+	log.o \
 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 
+LIBK_OBJS=$(OBJS:.o=.libk.o)
+LIBK_OBJS_BIN = $(foreach obj,$(LIBK_OBJS),bin/$(obj))
+
+
 
 LIB_BINARY=$(BIN)/libutil.a
+KERNEL_LIB_BINARY=$(BIN)/libutilkernel.a
 .PHONY : all install install-headers install-lib clean
 
-all : $(LIB_BINARY)
+all : $(LIB_BINARY) $(KERNEL_LIB_BINARY)
 
 $(LIB_BINARY) : $(OBJS_BIN)
 	@mkdir -p $(BIN)
 	$(AR) rcs $@ $(OBJS_BIN)
 
+$(KERNEL_LIB_BINARY) : $(LIBK_OBJS_BIN)
+	@mkdir -p $(BIN)
+	$(AR) rcs $@ $^
+
+
+$(BIN)/%.libk.o: %.c
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -D__is_libk
 
 $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -D__is_libc
 
 
 install: install-lib
 
-install-lib: $(LIB_BINARY)
+install-lib: $(LIB_BINARY) $(KERNEL_LIB_BINARY)
 	mkdir -p $(DESTDIR)$(LIBDIR)
 	cp $(LIB_BINARY) $(DESTDIR)$(LIBDIR)
+	cp $(KERNEL_LIB_BINARY) $(DESTDIR)$(LIBDIR)
 
 install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)

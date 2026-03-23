@@ -1,6 +1,5 @@
 #include "assert.h"
 #include "fcntl.h"
-#include "kernel/log.h"
 #include "kernel/userspace.h"
 #include "panic.h"
 #include "scheduler.h"
@@ -12,6 +11,7 @@
 #include <kernel/syscall.h>
 #include <lib/array.h>
 #include <lib/list.h>
+#include <lib/log.h>
 #include <sched.h>
 #include <socket.h>
 #include <spinlock.h>

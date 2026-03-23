@@ -1,7 +1,7 @@
 #ifndef INTERRUPTS_H
 #define INTERRUPTS_H
 
-#include <interrupts/arch_interrupts.h>
+#include "interrupts/arch_interrupts.h"
 #include <types.h>
 
 #define __int_handler ARCH_INTERRUPT_ATTRIBUTE

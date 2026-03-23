@@ -1,4 +1,3 @@
-#include "kernel/log.h"
 #include "panic.h"
 #include <lib/list.h>
 #include <scheduler.h>

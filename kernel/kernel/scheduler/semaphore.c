@@ -1,9 +1,9 @@
 /* TODO: this is currently broken */
 #include "assert.h"
-#include "kernel/log.h"
 #include "scheduler.h"
 #include "task_queue.h"
 #include <kernel/semaphore.h>
+#include <lib/log.h>
 #include <panic.h>
 #include <sched.h>
 #include <stdio.h>
