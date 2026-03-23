@@ -320,8 +320,6 @@ void kmain()
 
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
 
-    struct task_queue abc = TASK_QUEUE_INIT(abc);
-
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
     if (err < 0)

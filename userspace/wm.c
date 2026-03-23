@@ -45,8 +45,6 @@ static inline size_t get_framebuffer_y(struct framebuffer *f,
     return ((y + WIN_Y(win)) * f->pitch);
 }
 
-struct window *mouse;
-
 struct window_queue_entry
 {
     struct window *win;
@@ -61,6 +59,10 @@ struct window_queue_entry
         bool is_nonblock;
     } nonblock_info;
 };
+
+struct window *mouse;
+struct window_queue_entry *mouse_queue_ent;
+struct window *background;
 
 struct list2 *window_queue;
 int window_queue_mutex = -1;
@@ -130,6 +132,12 @@ void update_area_up(struct window_queue_entry *ent, struct rect area,
 {
     user_mutex_lock(window_queue_mutex);
 
+    if (!rect_eq(WIN_RECT(ent->win), area))
+    {
+        /* this is pretty stupid, it almost always draws */
+        win_draw_rect(background, area, buffer);
+    }
+
     struct list2 *pos;
     /* list2_for_each(pos, &ent->list) */
     list2_for_each(pos, window_queue)
@@ -137,22 +145,11 @@ void update_area_up(struct window_queue_entry *ent, struct rect area,
         struct window_queue_entry *ent2 =
             containerof(pos, struct window_queue_entry, list);
 
-        /* if (ent2->win == mouse) */
-        /* { */
-        /*     return; */
-        /* } */
-
         struct window *win = ent2->win;
 
-        /* TODO: struct framebuffer (or struct window) should have a member of
-         * type struct rect */
         struct rect win_rect = WIN_RECT(win);
         if (rect_intersect(win_rect, area))
         {
-            /* if (win != ent->win && win != mouse) */
-            /* { */
-            /*     /1* printf("intersect\n"); *1/ */
-            /* } */
             win_draw_rect(ent2->win, area, fb);
         }
     }
@@ -230,8 +227,15 @@ struct window *new_client_window(size_t x, size_t y, size_t w, size_t h)
 
 void draw_window(struct framebuffer *b, struct window *win)
 {
+    if (win->x + WIN_W(win) > b->width || win->y + WIN_H(win) > b->height ||
+        win->x < 0 || win->y < 0)
+    {
+        return;
+    }
+
     for (size_t y = 0; y < WIN_H(win) - 1; y++)
     {
+
         memcpy(b->buffer + (((y + WIN_Y(win)) * b->pitch) +
                             (WIN_X(win) * b->pixel_width)),
                win->fb.buffer + (y * WIN_W(win) * 4), WIN_W(win) * 4);
@@ -550,8 +554,8 @@ void mouse_thread()
 
         win_draw_rect(mouse, WIN_RECT(mouse), buffer);
         /* TODO: dont pass null */
-        update_area_up(NULL, WIN_RECT(mouse), buffer);
-        update_area_up(NULL, old_mouse, buffer);
+        update_area_up(mouse_queue_ent, WIN_RECT(mouse), buffer);
+        update_area_up(mouse_queue_ent, old_mouse, buffer);
 
         if (ev->buttons.left_click && drag_count < 3)
         {
@@ -618,9 +622,9 @@ void mouse_thread()
                 };
                 /* printf("%d ", move_area.h); */
 
-                /* update_area_up(focused, move_area, buffer); */
-                update_area_up(focused, WIN_RECT(win), buffer);
                 update_area_up(focused, old_area, buffer);
+                update_area_up(focused, move_area, buffer);
+                /* update_area_up(focused, WIN_RECT(win), buffer); */
                 /* update_area_up(focused, */
                 /*                (struct rect){.x = 0, */
                 /*                              .y = 0, */
@@ -691,11 +695,19 @@ int main()
     buffer = framebuffer_alloc();
     draw_window(buffer, mouse);
 
-    /* this might be bad because this is a stack allocation */
-    struct window_queue_entry mouse_ent = {.win = mouse, .list = LIST2_INIT()};
-    window_queue = &mouse_ent.list;
-    mouse_ent.nonblock_info.is_nonblock = false;
-    mouse_ent.nonblock_info.current_key = 0;
+    background = new_window(0, 0, buffer->width, buffer->height);
+    framebuffer_draw_rect(&background->fb, 0, 0, WIN_W(background),
+                          WIN_H(background), 0x00FF00);
+
+    draw_window(buffer, background);
+
+    /* this might be bad because these are stack allocations */
+    mouse_queue_ent = malloc(sizeof(struct window_queue_entry));
+    mouse_queue_ent->conn = NULL;
+    mouse_queue_ent->win = mouse;
+    window_queue = &mouse_queue_ent->list;
+    mouse_queue_ent->nonblock_info.is_nonblock = false;
+    mouse_queue_ent->nonblock_info.current_key = 0;
 
     clone((ptr)mouse_thread);
     clone((ptr)keyboard_thread);
