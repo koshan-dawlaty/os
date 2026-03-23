@@ -2,6 +2,7 @@
 #include "fcntl.h"
 #include <err_ptr.h>
 #include <errno.h>
+#include <lib/log.h>
 #include <sched.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -62,10 +63,19 @@ struct PSF_font *font_parse(int fd)
 void wm_render(struct wm_client client)
 {
     int render_code = WM_RES_RENDER;
-    send(client.socket, &render_code, sizeof(int));
+    int retval = send(client.socket, &render_code, sizeof(int));
+    if (retval == -ENOTSOCK)
+    {
+        logd("AAAA");
+    }
 
     int ack_code;
-    recv(client.socket, &ack_code, sizeof(int));
+    retval = recv(client.socket, &ack_code, sizeof(int));
+
+    if (retval == -ENOTSOCK)
+    {
+        logd("AAAA");
+    }
     if (ack_code != 3)
     {
         printf("server responded with invalid acknowledgment code:%d\n",
@@ -77,20 +87,36 @@ void wm_render(struct wm_client client)
 char wm_get_key(struct wm_client client)
 {
     int key_code = WM_RES_KEY;
-    send(client.socket, &key_code, sizeof(int));
+    int retval = send(client.socket, &key_code, sizeof(int));
+    if (retval == -ENOTSOCK)
+    {
+        return 0xFF;
+    }
 
     char out;
-    recv(client.socket, &out, sizeof(char));
+    retval = recv(client.socket, &out, sizeof(char));
+    if (retval == -ENOTSOCK)
+    {
+        return 0xFF;
+    }
 
     return out;
 }
 char wm_get_key_nonblock(struct wm_client client)
 {
     int key_code = WM_RES_KEY_NONBLOCK;
-    send(client.socket, &key_code, sizeof(int));
+    int retval = send(client.socket, &key_code, sizeof(int));
+    if (retval == -ENOTSOCK)
+    {
+        return 0xFF;
+    }
 
     char out;
-    recv(client.socket, &out, sizeof(char));
+    retval = recv(client.socket, &out, sizeof(char));
+    if (retval == -ENOTSOCK)
+    {
+        return 0xFF;
+    }
 
     return out;
 }

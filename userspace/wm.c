@@ -407,8 +407,16 @@ void process_connection()
             char input;
             /* printf("waiting for input\n"); */
             int retval = recv(conn->input_socket, &input, sizeof(char));
+
             if (retval == -ENOTSOCK)
             {
+                goto disconnect;
+            }
+
+            if (input == '\\')
+            {
+                /* TODO: this might not properly close the socket */
+                close(conn->client_socket);
                 goto disconnect;
             }
             /* printf("sending %c\n", input); */

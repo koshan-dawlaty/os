@@ -5,6 +5,7 @@
 #include <extension.h>
 #include <fcntl.h>
 #include <init.h>
+#include <lib/log.h>
 #include <math.h>
 #include <sched.h>
 #include <stdarg.h>
@@ -89,6 +90,10 @@ void key_thread()
     {
         user_mutex_lock(mutex);
         char c = wm_get_key(client);
+        if ((u8)c == 0xFF)
+        {
+            break;
+        }
         write(pipe_write, &c, 1);
         user_mutex_unlock(mutex);
         printf("%c ", c);
@@ -97,6 +102,8 @@ void key_thread()
         wm_render(client);
         user_mutex_unlock(mutex);
     }
+    logd("bad key");
+    exit(1);
 }
 
 int main()
@@ -233,6 +240,8 @@ int main()
         wm_render(client);
         user_mutex_unlock(mutex);
     }
+
+    logd("server disconnected");
 
     close(client.socket);
 

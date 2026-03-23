@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     {
         wm_render(client);
         char c = wm_get_key(client);
-        if (c == 'q')
+        if (c == 'q' || (u8)c == 0xFF)
         {
             break;
         }
