@@ -124,10 +124,7 @@ static inline irq_state_t irq_save()
  * wait for an irq
  * (this is the "hlt" instruction on x86)
  */
-static inline void irq_wait()
-{
-    asm("hlt");
-}
+#define irq_wait() asm("hlt")
 
 /*
  * helper function that disables irqs and saves the state

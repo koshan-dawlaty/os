@@ -1,6 +1,7 @@
 #include <extension.h>
 #include <kernel/log.h>
 #include <serial.h>
+#include <spinlock.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +24,8 @@ void log_writestring(const char *str)
     serial_writestring(str, strlen(str), LOG_SERIAL_PORT);
 }
 
+struct spinlock log_spinlock = SPINLOCK_INIT();
+
 void vlog_level(struct log_level level, const char *str, va_list parameters)
 {
     if (level.priority > LOG_PRIORITY_THRESHOLD.priority)
@@ -32,12 +35,14 @@ void vlog_level(struct log_level level, const char *str, va_list parameters)
 
     char *s = vrprintf(str, parameters);
 
+    spinlock_lock(&log_spinlock);
     log_writechar('[');
     log_writestring(level.str);
     log_writechar(']');
     log_writechar(' ');
     log_writestring(s);
     log_writechar('\n');
+    spinlock_unlock(&log_spinlock);
 
     free(s);
 }

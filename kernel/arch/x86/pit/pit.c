@@ -41,7 +41,6 @@ void init_pit()
 }
 
 INT_HANDLER(pit_handler, {
-    printf("hi\n");
     pit_time++;
     if (likely(is_scheduler_enabled()))
     {

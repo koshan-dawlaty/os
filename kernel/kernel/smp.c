@@ -46,8 +46,14 @@ struct local_apic local_apics[16];
 
 void ap_started()
 {
+    /* *(char *)0xffffc000000b8010 = 'a'; */
+    void *ptr = malloc(100);
+
+    printf("test:%d\n", 123);
+    logd("test:%d", 123);
+    irq_wait();
     printf("a\n");
-    irq_enable();
+    /* irq_enable(); */
     while (1)
     {
         irq_wait();
