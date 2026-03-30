@@ -1,8 +1,4 @@
 #include "dcache.h"
-#include "socket.h"
-#include "spinlock.h"
-#include "sys/stat.h"
-#include "unistd.h"
 #include "vfs_internal.h"
 #include <assert.h>
 #include <ata/ata.h>
@@ -18,11 +14,15 @@
 #include <memory/get_free_pages.h>
 #include <mutex.h>
 #include <scheduler.h>
+#include <socket.h>
+#include <spinlock.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <vfs.h>
 
 struct fdlist *new_fdlist()
@@ -52,13 +52,13 @@ void fdlist_free(struct fdlist *list)
 
 int fdlist_add(struct fdlist *list, file *f)
 {
-    lock_spinlock(&list->lock);
+    spinlock_lock(&list->lock);
     list->len++;
     list->files = realloc(list->files, list->len * sizeof(file *));
     list->files[list->len - 1] = f;
 
     int retval = list->len - 1;
-    release_spinlock(&list->lock);
+    spinlock_unlock(&list->lock);
     return retval;
 }
 
@@ -77,15 +77,15 @@ void fdlist_set(struct fdlist *list, size_t pos, struct file *f)
 
 struct file *fdlist_lookup(struct fdlist *list, int fd)
 {
-    lock_spinlock(&list->lock);
+    spinlock_lock(&list->lock);
 
     if (fd < 0 || (size_t)fd > list->len)
     {
-        release_spinlock(&list->lock);
+        spinlock_unlock(&list->lock);
         return NULL;
     }
     void *retval = list->files[fd];
-    release_spinlock(&list->lock);
+    spinlock_unlock(&list->lock);
     return retval;
 }
 

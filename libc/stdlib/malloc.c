@@ -292,7 +292,7 @@ end:
 }
 
 #ifdef __is_libk
-struct spinlock *heap_lock = NULL;
+struct spinlock heap_lock = SPINLOCK_INIT();
 #else
 int heap_mutex = -1;
 #endif
@@ -300,10 +300,7 @@ int heap_mutex = -1;
 static inline void lock_heap()
 {
 #ifdef __is_libk
-    if (heap_lock != NULL)
-    {
-        spinlock_lock(heap_lock);
-    }
+    spinlock_lock(&heap_lock);
 #else
     if (heap_mutex != -1)
     {
@@ -314,10 +311,7 @@ static inline void lock_heap()
 static inline void unlock_heap()
 {
 #ifdef __is_libk
-    if (heap_lock != NULL)
-    {
-        spinlock_unlock(heap_lock);
-    }
+    spinlock_unlock(&heap_lock);
 #else
     if (heap_mutex != -1)
     {
@@ -417,7 +411,7 @@ void *realloc(void *ptr, size_t new_size)
 void init_heap()
 {
 #ifdef __is_libk
-    heap_lock = new_spinlock();
+    /* already initalized, maybe remove this call */
 #else
     heap_mutex = user_mutex_create();
 #endif

@@ -2,30 +2,35 @@
 #define SPINLOCK_H
 #include <stdatomic.h>
 
-typedef struct spinlock
+struct spinlock
 {
     atomic_flag mutex;
-} spinlock;
-
-void lock_spinlock(struct spinlock *lock);
-void release_spinlock(struct spinlock *lock);
+};
 
 static inline void spinlock_lock(struct spinlock *lock)
 {
-    lock_spinlock(lock);
+    while (
+        atomic_flag_test_and_set_explicit(&lock->mutex, memory_order_acquire))
+    {
+        __builtin_ia32_pause();
+    }
 }
 
 static inline void spinlock_unlock(struct spinlock *lock)
 {
-    release_spinlock(lock);
+    atomic_flag_clear(&lock->mutex);
 }
 
-struct spinlock *new_spinlock();
 #define SPINLOCK_INIT()                                                        \
                                                                                \
     (struct spinlock)                                                          \
     {                                                                          \
         .mutex = ATOMIC_FLAG_INIT                                              \
     }
+
+static inline void spinlock_init(struct spinlock *lock)
+{
+    *lock = SPINLOCK_INIT();
+}
 
 #endif

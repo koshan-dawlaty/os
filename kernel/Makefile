@@ -74,7 +74,6 @@ kernel/scheduler/wait_queue.o \
 kernel/scheduler/sleep.o \
 kernel/scheduler/semaphore.o \
 kernel/scheduler/mutex.o \
-kernel/scheduler/spinlock.o \
 kernel/scheduler/shared_mem.o \
 kernel/memory/get_free_pages.o \
 kernel/graphics/graphics.o \

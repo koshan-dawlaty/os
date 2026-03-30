@@ -301,7 +301,7 @@ ACPI_STATUS AcpiOsSignalSemaphore(ACPI_SEMAPHORE Handle, UINT32 Units)
 
 ACPI_STATUS AcpiOsCreateLock(ACPI_SPINLOCK *OutHandle)
 {
-    *OutHandle = new_spinlock();
+    spinlock_init(*OutHandle);
     return AE_OK;
 }
 
@@ -311,13 +311,13 @@ void AcpiOsDeleteLock(ACPI_HANDLE Handle)
 
 ACPI_CPU_FLAGS AcpiOsAcquireLock(ACPI_SPINLOCK Handle)
 {
-    lock_spinlock(Handle);
+    spinlock_lock(Handle);
     return 0;
 }
 
 void AcpiOsReleaseLock(ACPI_SPINLOCK Handle, ACPI_CPU_FLAGS Flags)
 {
-    release_spinlock(Handle);
+    spinlock_unlock(Handle);
 }
 
 ACPI_STATUS AcpiOsInstallInterruptHandler(UINT32 InterruptLevel,
