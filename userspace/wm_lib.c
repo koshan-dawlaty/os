@@ -86,15 +86,21 @@ void wm_render(struct wm_client client)
 
 char wm_get_key(struct wm_client client)
 {
-    int key_code = WM_RES_KEY;
-    int retval = send(client.socket, &key_code, sizeof(int));
-    if (retval == -ENOTSOCK)
-    {
-        return 0xFF;
-    }
+    /* int key_code = WM_RES_KEY; */
+    /* int retval = send(client.socket, &key_code, sizeof(int)); */
+    /* if (retval == -ENOTSOCK) */
+    /* { */
+    /*     return 0xFF; */
+    /* } */
 
+    /* char out; */
+    /* retval = recv(client.socket, &out, sizeof(char)); */
+    /* if (retval == -ENOTSOCK) */
+    /* { */
+    /*     return 0xFF; */
+    /* } */
     char out;
-    retval = recv(client.socket, &out, sizeof(char));
+    int retval = recv(client.key_socket, &out, sizeof(char));
     if (retval == -ENOTSOCK)
     {
         return 0xFF;
@@ -113,6 +119,7 @@ char wm_get_key_nonblock(struct wm_client client)
 
     char out;
     retval = recv(client.socket, &out, sizeof(char));
+    logd("%d", retval);
     if (retval == -ENOTSOCK)
     {
         return 0xFF;
@@ -126,6 +133,9 @@ static struct wm_client wm_client_connect_impl(size_t height, size_t width,
 {
     int server = open("/wm_socket", O_RDONLY);
     int server_sock = connect(server);
+
+    int key_server = open("/input_socket", O_RDONLY);
+    int key_socket = connect(key_server);
 
     struct wm_inital win = {
         .height = height, .width = width, .is_nonblock = is_nonblock};
@@ -141,10 +151,12 @@ static struct wm_client wm_client_connect_impl(size_t height, size_t width,
     shared_mem_get(second_message.mem_id, &framebuffer);
 
     size_t fb_width = win.width;
-    struct wm_client out = {.fb = FRAMEBUFFER_INIT(fb_width, win.height,
-                                                   fb_width * 4, 32, 4,
-                                                   framebuffer),
-                            .socket = server_sock};
+    struct wm_client out = {
+        .fb = FRAMEBUFFER_INIT(fb_width, win.height, fb_width * 4, 32, 4,
+                               framebuffer),
+        .socket = server_sock,
+        .key_socket = key_socket,
+    };
 
     return out;
 }

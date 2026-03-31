@@ -24,7 +24,9 @@
 struct wm_connection
 {
     int client_socket;
+    int client_key_socket;
     int input_socket;
+
     void *buffer;
 };
 
@@ -318,7 +320,13 @@ static void disconnect_flip_image_h(struct window_queue_entry *ent,
     }
 }
 
+int accept(int socket)
+{
+    return syscall_wrapper_asm(SYS_accept, socket, 0, 0, 0, 0);
+}
+
 int current_client = 1;
+int current_key_socket;
 
 size_t y = 10;
 size_t x = 400;
@@ -327,6 +335,7 @@ void process_connection()
 {
     int socket;
     socket = current_client;
+    int key_socket = current_key_socket;
 
     struct wm_inital win_info;
     recv(socket, &win_info, sizeof(struct wm_inital));
@@ -343,6 +352,7 @@ void process_connection()
     send(socket, second_message, sizeof(struct wm_second));
 
     struct wm_connection *conn = wm_connection_alloc(socket, client_buf);
+    conn->client_key_socket = key_socket;
 
     struct window *w = new_client_window(x, y, win_info.width, win_info.height);
     y += win_info.height - 30;
@@ -518,7 +528,7 @@ void keyboard_thread()
                     current_keyboard_char = c;
 
                     /* printf("sending key to:%d\n", conn->input_socket); */
-                    send(conn->input_socket, &c, sizeof(char));
+                    send(conn->client_key_socket, &c, sizeof(char));
                 }
             }
         }
@@ -667,10 +677,6 @@ void thread1()
     exit(0);
 }
 
-int accept(int socket)
-{
-    return syscall_wrapper_asm(SYS_accept, socket, 0, 0, 0, 0);
-}
 int main()
 {
     init_libc();
@@ -680,6 +686,9 @@ int main()
 
     int server_sock = syscall_wrapper_asm(SYS_create_socket_fs,
                                           (ptr) "wm_socket", 0, 0, 0, 0);
+
+    int input_sock = syscall_wrapper_asm(SYS_create_socket_fs,
+                                         (ptr) "input_socket", 0, 0, 0, 0);
 
     window_queue_mutex = user_mutex_create();
 
@@ -721,7 +730,7 @@ int main()
     clone((ptr)keyboard_thread);
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    execv("imgview", (char *[]){"imgview", "osdev.tga", NULL});
+    /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("tron", (char *[]){"imgview", "osdev.tga", NULL}); */
@@ -731,11 +740,12 @@ int main()
     while (true)
     {
         int client_sock = accept(server_sock);
-        printf("new client accepted:%d\n", client_sock);
+        int key_socket = accept(input_sock);
         /* printf("socket num:%d\n", client_sock); */
         /* send(server_sock, &client_sock, sizeof(int)); */
         /* printf("sent\n"); */
         current_client = client_sock;
+        current_key_socket = key_socket;
 
         clone((ptr)(process_connection));
     }

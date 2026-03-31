@@ -88,21 +88,23 @@ void key_thread()
 {
     while (1)
     {
-        user_mutex_lock(mutex);
+        logd("getting key");
+        /* user_mutex_lock(mutex); */
         char c = wm_get_key(client);
+        /* user_mutex_unlock(mutex); */
+        logd("done getting key");
         if ((u8)c == 0xFF)
         {
             break;
         }
         write(pipe_write, &c, 1);
-        user_mutex_unlock(mutex);
         printf("%c ", c);
         draw_char(c);
         user_mutex_lock(mutex);
         wm_render(client);
         user_mutex_unlock(mutex);
     }
-    logd("bad key");
+    loge("bad key");
     exit(1);
 }
 
@@ -130,7 +132,8 @@ int main()
 
     /* *(char *)(0x1234) = 'a'; */
 
-    client = wm_client_connect(175, 600);
+    /* client = wm_client_connect(175, 600); */
+    client = wm_client_connect(600, 175);
     /* struct wm_client client = wm_client_connect(175, 220); */
 
     int font_fd = open("/font.psfu", O_RDONLY);
@@ -209,36 +212,27 @@ int main()
         char *buf = malloc(100);
     read_and_draw_char:;
         bool need_to_read_more = false;
-        /* printf("reading from pipe\n"); */
         size_t res = read(stdout_pipe[0], buf, 100);
-
-        /* size_t res =0; */
-        /* buf = "abcdef\b\b"; */
-        /* res = strlen(buf); */
 
         if (res == 100)
         {
             need_to_read_more = true;
         }
 
-        /* printf("size:%d\n", res); */
-
         for (size_t i = 0; i < res; i++)
         {
             char c = buf[i];
-
-            /* printf("read:%c\n"); */
             draw_char(c);
-
-            /* terminal_addchar(term, c); */
         }
         if (need_to_read_more)
         {
             goto read_and_draw_char;
         }
+        logd("rendering");
         user_mutex_lock(mutex);
         wm_render(client);
         user_mutex_unlock(mutex);
+        logd("done rendering");
     }
 
     logd("server disconnected");

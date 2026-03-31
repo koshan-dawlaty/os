@@ -39,6 +39,7 @@ struct client_window
 struct wm_client
 {
     int socket;
+    int key_socket;
     struct framebuffer fb;
 };
 
