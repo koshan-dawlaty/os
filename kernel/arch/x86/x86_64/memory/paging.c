@@ -1,6 +1,7 @@
 #include "kernel/paging.h"
 #include "kernel/types.h"
 #include "kernel/utils.h"
+#include "spinlock.h"
 #include <string.h>
 
 void *paging_page_table_addr = 0;
@@ -27,6 +28,8 @@ void write_kernel_page_tables(struct pagedir *pgdir)
             pgdir->pgdir_virtual[i] = init_pgdir.pgdir_virtual[i];
         }
     }
+
+    flush_tlb_full();
 }
 
 static inline void *get_virtual_addr(void *physical_addr)
@@ -34,8 +37,12 @@ static inline void *get_virtual_addr(void *physical_addr)
     return physical_addr + 0xffffc00000000000;
 }
 
+struct spinlock paging_spinlock = SPINLOCK_INIT();
+
 void unmap_page(void *virtualaddr)
 {
+
+    spinlock_lock(&paging_spinlock);
 
     u64 virtual = align_long((u64)virtualaddr, PAGE_SIZE);
 
@@ -54,6 +61,7 @@ void unmap_page(void *virtualaddr)
     }
     else
     {
+        spinlock_unlock(&paging_spinlock);
         return;
     }
 
@@ -69,6 +77,7 @@ void unmap_page(void *virtualaddr)
     }
     else
     {
+        spinlock_unlock(&paging_spinlock);
         return;
     }
 
@@ -88,6 +97,7 @@ void unmap_page(void *virtualaddr)
     u64 *pt_physical = (void *)((pdt[pdt_index]) & ~0xFFF);
     u64 *pt = get_virtual_addr(pt_physical);
     pt[pt_index] = 0;
+    spinlock_unlock(&paging_spinlock);
 
     flush_tlb_full();
 }
@@ -95,6 +105,7 @@ void unmap_page(void *virtualaddr)
 void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
                    uint flags)
 {
+    spinlock_lock(&paging_spinlock);
 
     u64 virtual = align_long((u64)virtualaddr, PAGE_SIZE);
     u64 physical = align_long((u64)physaddr, PAGE_SIZE);
@@ -148,6 +159,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
     u64 *pt_physical = (void *)((pdt[pdt_index]) & ~0xFFF);
     u64 *pt = get_virtual_addr(pt_physical);
     pt[pt_index] = physical | 0x3 | flags;
+    spinlock_unlock(&paging_spinlock);
 
     flush_tlb_full();
 }

@@ -222,7 +222,10 @@ struct window *new_client_window(size_t x, size_t y, size_t w, size_t h)
 
     /* allocate extra space for decorations */
     size_t height = h + WINDOW_DECORATION_ROWS;
+    /* the shared memory buffer could be used here, but the way it works now, it
+     * will break window decorations */
     out->fb = FRAMEBUFFER_INIT(w, height, w * 4, 32, 4, malloc(w * height * 4));
+    logd("%p", out->fb.buffer + (w * height * 4));
 
     return out;
 }
@@ -731,11 +734,10 @@ int main()
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("tron", (char *[]){"imgview", "osdev.tga", NULL}); */
-
-    logd("test:%d", 1234);
 
     while (true)
     {

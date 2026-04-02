@@ -47,6 +47,8 @@ int main(int argc, char **argv)
 
     init_libc();
 
+    /* sleep(400); */
+
     if (argc < 2)
     {
         printf("no image file\n");

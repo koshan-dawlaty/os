@@ -324,7 +324,7 @@ void kmain()
 
     if (err < 0)
     {
-        printf("error when opening init process:%s\n", strerror(-err));
+        loge("error when opening init process:%s\n", strerror(-err));
     }
 
     enable_scheduler();
@@ -332,6 +332,7 @@ void kmain()
     /* schedule(); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* while (1) */

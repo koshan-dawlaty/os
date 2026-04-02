@@ -184,6 +184,8 @@ void write_kernel_page_tables(struct pagedir *pgdir)
         }
     }
 
+    flush_tlb_full();
+
     /* other_dir[1023] = */
     /*     (uint32_t)get_physaddr(other_dir) | PAGING_WRITEABLE |
      * PAGING_PRESENT; */

@@ -6,7 +6,6 @@
 #include <fcntl.h>
 #include <init.h>
 #include <lib/log.h>
-#include <math.h>
 #include <sched.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -133,7 +132,8 @@ int main()
     /* *(char *)(0x1234) = 'a'; */
 
     /* client = wm_client_connect(175, 600); */
-    client = wm_client_connect(600, 175);
+    /* client = wm_client_connect(600, 175); */
+    client = wm_client_connect(600, 600);
     /* struct wm_client client = wm_client_connect(175, 220); */
 
     int font_fd = open("/font.psfu", O_RDONLY);

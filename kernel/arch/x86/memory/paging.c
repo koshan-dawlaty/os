@@ -86,6 +86,7 @@ void *get_free_phys_page_dir(struct pagedir dir)
 
 void *get_free_phys_pages(struct pagedir *dir, size_t amount)
 {
+    spinlock_lock(&phys_page_lock);
     ptr i;
     size_t consecutive = 0;
     size_t consecutive_start = 0;
@@ -128,6 +129,7 @@ void *get_free_phys_pages(struct pagedir *dir, size_t amount)
     void *address = (void *)((i * PAGE_SIZE) + phys_page_start);
 
     /* release_semaphore(get_free_pages_semaphore); */
+    spinlock_unlock(&phys_page_lock);
 
     return address;
 }
@@ -150,7 +152,7 @@ struct pagedir *new_pagedir()
     out->pgdir = get_physaddr(out->pgdir_virtual);
     /* TODO: FIXME: TODO: FIXME: make this dynamic, it runs out of space and
      * breaks everything */
-    out->physical_pagetables = get_free_pages(1);
+    out->physical_pagetables = get_free_pages(10);
     out->pagetable = get_free_pages(1);
 
 #ifdef CONFIG_x86_32

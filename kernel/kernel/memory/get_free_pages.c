@@ -1,5 +1,6 @@
 #include "kernel/addr_space.h"
 #include "memory/paging_flags.h"
+#include "spinlock.h"
 #include <container_of.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
@@ -43,6 +44,9 @@ struct bitmap_memory_zone gfp_bitmap_user_zone = {.virtual = 0x80000000,
 
 struct memory_zone gfp_user_zone = BITMAP_TO_GFP_ZONE(&gfp_bitmap_user_zone);
 
+/* FIXME: make this a member of a gfp zone */
+struct spinlock gfp_lock = SPINLOCK_INIT();
+
 /*
  * @amount: the number of pages to allocate
  * @zone: the zone to allocated the pages from
@@ -51,6 +55,8 @@ struct memory_zone gfp_user_zone = BITMAP_TO_GFP_ZONE(&gfp_bitmap_user_zone);
  */
 void *get_free_pages_bitmap(size_t amount, const struct memory_zone *z)
 {
+
+    spinlock_lock(&gfp_lock);
 
     struct bitmap_memory_zone *zone = z->zone_private;
 
@@ -109,6 +115,7 @@ void *get_free_pages_bitmap(size_t amount, const struct memory_zone *z)
         physical_addr += PAGE_SIZE;
         virtual_addr += PAGE_SIZE;
     }
+    spinlock_unlock(&gfp_lock);
 
     void *address = (void *)((i * PAGE_SIZE) + zone->virtual);
 
@@ -121,6 +128,7 @@ void free_pages_bitmap(void *addr, size_t amount, const struct memory_zone *z)
 {
     struct bitmap_memory_zone *zone = z->zone_private;
 
+    spinlock_lock(&gfp_lock);
     size_t index = (((size_t)addr - zone->virtual)) / 4096;
 
     for (size_t i = 0; i < amount; i++)
@@ -128,6 +136,7 @@ void free_pages_bitmap(void *addr, size_t amount, const struct memory_zone *z)
         zone->bitmap[(index + i) / 8] |= GFP_FREE >> ((index + i) % 8);
         unmap_page((void *)(addr + (i * PAGE_SIZE)));
     }
+    spinlock_unlock(&gfp_lock);
 }
 
 bool gfp_zones_initialized = false;
@@ -136,6 +145,7 @@ bool gfp_zones_initialized = false;
 void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *z)
 {
     struct bitmap_memory_zone *zone = z->zone_private;
+    spinlock_lock(&gfp_lock);
 
     ptr i;
     size_t consecutive = 0;
@@ -184,6 +194,7 @@ void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *z)
 
     /* release_semaphore(get_free_pages_semaphore); */
 
+    spinlock_unlock(&gfp_lock);
     return address;
 }
 
@@ -337,8 +348,6 @@ void init_gfp_zones()
     node->values = &value->list;
 
     bintree_add(&tree_zone->head, &node->bintree);
-
     gfp_kernel_tree_zone.zone_private = tree_zone;
-
     gfp_zones_initialized = true;
 }
