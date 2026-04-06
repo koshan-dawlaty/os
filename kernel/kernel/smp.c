@@ -1,10 +1,13 @@
 #include "../acpi/acpica/acpi.h"
+#include "interrupts/idt_internal.h"
 #include "interrupts/pic.h"
+#include "kernel/interrupts.h"
 #include "kernel/log.h"
 #include "kernel/multiboot.h"
 #include "kernel/types.h"
 #include "memory/get_free_pages.h"
 #include "memory/paging_flags.h"
+#include "msr.h"
 #include "panic.h"
 #include "utils.h"
 #include <compiler.h>
@@ -37,23 +40,113 @@ struct io_apic
 };
 
 ptr lapic;
-#define OFFSET_LAPIC(offset) ((volatile uint32_t *)(lapic + offset))
+#define OFFSET_LAPIC(offset) ((volatile u32 *)(lapic + offset))
 size_t num_cores;
 size_t aprunning;
 bool bspdone;
 
+#define IA32_APIC_BASE_MSR 0x1B
+#define IA32_APIC_BASE_MSR_BSP 0x100 /* Processor is a BSP */
+#define IA32_APIC_BASE_MSR_ENABLE 0x800
+
 struct local_apic local_apics[16];
 
-void ap_started()
+/* set the physical address for local APIC registers */
+void cpu_set_apic_base(ptr apic)
 {
+    u32 edx = 0;
+    u32 eax = (apic & 0xfffff0000) | IA32_APIC_BASE_MSR_ENABLE;
+
+    /* CHECKTHIS: osdev wiki had this, might mean 64 bit */
+#ifdef __PHYSICAL_MEMORY_EXTENSION__
+    edx = (apic >> 32) & 0x0f;
+#endif
+
+    cpu_set_msr(IA32_APIC_BASE_MSR, eax, edx);
+}
+
+/* get the physical address of the APIC registers page */
+ptr cpu_get_apic_base()
+{
+    uint32_t eax, edx;
+    cpu_get_msr(IA32_APIC_BASE_MSR, &eax, &edx);
+
+    /* CHECKTHIS: osdev wiki had this, might mean 64 bit */
+#ifdef __PHYSICAL_MEMORY_EXTENSION__
+    return (eax & 0xfffff000) | ((edx & 0x0f) << 32);
+#else
+    return (eax & 0xfffff000);
+#endif
+}
+
+#define LAPIC_TIMER_VECTOR 32
+
+/* FIXME: copied from x86-64 idt.c */
+struct idt_real
+{
+    u16 offset_low;
+    u16 selector;
+    u8 ist;
+    u8 type_attr;
+    u16 offset_mid;
+    u32 offset_high;
+    u32 zero;
+} __attribute__((packed));
+typedef struct
+{
+    u16 size;
+    u64 addr;
+} __attribute__((packed)) idtr_t;
+
+INT_HANDLER(lapic_timer_handler, {
+    logd("lapic timer");
+    *OFFSET_LAPIC(0xB0) = 0;
+})
+
+struct idt_real lapic_idt[256] = {};
+
+void lapic_timer_init()
+{
+    *OFFSET_LAPIC(0x3e0) = 2;
+    *OFFSET_LAPIC(0x320) = LAPIC_TIMER_VECTOR | (1 << 17);
+    *OFFSET_LAPIC(0x380) = 10000000;
+
+    IDT_entry entry = {(ptr)lapic_timer_handler, 8, 0x8E, 0};
+
+    /* FIXME: copied from x86-64 idt.c */
+    struct idt_real *real = &lapic_idt[LAPIC_TIMER_VECTOR];
+    real->offset_low = entry.offset & 0xFFFF;
+    real->selector = entry.segment_selector;
+    real->ist = entry.stack_table;
+    real->type_attr = entry.flags;
+    real->offset_mid = (entry.offset >> 16) & 0xFFFF;
+    real->offset_high = (entry.offset >> 32) & 0xFFFFFFFF;
+    real->zero = 0;
+
+    idtr_t idtr = {};
+    idtr.addr = (u64)&lapic_idt[0];
+    idtr.size = sizeof(lapic_idt) - 1;
+
+    asm("lidt %0" : : "m"(idtr));
+}
+
+void ap_started(u64 apic_id)
+{
+    logd("apic id:%d just started", apic_id);
     /* *(char *)0xffffc000000b8010 = 'a'; */
     void *ptr = malloc(100);
 
-    printf("test:%d\n", 123);
-    logd("test:%d", 123);
+    *OFFSET_LAPIC(0xF0) = *OFFSET_LAPIC(0xF0) | 0x100;
+    cpu_set_apic_base(cpu_get_apic_base());
+
+    lapic_timer_init();
+
+    /* logd("test:%d", 123); */
+    /* printf("a\n"); */
+    irq_enable();
+    logd("irqs on for apic:%d", apic_id);
     irq_wait();
-    printf("a\n");
-    /* irq_enable(); */
+    logd("apic:%d is not waiting forever", apic_id);
     while (1)
     {
         irq_wait();
@@ -295,15 +388,15 @@ void smp_init()
 
     bootstrap_init();
 
-    /* PIC_mask_all(); */
+    PIC_mask_all();
 
-    /* union redirection_entry ent = ioapic_get_redir_entry(io_apic, 0); */
-    /* ent.mask = 0; */
-    /* ent.vector = 32; */
-    /* ent.delv_mode = 0; */
-    /* ent.pin_polarity = 0; */
-    /* ent.trigger_mode = 0; */
-    /* ent.dest_mode = 0; */
-    /* ent.destination = 1; */
-    /* ioapic_write_redir_entry(io_apic, 0, ent); */
+    union redirection_entry ent = ioapic_get_redir_entry(io_apic, 0);
+    ent.mask = 0;
+    ent.vector = 32;
+    ent.delv_mode = 0;
+    ent.pin_polarity = 0;
+    ent.trigger_mode = 0;
+    ent.dest_mode = 0;
+    ent.destination = 1;
+    ioapic_write_redir_entry(io_apic, 0, ent);
 }
