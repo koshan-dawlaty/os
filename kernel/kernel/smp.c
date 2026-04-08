@@ -1,4 +1,5 @@
 #include "../acpi/acpica/acpi.h"
+#include "fcntl.h"
 #include "interrupts/idt_internal.h"
 #include "interrupts/pic.h"
 #include "kernel/interrupts.h"
@@ -9,6 +10,7 @@
 #include "memory/paging_flags.h"
 #include "msr.h"
 #include "panic.h"
+#include "scheduler.h"
 #include "utils.h"
 #include <compiler.h>
 #include <kernel/paging.h>
@@ -57,11 +59,6 @@ void cpu_set_apic_base(ptr apic)
     u32 edx = 0;
     u32 eax = (apic & 0xfffff0000) | IA32_APIC_BASE_MSR_ENABLE;
 
-    /* CHECKTHIS: osdev wiki had this, might mean 64 bit */
-#ifdef __PHYSICAL_MEMORY_EXTENSION__
-    edx = (apic >> 32) & 0x0f;
-#endif
-
     cpu_set_msr(IA32_APIC_BASE_MSR, eax, edx);
 }
 
@@ -71,12 +68,7 @@ ptr cpu_get_apic_base()
     uint32_t eax, edx;
     cpu_get_msr(IA32_APIC_BASE_MSR, &eax, &edx);
 
-    /* CHECKTHIS: osdev wiki had this, might mean 64 bit */
-#ifdef __PHYSICAL_MEMORY_EXTENSION__
-    return (eax & 0xfffff000) | ((edx & 0x0f) << 32);
-#else
     return (eax & 0xfffff000);
-#endif
 }
 
 #define LAPIC_TIMER_VECTOR 32
@@ -99,7 +91,19 @@ typedef struct
 } __attribute__((packed)) idtr_t;
 
 INT_HANDLER(lapic_timer_handler, {
-    logd("lapic timer");
+    struct task *t = get_current_task();
+    if (t == NULL)
+    {
+        goto end;
+    }
+    int count = t->preempt_count;
+    if (count <= 0)
+    {
+        logd("preemption enabled");
+        schedule();
+    }
+
+end:
     *OFFSET_LAPIC(0xB0) = 0;
 })
 
@@ -141,12 +145,12 @@ void ap_started(u64 apic_id)
 
     lapic_timer_init();
 
+    /* add_task(create_kernel_task()); */
+
     /* logd("test:%d", 123); */
     /* printf("a\n"); */
     irq_enable();
-    logd("irqs on for apic:%d", apic_id);
     irq_wait();
-    logd("apic:%d is not waiting forever", apic_id);
     while (1)
     {
         irq_wait();

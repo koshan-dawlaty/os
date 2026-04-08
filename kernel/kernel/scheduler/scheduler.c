@@ -2,6 +2,7 @@
 #include "kernel/syscall.h"
 #include "kmalloc.h"
 #include "sleep.h"
+#include "spinlock.h"
 #include "sys/syscall.h"
 #include "unistd.h"
 #include "utils.h"
@@ -467,9 +468,12 @@ printf("start_addr:%p\n", new_current->start_addr);
     current_task = new_current;
 }
 
+struct spinlock scheduler_lock = SPINLOCK_INIT();
+
 void schedule_impl()
 {
     /* preempt_disable(); */
+    spinlock_lock(&scheduler_lock);
     irq_disable();
 
     increment_sleep_queue();
@@ -500,6 +504,7 @@ void schedule_impl()
 
     /* PIC_sendEOI(0); */
 
+    spinlock_unlock(&scheduler_lock);
     load_registers(&current_task->regs);
 }
 

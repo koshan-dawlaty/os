@@ -1,4 +1,5 @@
 #include "dcache.h"
+#include "kernel/log.h"
 #include "socket.h"
 #include "spinlock.h"
 #include "sys/stat.h"
