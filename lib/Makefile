@@ -34,6 +34,7 @@ OBJS=\
 	array.o \
 	framebuffer.o \
 	log.o \
+	rect.o \
 
 OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
 

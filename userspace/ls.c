@@ -17,6 +17,8 @@ int main(int argc, char **argv)
 
     /* exit(0); */
 
+    printf("\n");
+
     const char *path = ".";
     if (argc >= 2)
     {

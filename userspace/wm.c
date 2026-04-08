@@ -137,23 +137,44 @@ void update_area_up(struct window_queue_entry *ent, struct rect area,
     if (!rect_eq(WIN_RECT(ent->win), area))
     {
         /* this is pretty stupid, it almost always draws */
-        win_draw_rect(background, area, buffer);
+        /* win_draw_rect(background, area, buffer); */
     }
 
     struct list2 *pos;
     /* list2_for_each(pos, &ent->list) */
+    size_t i = 0;
     list2_for_each(pos, window_queue)
     {
+
         struct window_queue_entry *ent2 =
             containerof(pos, struct window_queue_entry, list);
 
         struct window *win = ent2->win;
 
+        /* stupid, composite the windows better */
         struct rect win_rect = WIN_RECT(win);
         if (rect_intersect(win_rect, area))
         {
-            win_draw_rect(ent2->win, area, fb);
+            if (i == 0)
+            {
+                struct rect *rects = malloc(sizeof(struct rect) * 4);
+                u8 num_rects = rect_split_intersect(WIN_RECT(background),
+                                                    WIN_RECT(win), rects);
+                for (size_t j = 0; j < num_rects; j++)
+                {
+                    struct rect intersect = rect_get_intersect(area, rects[j]);
+                    /* logd("intersect h:%d, area h:%d", rects[j], intersect.h,
+                     */
+                    /*      area.h); */
+
+                    win_draw_rect(background, intersect, buffer);
+                }
+            }
+            /* win_draw_rect(ent2->win, area, fb); */
+
+            win_draw_rect(win, area, buffer);
         }
+        i++;
     }
     user_mutex_unlock(window_queue_mutex);
 }
@@ -171,8 +192,8 @@ void change_focus(struct window_queue_entry *new_focus)
         {
             framebuffer_put_pixel(&new_focus->win->fb, 0xFF00FF, x, y);
 
-            /* *(u32 *)(new_focus->win->fb.buffer + y * WIN_W(new_focus->win) *
-             * 4 + */
+            /* *(u32 *)(new_focus->win->fb.buffer + y *
+             * WIN_W(new_focus->win) * 4 + */
             /*          (x * 4)) = 0xFF00FF; */
         }
     }
@@ -186,7 +207,8 @@ void change_focus(struct window_queue_entry *new_focus)
     {
         for (size_t x = 0; x < WIN_W(focused->win); x++)
         {
-            /* *(u32 *)(focused->win->fb.buffer + y * WIN_W(focused->win) * 4 +
+            /* *(u32 *)(focused->win->fb.buffer + y * WIN_W(focused->win) *
+             * 4 +
              */
             /*          (x * 4)) = 0; */
             framebuffer_put_pixel(&focused->win->fb, 0xFF, x, y);
@@ -222,8 +244,8 @@ struct window *new_client_window(size_t x, size_t y, size_t w, size_t h)
 
     /* allocate extra space for decorations */
     size_t height = h + WINDOW_DECORATION_ROWS;
-    /* the shared memory buffer could be used here, but the way it works now, it
-     * will break window decorations */
+    /* the shared memory buffer could be used here, but the way it works
+     * now, it will break window decorations */
     out->fb = FRAMEBUFFER_INIT(w, height, w * 4, 32, 4, malloc(w * height * 4));
     logd("%p", out->fb.buffer + (w * height * 4));
 
@@ -574,7 +596,6 @@ void mouse_thread()
         }
 
         win_draw_rect(mouse, WIN_RECT(mouse), buffer);
-        /* TODO: dont pass null */
         update_area_up(mouse_queue_ent, WIN_RECT(mouse), buffer);
         update_area_up(mouse_queue_ent, old_mouse, buffer);
 
@@ -615,7 +636,8 @@ void mouse_thread()
 
             if (new_focus != NULL)
             {
-                /* memset(focused->win->buffer, 127, focused->win->w * 4 * 10);
+                /* memset(focused->win->buffer, 127, focused->win->w * 4 *
+                 * 10);
                  */
 
                 /* memset(focused->win->buffer, 0, */
@@ -643,14 +665,67 @@ void mouse_thread()
                 };
                 /* printf("%d ", move_area.h); */
 
-                update_area_up(focused, old_area, buffer);
-                update_area_up(focused, move_area, buffer);
-                /* update_area_up(focused, WIN_RECT(win), buffer); */
+                /* struct rect *rects = malloc(sizeof(struct rect) * 4); */
+                /* u8 num_rects = rect_split_intersect( */
+                /*     WIN_RECT(background), WIN_RECT(focused->win), rects); */
+                /* for (size_t i = 0; i < num_rects; i++) */
+                /* { */
+                /*     win_draw_rect(background, rects[i], buffer); */
+                /*     /1* struct rect r = rects[i]; *1/ */
+                /*     /1* u32 color; *1/ */
+                /*     /1* switch (i) *1/ */
+                /*     /1* { *1/ */
+                /*     /1* case 0: *1/ */
+                /*     /1*     color = 0xFFFF; *1/ */
+                /*     /1*     break; *1/ */
+                /*     /1* case 1: *1/ */
+                /*     /1*     color = 0xFFFF00; *1/ */
+                /*     /1*     break; *1/ */
+                /*     /1* case 2: *1/ */
+                /*     /1*     color = 0xFFFFFF; *1/ */
+                /*     /1*     break; *1/ */
+                /*     /1* case 3: *1/ */
+                /*     /1*     color = 0x00FF00; *1/ */
+                /*     /1*     break; *1/ */
+                /*     /1* default: *1/ */
+                /*     /1*     color = 0xFF00FF; *1/ */
+                /*     /1* } *1/ */
+                /*     /1* framebuffer_draw_rect(buffer, r.x, r.y, r.w, r.h, */
+                /*      * color); */
+                /*      *1/ */
+                /* } */
+                /* draw_window(buffer, focused->win); */
+
+                struct rect current_area = WIN_RECT(win);
+                if (rect_intersect(old_area, current_area))
+                {
+                    struct rect intersect =
+                        rect_get_intersect(current_area, old_area);
+                    struct rect *results = malloc(sizeof(struct rect) * 4);
+                    u8 num_rects =
+                        rect_split_intersect(old_area, current_area, results);
+                    for (size_t i = 0; i < num_rects; i++)
+                    {
+                        struct rect r = results[i];
+                        logd("%d, %d, %d, %d", r.x, r.y, r.w, r.h);
+                        // framebuffer_draw_rect(buffer, r.x, r.y, r.w, r.h,
+                        //                      0xFF0000);
+                        update_area_up(focused, r, buffer);
+                    }
+                    update_area_up(focused, intersect, buffer);
+                    //  framebuffer_draw_rect(buffer, intersect.x, intersect.y,
+                    //                       intersect.w, intersect.h, 0xFF);
+                }
+
+                /* update_area_up(focused, old_area, buffer); */
+                /* update_area_up(focused, move_area, buffer); */
                 /* update_area_up(focused, */
                 /*                (struct rect){.x = 0, */
                 /*                              .y = 0, */
-                /*                              .h = buffer->height, */
-                /*                              .w = buffer->width}, */
+                /*                              .h =
+                 * buffer->height, */
+                /*                              .w =
+                 * buffer->width}, */
                 /*                buffer); */
             }
         }
@@ -706,7 +781,8 @@ int main()
             /* u32 val = x * x * x * y * y * y * y; */
             u32 val = 0xFF;
             framebuffer_put_pixel(&mouse->fb, val, x, y);
-            /* *(u32 *)(mouse->fb.buffer + (x * 4) + (y * mouse_w * 4)) = val;
+            /* *(u32 *)(mouse->fb.buffer + (x * 4) + (y * mouse_w * 4)) =
+             * val;
              */
         }
     }
