@@ -54,7 +54,6 @@ readdir() reads from the filesystem alot and does not use dcache (this is also m
 
 NEED USERMODE/SCHEDULER TESTS!!!
 
-
 cant make user threads with arguments
 
 wm should really use nonblocking socket 

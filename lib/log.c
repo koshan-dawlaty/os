@@ -45,6 +45,14 @@ static inline void log_writestring(const char *str)
     log_serial_writestring(str, strlen(str));
 }
 
+void log_write_level(struct log_level level)
+{
+    log_writechar('[');
+    log_writestring(level.str);
+    log_writechar(']');
+    log_writechar(' ');
+}
+
 void vlog_level(struct log_level level, const char *str, va_list parameters)
 {
     if (level.priority > LOG_PRIORITY_THRESHOLD.priority)
@@ -54,11 +62,34 @@ void vlog_level(struct log_level level, const char *str, va_list parameters)
 
     char *s = vrprintf(str, parameters);
 
-    log_writechar('[');
-    log_writestring(level.str);
-    log_writechar(']');
-    log_writechar(' ');
-    log_writestring(s);
+    log_write_level(level);
+    char *s2 = s;
+    while (*s2)
+    {
+        char c = *s2;
+        if (c == '\n')
+        {
+            if (*(s2 + 1) == 0)
+            {
+                break;
+            }
+            log_writechar('\n');
+            size_t level_len =
+                strlen(level.str) +
+                3; /* TODO: the constant offset here could cause problems, maybe
+                      make the things printed with the log level constant */
+            for (size_t i = 0; i < level_len; i++)
+            {
+                log_writechar(' ');
+            }
+        }
+        else
+        {
+            log_writechar(c);
+        }
+
+        s2++;
+    }
     log_writechar('\n');
 
     free(s);

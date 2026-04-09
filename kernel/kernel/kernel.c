@@ -322,6 +322,12 @@ void kmain()
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
+    for (size_t i = 0; i < 10; i++)
+    {
+        logd("test:%d\n123:%d\n", i, i);
+        loge("error:%d", i);
+    }
+
     if (err < 0)
     {
         loge("error when opening init process:%s\n", strerror(-err));
