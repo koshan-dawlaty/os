@@ -98,6 +98,27 @@ char **create_user_args(int argc, char **argv)
     return args;
 }
 
+/*
+ * attempts to copy file at @index in @src to @index in @dest
+ * if the file at @index does not exist, @dev_path is created as a device, and
+ * put in @dest at @index
+ *
+ * used to copy device file descriptors to a new process
+ */
+static void fdlist_copy_device(struct fdlist *dest, struct fdlist *src,
+                               size_t index, const char *dev_path)
+{
+    struct file *file = fdlist_get(src, index);
+    if (file == NULL)
+    {
+        fdlist_set(dest, index, open_device(dev_path));
+    }
+    else
+    {
+        fdlist_set(dest, index, file);
+    }
+}
+
 struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 {
     struct task *out = malloc(sizeof(struct task));
@@ -164,12 +185,10 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
         struct fdlist *out_fds = out->descriptors;
 
         /* FIXME: the open_device calls get evaluated */
-        fdlist_copy_from_maybe(out_fds, current_fds, 0,
-                               open_device(keyboard_path));
-        fdlist_copy_from_maybe(out_fds, current_fds, 1, open_device(term_path));
-        fdlist_copy_from_maybe(out_fds, current_fds, 2, open_device(term_path));
-        fdlist_copy_from_maybe(out_fds, current_fds, 3,
-                               open_device(serial_path));
+        fdlist_copy_device(out_fds, current_fds, 0, keyboard_path);
+        fdlist_copy_device(out_fds, current_fds, 1, term_path);
+        fdlist_copy_device(out_fds, current_fds, 2, term_path);
+        fdlist_copy_device(out_fds, current_fds, 3, serial_path);
     }
     else
     {
@@ -245,12 +264,10 @@ struct task *user_thread_alloc(ptr ip)
         struct fdlist *out_fds = out->descriptors;
 
         /* FIXME: the open_device calls get evaluated */
-        fdlist_copy_from_maybe(out_fds, current_fds, 0,
-                               open_device(keyboard_path));
-        fdlist_copy_from_maybe(out_fds, current_fds, 1, open_device(term_path));
-        fdlist_copy_from_maybe(out_fds, current_fds, 2, open_device(term_path));
-        fdlist_copy_from_maybe(out_fds, current_fds, 3,
-                               open_device(serial_path));
+        fdlist_copy_device(out_fds, current_fds, 0, keyboard_path);
+        fdlist_copy_device(out_fds, current_fds, 1, term_path);
+        fdlist_copy_device(out_fds, current_fds, 2, term_path);
+        fdlist_copy_device(out_fds, current_fds, 3, serial_path);
     }
     else
     {

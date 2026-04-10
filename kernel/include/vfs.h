@@ -288,27 +288,6 @@ void fdlist_set(struct fdlist *list, size_t pos, struct file *f);
 
 void fdlist_free(struct fdlist *list);
 
-/*
- * attempts to copy file at @index in @src to @index in @dest
- * if the file at @index does not exist, @new_file is used to replace it
- *
- * used to copy maybe file descriptors to a new process
- */
-static inline void fdlist_copy_from_maybe(struct fdlist *dest,
-                                          struct fdlist *src, size_t index,
-                                          struct file *new_file)
-{
-    struct file *file = fdlist_get(src, index);
-    if (file == NULL)
-    {
-        fdlist_set(dest, index, new_file);
-    }
-    else
-    {
-        fdlist_set(dest, index, file);
-    }
-}
-
 /* TODO: this name is very similar to the standard readdir() function */
 int read_dir(file *dir, struct dirent *buf, size_t number);
 
