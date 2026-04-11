@@ -79,12 +79,11 @@ mkfifo "${SERIAL_PIPE}.out"
 $QEMU_COMMAND -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE  2>/dev/null &  
 QEMU_PID=$!
 
-tmux split-window -h "echo test; cat"
+tmux split-window -v -b -d -t "$TMUX_PANE" "cat $SERIAL_PIPE.out"
 
 
 echo $SERIAL_PIPE.out
 
-echo "test"
 FILE_NAME="$SERIAL_PIPE.out"
 while [[ ! -p "$FILE_NAME" ]]; do
     sleep 0.05

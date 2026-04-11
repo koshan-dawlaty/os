@@ -237,7 +237,7 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
             break;
         }
         /* printf("name:%s\n", raw_entry + 8); */
-        logd("name:%s", raw_entry + 8);
+        /* logd("name:%s", raw_entry + 8); */
 
         i += len;
     }

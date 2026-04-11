@@ -104,7 +104,7 @@ void add_test(test *);
 #define TEST_CONSTRUCTOR(name)
 #endif
 
-#define TEST(name, body)                                                       \
+#define TEST(name, body, ...)                                                  \
     test_result *name##_test()                                                 \
     {                                                                          \
         body return new_test_result(false, "");                                \

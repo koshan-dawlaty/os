@@ -487,20 +487,20 @@ disconnect:;
     size_t num_pixels = WIN_H(w) - 1;
     size_t sleep_ticks = 40;
 
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 4);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, -5);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
     disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
     disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 8);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
     disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
 
     disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 4);
+    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
     disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
     disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 2);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
     disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 4);
+    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
     disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
 
     user_mutex_lock(window_queue_mutex);

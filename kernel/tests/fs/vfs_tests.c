@@ -174,6 +174,35 @@ TEST(vfs_read_dir, {
     }
 })
 
+TEST(vfs_create_readdir, {
+    /* TODO: could use a macro for concatenating strings, or define dirname, and
+       name variables as macros, and use string literal concatenating */
+    const char *dirname = "dirtest123";
+
+    /* TODO: it would be nice if we could use an array, but it seems like it
+     * will break  the TEST() macro */
+    const char *name_one = "one";
+    const char *name_two = "two";
+    const char *file_one = "dirtest123/one";
+    const char *file_two = "dirtest123/two";
+
+    mkdir("dirtest123", 0);
+    creat(file_one, 0);
+    creat(file_two, 0);
+    struct file *f = open_file(dirname, O_RDWR);
+
+    size_t num = 4;
+    /* we want this to be zeroed because we check if the name is null later */
+    struct dirent *buf = calloc(num, sizeof(struct dirent));
+    read_dir(f, buf, num);
+
+    for (size_t i = 0; i < num; i++)
+    {
+        const char *str = buf[i].d_name;
+        ASSERT_NONULL(str, "element name in buffer should not be null");
+    }
+})
+
 TEST(vfs_dir_dot_dot_on_root_is_root, {
     int fd = open("/../../../../../one", O_RDONLY);
     ASSERT_GE(fd, 0, "file descriptor should be valid");

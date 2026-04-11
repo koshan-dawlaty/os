@@ -24,4 +24,6 @@ int memcmp(const void *s1, const void *s2, size_t n);
 /* errno.c */
 const char *strerror(int errnum);
 
+char *strchr(const char *s, int c);
+
 #endif
