@@ -12,7 +12,7 @@ typedef struct __attribute__((packed)) heap_block
 #define SMALL_BIN_AMOUNT 60
 struct malloc_zone
 {
-    const struct memory_zone *zone;
+    struct memory_zone *zone;
     void *current_page;
     void *initial_page;
     size_t page_offset;

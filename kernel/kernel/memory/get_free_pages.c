@@ -32,7 +32,7 @@ struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
     .pg_flags = PAGING_WRITEABLE,
 };
 
-const struct memory_zone gfp_kernel_zone =
+struct memory_zone gfp_kernel_zone =
     BITMAP_TO_GFP_ZONE(&gfp_bitmap_kernel_zone);
 
 struct bitmap_memory_zone gfp_bitmap_user_zone = {.virtual = 0x80000000,
@@ -44,19 +44,16 @@ struct bitmap_memory_zone gfp_bitmap_user_zone = {.virtual = 0x80000000,
 
 struct memory_zone gfp_user_zone = BITMAP_TO_GFP_ZONE(&gfp_bitmap_user_zone);
 
-/* FIXME: make this a member of a gfp zone */
-struct spinlock gfp_lock = SPINLOCK_INIT();
-
 /*
  * @amount: the number of pages to allocate
  * @zone: the zone to allocated the pages from
  *
  * returns address of allocated memory
  */
-void *get_free_pages_bitmap(size_t amount, const struct memory_zone *z)
+void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
 {
 
-    spinlock_lock(&gfp_lock);
+    spinlock_lock(&z->lock);
 
     struct bitmap_memory_zone *zone = z->zone_private;
 
@@ -115,7 +112,7 @@ void *get_free_pages_bitmap(size_t amount, const struct memory_zone *z)
         physical_addr += PAGE_SIZE;
         virtual_addr += PAGE_SIZE;
     }
-    spinlock_unlock(&gfp_lock);
+    spinlock_unlock(&z->lock);
 
     void *address = (void *)((i * PAGE_SIZE) + zone->virtual);
 
@@ -124,11 +121,11 @@ void *get_free_pages_bitmap(size_t amount, const struct memory_zone *z)
     return address;
 }
 
-void free_pages_bitmap(void *addr, size_t amount, const struct memory_zone *z)
+void free_pages_bitmap(void *addr, size_t amount, struct memory_zone *z)
 {
     struct bitmap_memory_zone *zone = z->zone_private;
 
-    spinlock_lock(&gfp_lock);
+    spinlock_lock(&z->lock);
     size_t index = (((size_t)addr - zone->virtual)) / 4096;
 
     for (size_t i = 0; i < amount; i++)
@@ -136,16 +133,16 @@ void free_pages_bitmap(void *addr, size_t amount, const struct memory_zone *z)
         zone->bitmap[(index + i) / 8] |= GFP_FREE >> ((index + i) % 8);
         unmap_page((void *)(addr + (i * PAGE_SIZE)));
     }
-    spinlock_unlock(&gfp_lock);
+    spinlock_unlock(&z->lock);
 }
 
 bool gfp_zones_initialized = false;
 
 /* TODO: only works on bitmap zones */
-void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *z)
+void *get_free_pages_unmmaped(size_t amount, struct memory_zone *z)
 {
     struct bitmap_memory_zone *zone = z->zone_private;
-    spinlock_lock(&gfp_lock);
+    spinlock_lock(&z->lock);
 
     ptr i;
     size_t consecutive = 0;
@@ -194,7 +191,7 @@ void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *z)
 
     /* release_semaphore(get_free_pages_semaphore); */
 
-    spinlock_unlock(&gfp_lock);
+    spinlock_unlock(&z->lock);
     return address;
 }
 
@@ -215,11 +212,8 @@ struct gfp_tree_node
 
 struct tree_memory_zone kernel_tree_zone = {};
 
-struct memory_zone gfp_kernel_tree_zone = {
-    .get_pages = get_free_pages_tree,
-    .free_pages = free_pages_tree,
-    .zone_private = NULL,
-};
+struct memory_zone gfp_kernel_tree_zone =
+    MEMORY_ZONE_INIT(get_free_pages_tree, free_pages_tree, NULL);
 
 struct gfp_tree_node *gfp_tree_node_init(long value)
 {
@@ -242,7 +236,7 @@ struct gfp_tree_value *gfp_tree_value_init(void *addr)
     return out;
 }
 
-void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
+void *get_free_pages_tree(size_t amount, struct memory_zone *z)
 {
 
     struct tree_memory_zone *zone = z->zone_private;
@@ -292,7 +286,7 @@ void *get_free_pages_tree(size_t amount, const struct memory_zone *z)
     }
 }
 
-void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z)
+void free_pages_tree(void *addr, size_t amount, struct memory_zone *z)
 {
     struct tree_memory_zone *zone = z->zone_private;
 

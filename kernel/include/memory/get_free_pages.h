@@ -2,6 +2,7 @@
 #define GET_FREE_PAGES_H
 
 #include "lib/binary_tree.h"
+#include "spinlock.h"
 #include <kernel/types.h>
 #include <lib/list.h>
 #include <memory/paging_flags.h>
@@ -16,13 +17,20 @@
 struct memory_zone
 {
 
-    void *(*get_pages)(size_t, const struct memory_zone *);
-    void (*free_pages)(void *, size_t, const struct memory_zone *);
+    void *(*get_pages)(size_t, struct memory_zone *);
+    void (*free_pages)(void *, size_t, struct memory_zone *);
 
     void *zone_private;
 
-    /* TODO: add a lock here */
+    struct spinlock lock;
 };
+
+#define MEMORY_ZONE_INIT(get, free, private)                                   \
+    (struct memory_zone)                                                       \
+    {                                                                          \
+        .get_pages = get, .free_pages = free, .zone_private = private,         \
+        .lock = SPINLOCK_INIT()                                                \
+    }
 
 struct bitmap_memory_zone
 {
@@ -35,7 +43,7 @@ struct bitmap_memory_zone
     u8 pg_flags; /* paging flags to be used with this zone */
 };
 
-extern const struct memory_zone gfp_kernel_zone;
+extern struct memory_zone gfp_kernel_zone;
 extern struct memory_zone gfp_kernel_tree_zone;
 extern struct memory_zone gfp_user_zone;
 
@@ -47,8 +55,7 @@ extern bool gfp_zones_initialized;
  *
  * returns address of allocated memory
  */
-static inline void *get_free_pages_zone(size_t amount,
-                                        const struct memory_zone *zone)
+static inline void *get_free_pages_zone(size_t amount, struct memory_zone *zone)
 {
 
     return zone->get_pages(amount, zone);
@@ -60,22 +67,18 @@ static inline void *get_free_pages_zone(size_t amount,
  * @zone the zone that the pages came from
  */
 static inline void free_pages_zone(void *addr, size_t amount,
-                                   const struct memory_zone *zone)
+                                   struct memory_zone *zone)
 {
     zone->free_pages(addr, amount, zone);
 }
 
-void *get_free_pages_bitmap(size_t amount, const struct memory_zone *zone);
-void free_pages_bitmap(void *addr, size_t amount,
-                       const struct memory_zone *zone);
+void *get_free_pages_bitmap(size_t amount, struct memory_zone *zone);
+void free_pages_bitmap(void *addr, size_t amount, struct memory_zone *zone);
 
 #define BITMAP_TO_GFP_ZONE(zone)                                               \
-    (struct memory_zone){.zone_private = (void *)zone,                         \
-                         .get_pages = get_free_pages_bitmap,                   \
-                         .free_pages = free_pages_bitmap};
+    MEMORY_ZONE_INIT(get_free_pages_bitmap, free_pages_bitmap, zone)
 
-inline struct memory_zone
-bitmap_to_gfp_zone(const struct bitmap_memory_zone *zone)
+inline struct memory_zone bitmap_to_gfp_zone(struct bitmap_memory_zone *zone)
 {
     return (struct memory_zone){.zone_private = (void *)zone,
                                 .get_pages = get_free_pages_bitmap,
@@ -88,8 +91,8 @@ struct tree_memory_zone
     void *base;
     size_t offset; /* offset, in pages from base */
 };
-void *get_free_pages_tree(size_t amount, const struct memory_zone *z);
-void free_pages_tree(void *addr, size_t amount, const struct memory_zone *z);
+void *get_free_pages_tree(size_t amount, struct memory_zone *z);
+void free_pages_tree(void *addr, size_t amount, struct memory_zone *z);
 
 #define TREE_ZONE_TO_GFP_ZONE(zone)                                            \
     (struct memory_zone){.zone_private = (void *)zone,                         \
@@ -104,7 +107,7 @@ void init_gfp_zones();
 /*
  * gets free pages from the bitmap in @zone, but does not map them
  */
-void *get_free_pages_unmmaped(size_t amount, const struct memory_zone *zone);
+void *get_free_pages_unmmaped(size_t amount, struct memory_zone *zone);
 
 static inline void *get_free_pages(size_t amount)
 {
