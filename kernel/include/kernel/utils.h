@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
-#include "kernel/types.h"
-#include "scheduler.h"
+#include <kernel/types.h>
+#include <scheduler.h>
 #include <stdint.h>
 
 #define MACRO_STR2(x) #x

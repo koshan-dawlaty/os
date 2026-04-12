@@ -1,6 +1,4 @@
-#include "lib/array.h"
 #include "unistd.h"
-#include "wait_queue.h"
 #include <assert.h>
 #include <container_of.h>
 #include <fcntl.h>
@@ -17,6 +15,7 @@
 #include <sys/syscall.h>
 #include <utils.h>
 #include <vfs.h>
+#include <wait_queue.h>
 
 extern void display_queue();
 

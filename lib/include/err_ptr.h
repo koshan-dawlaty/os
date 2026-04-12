@@ -1,8 +1,8 @@
 #ifndef ERROR_H
 #define ERROR_H
 
+#include "types.h"
 #include <error.h>
-#include <types.h>
 
 #define MAX_PTR_VAL 4095
 

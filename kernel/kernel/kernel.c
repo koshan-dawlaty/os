@@ -1,7 +1,5 @@
 #include "../acpi/acpica.h"
 #include "multiboot.h"
-#include "serial.h"
-#include "task_queue.h"
 #include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>
@@ -43,6 +41,7 @@
 #include <pit/pit.h>
 #include <sched.h>
 #include <scheduler.h>
+#include <serial.h>
 #include <socket.h>
 #include <spinlock.h>
 #include <stdbool.h>
@@ -54,6 +53,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
+#include <task_queue.h>
 #include <userspace/mouse.h>
 #include <utils.h>
 #include <vfs.h>
@@ -316,6 +316,7 @@ void kmain()
 
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
     logi("starting init task");
+
     int err = execv("/wm", (char *[]){"wm", NULL});
 
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */

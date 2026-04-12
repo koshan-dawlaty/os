@@ -1,3 +1,10 @@
 CompileFlags:
-  Add: ["-D__is_libk", "-D__is_libc", "-DCONFIG_LOG"]
+  Remove: ["-isystem=/usr/include"]
+  Add: [
+    "-D__is_libk", "-D__is_libc", "-DCONFIG_LOG",
+    # TODO: these might cause problems where this was not an actual path in the compile command 
+    # this ensures that clangd will not go to the sysroot version of these files
+    "-I/home/koshan/c/os/libc/include", # TODO: dont use the full path here
+    "-I/home/koshan/c/os/lib/include",
+  ]
 
