@@ -1,15 +1,17 @@
 #ifndef ASSERT_H
 #define ASSERT_H
 
-#include <kernel/utils.h>
+#include <lib/utils.h>
 #include <panic.h>
+
+void assert_panic(const char *format, ...);
 
 /* assert that something is true, if it is not, panic */
 #define ASSERT(condition, message, ...)                                        \
     if (!(condition))                                                          \
     {                                                                          \
-        panic("assertion failed\n" __FILE__                                    \
-              ":" MACRO_STR(__LINE__) " " message __VA_OPT__(, ) __VA_ARGS__); \
+        assert_panic("assertion failed\n" __FILE__ ":" MACRO_STR(              \
+            __LINE__) " " message __VA_OPT__(, ) __VA_ARGS__);                 \
     }
 
 /* panics if pointer is null */
@@ -18,8 +20,8 @@
            "pointer was null\n" message __VA_OPT__(, ) __VA_ARGS__)
 
 #define UNREACHABLE(message, ...)                                              \
-    panic("unreachable code\n" __FILE__                                        \
-          ":" MACRO_STR(__LINE__) " " message __VA_OPT__(, ) __VA_ARGS__);     \
+    assert_panic("unreachable code\n" __FILE__ ":" MACRO_STR(                  \
+        __LINE__) " " message __VA_OPT__(, ) __VA_ARGS__);                     \
     __builtin_unreachable()
 
 #endif

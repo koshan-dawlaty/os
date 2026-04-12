@@ -5,7 +5,6 @@
 #include "unistd.h"
 #include "utils.h"
 #include "vfs.h"
-#include <assert.h>
 #include <container_of.h>
 #include <drivers/character/terminal.h>
 #include <elf.h>
@@ -15,6 +14,7 @@
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <lib/assert.h>
 #include <lib/list.h>
 #include <memory/get_free_pages.h>
 #include <panic.h>
@@ -184,7 +184,6 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
         struct fdlist *current_fds = current_task->descriptors;
         struct fdlist *out_fds = out->descriptors;
 
-        /* FIXME: the open_device calls get evaluated */
         fdlist_copy_device(out_fds, current_fds, 0, keyboard_path);
         fdlist_copy_device(out_fds, current_fds, 1, term_path);
         fdlist_copy_device(out_fds, current_fds, 2, term_path);

@@ -1,4 +1,4 @@
-#include "assert.h"
+#include "lib/assert.h"
 #include <lib/array.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -47,16 +47,9 @@ void *array_get(struct array *array, size_t index, size_t item_len)
 {
     /* TODO: could implement this function as a macro so that this prints the
      * line number where this was called */
-    /* TODO: get assertions working for utils */
-    /* ASSERT(index * item_len <= array->len, */
-    /*        "index %d out of bounds for array len %d", index * item_len, */
-    /*        array->len); */
-
-    if (index * item_len > array->len)
-    {
-        printf("index %d out of bounds for len %d\n", index * item_len,
-               array->len);
-    }
+    ASSERT(index * item_len <= array->len,
+           "index %d out of bounds for array len %d", index * item_len,
+           array->len);
 
     return array->data + index * item_len;
 }
@@ -64,17 +57,8 @@ void *array_get(struct array *array, size_t index, size_t item_len)
 void *array_pop_end(struct array *array, size_t len)
 {
     /* this should remove from the start of the array */
-    /* TODO: get assertions working for utils */
-    /* ASSERT(array->len >= len, "array length too high, %d > %d", len, */
-    /*        array->len); */
-
-    if (array->len < len)
-    {
-        printf("array length too high %d > %d\n", len, array->len);
-        while (1)
-        {
-        }
-    }
+    ASSERT(array->len >= len, "array length too high, %d > %d", len,
+           array->len);
 
     void *out = array->data + array->len - len;
 

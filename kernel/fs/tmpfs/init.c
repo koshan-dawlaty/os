@@ -1,10 +1,10 @@
 /* TODO: a lot of this should not be used with a non ramdisk bev */
 #include "tmpfs.h"
-#include <assert.h>
 #include <bdev.h>
 #include <container_of.h>
 #include <err_ptr.h>
 #include <errno.h>
+#include <lib/assert.h>
 #include <lib/list.h>
 #include <stdlib.h>
 #include <string.h>

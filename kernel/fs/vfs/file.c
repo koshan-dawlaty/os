@@ -1,6 +1,5 @@
 #include "dcache.h"
 #include "vfs_internal.h"
-#include <assert.h>
 #include <ata/ata.h>
 #include <bdev.h>
 #include <cdev.h>
@@ -11,6 +10,7 @@
 #include <fcntl.h>
 #include <interrupts/pic.h>
 #include <kernel/types.h>
+#include <lib/assert.h>
 #include <memory/get_free_pages.h>
 #include <mutex.h>
 #include <scheduler.h>

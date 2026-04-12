@@ -2,10 +2,10 @@
 #include "mutex.h"
 #include "spinlock.h"
 #include "vfs_internal.h"
-#include <assert.h>
 #include <ata/ata.h>
 #include <err_ptr.h>
 #include <fcntl.h>
+#include <lib/assert.h>
 #include <scheduler.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,5 +1,5 @@
-#include "assert.h"
 #include "dcache.h"
+#include "lib/assert.h"
 #include "vfs.h"
 #include "vfs_internal.h"
 #include <err_ptr.h>

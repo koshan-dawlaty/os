@@ -1,4 +1,4 @@
-#include "assert.h"
+#include "lib/assert.h"
 #include <bdev.h>
 #include <cdev.h>
 #include <err_ptr.h>

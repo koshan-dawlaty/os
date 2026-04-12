@@ -1,8 +1,8 @@
 /* TODO: this is currently broken */
-#include "assert.h"
 #include "scheduler.h"
 #include "task_queue.h"
 #include <kernel/semaphore.h>
+#include <lib/assert.h>
 #include <lib/log.h>
 #include <panic.h>
 #include <sched.h>

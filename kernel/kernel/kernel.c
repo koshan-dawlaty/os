@@ -1,6 +1,5 @@
 #include "../acpi/acpica.h"
 #include "multiboot.h"
-#include <assert.h>
 #include <ata/ata.h>
 #include <compiler.h>
 #include <dirent.h>
@@ -28,6 +27,7 @@
 #include <kernel/types.h>
 #include <kernel/userspace.h>
 #include <lib/array.h>
+#include <lib/assert.h>
 #include <lib/binary_tree.h>
 #include <lib/list.h>
 #include <lib/log.h>
