@@ -189,6 +189,10 @@ void *d = NULL;
 
 void t1(void *a)
 {
+    while (1)
+    {
+        logd("t1");
+    }
     /* while (true) */
     /* { */
     /*     printf("task 1 is waiting\n"); */
@@ -214,6 +218,10 @@ void t1(void *a)
 void t2(void *a)
 {
 
+    while (1)
+    {
+        logd("t2");
+    }
     /* while (true) */
     /* { */
     /*     if (!WAIT_QUEUE_EMPTY(testing_wait_queue)) */
@@ -313,9 +321,6 @@ void kmain()
     acpica_init();
     smp_init();
 
-    /* irq_disable(); */
-    /* irq_wait(); */
-
     /* for (size_t i = 0; i < 100; i++) */
     /* { */
     /*     malloc(10); */
@@ -351,13 +356,13 @@ void kmain()
     /* printf("%p, %p\n", read, write); */
 
     /* d = malloc(10); */
-    /* ktask_run(t2, NULL); */
-    /* ktask_run(t1, NULL); */
+    ktask_run(t2, NULL);
+    ktask_run(t1, NULL);
     /* /1* ktask_run(t3, NULL); *1/ */
-    /* enable_scheduler(); */
-    /* irq_enable(); */
+    enable_scheduler();
+    irq_enable();
     /* schedule(); */
-    /* return; */
+    return;
 
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 

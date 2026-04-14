@@ -3,25 +3,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-struct tss
-{
-    u32 reserved;
-    u64 rsp0;
-    u64 rsp1;
-    u64 rsp2;
-    u64 reserved2;
-    u64 ist1;
-    u64 ist2;
-    u64 ist3;
-    u64 ist4;
-    u64 ist5;
-    u64 ist6;
-    u64 ist7;
-    u64 reserved3;
-    u16 reserved4;
-    u16 iopb;
-} __attribute__((packed));
-
 struct tss tss;
 
 struct GDT_register
@@ -41,8 +22,7 @@ extern ptr stack_top;
 
 extern char double_fault_stack[4096];
 
-/* TODO: tss */
-void init_gdt()
+void gdt_init_tss(struct tss t)
 {
 
     /* TODO: this is kinda stupid but i dont care */
@@ -55,15 +35,15 @@ void init_gdt()
     gdt[3] = 0x00AFFA000000FFFF; /* code */
     gdt[4] = 0x00AFF2000000FFFF; /* data */
 
-    tss.iopb = sizeof(struct tss);
+    t.iopb = sizeof(struct tss);
 
-    u64 base = (u64)&tss;
-    u64 limit = sizeof(tss) - 1;
-    tss.rsp0 = stack_top;
+    u64 base = (u64)&t;
+    u64 limit = sizeof(t) - 1;
+    t.rsp0 = stack_top;
 
     gdt[5] = ((limit & 0xFFFF)) | ((base & 0xFFFFFF) << 16) |
-             ((uint64_t)0x89 << 40) | // 0x89 = 64-bit TSS (available)
-             ((limit >> 16) & 0xF) << 48 | ((base >> 24) & 0xFF) << 56;
+             ((u64)0x89 << 40) | ((limit >> 16) & 0xF) << 48 |
+             ((base >> 24) & 0xFF) << 56;
     gdt[6] = (base >> 32) & 0xFFFFFFFFULL;
 
     gdtr.limit = sizeof(gdt) - 1;
@@ -77,7 +57,17 @@ void init_gdt()
     flush_tss();
 }
 
+void init_gdt()
+{
+    gdt_init_tss(tss);
+}
+
+/* from smp.c */
+extern struct tss *apic_tss;
+extern u8 get_cpu_id();
+
 void set_kernel_stack(ptr stack)
 {
-    tss.rsp0 = stack;
+    apic_tss[get_cpu_id()].rsp0 = stack;
+    /* tss.rsp0 = stack; */
 }

@@ -1,5 +1,7 @@
 #include "../acpi/acpica/acpi.h"
+#include "acoutput.h"
 #include "fcntl.h"
+#include "gdt.h"
 #include "interrupts/idt_internal.h"
 #include "interrupts/pic.h"
 #include "kernel/interrupts.h"
@@ -134,9 +136,16 @@ void lapic_timer_init()
     asm("lidt %0" : : "m"(idtr));
 }
 
+struct tss *apic_tss;
+
 void ap_started(u64 apic_id)
 {
+    u64 cpu_id = apic_id - 1;
     logd("apic id:%d just started", apic_id);
+
+    logd("tss:%p", apic_tss[apic_id - 1].rsp0);
+    gdt_init_tss(apic_tss[apic_id - 1]);
+
     /* *(char *)0xffffc000000b8010 = 'a'; */
     void *ptr = malloc(100);
 
@@ -161,6 +170,17 @@ extern void ap_trampoline();
 extern void ap_64();
 /* used by ap_init.S */
 void **ap_stacks;
+
+/* from gdt.c */
+extern struct tss tss;
+
+u8 get_cpu_id()
+{
+    u8 id;
+    asm volatile("mov $1, %%eax; cpuid; shrl $24, %%ebx;" : "=b"(id) : :);
+
+    return id;
+}
 
 void bootstrap_init()
 {
@@ -190,6 +210,19 @@ void bootstrap_init()
     }
 
     ap_stacks = malloc(sizeof(void *) * num_cores - 1);
+    apic_tss = calloc(num_cores, sizeof(struct tss));
+    for (size_t i = 0; i < num_cores; i++)
+    {
+        if (i == bspid)
+        {
+            apic_tss[bspid - 1] = tss; /* this makes the variable tss useless */
+        }
+        else
+        {
+            apic_tss[i].rsp0 = (ptr)(get_free_pages(2) + (PAGE_SIZE * 2)) - 10;
+        }
+    }
+
     for (size_t i = 0; i < num_cores - 1; i++)
     {
         /* logd("writing a stack to:%d", i); */
