@@ -16,6 +16,7 @@
 #include <interrupts/pic.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
+#include <kernel/smp.h>
 #include <kernel/types.h>
 #include <lib/list.h>
 #include <memory/get_free_pages.h>
@@ -30,6 +31,7 @@
 #include <task_queue.h>
 
 TASK_QUEUE_DEFINE(scheduler_queue);
+struct task_queue *cpu_scheduler_queue;
 
 bool scheduler_enabled = false;
 struct task *current_task = NULL;
@@ -430,13 +432,17 @@ void remove_task(struct task *task)
 void add_task(struct task *task)
 {
     IRQ_OFF({
-        if (current_task == NULL)
-        {
-            current_task = task;
-        }
-
-        task_queue_push(&scheduler_queue, task);
+        struct task_queue current_queue = cpu_scheduler_queue[get_cpu_id()];
+        task_queue_push(&current_queue, task);
     })
+    /* IRQ_OFF({ */
+    /*     if (current_task == NULL) */
+    /*     { */
+    /*         current_task = task; */
+    /*     } */
+
+    /*     task_queue_push(&scheduler_queue, task); */
+    /* }) */
 }
 
 int num_task_switches = 0;
@@ -472,6 +478,7 @@ struct spinlock scheduler_lock = SPINLOCK_INIT();
 
 void schedule_impl()
 {
+    struct task_queue current_queue = cpu_scheduler_queue[get_cpu_id()];
     /* preempt_disable(); */
     spinlock_lock(&scheduler_lock);
     irq_disable();

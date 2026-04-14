@@ -13,6 +13,7 @@
 #include "msr.h"
 #include "panic.h"
 #include "scheduler.h"
+#include "task_queue.h"
 #include "utils.h"
 #include <compiler.h>
 #include <kernel/paging.h>
@@ -174,6 +175,8 @@ void **ap_stacks;
 /* from gdt.c */
 extern struct tss tss;
 
+extern struct task_queue *cpu_scheduler_queue;
+
 u8 get_cpu_id()
 {
     u8 id;
@@ -184,8 +187,7 @@ u8 get_cpu_id()
 
 void bootstrap_init()
 {
-    u8 bspid;
-    asm volatile("mov $1, %%eax; cpuid; shrl $24, %%ebx;" : "=b"(bspid) : :);
+    u8 bspid = get_cpu_id();
 
     /* map bootstrap code */
     map_page((void *)0x8000, (void *)0x8000, PAGING_WRITEABLE | PAGING_PRESENT);
@@ -207,6 +209,12 @@ void bootstrap_init()
     {
         panic("max apic id:%d not equal to number of apics:%d", apic_max,
               num_cores - 1);
+    }
+
+    cpu_scheduler_queue = malloc(sizeof(struct task_queue) * num_cores);
+    for (size_t i = 0; i < num_cores; i++)
+    {
+        task_queue_init(&cpu_scheduler_queue[i]);
     }
 
     ap_stacks = malloc(sizeof(void *) * num_cores - 1);
