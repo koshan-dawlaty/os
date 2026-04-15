@@ -163,23 +163,31 @@ void draw_window(struct framebuffer *b, struct window *win)
     }
 }
 
-struct array compute_visible(struct window_queue_entry *win_ent)
+struct array compute_visible(struct window_queue_entry *win_ent,
+                             struct rect area)
 {
 
     struct window *win = win_ent->win;
 
     struct array visible = ARRAY_INIT();
-    array_add(&visible, &WIN_RECT(win), sizeof(struct rect));
+    struct rect intersection = rect_get_intersect(WIN_RECT(win), area);
+    if (rect_eq(intersection, RECT_INIT(0, 0, 0, 0)))
+    {
+        return visible;
+    }
+    array_add(&visible, &intersection, sizeof(struct rect));
+    /* array_add(&visible, &WIN_RECT(win), sizeof(struct rect)); */
 
     struct list2 *pos;
     for (pos = win_ent->list.next; pos != NULL; pos = pos->next)
     /* list2_for_each(pos, &win_ent->list) */
     /* list2_for_each(pos, window_queue) */
     {
-
         struct window_queue_entry *ent =
             containerof(pos, struct window_queue_entry, list);
-        struct rect current = WIN_RECT(ent->win);
+        struct rect current = rect_get_intersect(WIN_RECT(ent->win), area);
+        if (rect_eq(current, RECT_INIT(0, 0, 0, 0)))
+            continue;
 
         struct array new_regions = ARRAY_INIT();
 
@@ -194,7 +202,7 @@ struct array compute_visible(struct window_queue_entry *win_ent)
             {
                 /* struct rect *results = malloc(sizeof(struct rect) * 4);
                  */
-                struct rect results[4];
+                struct rect results[4] = {0};
                 u8 num = rect_split_intersect(*r, current, results);
                 /* logd("num:%d", num); */
                 for (size_t j = 0; j < num; j++)
@@ -208,17 +216,16 @@ struct array compute_visible(struct window_queue_entry *win_ent)
                      * result.w, */
                     /*                       result.h, color_num(j)); */
                 }
-                /* free(results); */
             }
         }
         /* logd("loop"); */
-        /* free(visible.data); */
+        free(visible.data);
         visible = new_regions;
     }
     return visible;
 }
 
-void update_area_up(struct window_queue_entry *ent, struct rect area,
+void update_area_up(struct window_queue_entry *e, struct rect area,
                     struct framebuffer *fb)
 {
     user_mutex_lock(window_queue_mutex);
@@ -229,17 +236,25 @@ void update_area_up(struct window_queue_entry *ent, struct rect area,
         struct window_queue_entry *ent =
             containerof(pos, struct window_queue_entry, list);
 
-        struct array visible = compute_visible(ent);
+        struct array visible = compute_visible(ent, area);
 
         /* logd("%d", ARRAY_LEN(visible, sizeof(struct rect))); */
 
         for (size_t i = 0; i < ARRAY_LEN(visible, sizeof(struct rect)); i++)
         {
             struct rect *r = array_get(&visible, i, sizeof(struct rect));
-            struct rect intersect = rect_get_intersect(*r, WIN_RECT(ent->win));
-            if (!rect_eq(intersect, (struct rect){0, 0, 0, 0}))
+            /* logd("%p", r); */
+            // struct rect intersect = rect_get_intersect(*r,
+            // WIN_RECT(ent->win));
+            /* struct rect intersect = rect_get_intersect(*r, area); */
+            struct rect intersect = *r;
+            /* logd("intersect:x:%d y:%d w:%d h:%d", intersect.x, intersect.y,
+             */
+            /*      intersect.w, intersect.h); */
+
+            if (!rect_eq(intersect, RECT_INIT(0, 0, 0, 0)))
             {
-                win_draw_rect(ent->win, intersect, buffer);
+                win_draw_rect(ent->win, intersect, fb);
             }
             /* logd("drawing:%d, %d w:%d, h:%d", r->x, r->y, r->w,
              * r->h); */
@@ -252,9 +267,43 @@ void update_area_up(struct window_queue_entry *ent, struct rect area,
             /*     win_draw_rect(ent->win, *r, buffer); */
             /* } */
         }
+        free(visible.data);
     }
 
     user_mutex_unlock(window_queue_mutex);
+}
+
+void move_window(struct window_queue_entry *ent, int x, int y,
+                 struct framebuffer *fb)
+{
+
+    struct window *win = ent->win;
+    struct rect old_area = WIN_RECT(ent->win);
+    WIN_X(win) += x;
+    WIN_Y(win) += y;
+    struct rect new_area = WIN_RECT(ent->win);
+
+    struct rect result[4] = {0};
+    u8 num_rects = rect_split_intersect(old_area, new_area, result);
+
+    /* moved far enough away to not intersect */
+    if (num_rects == 0)
+    {
+        update_area_up(ent, old_area, buffer);
+    }
+
+    for (size_t i = 0; i < num_rects; i++)
+    {
+        struct rect r = result[i];
+
+        /* logd("damage:x:%d y:%d w:%d h:%d", r.x, r.y, r.w, r.h);
+         */
+        update_area_up(ent, r, buffer);
+        /* framebuffer_draw_rect(buffer, r.x, r.y, r.w, r.h, */
+        /*                       color_num(i)); */
+    }
+    update_area_up(ent, WIN_RECT(win),
+                   buffer); /* check if this is useful, i think it is */
 }
 
 #define WINDOW_DECORATION_ROWS 10
@@ -645,23 +694,7 @@ void mouse_thread()
         {
         }
 
-        struct rect old_mouse = WIN_RECT(mouse);
-
-        WIN_X(mouse) += ev->x_change;
-        WIN_Y(mouse) += ev->y_change;
-
-        if ((int)WIN_X(mouse) < 0)
-        {
-            WIN_X(mouse) = 0;
-        }
-
-        if ((int)WIN_Y(mouse) < 0)
-        {
-            WIN_Y(mouse) = 0;
-        }
-
-        /* win_draw_rect(mouse, WIN_RECT(mouse), buffer); */
-        update_area_up(mouse_queue_ent, WIN_RECT(mouse), buffer);
+        move_window(mouse_queue_ent, ev->x_change, ev->y_change, buffer);
         /* update_area_down(mouse_queue_ent, old_mouse, buffer); */
 
         if (ev->buttons.left_click && drag_count < 3)
@@ -716,19 +749,7 @@ void mouse_thread()
         {
             if (focused != NULL)
             {
-                struct window *win = focused->win;
-                struct rect old_area = WIN_RECT(win);
-
-                WIN_X(win) += ev->x_change;
-                WIN_Y(win) += ev->y_change;
-
-                struct rect new_area = WIN_RECT(win);
-
-                struct rect result[4];
-                u8 num_rects = rect_split_intersect(old_area, new_area, result);
-
-                /* update_area_down(focused, WIN_RECT(win), buffer); */
-                update_area_up(focused, WIN_RECT(win), buffer);
+                move_window(focused, ev->x_change, ev->y_change, buffer);
 
                 /* printf("%d ", move_area.h); */
 

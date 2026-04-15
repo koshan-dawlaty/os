@@ -218,6 +218,10 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size,
 
 void free_zone(void *ptr, struct malloc_zone *zone)
 {
+    if (ptr == NULL)
+    {
+        return;
+    }
 
     heap_block *block = ptr_to_block(ptr);
 

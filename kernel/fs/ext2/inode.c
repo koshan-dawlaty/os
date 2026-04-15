@@ -1,4 +1,5 @@
 #include "ext2.h"
+#include "panic.h"
 #include <container_of.h>
 #include <err_ptr.h>
 #include <errno.h>
@@ -66,6 +67,11 @@ static u32 ext2_inode_get_block(struct ext2_inode *node, size_t block_num,
     if (block_num < 12)
     {
         return node->direct_blocks[block_num];
+    }
+
+    if (block_num > EXT2_BLOCK_SIZE(sb))
+    {
+        panic("ext2 file read too big");
     }
 
     u32 *indirect_block =

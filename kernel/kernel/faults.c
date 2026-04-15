@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include "panic.h"
 #include <kernel/faults.h>
 #include <scheduler.h>
@@ -33,6 +34,8 @@ void page_fault(void *addr, void *ip, struct page_fault_flags flags)
     IRQ_OFF({
         struct task *t = get_current_task();
 
+        loge("user page fault at addr:%p",
+             addr); /* TODO: make this print to the task's stdout */
         printf("user page fault at addr:%p\n",
                addr); /* TODO: make this print to the task's stdout */
         print_page_fault_flags(flags);
