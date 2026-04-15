@@ -8,3 +8,9 @@ CompileFlags:
     "-I/home/koshan/c/os/lib/include",
   ]
 
+
+# Dianostics:
+#   Suppress: [
+#     "-Wunused-parameter", "unused-parameter",
+#     "-Wunused-variable", "unused-variable",
+#   ]

@@ -9,6 +9,7 @@ u8 rect_split_intersect(struct rect one, struct rect two, struct rect *result)
     {
         return 0;
     }
+
     u8 retval = 0;
 
     if (intersect.y > one.y)

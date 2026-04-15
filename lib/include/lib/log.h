@@ -2,8 +2,8 @@
 #define KERNEL_LOG_H
 
 #include <compiler.h>
-#include <kernel/types.h>
 #include <stdarg.h>
+#include <types.h>
 struct log_level
 {
     const char *str;

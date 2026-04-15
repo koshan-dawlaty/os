@@ -19,7 +19,7 @@ export CC := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
 # once printf supports the actual standard format specifiers, -Wno-format can be removed
 export CFLAGS :=  -DMYOS1234 -Werror \
 -Wno-format	\
--Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fomit-frame-pointer
+-Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fomit-frame-pointer -Wno-unused-parameter
 
 
 export QEMU_COMMAND := qemu-system-$(shell ./build/qemu-arch.sh $(ARCH))

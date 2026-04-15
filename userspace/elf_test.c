@@ -133,7 +133,8 @@ int main()
 
     /* client = wm_client_connect(175, 600); */
     /* client = wm_client_connect(600, 175); */
-    client = wm_client_connect(600, 600);
+    /* client = wm_client_connect(600, 600); */
+    client = wm_client_connect(100, 100);
     /* struct wm_client client = wm_client_connect(175, 220); */
 
     int font_fd = open("/font.psfu", O_RDONLY);
