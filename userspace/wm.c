@@ -279,8 +279,28 @@ void move_window(struct window_queue_entry *ent, int x, int y,
 
     struct window *win = ent->win;
     struct rect old_area = WIN_RECT(ent->win);
+
     WIN_X(win) += x;
     WIN_Y(win) += y;
+
+    if ((int)WIN_X(win) <= 0)
+    {
+        WIN_X(win) = 0;
+    }
+    if ((int)WIN_Y(win) <= 0)
+    {
+        WIN_Y(win) = 0;
+    }
+
+    if (WIN_X(win) + WIN_W(win) >= fb->width)
+    {
+        WIN_X(win) = fb->width - WIN_W(win);
+    }
+    if (WIN_Y(win) + WIN_H(win) >= fb->height)
+    {
+        WIN_Y(win) = fb->height - WIN_H(win);
+    }
+
     struct rect new_area = WIN_RECT(ent->win);
 
     struct rect result[4] = {0};
@@ -491,8 +511,8 @@ void process_connection()
     conn->client_key_socket = key_socket;
 
     struct window *w = new_client_window(x, y, win_info.width, win_info.height);
-    y += win_info.height - 30;
-    x += 40;
+    /* y += win_info.height - 30; */
+    /* x += 40; */
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
     ent->list = LIST2_INIT();
@@ -599,23 +619,15 @@ void process_connection()
 disconnect:;
 
     size_t num_pixels = WIN_H(w) - 1;
-    size_t sleep_ticks = 40;
+    size_t sleep_ticks = 20;
 
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
-    disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
+    for (size_t i = 0; i < 10; i++)
+    {
+        disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
+        disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
+        disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
+        disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
+    }
 
     user_mutex_lock(window_queue_mutex);
     list2_remove(&ent->list, &window_queue);
@@ -911,12 +923,12 @@ int main()
     clone((ptr)keyboard_thread);
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
-    execv("imgview", (char *[]){"imgview", "osdev.tga", NULL});
-    execv("imgview", (char *[]){"imgview", "dog.tga", NULL});
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
-    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("imgview", (char *[]){"imgview", "dog.tga", NULL});
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("tron", (char *[]){"imgview", "osdev.tga", NULL}); */
 
