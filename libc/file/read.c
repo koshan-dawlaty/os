@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include "sys/syscall.h"
 #include "utils.h"
 #include <errno.h>

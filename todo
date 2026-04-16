@@ -60,3 +60,8 @@ wm should really use nonblocking socket
 
 atomic access to waitqueue in some cases?
 	like in socket connect(), it uses the wait queue in 2 directions
+
+read() seems to get called a lot with the window manager
+	this might just be normal, it is maybe 5 times per terminal key press, which makes some sense considering that there is the wm ipc and the pipe ipc between the wm client and the shell
+
+window manager seems to maybe hang when invalid values are passed when connecting

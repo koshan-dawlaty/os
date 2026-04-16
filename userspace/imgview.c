@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include "sched.h"
 #include "sys/types.h"
 #include "wm_lib.h"
@@ -37,7 +38,12 @@ void *parse_tga_image(const char *path, struct tga_header *header)
     size_t data_size = header->h * header->w * (header->bpp / 8);
     void *data = malloc(data_size);
 
-    pread(fd, data, data_size, sizeof(struct tga_header));
+    int err = pread(fd, data, data_size, sizeof(struct tga_header));
+    if (err < 0)
+    {
+        printf("bad fd\n");
+        exit(1);
+    }
 
     return data;
 }
