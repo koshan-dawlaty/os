@@ -629,19 +629,41 @@ void process_connection()
 disconnect:;
 
     size_t num_pixels = WIN_H(w) - 1;
-    size_t sleep_ticks = 20;
+    size_t sleep_ticks = 200;
+    size_t dist = 100;
 
-    for (size_t i = 0; i < 10; i++)
+    for (size_t i = 0; i < 3; i++)
     {
-        disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-        disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
-        disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1);
-        disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1);
+        move_window(ent, dist, dist, buffer);
+        sleep(sleep_ticks);
+
+        move_window(ent, -dist, dist, buffer);
+        sleep(sleep_ticks);
+
+        move_window(ent, -dist, -dist, buffer);
+        sleep(sleep_ticks);
+
+        move_window(ent, dist, -dist, buffer);
+        sleep(sleep_ticks);
+
+        dist += 50;
     }
+
+    /* for (size_t i = 0; i < 10; i++) */
+    /* { */
+    /*     disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1); */
+    /*     disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1); */
+    /*     disconnect_flip_image_w(ent, num_pixels, sleep_ticks, 1); */
+    /*     disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1); */
+    /* } */
+
+    struct rect old_area = WIN_RECT(ent->win);
 
     user_mutex_lock(window_queue_mutex);
     list2_remove(&ent->list, &window_queue);
     user_mutex_unlock(window_queue_mutex);
+
+    update_area_up(NULL, old_area, buffer);
 
     while (1)
     {
