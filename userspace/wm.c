@@ -226,8 +226,7 @@ struct array compute_visible(struct window_queue_entry *win_ent,
     return visible;
 }
 
-void update_area_up(struct window_queue_entry *e, struct rect area,
-                    struct framebuffer *fb)
+void update_area_up(struct rect area, struct framebuffer *fb)
 {
     user_mutex_lock(window_queue_mutex);
 
@@ -310,7 +309,7 @@ void move_window(struct window_queue_entry *ent, int x, int y,
     /* moved far enough away to not intersect */
     if (num_rects == 0)
     {
-        update_area_up(ent, old_area, buffer);
+        update_area_up(old_area, buffer);
     }
 
     for (size_t i = 0; i < num_rects; i++)
@@ -319,11 +318,11 @@ void move_window(struct window_queue_entry *ent, int x, int y,
 
         /* logd("damage:x:%d y:%d w:%d h:%d", r.x, r.y, r.w, r.h);
          */
-        update_area_up(ent, r, buffer);
+        update_area_up(r, buffer);
         /* framebuffer_draw_rect(buffer, r.x, r.y, r.w, r.h, */
         /*                       color_num(i)); */
     }
-    update_area_up(ent, WIN_RECT(win),
+    update_area_up(WIN_RECT(win),
                    buffer); /* check if this is useful, i think it is */
 }
 
@@ -354,7 +353,6 @@ void change_focus(struct window_queue_entry *new_focus)
     }
     struct rect new_rect = WIN_RECT(new_focus->win);
     update_area_up(
-        new_focus,
         RECT_INIT(new_rect.x, new_rect.y, new_rect.w, WINDOW_DECORATION_ROWS),
         buffer);
 
@@ -371,8 +369,7 @@ void change_focus(struct window_queue_entry *new_focus)
     }
 
     struct rect prev_rect = WIN_RECT(focused->win);
-    update_area_up(focused,
-                   RECT_INIT(prev_rect.x, prev_rect.y, prev_rect.w,
+    update_area_up(RECT_INIT(prev_rect.x, prev_rect.y, prev_rect.w,
                              WINDOW_DECORATION_ROWS),
                    buffer);
 
@@ -432,7 +429,7 @@ static void disconnect_flip_image_w(struct window_queue_entry *ent,
             struct rect area = WIN_RECT(w);
             area.h = y;
 
-            update_area_up(ent, area, buffer);
+            update_area_up(area, buffer);
             sleep(sleep_ticks);
         }
 
@@ -460,7 +457,7 @@ static void disconnect_flip_image_h(struct window_queue_entry *ent,
             struct rect area = WIN_RECT(w);
             area.h = y;
 
-            update_area_up(ent, area, buffer);
+            update_area_up(area, buffer);
             sleep(sleep_ticks);
         }
 
@@ -566,7 +563,7 @@ void process_connection()
                        WIN_W(w) * 4);
             }
 
-            update_area_up(ent, WIN_RECT(w), buffer);
+            update_area_up(WIN_RECT(w), buffer);
             /* draw_window(buffer, ent->win); */
             /* draw_windows(buffer); */
 
@@ -663,7 +660,7 @@ disconnect:;
     list2_remove(&ent->list, &window_queue);
     user_mutex_unlock(window_queue_mutex);
 
-    update_area_up(NULL, old_area, buffer);
+    update_area_up(old_area, buffer);
 
     while (1)
     {
