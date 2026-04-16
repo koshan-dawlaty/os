@@ -147,22 +147,6 @@ u32 color_num(size_t num)
     return 0xFFFFFF;
 }
 
-void draw_window(struct framebuffer *b, struct window *win)
-{
-    if (win->x + WIN_W(win) > b->width || win->y + WIN_H(win) > b->height ||
-        win->x < 0 || win->y < 0)
-    {
-        return;
-    }
-
-    for (size_t y = 0; y < WIN_H(win) - 1; y++)
-    {
-
-        memcpy(b->buffer + (((y + WIN_Y(win)) * b->pitch) +
-                            (WIN_X(win) * b->pixel_width)),
-               win->fb.buffer + (y * WIN_W(win) * 4), WIN_W(win) * 4);
-    }
-}
 
 struct array compute_visible(struct window_queue_entry *win_ent,
                              struct rect area)
@@ -271,6 +255,10 @@ void update_area_up(struct rect area, struct framebuffer *fb)
     }
 
     user_mutex_unlock(window_queue_mutex);
+}
+
+void draw_window(struct framebuffer * b, struct window *win) {
+    update_area_up(WIN_RECT(win), b);
 }
 
 void move_window(struct window_queue_entry *ent, int x, int y,
