@@ -104,7 +104,8 @@ void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
 
         zone->bitmap[j / 8] |= (1 << (j % 8));
 
-        map_page(physical_addr, virtual_addr, zone->pg_flags);
+        /* map_page(physical_addr, virtual_addr, zone->pg_flags); */
+        map_page(get_free_phys_page(), virtual_addr, zone->pg_flags);
 
         /* physical_addr += PAGE_SIZE * j; */
         /* virtual_addr += PAGE_SIZE * j; */

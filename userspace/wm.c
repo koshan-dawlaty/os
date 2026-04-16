@@ -334,6 +334,13 @@ struct window_queue_entry *focused = NULL;
 void change_focus(struct window_queue_entry *new_focus)
 {
 
+    /* TODO: the focusable windows should maybe be stored in a separate way so
+     * this does not need to happen */ /* this check does not techincally need to happen right now, any callers of this will not foucs these windows */
+    if (new_focus == background_queue_ent || new_focus == mouse_queue_ent)
+    {
+        return;
+    }
+
     for (size_t y = 0; y < WINDOW_DECORATION_ROWS; y++)
     {
         for (size_t x = 0; x < WIN_W(new_focus->win); x++)
@@ -528,7 +535,7 @@ void process_connection()
     }
     else
     {
-        ent->list.prev = window_queue->next;
+        ent->list.prev = window_queue;
         ent->list.next = window_queue->next;
         window_queue->next->prev = &ent->list;
 
@@ -665,6 +672,11 @@ void keyboard_thread()
                 ent =
                     containerof(window_queue, struct window_queue_entry, list);
             }
+            if (ent == background_queue_ent)
+            {
+                ent = containerof(window_queue->next, struct window_queue_entry,
+                                  list);
+            }
             change_focus(ent);
         }
         else
@@ -703,10 +715,6 @@ void mouse_thread()
         if (size != sizeof(struct mouse_event))
         {
             /* printf("reading from the mouse returned invalid size!\n"); */
-        }
-
-        if (ev->x_change < 0)
-        {
         }
 
         move_window(mouse_queue_ent, ev->x_change, ev->y_change, buffer);
