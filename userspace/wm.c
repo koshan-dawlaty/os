@@ -66,6 +66,7 @@ struct window_queue_entry
 
 struct window *mouse;
 struct window_queue_entry *mouse_queue_ent;
+struct window_queue_entry *background_queue_ent;
 struct window *background;
 
 struct list2 *window_queue;
@@ -345,11 +346,10 @@ void change_focus(struct window_queue_entry *new_focus)
         }
     }
     struct rect new_rect = WIN_RECT(new_focus->win);
-    /* update_area_up( */
-    /*     new_focus, */
-    /*     RECT_INIT(new_rect.x, new_rect.y, new_rect.w,
-     * WINDOW_DECORATION_ROWS), */
-    /*     buffer); */
+    update_area_up(
+        new_focus,
+        RECT_INIT(new_rect.x, new_rect.y, new_rect.w, WINDOW_DECORATION_ROWS),
+        buffer);
 
     for (size_t y = 0; y < WINDOW_DECORATION_ROWS; y++)
     {
@@ -364,10 +364,10 @@ void change_focus(struct window_queue_entry *new_focus)
     }
 
     struct rect prev_rect = WIN_RECT(focused->win);
-    /* update_area_up(focused, */
-    /*                RECT_INIT(prev_rect.x, prev_rect.y, prev_rect.w, */
-    /*                          WINDOW_DECORATION_ROWS), */
-    /*                buffer); */
+    update_area_up(focused,
+                   RECT_INIT(prev_rect.x, prev_rect.y, prev_rect.w,
+                             WINDOW_DECORATION_ROWS),
+                   buffer);
 
     focused = new_focus;
 }
@@ -528,7 +528,10 @@ void process_connection()
     }
     else
     {
+        ent->list.prev = window_queue->next;
         ent->list.next = window_queue->next;
+        window_queue->next->prev = &ent->list;
+
         window_queue->next = &ent->list;
         /* list2_add_front(&ent->list, &window_queue); */
     }
@@ -557,7 +560,7 @@ void process_connection()
             }
 
             update_area_up(ent, WIN_RECT(w), buffer);
-            draw_window(buffer, ent->win);
+            /* draw_window(buffer, ent->win); */
             /* draw_windows(buffer); */
 
             int ack_code = 3;
@@ -724,6 +727,8 @@ void mouse_thread()
                 prev = pos;
             }
 
+            /* logd("%p", prev->prev->prev); */
+
             struct window_queue_entry *new_focus = NULL;
 
             for (pos = prev; pos != NULL; pos = pos->prev)
@@ -731,13 +736,22 @@ void mouse_thread()
 
                 struct window_queue_entry *queue_ent =
                     LIST_ENTRY(pos, struct window_queue_entry, list);
+
+                if (queue_ent == mouse_queue_ent ||
+                    queue_ent == background_queue_ent)
+                {
+                    continue;
+                }
+
                 struct window *win = queue_ent->win;
 
                 if (WIN_X(mouse) > WIN_X(win) &&
                     WIN_X(mouse) < WIN_X(win) + WIN_W(win) &&
                     WIN_Y(mouse) > WIN_Y(win) &&
                     WIN_Y(mouse) < WIN_Y(win) + WIN_H(win))
+
                 {
+                    /* logd("intersect"); */
                     new_focus = queue_ent;
                     break;
                 }
@@ -746,15 +760,15 @@ void mouse_thread()
 
             if (new_focus != NULL)
             {
-                /* memset(focused->win->buffer, 127, focused->win->w * 4 *
-                 * 10);
+                /* memset(focused->win->buffer, 127,
+                 * focused->win->w * 4 * 10);
                  */
 
                 /* memset(focused->win->buffer, 0, */
                 /*        focused->win->w * focused->win->h *
                  * 4); */
 
-                /* change_focus(new_focus); */
+                change_focus(new_focus);
             }
         }
         else if (ev->buttons.left_click)
@@ -905,12 +919,12 @@ int main()
     mouse_queue_ent = malloc(sizeof(struct window_queue_entry));
     mouse_queue_ent->conn = NULL;
     mouse_queue_ent->win = mouse;
+    mouse_queue_ent->list = LIST2_INIT();
     window_queue = &mouse_queue_ent->list;
     mouse_queue_ent->nonblock_info.is_nonblock = false;
     mouse_queue_ent->nonblock_info.current_key = 0;
 
-    struct window_queue_entry *background_queue_ent =
-        malloc(sizeof(struct window_queue_entry));
+    background_queue_ent = malloc(sizeof(struct window_queue_entry));
     background_queue_ent->win = background;
     background_queue_ent->list = LIST2_INIT();
     background_queue_ent->conn = NULL;

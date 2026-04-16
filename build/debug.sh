@@ -8,7 +8,7 @@
 # gdb -ex "set \$flags=$QEMU_FLAGS" -x debug.gdb
 #
 
-USER_EXECUTABLE="build/fs-root/ksh"
+USER_EXECUTABLE="build/fs-root/wm"
 USER_EXECUTABLE2="build/fs-root/elf_test"
 
 KERNEL_ADDR=objdump -h isodir/boot/os.kernel | grep \ .text\  | awk '{print $4}'
