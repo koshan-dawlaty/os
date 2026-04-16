@@ -147,7 +147,6 @@ u32 color_num(size_t num)
     return 0xFFFFFF;
 }
 
-
 struct array compute_visible(struct window_queue_entry *win_ent,
                              struct rect area)
 {
@@ -204,7 +203,7 @@ struct array compute_visible(struct window_queue_entry *win_ent,
             }
         }
         /* logd("loop"); */
-        free(visible.data);
+        array_free(&visible);
         visible = new_regions;
     }
     return visible;
@@ -251,13 +250,14 @@ void update_area_up(struct rect area, struct framebuffer *fb)
             /*     win_draw_rect(ent->win, *r, buffer); */
             /* } */
         }
-        free(visible.data);
+        array_free(&visible);
     }
 
     user_mutex_unlock(window_queue_mutex);
 }
 
-void draw_window(struct framebuffer * b, struct window *win) {
+void draw_window(struct framebuffer *b, struct window *win)
+{
     update_area_up(WIN_RECT(win), b);
 }
 
@@ -391,7 +391,6 @@ struct window *new_client_window(size_t x, size_t y, size_t w, size_t h)
 
     return out;
 }
-
 
 static void disconnect_flip_image_w(struct window_queue_entry *ent,
                                     size_t num_pixels, size_t sleep_ticks,
@@ -856,8 +855,6 @@ void mouse_thread()
         }
 
         /* printf("%d, %d\n", mouse->x, mouse->y); */
-
-        
 
         free(ev);
     }
