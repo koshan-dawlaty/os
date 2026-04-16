@@ -404,17 +404,6 @@ struct window *new_client_window(size_t x, size_t y, size_t w, size_t h)
     return out;
 }
 
-void draw_windows(struct framebuffer *b)
-{
-
-    struct list2 *pos;
-    list2_for_each(pos, window_queue)
-    {
-        struct window_queue_entry *ent =
-            LIST_ENTRY(pos, struct window_queue_entry, list);
-        draw_window(b, ent->win);
-    }
-}
 
 static void disconnect_flip_image_w(struct window_queue_entry *ent,
                                     size_t num_pixels, size_t sleep_ticks,
@@ -565,7 +554,6 @@ void process_connection()
 
             update_area_up(WIN_RECT(w), buffer);
             /* draw_window(buffer, ent->win); */
-            /* draw_windows(buffer); */
 
             int ack_code = 3;
             int retval = send(socket, &ack_code, sizeof(int));
@@ -881,8 +869,7 @@ void mouse_thread()
 
         /* printf("%d, %d\n", mouse->x, mouse->y); */
 
-        /* draw_window(buffer, mouse); */
-        /* draw_windows(buffer); */
+        
 
         free(ev);
     }
