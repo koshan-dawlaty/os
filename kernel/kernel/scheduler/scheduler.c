@@ -30,8 +30,34 @@
 #include <string.h>
 #include <task_queue.h>
 
+struct sched_queue
+{
+    struct task_queue queue;
+    struct task *current;
+};
+
+#define SCHED_QUEUE_INIT(name)                                                 \
+    (struct sched_queue)                                                       \
+    {                                                                          \
+        .queue = TASK_QUEUE_INIT((name).queue), .current = NULL                \
+    }
+
+static inline void sched_queue_init(struct sched_queue *q)
+{
+    *q = (struct sched_queue){
+        .queue = (struct task_queue){.head = ((struct list2c){
+                                         .prev = &((*q).queue).head,
+                                         .next = &((*q).queue).head})},
+        .current = ((void *)0)};
+
+    logd("initalized to:%p", q->queue.head.next);
+}
+
+#define SCHED_QUEUE_DEFINE(name)                                               \
+    struct sched_queue name = SCHED_QUEUE_INIT(name)
+
 TASK_QUEUE_DEFINE(scheduler_queue);
-struct task_queue *cpu_scheduler_queue;
+struct sched_queue *cpu_scheduler_queue;
 
 bool scheduler_enabled = false;
 struct task *current_task = NULL;
@@ -432,8 +458,9 @@ void remove_task(struct task *task)
 void add_task(struct task *task)
 {
     IRQ_OFF({
-        struct task_queue current_queue = cpu_scheduler_queue[get_cpu_id()];
-        task_queue_push(&current_queue, task);
+        struct sched_queue current_queue = cpu_scheduler_queue[get_cpu_id()];
+        logd("adding:%p", current_queue.queue.head);
+        task_queue_push(&current_queue.queue, task);
     })
     /* IRQ_OFF({ */
     /*     if (current_task == NULL) */
@@ -446,13 +473,14 @@ void add_task(struct task *task)
 }
 
 int num_task_switches = 0;
-void switch_tasks()
+void switch_tasks(struct sched_queue *queue)
 {
-    struct list2c *temp = current_task->list.next;
+    struct task *current = queue->current;
+    struct list2c *temp = current->list.next;
 
-    if (temp == &scheduler_queue.head)
+    if (temp == &queue->queue.head)
     {
-        temp = scheduler_queue.head.next;
+        temp = queue->queue.head.next;
     }
     /*     if (temp == NULL) */
     /*     { */
@@ -471,30 +499,33 @@ printf("%p\n", new_current->list.next->next);
 printf("start_addr:%p\n", new_current->start_addr);
     */
 
-    current_task = new_current;
+    queue->current = new_current;
 }
 
 struct spinlock scheduler_lock = SPINLOCK_INIT();
 
 void schedule_impl()
 {
-    struct task_queue current_queue = cpu_scheduler_queue[get_cpu_id()];
+    /* logd("scheduling"); */
+    struct sched_queue current_queue = cpu_scheduler_queue[get_cpu_id()];
+    struct task *current = current_queue.current;
     /* preempt_disable(); */
     spinlock_lock(&scheduler_lock);
     irq_disable();
 
     increment_sleep_queue();
+    logd("queue:%p", current_queue);
 
-    if (!scheduler_enabled || current_task == NULL)
+    if (!scheduler_enabled || LIST2C_IS_EMPTY(current_queue.queue.head))
     {
         return;
     }
 
-    save_registers(&current_task->regs);
+    save_registers(&current->regs);
 
-    switch_tasks();
+    switch_tasks(&current_queue);
 
-    if (current_task == NULL)
+    if (current == NULL)
     {
         return;
     }
@@ -502,17 +533,17 @@ void schedule_impl()
     /* printf("%p\n", current_task->pgdir->pgdir); */
     /* printf("%p\n", current_task->pgdir->pgdir_virtual); */
 
-    if (current_task->addr_space.dir != NULL)
+    if (current->addr_space.dir != NULL)
     {
-        addr_space_load(current_task->addr_space);
+        addr_space_load(current->addr_space);
     }
 
-    set_kernel_stack((ptr)current_task->stack);
+    set_kernel_stack((ptr)current->stack);
 
     /* PIC_sendEOI(0); */
 
     spinlock_unlock(&scheduler_lock);
-    load_registers(&current_task->regs);
+    load_registers(&current->regs);
 }
 
 void schedule()
@@ -547,4 +578,14 @@ void print_tasks()
         printf("%p ", t->start_addr);
     }
     printf("\n");
+}
+
+void scheduler_init_smp(size_t num_cpus)
+{
+    logd("scheduler init");
+    cpu_scheduler_queue = malloc(sizeof(struct sched_queue) * num_cpus);
+    for (size_t i = 0; i < num_cpus; i++)
+    {
+        sched_queue_init(&cpu_scheduler_queue[i]);
+    }
 }

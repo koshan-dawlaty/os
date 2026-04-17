@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <gdt.h>
+#include <init.h>
 #include <interrupts/idt.h>
 #include <kernel/addr_space.h>
 #include <kernel/graphics.h>

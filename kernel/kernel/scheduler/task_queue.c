@@ -14,6 +14,7 @@ void task_queue_push(struct task_queue *queue, struct task *t)
     /* logd("%p", t->start_addr); */
     /* printf("start:%p\n", t->start_addr); */
 
+    logd("pushing to:%p", queue->head.next);
     list2c_push(&t->list, &queue->head);
 }
 

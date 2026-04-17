@@ -54,8 +54,6 @@ struct task
     void *start_addr; /* used for debugging */
 };
 
-void switch_tasks();
-
 /* adds a task to the scheduler task queue */
 void add_task(struct task *task);
 
@@ -149,5 +147,7 @@ static inline void preempt_enable()
         irq_enable();
     }
 }
+
+void scheduler_init_smp(size_t num_cpus);
 
 #endif

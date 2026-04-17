@@ -146,6 +146,7 @@ void ap_started(u64 apic_id)
 
     logd("tss:%p", apic_tss[apic_id - 1].rsp0);
     gdt_init_tss(apic_tss[apic_id - 1]);
+    logd("tss done");
 
     /* *(char *)0xffffc000000b8010 = 'a'; */
     void *ptr = malloc(100);
@@ -211,11 +212,12 @@ void bootstrap_init()
               num_cores - 1);
     }
 
+    scheduler_init_smp(num_cores);
     cpu_scheduler_queue = malloc(sizeof(struct task_queue) * num_cores);
-    for (size_t i = 0; i < num_cores; i++)
-    {
-        task_queue_init(&cpu_scheduler_queue[i]);
-    }
+    /* for (size_t i = 0; i < num_cores; i++) */
+    /* { */
+    /*     task_queue_init(&cpu_scheduler_queue[i]); */
+    /* } */
 
     ap_stacks = malloc(sizeof(void *) * num_cores - 1);
     apic_tss = calloc(num_cores, sizeof(struct tss));
