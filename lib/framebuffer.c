@@ -34,21 +34,6 @@ void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
     }
 }
 
-void framebuffer_put_pixel(struct framebuffer *f, int color, int x, int y)
-{
-    if (unlikely(x > f->width || y > f->height || x < 0 || y < 0))
-    {
-        /* for right now just ignore invalid positions */
-        return;
-    }
-
-    size_t location = y * f->pitch + x * f->pixel_width;
-
-    u8 *pixel = f->buffer + location;
-
-    framebuffer_pixel_write(f, pixel, color);
-}
-
 u32 framebuffer_get_pixel(struct framebuffer *fb, size_t x, size_t y)
 {
     if (unlikely(x > fb->width || y > fb->height || x < 0 || y < 0))

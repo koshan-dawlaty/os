@@ -314,6 +314,16 @@ void move_window(struct window_queue_entry *ent, int x, int y,
                    buffer); /* check if this is useful, i think it is */
 }
 
+void move_window_step(struct window_queue_entry *ent, int x, int y,
+                      int num_steps, size_t s)
+{
+    for (size_t i = 0; i < num_steps; i++)
+    {
+        move_window(ent, x / num_steps, y / num_steps, buffer);
+        sleep(s);
+    }
+}
+
 #define WINDOW_DECORATION_ROWS 10
 struct window_queue_entry *focused = NULL;
 
@@ -601,22 +611,19 @@ void process_connection()
 disconnect:;
 
     size_t num_pixels = WIN_H(w) - 1;
-    size_t sleep_ticks = 200;
+    size_t sleep_ticks = 20;
     size_t dist = 100;
+    size_t num_ticks = 10;
 
     for (size_t i = 0; i < 3; i++)
     {
-        move_window(ent, dist, dist, buffer);
+        move_window_step(ent, dist, dist, num_ticks, sleep_ticks);
         sleep(sleep_ticks);
-
-        move_window(ent, -dist, dist, buffer);
+        move_window_step(ent, -dist, dist, num_ticks, sleep_ticks);
         sleep(sleep_ticks);
-
-        move_window(ent, -dist, -dist, buffer);
+        move_window_step(ent, -dist, -dist, num_ticks, sleep_ticks);
         sleep(sleep_ticks);
-
-        move_window(ent, dist, -dist, buffer);
-        sleep(sleep_ticks);
+        move_window_step(ent, dist, -dist, num_ticks, sleep_ticks);
 
         dist += 50;
     }
@@ -906,13 +913,10 @@ int main()
     /* memset(mouse->fb.buffer, 255, 10 * 10 * 4); */
 
     buffer = framebuffer_alloc();
-    draw_window(buffer, mouse);
 
     background = new_window(0, 0, buffer->width, buffer->height);
     framebuffer_draw_rect(&background->fb, 0, 0, WIN_W(background),
-                          WIN_H(background), 0x00FF00);
-
-    draw_window(buffer, background);
+                          WIN_H(background), 0x233826);
 
     /* this might be bad because these are stack allocations */
     mouse_queue_ent = malloc(sizeof(struct window_queue_entry));
@@ -931,6 +935,9 @@ int main()
     background_queue_ent->nonblock_info.current_key = 0;
 
     list2_add_front(&background_queue_ent->list, &window_queue);
+
+    draw_window(buffer, mouse);
+    draw_window(buffer, background);
 
     clone((ptr)mouse_thread);
     clone((ptr)keyboard_thread);
