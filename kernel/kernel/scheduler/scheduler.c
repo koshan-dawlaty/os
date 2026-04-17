@@ -467,6 +467,15 @@ void remove_task(struct task *task)
     preempt_enable();
 }
 
+void task_remove_free(struct task *task)
+{
+    preempt_disable();
+    remove_task_sched_queue(task);
+    free_task(task);
+    remove_task_load(task);
+    preempt_enable();
+}
+
 void add_task(struct task *task)
 {
     IRQ_OFF({
@@ -560,7 +569,7 @@ struct task *get_current_task()
 
 void free_task(struct task *t)
 {
-    printf("free_task\n");
+    addr_space_free(t->addr_space);
     /* TODO: free the pagedir */
     fdlist_free(t->descriptors);
 

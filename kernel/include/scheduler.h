@@ -150,4 +150,9 @@ static inline void preempt_enable()
     }
 }
 
+/*
+ * removes task from scheduler queue, and frees it atomically
+ */
+void task_remove_free(struct task *task);
+
 #endif

@@ -1,4 +1,5 @@
 #include <kernel_syscall.h>
+#include <lib/log.h>
 #include <sched.h>
 #include <stdlib.h>
 #include <sys/syscall.h>
@@ -15,10 +16,8 @@ void exit(int status)
     struct task *t = get_current_task();
 
     printf("exit addr_space:%p\n", &t->addr_space);
-    addr_space_free(t->addr_space);
-    /* TODO: this is not atomic, and should be implemented in one function */
-    remove_task(t);
-    free_task(t);
+    /* addr_space_free(t->addr_space); */
+    task_remove_free(t);
     /*
      * if schedule() is called after this, and this is not done, then schedule()
      * will save the registers of this task to another task, resulting in this

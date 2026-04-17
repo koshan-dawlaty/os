@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include <errno.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
@@ -42,6 +43,7 @@ void addr_space_free(struct addr_space a)
 
         for (size_t i = 0; i < pg->num_pages; i++)
         {
+            /* this might not take care of gfp zones */
             unmap_page(pg->addr + (i * PAGE_SIZE));
         }
 
