@@ -1,4 +1,3 @@
-#include "sys/mman.h"
 #include <extension.h>
 #include <malloc_internal.h>
 #include <sched.h>
@@ -7,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 
 #ifdef __is_libk
 #include <memory/get_free_pages.h>
@@ -145,10 +145,12 @@ heap_block *get_block(size_t size, struct malloc_zone *zone)
     heap_block *block =
         (heap_block *)((uintptr_t)zone->current_page + zone->page_offset);
 
-    block->size = size;
+    size_t total_size = align_long2(size + sizeof(heap_block), ALIGN);
+    block->size = total_size;
     block->next = NULL;
 
-    zone->page_offset += size + sizeof(heap_block);
+    /* zone->page_offset += size + sizeof(heap_block); */
+    zone->page_offset += total_size;
 
     return block;
 }
@@ -202,7 +204,8 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size,
         /*     return current_block->next; */
         /* } */
 
-        if ((current_block)->size == (size_t)align_long2(new_size, ALIGN))
+        if ((current_block)->size ==
+            (size_t)align_long2(new_size + sizeof(struct heap_block), ALIGN))
         {
             (*prev_block) = current_block->next;
 
@@ -254,7 +257,7 @@ void free_zone(void *ptr, struct malloc_zone *zone)
 
     if (block->size > sizeof(struct heap_block))
     {
-        memset(ptr, 'a', block->size);
+        memset(ptr, 'a', block->size - sizeof(struct heap_block));
     }
 }
 
@@ -268,7 +271,7 @@ void *malloc_zone(size_t size, struct malloc_zone *zone)
     {
         /* TODO: can result in some wasted memory */
         heap_block *page = malloc_get_pages((total_size / 4096) + 1, zone);
-        page->size = size;
+        page->size = total_size;
         page->next = NULL;
 
         retval = (void *)(page) + sizeof(heap_block);
@@ -279,7 +282,6 @@ void *malloc_zone(size_t size, struct malloc_zone *zone)
 
     if (total_size < SMALL_BIN_AMOUNT * ALIGN)
     {
-
         block = get_block_from_bin_fast(&(zone->small_bins[total_size / ALIGN]),
                                         size, zone);
     }
@@ -384,7 +386,9 @@ void *realloc_zone(void *ptr, size_t new_size, struct malloc_zone *zone)
 
     heap_block *block = ptr_to_block(ptr);
 
-    size_t copy_size = block->size < new_size ? block->size : new_size;
+    size_t copy_size = (block->size - sizeof(heap_block)) < new_size
+                           ? (block->size - sizeof(heap_block))
+                           : new_size;
     memcpy(new_ptr, ptr, copy_size);
 
     void *retval = new_ptr;

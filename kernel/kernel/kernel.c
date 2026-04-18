@@ -269,6 +269,12 @@ struct task_queue abc = TASK_QUEUE_INIT(abc);
 
 void kmain()
 {
+    /* void *x = malloc(10); */
+    /* logd("x:%p", x); */
+    /* free(x); */
+    /* void *y = malloc(10); */
+    /* logd("y:%p", y); */
+    /* return; */
 
     irq_disable();
     /* malloc(1000000); */
@@ -319,9 +325,7 @@ void kmain()
     logi("starting init task");
 
     int err = execv("/wm", (char *[]){"wm", NULL});
-
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
-
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
     enable_scheduler();

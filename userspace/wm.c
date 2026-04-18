@@ -708,9 +708,10 @@ void mouse_thread()
 {
 
     int mouse_fd = open("/mouse", O_RDONLY);
+    struct mouse_event *ev = malloc(sizeof(struct mouse_event));
+    logd("here");
     while (true)
     {
-        struct mouse_event *ev = malloc(sizeof(struct mouse_event));
         int size = read(mouse_fd, ev, sizeof(struct mouse_event));
 
         if (size != sizeof(struct mouse_event))
@@ -862,9 +863,8 @@ void mouse_thread()
         }
 
         /* printf("%d, %d\n", mouse->x, mouse->y); */
-
-        free(ev);
     }
+    free(ev);
 }
 
 void thread1()
@@ -949,7 +949,7 @@ int main()
     execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
-    execv("imgview", (char *[]){"imgview", "dog.tga", NULL});
+    /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */

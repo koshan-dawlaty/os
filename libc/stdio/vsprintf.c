@@ -314,6 +314,7 @@ that they will not work because the bootstrap has not initialized them
         format++;
     }
 
+    /* this line is where the malloc bug is caused */
     append_buf(&out, &out_len, &capacity, 0);
 
     return out;

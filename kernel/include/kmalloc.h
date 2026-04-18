@@ -17,7 +17,7 @@
  * is in a non-standard header */
 static inline void *kmalloc(size_t size, struct malloc_zone *zone)
 {
-    return malloc_zone(size, zone);
+    return malloc_zone(size, zone); /* might not lock the heap */
 }
 
 static inline void kfree(void *ptr, struct malloc_zone *zone)
