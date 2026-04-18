@@ -1,4 +1,5 @@
 #include "../acpi/acpica.h"
+#include "lib/log.h"
 #include "multiboot.h"
 #include <ata/ata.h>
 #include <compiler.h>
@@ -332,6 +333,7 @@ void kmain()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* while (1) */
+
     /* { */
     /*     schedule(); */
     /* } */

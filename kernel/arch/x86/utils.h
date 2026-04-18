@@ -120,8 +120,9 @@ static inline irq_state_t irq_save()
     return irq_state;
 }
 
-/*
+/**
  * wait for an irq
+ *
  * (this is the "hlt" instruction on x86)
  */
 static inline void irq_wait()

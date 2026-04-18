@@ -1,4 +1,5 @@
 #include "lib/log.h"
+#include "scheduler.h"
 #include <errno.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
@@ -36,14 +37,21 @@ void addr_space_free(struct addr_space a)
 
     struct list *pos;
     struct addr_space_page *prev = NULL;
+
+    struct pagedir *prev_dir = get_current_pagedir();
+    load_pgdir(a.dir);
+    logd("addr:%p",
+         containerof(a.list_head, struct addr_space_page, list)->addr);
     list_for_each(pos, a.list_head)
     {
         struct addr_space_page *pg =
             LIST_ENTRY(pos, struct addr_space_page, list);
 
+        logd("free:%p, a:%p", pg->addr, a.dir);
+
         for (size_t i = 0; i < pg->num_pages; i++)
         {
-            /* this might not take care of gfp zones */
+            /* does not account for gfp zones */
             unmap_page(pg->addr + (i * PAGE_SIZE));
         }
 
@@ -53,12 +61,15 @@ void addr_space_free(struct addr_space a)
         }
         prev = pg;
     }
+    load_pgdir(prev_dir);
 }
 
 int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
                    int flags)
 {
+
     irq_state_t state = irq_save_disable();
+    /* logd("mapping:%p, a:%p c:%p", addr, a->dir, current_addr_space.dir); */
     /* printf("start:%p\n", a->list_head); */
     struct pagedir *prev_dir = get_current_pagedir();
     load_pgdir(a->dir);
@@ -79,7 +90,16 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
     }
     else
     {
+        logd("ovewrite:%p", a->dir);
         a->list_head = &page->list;
+    }
+
+    struct list *pos;
+    list_for_each(pos, a->list_head)
+    {
+        struct addr_space_page *pg =
+            containerof(pos, struct addr_space_page, list);
+        logd("%p, %d, %p", pg->addr, pg->num_pages, a->dir);
     }
 
     load_pgdir(prev_dir);
@@ -96,6 +116,7 @@ int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages)
     irq_state_t state = irq_save_disable();
 
     struct pagedir *prev_dir = get_current_pagedir();
+
     load_pgdir(a->dir);
 
     struct addr_space_page *pg = NULL;
@@ -129,6 +150,18 @@ int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages)
     irq_restore(state);
 
     return 0;
+}
+
+int addr_space_map_current(void *addr, size_t num, int flags)
+{
+    /* struct addr_space a = current_addr_space; */
+    /* struct task *current = get_current_task(); */
+    /* if (current != NULL) */
+    /* { */
+    /*     a = current->addr_space; */
+    /* } */
+
+    return addr_space_map(&current_addr_space, addr, num, flags);
 }
 
 void addr_space_load(struct addr_space a)

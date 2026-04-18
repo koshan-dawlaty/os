@@ -126,7 +126,7 @@ $(BIN)/wm : $(OBJS_START_BIN) $(BIN)/wm.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(STAR
 
 $(BIN)/imgview : $(OBJS_START_BIN) $(BIN)/imgview.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
 
 $(BIN)/tron : $(OBJS_START_BIN) $(BIN)/tron.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)

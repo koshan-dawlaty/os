@@ -1,5 +1,6 @@
 #include "kernel/syscall.h"
 #include "kmalloc.h"
+#include "lib/log.h"
 #include "sleep.h"
 #include "sys/syscall.h"
 #include "unistd.h"
@@ -163,6 +164,7 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     /* TODO: this calls load_pgdir alot */
     struct pagedir *temp = get_current_pagedir();
     addr_space_load(out->addr_space);
+    logd("load:%p", out->addr_space.dir);
     char **args = create_user_args(argc, args_temp);
 
     scheduler_set_regs_arguments(argc, args, ip, &out->regs);
@@ -569,6 +571,7 @@ struct task *get_current_task()
 
 void free_task(struct task *t)
 {
+    logd("THIS IS CALLED");
     addr_space_free(t->addr_space);
     /* TODO: free the pagedir */
     fdlist_free(t->descriptors);

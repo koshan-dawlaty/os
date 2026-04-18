@@ -8,7 +8,7 @@
 # gdb -ex "set \$flags=$QEMU_FLAGS" -x debug.gdb
 #
 
-USER_EXECUTABLE="build/fs-root/wm"
+USER_EXECUTABLE="build/fs-root/imgview"
 USER_EXECUTABLE2="build/fs-root/elf_test"
 
 KERNEL_ADDR=objdump -h isodir/boot/os.kernel | grep \ .text\  | awk '{print $4}'
@@ -21,7 +21,7 @@ mkfifo "${SERIAL_PIPE}.in"
 mkfifo "${SERIAL_PIPE}.out"
 
 # -v is for vertial -b is for above current, -d is to keep old focus
-tmux split-window -v -b -d -t "$TMUX_PANE" "cat $SERIAL_PIPE.out"
+tmux split-window -h -b -d -t "$TMUX_PANE" "cat $SERIAL_PIPE.out"
 
 gdb \
 	-ex "source pretty-print.py" \
