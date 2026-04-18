@@ -40,7 +40,7 @@ void wait_queue_wait(struct wait_queue *queue)
 
     if (current_task->addr_space.dir != NULL)
     {
-        addr_space_load(current_task->addr_space);
+        addr_space_load(&current_task->addr_space);
     }
     set_kernel_stack((ptr)current_task->stack);
 

@@ -11,7 +11,8 @@
 #include <utils.h>
 extern struct pagedir init_pgdir;
 
-struct addr_space current_addr_space = {.dir = &init_pgdir, .list_head = NULL};
+struct addr_space *current_addr_space =
+    &(struct addr_space){.dir = &init_pgdir, .list_head = NULL};
 
 struct addr_space addr_space_alloc()
 {
@@ -40,14 +41,10 @@ void addr_space_free(struct addr_space a)
 
     struct pagedir *prev_dir = get_current_pagedir();
     load_pgdir(a.dir);
-    logd("addr:%p",
-         containerof(a.list_head, struct addr_space_page, list)->addr);
     list_for_each(pos, a.list_head)
     {
         struct addr_space_page *pg =
             LIST_ENTRY(pos, struct addr_space_page, list);
-
-        logd("free:%p, a:%p", pg->addr, a.dir);
 
         for (size_t i = 0; i < pg->num_pages; i++)
         {
@@ -90,7 +87,6 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
     }
     else
     {
-        logd("ovewrite:%p", a->dir);
         a->list_head = &page->list;
     }
 
@@ -99,7 +95,7 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
     {
         struct addr_space_page *pg =
             containerof(pos, struct addr_space_page, list);
-        logd("%p, %d, %p", pg->addr, pg->num_pages, a->dir);
+        /* logd("%p, %d, %p", pg->addr, pg->num_pages, a->dir); */
     }
 
     load_pgdir(prev_dir);
@@ -161,10 +157,10 @@ int addr_space_map_current(void *addr, size_t num, int flags)
     /*     a = current->addr_space; */
     /* } */
 
-    return addr_space_map(&current_addr_space, addr, num, flags);
+    return addr_space_map(current_addr_space, addr, num, flags);
 }
 
-void addr_space_load(struct addr_space a)
+void addr_space_load(struct addr_space *a)
 {
     current_addr_space = a;
     /* struct task *current = get_current_task(); */
@@ -172,5 +168,10 @@ void addr_space_load(struct addr_space a)
     /* { */
     /*     current->addr_space = a; */
     /* } */
-    load_pgdir(a.dir);
+    load_pgdir(a->dir);
+}
+
+struct addr_space *get_current_addr_space()
+{
+    return current_addr_space;
 }

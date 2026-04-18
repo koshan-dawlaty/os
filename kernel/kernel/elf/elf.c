@@ -75,7 +75,7 @@ write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
 
             irq_state_t state = irq_save_disable();
             struct pagedir *temp_pgdir = get_current_pagedir();
-            addr_space_load(t->addr_space);
+            addr_space_load(&t->addr_space);
             if (header->size_memory > header->size_file)
             {
                 for (size_t i = 0; i < header->size_memory - header->size_file;

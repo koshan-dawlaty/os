@@ -109,8 +109,7 @@ void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
         /* FIXME: stupid */
         if ((zone->pg_flags & PAGING_USER))
         {
-            addr_space_map(&current_addr_space, virtual_addr, 1,
-                           zone->pg_flags);
+            addr_space_map_current(virtual_addr, 1, zone->pg_flags);
         }
         else
         {

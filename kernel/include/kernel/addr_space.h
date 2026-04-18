@@ -21,9 +21,9 @@ struct addr_space
 struct addr_space addr_space_alloc();
 void addr_space_free(struct addr_space a);
 
-extern struct addr_space current_addr_space;
+struct addr_space *get_current_addr_space();
 
-void addr_space_load(struct addr_space a);
+void addr_space_load(struct addr_space *a);
 
 int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
                    int flags);

@@ -17,15 +17,8 @@
 void *mmap(void *addr, size_t len, int prot, int flags, off_t off)
 {
 #ifdef __is_libk
-    logd("mmap:%p, %p", current_addr_space.dir, addr);
-    /* for (size_t i = 0; i < (len / 4096) + 1; i++) */
-    /* { */
-    /* TODO: make a function to map to the current addr_space because this
-     * is stupid and will probably break if current_addr_space is not
-     * updated correctly */
-    addr_space_map(&get_current_task()->addr_space, (void *)addr,
-                   (len / 4096) + 1, PAGING_USER | PAGING_WRITEABLE);
-    /* } */
+    addr_space_map_current((void *)addr, (len / 4096) + 1,
+                           PAGING_USER | PAGING_WRITEABLE);
     return addr;
 #else
     syscall_wrapper_asm(SYS_mmap, (uintptr_t)addr, len, 0, 0, 0);
