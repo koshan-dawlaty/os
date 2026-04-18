@@ -1,14 +1,15 @@
 #include "ext2.h"
-#include "kernel/types.h"
-#include "kernel/utils.h"
-#include "panic.h"
-#include "utils.h"
-#include "vfs.h"
+#include <kernel/types.h>
+#include <kernel/utils.h>
+#include <lib/utils.h>
+#include <panic.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <utils.h>
+#include <vfs.h>
 
 struct inode *ext2_inode_alloc(struct superblock *sb, u16 type)
 {
@@ -228,8 +229,9 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
 
         if (i + len == EXT2_BLOCK_SIZE(sb))
         {
+            size_t new_len = ptr_align(8 + (*(u8 *)(raw_entry + 6)), 4);
 
-            size_t new_len = align_long(8 + (*(u8 *)(raw_entry + 6)), 4);
+            logd("name:%s, %d", raw_entry + 8, i);
 
             i += new_len;
             *(u16 *)(raw_entry + 4) = new_len;
@@ -237,10 +239,11 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
             break;
         }
         /* printf("name:%s\n", raw_entry + 8); */
-        /* logd("name:%s", raw_entry + 8); */
 
         i += len;
     }
+
+    logd("%d", i);
 
     size_t buf_len = align_long((strlen(name) + 8), 4);
     u8 *new_buf = buf + i;
@@ -248,6 +251,7 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
     struct inode *new_node = ext2_inode_alloc(sb, ext2_get_inode_type(type));
 
     memcpy(new_buf + 8, name, strlen(name));
+    logd("%s", new_buf + 8);
     *(u32 *)(new_buf) = new_node->number;
     *(u16 *)(new_buf + 4) = EXT2_BLOCK_SIZE(sb) - i;
     *(u8 *)(new_buf + 6) = strlen(name);

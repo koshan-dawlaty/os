@@ -87,11 +87,11 @@ void key_thread()
 {
     while (1)
     {
-        logd("getting key");
+        /* logd("getting key"); */
         /* user_mutex_lock(mutex); */
         char c = wm_get_key(client);
         /* user_mutex_unlock(mutex); */
-        logd("done getting key");
+        /* logd("done getting key"); */
         if ((u8)c == 0xFF)
         {
             break;
@@ -230,11 +230,11 @@ int main()
         {
             goto read_and_draw_char;
         }
-        logd("rendering");
+        /* logd("rendering"); */
         user_mutex_lock(mutex);
         wm_render(client);
         user_mutex_unlock(mutex);
-        logd("done rendering");
+        /* logd("done rendering"); */
     }
 
     logd("server disconnected");

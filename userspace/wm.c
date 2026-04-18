@@ -709,7 +709,6 @@ void mouse_thread()
 
     int mouse_fd = open("/mouse", O_RDONLY);
     struct mouse_event *ev = malloc(sizeof(struct mouse_event));
-    logd("here");
     while (true)
     {
         int size = read(mouse_fd, ev, sizeof(struct mouse_event));

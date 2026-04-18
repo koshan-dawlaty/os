@@ -276,6 +276,25 @@ void kmain()
     /* logd("y:%p", y); */
     /* return; */
 
+    DIR *d = opendir("/");
+    struct dirent *e = readdir(d);
+
+    while (e != NULL)
+    {
+        /* logd("%s ", e->d_name); */
+        e = readdir(d);
+    }
+
+    creat("abc", 0);
+
+    d = opendir("/");
+    e = readdir(d);
+    while (e != NULL)
+    {
+        logd("%s ", e->d_name);
+        e = readdir(d);
+    }
+
     irq_disable();
     /* malloc(1000000); */
     /* malloc(1000000); */
