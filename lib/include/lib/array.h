@@ -18,8 +18,10 @@ struct array
 int array_add(struct array *array, const void *data, size_t size);
 
 /*
- * you dont own the returned pointer, item_len is the length of one item in the
- * array, indexes as buffer + index * item_len
+ * you dont own the returned pointer
+ *
+ * item_len is the length of one item in the array, indexes as buffer + index *
+ * item_len
  */
 void *array_get(struct array *array, size_t index, size_t item_len);
 

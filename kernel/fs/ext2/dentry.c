@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <kernel/types.h>
 #include <kernel/utils.h>
+#include <lib/log.h>
 #include <panic.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -60,6 +61,7 @@ read_entry:;
         /* error */
         return (void *)current_node;
     }
+
     struct dentry *out = new_dentry(
         new_name, entry, ext2_get_vfs_node(node_index, current_node, sb),
         ext2_get_dentry_type(current_node));

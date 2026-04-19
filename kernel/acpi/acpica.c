@@ -82,8 +82,6 @@ void acpica_init()
         panic("ACPI table init failed");
     }
 
-    printf("test\n");
-
     status = AcpiLoadTables();
     if (ACPI_FAILURE(status))
     {

@@ -147,6 +147,7 @@ void kernel_init()
     init_idt();
 
 #ifndef CONFIG_PLEASE_DONT_USE_THE_SERIAL_PORT
+    printf("init\n");
     serial_init(0x3f8);
 #endif
     /* irq_enable(); */
@@ -327,7 +328,6 @@ void kmain()
     /* printf("%p, %p\n", read, write); */
 
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
-    logi("starting init task");
 
     int err = execv("/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */

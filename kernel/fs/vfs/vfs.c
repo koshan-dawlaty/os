@@ -69,9 +69,11 @@ struct superblock *new_superblock(size_t blocksize, void *fs_private,
     return out;
 }
 
-dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type)
+struct dentry *new_dentry(char *name, dentry *parent, inode *inode,
+                          dentry_type type)
 {
-    dentry *out = malloc(sizeof(dentry));
+    /* logd("creating dentry with name:%s", name); */
+    struct dentry *out = malloc(sizeof(dentry));
 
     out->inode = inode;
     out->name = name;

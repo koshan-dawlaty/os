@@ -479,10 +479,6 @@ size_t x = 400;
 
 void process_connection()
 {
-    while (true)
-    {
-        sched_yield();
-    }
     int socket;
     socket = current_client;
     int key_socket = current_key_socket;
@@ -661,7 +657,6 @@ void keyboard_thread()
 
     while (true)
     {
-        logd("start of loop");
         char c = getchar();
 
         if (c == '\t')
@@ -962,6 +957,7 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("/explore", (char *[]){"explore", NULL});
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */

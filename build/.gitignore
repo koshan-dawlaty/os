@@ -16,6 +16,7 @@ fs-root/touch
 fs-root/rm
 fs-root/ls
 fs-root/imgview
+fs-root/explore
 fs-root/wm
 *.psfu
 fs-root/*.tga

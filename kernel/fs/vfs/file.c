@@ -266,7 +266,7 @@ int read_dir(struct file *dir, struct dirent *buf, size_t number)
             return GET_ERR(entry);
         }
 
-        memcpy(buf[i].d_name, entry->name, strlen(entry->name));
+        memcpy(buf[i].d_name, entry->name, strlen(entry->name) + 1);
 
         if (DENTRY_TYPE_HAS_INODE(entry->type))
         {

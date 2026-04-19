@@ -76,6 +76,7 @@ BINARIES=\
 	ls \
 	wm \
 	tron \
+	explore \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -129,6 +130,10 @@ $(BIN)/imgview : $(OBJS_START_BIN) $(BIN)/imgview.o $(BIN)/wm_lib.o $(DEPENDENCI
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
 
 $(BIN)/tron : $(OBJS_START_BIN) $(BIN)/tron.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+
+$(BIN)/explore : $(OBJS_START_BIN) $(BIN)/explore.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
 
