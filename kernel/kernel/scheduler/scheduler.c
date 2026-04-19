@@ -66,6 +66,8 @@ void new_task_usermode_start(int argc, char **argv, ptr addr)
 void user_thread_kernel_start(ptr addr)
 {
 
+    logd("user thread:%p", addr);
+
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
 
@@ -211,10 +213,11 @@ struct task *user_thread_alloc(ptr ip)
 
     struct task *out = malloc(sizeof(struct task));
     out->preempt_count = 0;
+    out->list = LIST2C_INIT();
 
     out->start_addr = (void *)ip;
 
-    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x60);
     out->bp = (ptr)out->stack;
     out->descriptors = new_fdlist();
 
@@ -557,6 +560,7 @@ void schedule_impl()
 void schedule()
 {
 
+    logd("schedule");
     /* preempt_disable(); */
     irq_disable();
     schedule_impl();

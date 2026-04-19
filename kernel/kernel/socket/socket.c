@@ -44,6 +44,7 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
         wait_queue_wait(&sock->recv_queue);
         if (sock->is_closing)
         {
+            logd("socket was closing");
             return -ENOTSOCK;
         }
     }
@@ -83,11 +84,18 @@ int unix_socket_close(struct file *f)
     logd("socket closed");
 
     struct unix_socket *sock = f->file_private;
-
     sock->is_closing = true;
+
+    struct list2c *recv_queue = &sock->recv_queue.queue.head;
+    struct task *t = containerof(recv_queue->next, struct task, list);
+
+    logd("task:%p", t->start_addr);
+    logd("%p, %p, %p", recv_queue, recv_queue->next, recv_queue->next->next);
+    logd("%p", LIST2C_IS_EMPTY(sock->send_queue.queue.head));
 
     wait_queue_wake_all(&sock->recv_queue);
     wait_queue_wake_all(&sock->send_queue);
+
     /* TODO: we want to free the socket, but need to wait for everyone waiting
      * on the queue to be done */
     /* this could cause issues */

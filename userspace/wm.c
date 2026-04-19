@@ -479,6 +479,10 @@ size_t x = 400;
 
 void process_connection()
 {
+    while (true)
+    {
+        sched_yield();
+    }
     int socket;
     socket = current_client;
     int key_socket = current_key_socket;
@@ -577,6 +581,7 @@ void process_connection()
             if (input == '\\')
             {
                 /* TODO: this might not properly close the socket */
+
                 close(conn->client_socket);
                 goto disconnect;
             }
@@ -656,6 +661,7 @@ void keyboard_thread()
 
     while (true)
     {
+        logd("start of loop");
         char c = getchar();
 
         if (c == '\t')
@@ -694,7 +700,6 @@ void keyboard_thread()
                     struct wm_connection *conn = focused->conn;
                     current_keyboard_char = c;
 
-                    /* printf("sending key to:%d\n", conn->input_socket); */
                     send(conn->client_key_socket, &c, sizeof(char));
                 }
             }
@@ -868,12 +873,17 @@ void mouse_thread()
 
 void thread1()
 {
-    /* printf("thread\n"); */
-
+    printf("thread\n");
     while (1)
     {
         sched_yield();
+        logd("test");
     }
+
+    /* while (1) */
+    /* { */
+    /*     sched_yield(); */
+    /* } */
 
     exit(0);
 }
@@ -884,6 +894,12 @@ int main()
 
     /* printf("window manager\n"); */
     /* clone((ptr)thread1); */
+    /* sched_yield(); */
+    /* while (1) */
+    /* { */
+    /*     /1* sched_yield(); *1/ */
+    /* } */
+    /* exit(1); */
 
     int server_sock = syscall_wrapper_asm(SYS_create_socket_fs,
                                           (ptr) "wm_socket", 0, 0, 0, 0);
@@ -945,8 +961,8 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
-    execv("/elf_test", (char *[]){"elf_test", NULL});
-    /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    execv("imgview", (char *[]){"imgview", "dog.tga", NULL});
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */

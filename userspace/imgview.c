@@ -86,11 +86,13 @@ int main(int argc, char **argv)
     }
 
     sched_yield();
+    wm_render(client);
 
     while (1)
     {
         wm_render(client);
         char c = wm_get_key(client);
+        logd("a:%c", c);
         if (c == 'q' || (u8)c == 0xFF)
         {
             break;

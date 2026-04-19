@@ -144,6 +144,8 @@ void kernel_init()
         draw_background(f);
     }
 
+    *(char *)(0xC03FF000) = 'a';
+
     init_gdt();
     init_idt();
 
@@ -269,31 +271,15 @@ struct task_queue abc = TASK_QUEUE_INIT(abc);
 
 void kmain()
 {
+
+    /* logd("%d", KERNEL_SIZE); */
+
     /* void *x = malloc(10); */
     /* logd("x:%p", x); */
     /* free(x); */
     /* void *y = malloc(10); */
     /* logd("y:%p", y); */
     /* return; */
-
-    DIR *d = opendir("/");
-    struct dirent *e = readdir(d);
-
-    while (e != NULL)
-    {
-        /* logd("%s ", e->d_name); */
-        e = readdir(d);
-    }
-
-    creat("abc", 0);
-
-    d = opendir("/");
-    e = readdir(d);
-    while (e != NULL)
-    {
-        logd("%s ", e->d_name);
-        e = readdir(d);
-    }
 
     irq_disable();
     /* malloc(1000000); */
@@ -334,6 +320,11 @@ void kmain()
 #ifndef CONFIG_PLEASE_DONT_USE_THE_SERIAL_PORT
     create_device("/serial0", serial_cdev_create(0x3F8));
 #endif
+
+    /* ktask_run(t1, NULL); */
+    /* enable_scheduler(); */
+    /* irq_enable(); */
+    /* return; */
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */

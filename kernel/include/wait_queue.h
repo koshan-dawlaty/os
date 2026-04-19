@@ -2,6 +2,7 @@
 #define WAIT_QUEUE_H
 
 #include <lib/list.h>
+#include <lib/log.h>
 #include <stdlib.h>
 #include <task_queue.h>
 
@@ -39,6 +40,7 @@ void wait_queue_done(struct wait_queue *);
 
 static inline void wait_queue_wake_all(struct wait_queue *queue)
 {
+    logd("wait_queue_wake_all");
     while (!WAIT_QUEUE_EMPTY(*queue))
     {
         wait_queue_done(queue);
