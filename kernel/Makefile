@@ -111,6 +111,8 @@ drivers/character/keyboard/device.o \
 drivers/device.o \
 \
 acpi/os_layer/os_layer.o \
+acpi/acpica.o \
+
 
 
 

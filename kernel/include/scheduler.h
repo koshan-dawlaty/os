@@ -1,7 +1,6 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include "utils.h"
 #include <compiler.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
@@ -10,6 +9,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <task_queue.h>
+#include <utils.h>
 #include <vfs.h>
 
 /* TODO: mabye do the architecture specific part of this architecture

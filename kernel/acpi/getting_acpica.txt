@@ -1,0 +1,10 @@
+git clone https://github.com/acpica/acpica
+
+getting c files:
+	delete folders in source other than components and include
+	go into components and delete debugger and dispatcher
+	delete resources/rsdump.c
+
+move source/* to kernel/acpi/acpica
+move acpica/include/* to acpica/
+add include for os_layer.h to acpica/platform/acenv.h

@@ -1,5 +1,4 @@
 #include "../acpi/acpica.h"
-#include "lib/log.h"
 #include "multiboot.h"
 #include <ata/ata.h>
 #include <compiler.h>
@@ -144,8 +143,6 @@ void kernel_init()
         draw_background(f);
     }
 
-    *(char *)(0xC03FF000) = 'a';
-
     init_gdt();
     init_idt();
 
@@ -271,8 +268,6 @@ struct task_queue abc = TASK_QUEUE_INIT(abc);
 
 void kmain()
 {
-
-    /* logd("%d", KERNEL_SIZE); */
 
     /* void *x = malloc(10); */
     /* logd("x:%p", x); */
