@@ -15,8 +15,6 @@ struct pagedir
     /* the virtual address of the page directory in the initial page directory
      */
     ptr *pgdir_virtual;
-    /* used to map physical pages */
-    uint32_t *physical_pagetables;
     /* virtual address of the self referencing page table */
     uint32_t *pagetable;
 };

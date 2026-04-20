@@ -1,12 +1,13 @@
-#include "kernel/paging.h"
-#include "gdt.h"
-#include "interrupts/idt.h"
-#include "kernel/addr_space.h"
-#include "kernel/multiboot.h"
-#include "kernel/tty.h"
-#include "kernel/utils.h"
 #include "memory/paging_flags.h"
 #include "memory/paging_internal.h"
+#include <gdt.h>
+#include <interrupts/idt.h>
+#include <kernel/addr_space.h>
+#include <kernel/multiboot.h>
+#include <kernel/paging.h>
+#include <kernel/tty.h>
+#include <kernel/utils.h>
+#include <lib/assert.h>
 #include <memory/get_free_pages.h>
 
 #include "multiboot.h"
@@ -29,7 +30,7 @@ typedef uint32_t table_entry;
 extern long paging_page_table_addr;
 #define paging_page_table ((table_entry *)&paging_page_table_addr)
 
-#define PAGE_SIZE 4096
+/* #define PAGE_SIZE 4096 */
 
 #ifdef CONFIG_x86_64
 #define DIRECTORY_ADDR ((directory_entry *)0xffffc00000001000)
@@ -37,7 +38,10 @@ extern long paging_page_table_addr;
 #define DIRECTORY_ADDR ((directory_entry *)0xFFFFF000)
 #endif
 
-#define NUM_PAGES 4096
+/* TODO: write a good physical page allocator instead of relying on increasing
+ * this limit, it is stupid */
+/* #define NUM_PAGES 4096 */
+#define NUM_PAGES 8000
 
 #define FREE 0
 #define IN_USE 1
@@ -66,12 +70,12 @@ void *get_free_phys_page_dir(struct pagedir dir)
         i++;
     }
 
+    if (i >= NUM_PAGES - 3)
+    {
+        PANIC("ran out of space in get_free_phys_pages");
+    }
+
     phys_free_page_bitmap[i / 8] |= IN_USE << (i % 8);
-
-    dir.physical_pagetables[i] =
-        ((ptr)phys_page_start + (i * PAGE_SIZE)) | 0x03;
-
-    /* printf("test\n"); */
 
     void *addr = (void *)(phys_page_start + (i * PAGE_SIZE));
 
@@ -121,8 +125,6 @@ void *get_free_phys_pages(struct pagedir *dir, size_t amount)
         /* printf("j is:%d\n", j); */
 
         /* printf("virtual:%p\nphysical:%p\n", virtual_addr, physical_addr); */
-        dir->physical_pagetables[j] =
-            ((ptr)phys_page_start + (j * PAGE_SIZE)) | 0x03;
         phys_free_page_bitmap[j / 8] |= (1 << (j % 8));
     }
 
@@ -150,9 +152,6 @@ struct pagedir *new_pagedir()
     struct pagedir *out = malloc(sizeof(struct pagedir));
     out->pgdir_virtual = get_free_pages(1);
     out->pgdir = get_physaddr(out->pgdir_virtual);
-    /* TODO: FIXME: TODO: FIXME: make this dynamic, it runs out of space and
-     * breaks everything */
-    out->physical_pagetables = get_free_pages(30);
     out->pagetable = get_free_pages(1);
 
 #ifdef CONFIG_x86_32
@@ -190,7 +189,7 @@ void init_paging()
     init_pgdir =
         (struct pagedir){.pgdir = directory_physical,
                          .pgdir_virtual = (void *)DIRECTORY_ADDR,
-                         .physical_pagetables = paging_page_table,
+                         /* .physical_pagetables = paging_page_table, */
                          /* will break if this is not the current pagedir */
                          .pagetable = (void *)0xFFC00000};
 
