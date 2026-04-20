@@ -1,5 +1,7 @@
 #include "wm_lib.h"
+#include <assert.h>
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <init.h>
 #include <lib/array.h>
@@ -7,6 +9,7 @@
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <types.h>
 #include <unistd.h>
@@ -45,6 +48,11 @@ void render(struct wm_client c, struct array *ents, size_t cursor_pos)
 struct array read_dir_path(const char *path)
 {
     DIR *d = opendir(path);
+    if (d == NULL)
+    {
+        loge("error when reading dir:%s", strerror(errno));
+    }
+    logd("dir:%p", d->fd);
 
     struct array ents = ARRAY_INIT();
     struct dirent *e = readdir(d);
@@ -83,7 +91,10 @@ int main(int argc, char **argv)
         switch (c)
         {
         case 'j':
-            pos++;
+            if (pos < ARRAY_LEN(ents, sizeof(struct dirent)) - 1)
+            {
+                pos++;
+            }
             break;
         case 'k':
             if (pos != 0)
@@ -93,7 +104,8 @@ int main(int argc, char **argv)
             break;
         case '\n':;
             struct dirent *e = array_get(&ents, pos, sizeof(struct dirent));
-            struct array new_ents = read_dir_path(e->d_name);
+            chdir(e->d_name);
+            struct array new_ents = read_dir_path(".");
             array_free(&ents);
             ents = new_ents;
             pos = 0;
@@ -101,6 +113,8 @@ int main(int argc, char **argv)
             break;
         }
 
+        /* could only update area that was changed here, but it probably does
+         * not matter */
         render(client, &ents, pos);
     }
 

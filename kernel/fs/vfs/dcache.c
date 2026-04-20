@@ -287,13 +287,17 @@ struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
               being read from  */
     {
         context->dcache_offset++;
-        return entry;
+        /* TODO: DONT ALLOCATE A DENTRY THIS IS STUPID */
+        return new_dentry(".", entry->parent, entry->inode, entry->type);
     }
     else if (context->dcache_offset == 1) /* equivalent to the path being "..",
               so return the directory that is being read from's parent  */
     {
         context->dcache_offset++;
-        return entry->parent;
+        struct dentry *parent = entry->parent;
+
+        /* TODO: DONT ALLOCATE A DENTRY THIS IS STUPID */
+        return new_dentry("..", parent->parent, parent->inode, parent->type);
     }
 
     struct dcache_dir *dir = get_dcache_dir(entry);

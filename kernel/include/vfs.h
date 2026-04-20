@@ -82,6 +82,12 @@ typedef enum dentry_type
  */
 #define DENTRY_TYPE_HAS_INODE(type) type == DENTRY_FILE || type == DENTRY_DIR
 
+/*
+ * true if it is a mount point or directory (things that act like a directory
+ */
+#define DENTRY_TYPE_LIKE_DIR(type)                                             \
+    (type == DENTRY_MOUNT_POINT || type == DENTRY_DIR)
+
 typedef struct dentry
 {
     char *name;

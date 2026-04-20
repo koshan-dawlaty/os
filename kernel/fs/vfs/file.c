@@ -191,6 +191,15 @@ struct file *open_file(const char *path, int flags)
         return (void *)dentry;
     }
 
+    if (!DENTRY_TYPE_LIKE_DIR(dentry->type) && (flags & O_DIRECTORY))
+    {
+        return ERR_PTR(-ENOTDIR);
+    }
+    else if (DENTRY_TYPE_LIKE_DIR(dentry->type) && !(flags & O_DIRECTORY))
+    {
+        return ERR_PTR(-EISDIR);
+    }
+
     struct file *out = new_file(dentry, flags);
 
     switch (dentry->type)

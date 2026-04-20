@@ -160,7 +160,7 @@ TEST(stdlib_FILE, {
 TEST(vfs_read_dir, {
     /* this should use O_SEARCH */
     /* struct file *f = open_file("/", O_SEARCH); */
-    struct file *f = open_file("/", O_RDWR);
+    struct file *f = open_file("/", O_DIRECTORY);
 
     size_t num = 2;
     /* we want this to be zeroed because we check if the name is null later */
@@ -189,7 +189,7 @@ TEST(vfs_create_readdir, {
     mkdir("dirtest123", 0);
     creat(file_one, 0);
     creat(file_two, 0);
-    struct file *f = open_file(dirname, O_RDWR);
+    struct file *f = open_file(dirname, O_DIRECTORY);
 
     size_t num = 4;
     /* we want this to be zeroed because we check if the name is null later */

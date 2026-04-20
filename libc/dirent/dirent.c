@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <dirent.h>
+#include <err_ptr.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <kernel_syscall.h>
@@ -15,7 +16,11 @@
 long get_dents(int fd, struct dirent *buf, size_t num)
 {
 #ifdef __is_libk
-    file *f = lookup_descriptor(fd);
+    struct file *f = lookup_descriptor(fd);
+    if (f == NULL)
+    {
+        return -EBADF;
+    }
     /* printf("file:%p\n", f); */
     /* printf("fd:%d\n", fd); */
     long retval = read_dir(f, buf, num);
@@ -34,7 +39,16 @@ SYSCALL_DEFINE3(SYS_getdents, long, int, fd, struct dirent *, buf, size_t, num)
 DIR *opendir(const char *name)
 {
     DIR *out = malloc(sizeof(DIR));
-    out->fd = open(name, O_RDONLY);
+    int fd = open(name, O_DIRECTORY);
+    if (fd >= 0)
+    {
+        out->fd = fd;
+    }
+    else
+    {
+        return NULL;
+    }
+
     return out;
 }
 

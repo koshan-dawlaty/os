@@ -3,6 +3,7 @@
 #include "vfs.h"
 #include "vfs_internal.h"
 #include <err_ptr.h>
+#include <lib/log.h>
 #include <socket.h>
 
 #include <errno.h>
@@ -21,6 +22,7 @@ static dentry *parse_dentries_component(dentry *dir, const char *component)
 
     while (ent != NULL && !IS_ERR(ent))
     {
+        /* logd("read:%s", ent->name); */
 
         if (!strcmp(ent->name, component))
         {

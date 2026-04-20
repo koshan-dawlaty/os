@@ -183,7 +183,7 @@ void register_filesystem(struct fs_type *type)
  * The issue with this is that both dcache and the filesystem have duplicate
  * information
  */
-struct dentry *dir_readdir(dentry *entry, struct dir_context *context)
+struct dentry *dir_readdir(struct dentry *entry, struct dir_context *context)
 {
 
     ASSERT(entry->type == DENTRY_DIR || entry->type == DENTRY_MOUNT_POINT,
