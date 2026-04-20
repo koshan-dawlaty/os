@@ -2,26 +2,30 @@
 #define ASSERT_H
 
 #include <lib/utils.h>
-#include <panic.h>
 
-void assert_panic(const char *format, ...);
+void __panic_func(const char *format, ...);
+
+#define __panic_impl(format, ...)                                              \
+    __panic_func(__FILE__ ":" MACRO_STR(__LINE__) " " format __VA_OPT__(, )    \
+                     __VA_ARGS__)
 
 /* assert that something is true, if it is not, panic */
 #define ASSERT(condition, message, ...)                                        \
     if (!(condition))                                                          \
     {                                                                          \
-        assert_panic("assertion failed\n" __FILE__ ":" MACRO_STR(              \
-            __LINE__) " " message __VA_OPT__(, ) __VA_ARGS__);                 \
+        __panic_impl("assertion failed\n" message __VA_OPT__(, ) __VA_ARGS__); \
     }
+
+#define PANIC(message, ...) __panic_impl(message __VA_OPT__(, ) __VA_ARGS__)
+/* preferred to use PANIC */
+#define panic(message, ...) __panic_impl(message __VA_OPT__(, ) __VA_ARGS__)
 
 /* panics if pointer is null */
 #define NOT_NULL(pointer, message, ...)                                        \
-    ASSERT(pointer != NULL,                                                    \
-           "pointer was null\n" message __VA_OPT__(, ) __VA_ARGS__)
+    ASSERT(pointer != NULL, "pointer was null\n" message, __VA_ARGS__)
 
 #define UNREACHABLE(message, ...)                                              \
-    assert_panic("unreachable code\n" __FILE__ ":" MACRO_STR(                  \
-        __LINE__) " " message __VA_OPT__(, ) __VA_ARGS__);                     \
+    __panic_impl("unreachable code\n" message __VA_OPT__(, ) __VA_ARGS__);     \
     __builtin_unreachable()
 
 #endif

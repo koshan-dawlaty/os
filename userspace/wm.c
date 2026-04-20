@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <init.h>
 #include <lib/array.h>
+#include <lib/assert.h>
 #include <lib/framebuffer.h>
 #include <lib/list.h>
 #include <lib/log.h>
@@ -886,6 +887,8 @@ void thread1()
 int main()
 {
     init_libc();
+
+    /* panic("abc:%d", 123); */
 
     /* printf("window manager\n"); */
     /* clone((ptr)thread1); */

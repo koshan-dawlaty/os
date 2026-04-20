@@ -1,4 +1,5 @@
 #include <lib/assert.h>
+#include <lib/log.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,7 +8,7 @@
 #include <panic.h>
 #endif
 
-void assert_panic(const char *format, ...)
+void __panic_func(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -15,6 +16,7 @@ void assert_panic(const char *format, ...)
     vpanic(format, args);
 #else
     vprintf(format, args);
+    vlog_level(LOG_ERROR, format, args);
     exit(1);
 #endif
     va_end(args);

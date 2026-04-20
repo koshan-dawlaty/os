@@ -52,7 +52,6 @@ struct array read_dir_path(const char *path)
     {
         loge("error when reading dir:%s", strerror(errno));
     }
-    logd("dir:%p", d->fd);
 
     struct array ents = ARRAY_INIT();
     struct dirent *e = readdir(d);
