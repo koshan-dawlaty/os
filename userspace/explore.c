@@ -199,10 +199,11 @@ int main(int argc, char **argv)
                     wm_get_key(client);
                     break;
                 case EXPLORER_IMAGE:
-                    execv("imgview", (char *[]){"imgview", e->d_name});
+                    execv("imgview", (char *[]){"imgview", e->d_name, NULL});
                     break;
                 case EXPLORER_EXECUTABLE:
-                    execv(e->d_name, (char *[]){e->d_name});
+                    logd("execving:%s", e->d_name);
+                    execv(e->d_name, (char *[]){e->d_name, NULL});
                     break;
                 case EXPLORER_INVALID:
                     PANIC("invalid filetype from fd:%d", fd);

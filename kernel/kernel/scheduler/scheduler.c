@@ -140,7 +140,9 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
         .esp = (ptr)out->stack,
         .ebp = (ptr)out->stack,
         .eflags = 1 << 9,
+#ifdef CONFIG_x86_64
         .edi = (ip),
+#endif
     };
 
     /* out->working_dir = get_root_dir(); */
@@ -151,7 +153,9 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     /* edx is the third argument first and second are set later in this
      * function
      */
-    /* *(ptr *)(out->stack + 8) = ip; */
+    /* #ifdef CONFIG_x86_32 */
+    /*     *(ptr *)(out->stack + sizeof(ptr) * 2) = ip; */
+    /* #endif */
 
     out->addr_space = addr_space_alloc();
 
@@ -225,7 +229,9 @@ struct task *user_thread_alloc(ptr ip)
         .esp = (ptr)out->stack,
         .ebp = (ptr)out->stack,
         .eflags = 1 << 9,
+#ifdef CONFIG_x86_64
         .edi = (ip),
+#endif
     };
 
     /* out->working_dir = get_root_dir(); */
@@ -236,7 +242,10 @@ struct task *user_thread_alloc(ptr ip)
     /* edx is the third argument first and second are set later in this
      * function
      */
-    *(ptr *)(out->stack + 8) = ip;
+    *(ptr *)(out->stack + sizeof(ptr)) = ip;
+#ifdef CONFIG_x86_32
+    *(ptr *)(out->stack + sizeof(ptr) * 2) = ip;
+#endif
 
     out->addr_space = current_addr_space;
 

@@ -53,6 +53,12 @@ endif
 
 
 
+ifeq ($(findstring $(ACPI_FLAG), $(CFLAGS)), $(ACPI_FLAG))
+ACPI_OBJS_EXTRA=\
+acpi/os_layer/os_layer.o \
+acpi/acpica.o
+endif
+
 $(info $(TEST_OBJS))
 
 KERNEL_OBJS= \
@@ -110,9 +116,7 @@ drivers/character/terminal/device.o \
 drivers/character/keyboard/device.o \
 drivers/device.o \
 \
-acpi/os_layer/os_layer.o \
-acpi/acpica.o \
-
+$(ACPI_OBJS_EXTRA)
 
 
 

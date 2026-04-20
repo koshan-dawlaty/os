@@ -152,7 +152,7 @@ struct pagedir *new_pagedir()
     out->pgdir = get_physaddr(out->pgdir_virtual);
     /* TODO: FIXME: TODO: FIXME: make this dynamic, it runs out of space and
      * breaks everything */
-    out->physical_pagetables = get_free_pages(10);
+    out->physical_pagetables = get_free_pages(30);
     out->pagetable = get_free_pages(1);
 
 #ifdef CONFIG_x86_32
