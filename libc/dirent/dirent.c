@@ -38,18 +38,33 @@ SYSCALL_DEFINE3(SYS_getdents, long, int, fd, struct dirent *, buf, size_t, num)
 
 DIR *opendir(const char *name)
 {
-    DIR *out = malloc(sizeof(DIR));
     int fd = open(name, O_DIRECTORY);
-    if (fd >= 0)
-    {
-        out->fd = fd;
-    }
-    else
+    if (fd < 0)
     {
         return NULL;
     }
+    DIR *out = malloc(sizeof(DIR));
+    out->fd = fd;
 
     return out;
+}
+
+DIR *fdopendir(int fd)
+{
+    if (fd < 0)
+    {
+        return NULL;
+    }
+    DIR *out = malloc(sizeof(DIR));
+    out->fd = fd;
+    return out;
+}
+
+int closedir(DIR *d)
+{
+    close(d->fd);
+    free(d);
+    return 0;
 }
 
 struct dirent *readdir(DIR *d)

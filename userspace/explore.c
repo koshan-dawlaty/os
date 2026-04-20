@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <init.h>
 #include <lib/array.h>
+#include <lib/assert.h>
 #include <lib/log.h>
 #include <sched.h>
 #include <stdio.h>
@@ -13,6 +14,43 @@
 #include <sys/types.h>
 #include <types.h>
 #include <unistd.h>
+
+enum explorer_filetype
+{
+    EXPLORER_TEXT,
+    EXPLORER_IMAGE,
+    EXPLORER_EXECUTABLE,
+    EXPLORER_INVALID,
+};
+enum explorer_filetype get_filetype(int fd)
+{
+    char *buf = malloc(4);
+    int result = read(fd, buf, 4);
+    if (result < 0)
+    {
+        return EXPLORER_INVALID;
+    }
+    if (result != 4)
+    {
+        return EXPLORER_TEXT;
+    }
+
+    /* the .tga format does not have a magic number, but the first two bytes are
+     * always zero */
+    if (buf[0] == 0 &&
+        buf[1] == 0) /* TODO: this will definitly result in issues, but it
+                        shouldn't conflict with any text files */
+    {
+        return EXPLORER_IMAGE;
+    }
+
+    if (buf[0] == 0x7F && buf[1] == 'E' && buf[2] == 'L' && buf[3] == 'F')
+    {
+        return EXPLORER_EXECUTABLE;
+    }
+
+    return EXPLORER_TEXT;
+}
 
 struct PSF_font *font;
 void render(struct wm_client c, struct array *ents, size_t cursor_pos)
@@ -45,12 +83,12 @@ void render(struct wm_client c, struct array *ents, size_t cursor_pos)
     wm_render(c);
 }
 
-struct array read_dir_path(const char *path)
+struct array read_dir_path(int fd)
 {
-    DIR *d = opendir(path);
+    DIR *d = fdopendir(fd);
     if (d == NULL)
     {
-        loge("error when reading dir:%s", strerror(errno));
+        PANIC("error when reading dir:%s", strerror(errno));
     }
 
     struct array ents = ARRAY_INIT();
@@ -60,7 +98,7 @@ struct array read_dir_path(const char *path)
         array_add(&ents, e, sizeof(struct dirent));
         e = readdir(d);
     }
-    /* TODO: closedir() */
+    closedir(d);
     return ents;
 }
 
@@ -80,7 +118,8 @@ int main(int argc, char **argv)
 
     size_t pos = 0;
 
-    struct array ents = read_dir_path("/");
+    int fd = open("/", O_DIRECTORY);
+    struct array ents = read_dir_path(fd);
     render(client, &ents, pos);
 
     while (1)
@@ -103,11 +142,75 @@ int main(int argc, char **argv)
             break;
         case '\n':;
             struct dirent *e = array_get(&ents, pos, sizeof(struct dirent));
-            chdir(e->d_name);
-            struct array new_ents = read_dir_path(".");
-            array_free(&ents);
-            ents = new_ents;
-            pos = 0;
+            /* TODO: this should use stat() */
+            int fd = open(e->d_name, O_RDONLY);
+            if (fd < 0 && errno != EISDIR)
+            {
+                logd("%d", errno);
+                PANIC("open error:%s", strerror(errno));
+            }
+            else if (errno == EISDIR)
+            {
+                chdir(e->d_name);
+                close(fd);
+                fd = open(".", O_DIRECTORY);
+                struct array new_ents = read_dir_path(fd);
+                array_free(&ents);
+                ents = new_ents;
+                pos = 0;
+            }
+            else
+            {
+                enum explorer_filetype type = get_filetype(fd);
+
+                switch (type)
+                {
+                case EXPLORER_TEXT:
+                    /* TODO: display the text */
+
+                    client_draw_rect(client, 0, 0, client.fb.width,
+                                     client.fb.height, 0);
+                    lseek(fd, 0, SEEK_SET);
+                    size_t x = 0;
+                    size_t y = 0;
+                    size_t read_size = 100;
+                    char *buf = malloc(read_size);
+                    int bytes_read = read(fd, buf, read_size);
+                    do
+
+                    {
+                        for (size_t i = 0; i < bytes_read; i++)
+                        {
+                            if (buf[i] == '\n')
+                            {
+                                y += font->header.height;
+                                x = 0;
+                            }
+                            else
+                            {
+                                client_draw_char(client, font, buf[i], x, y);
+                                x += font->header.width;
+                            }
+                        }
+                    } while ((bytes_read = read(fd, buf, read_size)) ==
+                             read_size);
+                    wm_render(client);
+
+                    wm_get_key(client);
+                    break;
+                case EXPLORER_IMAGE:
+                    execv("imgview", (char *[]){"imgview", e->d_name});
+                    break;
+                case EXPLORER_EXECUTABLE:
+                    execv(e->d_name, (char *[]){e->d_name});
+                    break;
+                case EXPLORER_INVALID:
+                    PANIC("invalid filetype from fd:%d", fd);
+                    break;
+                }
+
+                close(fd);
+            }
 
             break;
         }

@@ -15,7 +15,7 @@ void exit(int status)
 #ifdef __is_libk
     struct task *t = get_current_task();
 
-    printf("exit addr_space:%p\n", &t->addr_space);
+    /* printf("exit addr_space:%p\n", &t->addr_space); */
     /* addr_space_free(t->addr_space); */
     task_remove_free(t);
     /*

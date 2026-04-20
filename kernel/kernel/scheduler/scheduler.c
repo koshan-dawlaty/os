@@ -560,7 +560,6 @@ void schedule_impl()
 void schedule()
 {
 
-    logd("schedule");
     /* preempt_disable(); */
     irq_disable();
     schedule_impl();

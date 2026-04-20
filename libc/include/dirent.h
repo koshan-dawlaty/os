@@ -18,6 +18,7 @@ struct dirent
 
 int closedir(DIR *);
 DIR *opendir(const char *);
+DIR *fdopendir(int fd);
 struct dirent *readdir(DIR *);
 int readdir_r(DIR *, struct dirent *, struct dirent **);
 void rewinddir(DIR *);
