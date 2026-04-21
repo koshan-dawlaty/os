@@ -27,7 +27,7 @@ int vprintf(const char *format, va_list list)
 {
     char *str = vrprintf(format, list);
     puts(str);
-    free(str);
+    /* free(str); */
 
     /* TODO: make return value standard compliant */
 

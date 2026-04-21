@@ -13,6 +13,8 @@
 #include <kernel/tty.h>
 #endif
 
+char int_to_string_data[4096] = {0};
+
 // TODO: kinda slow
 char *int_to_string_unsigned(uintmax_t in, long base)
 {
@@ -20,7 +22,7 @@ char *int_to_string_unsigned(uintmax_t in, long base)
     if (in == 0)
     {
 
-        char *buf = malloc(2);
+        char *buf = int_to_string_data;
         buf[0] = '0';
         buf[1] = '\0';
 
@@ -37,7 +39,7 @@ char *int_to_string_unsigned(uintmax_t in, long base)
 
     size_t buf_size = digits_len * sizeof(char);
 
-    char *buf = malloc(buf_size);
+    char *buf = int_to_string_data;
 
     size_t i = digits_len;
 
@@ -138,27 +140,7 @@ char *int_to_string(intmax_t in, int base)
 }
 const size_t buf_increment = 10;
 
-void increment_buf(char **buf, size_t *len, size_t *capacity, size_t add)
-{
-
-    if ((*len + add + 1) >= *capacity)
-    {
-        while ((*len + add + 1) > *capacity)
-        {
-            *capacity += buf_increment;
-        }
-
-        *buf = realloc(*buf, *capacity);
-    }
-}
-
-void append_buf(char **buf, size_t *buf_len, size_t *capacity, char new)
-{
-    increment_buf(buf, buf_len, capacity, 1);
-    (*buf_len)++;
-    (*buf)[*buf_len - 1] = new;
-    (*buf)[*buf_len] = 0;
-}
+char printf_data[4096] = {0};
 
 /* not standard */
 char *vrprintf(const char *format, va_list list)
@@ -166,14 +148,12 @@ char *vrprintf(const char *format, va_list list)
     /* puts((char *)format); */
     /* puts("\n"); */
 
-    char *out = malloc(buf_increment);
+    char *out = printf_data;
 
     /* total bytes */
     size_t out_len = 0;
-    size_t capacity = 10;
 
     bool is_unsigned = false;
-
     int next_is_format = 0;
 
     if (*format == 0)
@@ -200,16 +180,16 @@ that they will not work because the bootstrap has not initialized them
                     str = "null";
                 }
 
-                increment_buf(&out, &out_len, &capacity, strlen(str));
-
+                memcpy(out + (out_len), str, strlen(str));
                 out_len += strlen(str);
-                memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }
             else if (*format == 'c')
             {
                 char c = (char)va_arg(list, int);
+                out[out_len] = c;
+                out_len++;
 
-                append_buf(&out, &out_len, &capacity, c);
+                /* append_buf(&out, &out_len, &capacity, c); */
             }
             else if (*format == 'u')
             {
@@ -279,7 +259,7 @@ that they will not work because the bootstrap has not initialized them
                         /* str[1] = *format; */
                         /* str[2] = 0; */
 
-                        str = malloc(2);
+                        str = int_to_string_data;
                         /* str[0] = *format; */
                         str[0] = '-';
                         str[1] = 0;
@@ -296,10 +276,8 @@ that they will not work because the bootstrap has not initialized them
                     }
                 }
 
-                increment_buf(&out, &out_len, &capacity, strlen(str));
-
+                memcpy(out + (out_len), str, strlen(str));
                 out_len += strlen(str);
-                memcpy(out + (out_len - strlen(str)), str, strlen(str));
             }
         }
         else if (*format == '%')
@@ -308,14 +286,14 @@ that they will not work because the bootstrap has not initialized them
         }
         else
         {
-            append_buf(&out, &out_len, &capacity, *format);
+            out[out_len] = *format;
+            out_len++;
         }
 
         format++;
     }
 
-    /* this line is where the malloc bug is caused */
-    append_buf(&out, &out_len, &capacity, 0);
+    out[out_len] = 0;
 
     return out;
 }

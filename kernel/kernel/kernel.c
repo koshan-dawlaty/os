@@ -342,7 +342,6 @@ void kmain()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* while (1) */
-
     /* { */
     /*     schedule(); */
     /* } */

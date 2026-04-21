@@ -27,7 +27,14 @@ test_result *new_test_result(bool failed, char *message)
 {
     test_result *out = malloc(sizeof(test_result));
     out->failed = failed;
-    out->message = message;
+    if (message != NULL)
+    {
+        out->message = strdup(message);
+    }
+    else
+    {
+        out->message = NULL;
+    }
 
     return out;
 }
