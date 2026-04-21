@@ -333,6 +333,7 @@ void init_gfp_zones()
 
     struct tree_memory_zone *tree_zone =
         malloc(sizeof(struct tree_memory_zone));
+        tree_zone->offset = 0;
 
 #ifdef CONFIG_x86_64
     tree_zone->base = (void *)0xffffE00000000000;
