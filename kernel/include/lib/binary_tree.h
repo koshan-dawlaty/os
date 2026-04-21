@@ -14,6 +14,8 @@ struct bintree_node
         .l = NULL, .r = NULL, .value = _value                                  \
     }
 
+#define BINTREE_HEAD_INIT() ((struct bintree_head){.root = NULL})
+
 struct bintree_head
 {
     struct bintree_node *root;

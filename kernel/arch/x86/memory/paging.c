@@ -1,3 +1,6 @@
+#include "kmalloc.h"
+#include "lib/binary_tree.h"
+#include "lib/list.h"
 #include "memory/paging_flags.h"
 #include "memory/paging_internal.h"
 #include <gdt.h>
@@ -50,14 +53,64 @@ extern long paging_page_table_addr;
 uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
 void *phys_page_start = (void *)0x200000;
+void *phys_page_offset = 0;
 
 struct spinlock phys_page_lock = SPINLOCK_INIT();
+
+struct phys_page_tree_value
+{
+    void *addr;
+    struct list2c list;
+};
+
+struct phys_page_tree_node
+{
+    struct list2c values;
+    struct bintree_node node;
+};
+
+struct phys_page_tree_node *phys_page_tree_node_alloc(long value)
+{
+    struct phys_page_tree_node *out =
+        kmalloc(sizeof(struct phys_page_tree_node), KMALLOC_BASIC);
+    out->node = BINTREE_NODE_INIT(value);
+    LIST2C_HEAD_INIT(&out->values);
+    return out;
+}
+
+struct bintree_head phys_page_tree = BINTREE_HEAD_INIT();
+
+void *get_free_phys_pages_tree(size_t num_pages)
+{
+    struct bintree_node *tree_node = bintree_get(&phys_page_tree, num_pages);
+    if (tree_node == NULL)
+    {
+        tree_node = &phys_page_tree_node_alloc(num_pages)->node;
+        bintree_add(&phys_page_tree, tree_node);
+    }
+
+    struct phys_page_tree_node *node =
+        containerof(tree_node, struct phys_page_tree_node, node);
+
+    struct list2c *list = list2c_pop(&node->values);
+    if (list != NULL)
+    {
+        struct phys_page_tree_value *value =
+            containerof(list, struct phys_page_tree_value, list);
+        return value->addr;
+    }
+    else
+    {
+        /* TODO: cant use phys_page_start because it is also used by the bitmap
+         */
+        return NULL;
+    }
+}
 
 struct pagedir init_pgdir;
 struct pagedir *current_pagedir = &init_pgdir;
 void *get_free_phys_page_dir(struct pagedir dir)
 {
-    spinlock_lock(&phys_page_lock);
     ptr i = 0;
 
     while (i < NUM_PAGES)
