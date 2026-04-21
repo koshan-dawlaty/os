@@ -478,6 +478,8 @@ int current_key_socket;
 size_t y = 10;
 size_t x = 400;
 
+size_t num_connections = 0;
+
 void process_connection()
 {
     int socket;
@@ -528,8 +530,12 @@ void process_connection()
     }
     user_mutex_unlock(window_queue_mutex);
 
-    focused = ent;
+    if (num_connections < 1)
+    {
+        focused = ent;
+    }
 
+    num_connections++;
     int code;
     recv(socket, &code, sizeof(int));
     while (true)
@@ -575,13 +581,6 @@ void process_connection()
                 goto disconnect;
             }
 
-            if (input == '\\')
-            {
-                /* TODO: this might not properly close the socket */
-
-                close(conn->client_socket);
-                goto disconnect;
-            }
             /* printf("sending %c\n", input); */
             retval = send(socket, &input, sizeof(char));
             if (retval == -ENOTSOCK)
@@ -659,6 +658,15 @@ void keyboard_thread()
     while (true)
     {
         char c = getchar();
+
+        if (c == '\\')
+        {
+            if (focused != NULL)
+            {
+                close(focused->conn->client_socket);
+                logd("closed");
+            }
+        }
 
         if (c == '\t')
         {
@@ -959,8 +967,8 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
-    execv("/elf_test", (char *[]){"elf_test", NULL});
-    /* execv("/explore", (char *[]){"explore", NULL}); */
+    /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
+    execv("/explore", (char *[]){"explore", NULL});
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */

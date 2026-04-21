@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 
     /* sleep(400); */
 
-    struct wm_client client = wm_client_connect(600, 600);
+    struct wm_client client = wm_client_connect(600, 200);
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse(font_fd);
 
