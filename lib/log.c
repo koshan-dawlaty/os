@@ -91,6 +91,4 @@ void vlog_level(struct log_level level, const char *str, va_list parameters)
         s2++;
     }
     log_writechar('\n');
-
-    free(s);
 }
