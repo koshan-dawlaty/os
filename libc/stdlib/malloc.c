@@ -330,6 +330,7 @@ void *malloc(size_t size)
 {
 
     lock_heap();
+    /* printf("lock done\n"); */
 
 #ifdef __is_libk
     void *retval;

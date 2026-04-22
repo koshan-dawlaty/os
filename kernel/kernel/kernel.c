@@ -131,7 +131,9 @@ void kernel_init()
 {
 
     terminal_initialize();
+
     init_paging();
+
     init_heap();
     init_gfp_zones();
 
@@ -143,8 +145,30 @@ void kernel_init()
         draw_background(f);
     }
 
+    printf("multiboot init done\n");
+
     init_gdt();
+
+    printf("gdt init done\n");
+
     init_idt();
+
+    printf("idt init done\n");
+
+    /* volatile char *addr = get_free_pages_zone(1, &gfp_kernel_tree_zone); */
+    /* printf("memory allocated\n"); */
+    /* printf("at address:%p\n", addr); */
+    /* *addr = 'a'; */
+    /* if (c != 'a') */
+    /* { */
+    /*     printf("SJLKDFLSKDFJLSDFJ\n"); */
+    /* } */
+    /* printf("wrote to memory\n"); */
+    /* char c = *addr; */
+    /* printf("got something from memory\n"); */
+    /* printf("read:%c\n", c); */
+    /* irq_disable(); */
+    /* irq_wait(); */
 
 #ifndef CONFIG_PLEASE_DONT_USE_THE_SERIAL_PORT
     printf("init\n");

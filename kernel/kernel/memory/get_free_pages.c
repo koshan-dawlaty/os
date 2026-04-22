@@ -87,7 +87,9 @@ void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
 
     if (i >= zone->size)
     {
-        panic("out of memory in get_free_pages_bitmap()");
+        panic("out of memory in get_free_pages_bitmap() for requested size:%d, "
+              "and offset:%d, max size:%d",
+              amount, i, zone->size);
     }
 
     /* printf("start:%d\n", consecutive_start); */
@@ -333,7 +335,7 @@ void init_gfp_zones()
 
     struct tree_memory_zone *tree_zone =
         malloc(sizeof(struct tree_memory_zone));
-        tree_zone->offset = 0;
+    tree_zone->offset = 0;
 
 #ifdef CONFIG_x86_64
     tree_zone->base = (void *)0xffffE00000000000;
