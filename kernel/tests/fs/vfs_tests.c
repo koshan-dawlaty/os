@@ -157,20 +157,48 @@ TEST(stdlib_FILE, {
     }
 })
 
-TEST(vfs_read_dir, {
-    /* this should use O_SEARCH */
-    /* struct file *f = open_file("/", O_SEARCH); */
+/* TODO: this should be in the test vfs_read_dir_dots, but there is an issue
+ * with the test macro that prevents it from being there */
+char *vfs_read_dir_dots_expected[] = {".", ".."};
+TEST(vfs_read_dir_dots, {
     struct file *f = open_file("/", O_DIRECTORY);
+
+    char **expected = {};
 
     size_t num = 2;
     /* we want this to be zeroed because we check if the name is null later */
     struct dirent *buf = calloc(num, sizeof(struct dirent));
     read_dir(f, buf, num);
 
-    for (size_t i = 0; i < num; i++)
+    for (size_t i = 0;
+         i < MIN(num, sizeof(vfs_read_dir_dots_expected) / sizeof(char *)); i++)
     {
-        ASSERT_NONULL(buf[i].d_name,
-                      "element name in buffer should not be null");
+        char *name = buf[i].d_name;
+        char *expected_name = vfs_read_dir_dots_expected[i];
+        ASSERT_EQ_STR(name, expected_name, "read dir name as:%s expected:%s",
+                      name, expected_name)
+    }
+})
+
+char *vfs_create_read_dir_expected[] = {".", "..", "testfile"};
+TEST(vfs_create_read_dir, {
+    mkdir("/testdirfortest", 0);
+    struct file *f = open_file("/testdirfortest", O_DIRECTORY);
+    creat("/testdirfortest/testfile", 0);
+
+    size_t num = 3;
+    /* we want this to be zeroed because we check if the name is null later */
+    struct dirent *buf = calloc(num, sizeof(struct dirent));
+    read_dir(f, buf, num);
+
+    for (size_t i = 0;
+         i < MIN(num, sizeof(vfs_create_read_dir_expected) / sizeof(char *));
+         i++)
+    {
+        char *name = buf[i].d_name;
+        char *expected_name = vfs_create_read_dir_expected[i];
+        ASSERT_EQ_STR(name, expected_name, "read dir name as:%s expected:%s",
+                      name, expected_name)
     }
 })
 
