@@ -208,84 +208,27 @@ void kernel_init()
 #endif
 }
 
-WAIT_QUEUE_DEFINE(testing_wait_queue);
-MUTEX_DEFINE(testing_mutex);
-
-void *d = NULL;
-
-void t1(void *a)
-{
-    /* while (true) */
-    /* { */
-    /*     printf("task 1 is waiting\n"); */
-    /*     wait_queue_wait(&testing_wait_queue); */
-    /*     printf("task 1\n"); */
-    /* } */
-
-    for (;;)
-    {
-        mutex_lock(&testing_mutex);
-
-        schedule();
-        memcpy(d, "one", 4);
-        if (strcmp(d, "one"))
-        {
-            logi("one:%s\n", d);
-        }
-
-        mutex_unlock(&testing_mutex);
-    }
-}
+WAIT_QUEUE_DEFINE(poll_wait_queue);
 
 void t2(void *a)
 {
-
-    /* while (true) */
-    /* { */
-    /*     if (!WAIT_QUEUE_EMPTY(testing_wait_queue)) */
-    /*     { */
-    /*         wait_queue_done(&testing_wait_queue); */
-    /*         printf("task 2\n"); */
-    /*     } */
-    /*     else */
-    /*     { */
-    /*         /1* printf("task 2 not ready\n"); *1/ */
-    /*     } */
-    /* } */
-    for (;;)
-    {
-        mutex_lock(&testing_mutex);
-
-        schedule();
-        memcpy(d, "two", 4);
-        if (strcmp(d, "two"))
-        {
-            logi("two:%s\n", d);
-        }
-
-        mutex_unlock(&testing_mutex);
-    }
 }
 
 void t3(void *a)
 {
-    while (true)
-    {
-        wait_queue_wait(&testing_wait_queue);
-        printf("task 3\n");
-    }
-    for (;;)
-    {
-        mutex_lock(&testing_mutex);
+}
 
-        schedule();
-        memcpy(d, "333", 4);
-        if (strcmp(d, "333"))
-        {
-            logi("333:%s\n", d);
-        }
+void t1(void *a)
+{
+    struct file *read, *write;
+    pipe_open(&read, &write);
 
-        mutex_unlock(&testing_mutex);
+    ktask_run(t2, read);
+    ktask_run(t3, write);
+
+    if (file_poll(read))
+    {
+        printf("test\n");
     }
 }
 

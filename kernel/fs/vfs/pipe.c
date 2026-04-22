@@ -61,8 +61,16 @@ int pipe_write(struct file *file, const char *buf, size_t n, size_t off)
     return n;
 }
 
-const struct file_operations pipe_operations = {.read = pipe_read,
-                                                .write = pipe_write};
+bool pipe_poll(struct file *f, struct wait_queue **queue)
+{
+    struct pipe *pipe = f->file_private;
+    /* might only work for read side, need a way of determining which side is
+     * which */
+    return pipe->buffer.len == 0;
+}
+
+const struct file_operations pipe_operations = {
+    .read = pipe_read, .write = pipe_write, .poll = pipe_poll};
 
 int pipe_open(struct file **read_ptr, struct file **write_ptr)
 {

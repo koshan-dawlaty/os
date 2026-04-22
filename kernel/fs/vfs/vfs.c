@@ -14,6 +14,7 @@
 /* TODO: bad */
 #include "../ext2/ext2.h"
 #include "../tmpfs/tmpfs.h"
+#include "wait_queue.h"
 
 struct fdlist *basic_open_files = NULL;
 struct dentry *rootdir = NULL;
@@ -210,4 +211,29 @@ struct dentry *dir_readdir(struct dentry *entry, struct dir_context *context)
     }
 
     return out;
+}
+
+struct file *fs_poll(struct file **files, size_t num)
+{
+
+    struct wait_queue **queues = malloc(sizeof(struct wait_queue *) * num);
+    struct file *retval = NULL;
+    for (size_t i = 0; i < num; i++)
+    {
+        bool result = file_poll(files[i], &queues[i]);
+        if (result)
+        {
+            retval = files[i];
+            goto end;
+        }
+    }
+    for (size_t i = 0; i < num; i++)
+    {
+        wait_queue_wait(queues[i]);
+    }
+
+end:
+    free(queues);
+
+    return retval;
 }

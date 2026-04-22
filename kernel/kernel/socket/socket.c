@@ -118,15 +118,18 @@ static inline int unix_socket_fs_write(struct file *f, const char *buf,
     return unix_socket_send(socket, buf, n);
 }
 
-struct file_operations socket_operations = {
-    .read = unix_socket_fs_read,
-    .write = unix_socket_fs_write,
-    .close = unix_socket_close,
-};
+bool unix_socket_poll(struct file *f, struct task_queue **queue)
+{
+    struct unix_socket *socket = f->file_private;
+    /* TODO: return mask when poll api is changed */
+    return !WAIT_QUEUE_EMPTY(socket->recv_queue);
+}
 
-/*
- * creates a socket that an anonymous file (not associated with a dentry)
- */
+struct file_operations socket_operations = {.read = unix_socket_fs_read,
+                                            .write = unix_socket_fs_write,
+                                            .close = unix_socket_close,
+                                            .poll = file_default_poll};
+
 struct file *unix_socket_create()
 {
     /* TODO: dont use new_file for this, as it takes a struct dentry as a

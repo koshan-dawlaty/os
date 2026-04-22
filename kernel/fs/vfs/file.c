@@ -175,8 +175,8 @@ static int write_file_fs(struct file *file, const char *buf, size_t n,
     return write_size;
 }
 
-const struct file_operations fs_file_operations = {.read = read_file_fs,
-                                                   .write = write_file_fs};
+const struct file_operations fs_file_operations = {
+    .read = read_file_fs, .write = write_file_fs, .poll = file_default_poll};
 
 extern const struct file_operations device_operations;
 

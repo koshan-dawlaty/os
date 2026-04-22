@@ -54,8 +54,8 @@ int dev_write(struct file *file, const char *buf, size_t n, size_t off)
     }
 }
 
-const struct file_operations device_operations = {.read = dev_read,
-                                                  .write = dev_write};
+const struct file_operations device_operations = {
+    .read = dev_read, .write = dev_write, .poll = file_default_poll};
 
 /* TODO: this probably shouldnt just create devices in /dev/ instead maybe have
  * separate directories for device types */

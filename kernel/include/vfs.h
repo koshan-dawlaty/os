@@ -1,5 +1,8 @@
 #ifndef VFS_H
 #define VFS_H
+#include "lib/assert.h"
+#include "task_queue.h"
+#include "wait_queue.h"
 #include <device.h>
 #include <dirent.h>
 #include <kernel/types.h>
@@ -151,12 +154,22 @@ struct file_operations
      * the fdlist before this
      */
     int (*close)(struct file *);
+
+    /*
+     * returns true if file is readable
+     */
+    bool (*poll)(struct file *, struct wait_queue **);
 };
+
+static inline bool file_default_poll(struct file *f, struct wait_queue **q)
+{
+    return true;
+}
 
 #define FILE_OPERATIONS_EMPTY                                                  \
     (struct file_operations)                                                   \
     {                                                                          \
-        .read = NULL, .write = NULL                                            \
+        .read = NULL, .write = NULL, .poll = NULL                              \
     }
 
 typedef struct file
@@ -176,6 +189,14 @@ typedef struct file
     struct file_operations operations;
     void *file_private;
 } file;
+
+static inline bool file_poll(struct file *f, struct wait_queue **queue)
+{
+    NOT_NULL(f->operations.poll, "file had null poll() function");
+    return f->operations.poll(f, queue);
+}
+
+struct file *fs_poll(struct file **files, size_t num);
 
 static inline void add_file_offset(file *f, size_t add)
 {

@@ -47,4 +47,9 @@ struct dentry *dentry_socket_alloc(const char *name, struct dentry *parent,
                                    struct unix_socket *socket);
 extern struct file_operations socket_operations;
 
+/*
+ * creates a socket that an anonymous file (not associated with a dentry)
+ */
+struct file *unix_socket_create();
+
 #endif
