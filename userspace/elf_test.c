@@ -1,3 +1,4 @@
+#include "lib/assert.h"
 #include "wm_lib.h"
 #include <compiler.h>
 #include <container_of.h>
@@ -5,7 +6,9 @@
 #include <extension.h>
 #include <fcntl.h>
 #include <init.h>
+#include <lib/array.h>
 #include <lib/log.h>
+#include <lib/utils.h>
 #include <sched.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -29,59 +32,115 @@ int execv_stdio(const char *path, char *const argv[], int in, int out)
                                0);
 }
 
-size_t x = 0, y = 0;
-struct PSF_font *font;
-struct wm_client client;
-int pipe_write;
-int mutex; /* TODO: maybe have a mutex in the wm_client variable? */
-
-void draw_char(char c)
+struct terminal_operations
 {
+    void (*draw_char_at)(char c, size_t x, size_t y);
+    size_t (*get_width)();
+    size_t (*get_height)();
+};
+struct terminal
+{
+    struct terminal_operations operations;
+    struct array characters; /* array of arrays */
+    size_t top_line; /* line that is currently at the top of the screen */
+    size_t x;
+    size_t y;
+};
 
+void terminal_draw_line(struct terminal *term, size_t index, size_t y)
+{
+    struct array *line =
+        array_get(&term->characters, index, sizeof(struct array));
+    /* logd("%d len of %s:%d", y, line->data, line->len); */
+    for (size_t i = 0; i < term->operations.get_width(); i++)
+    {
+        term->operations.draw_char_at(' ', i, y);
+    }
+    for (size_t i = 0; i < line->len - 1; i++)
+    {
+        char c = ((char *)line->data)[i];
+        term->operations.draw_char_at(c, i, y);
+    }
+}
+
+void terminal_add_newline(struct terminal *term)
+{
+    struct array new_line = ARRAY_INIT();
+    array_add(&term->characters, &new_line, sizeof(struct array));
+    term->y++;
+    term->x = 0;
+    size_t height = term->operations.get_height();
+
+    if (term->y > height)
+    {
+        term->y -= 1;
+        size_t min_height =
+            MIN(height, ARRAY_LEN(term->characters, sizeof(struct array)));
+
+        for (size_t i = term->top_line; i < min_height + term->top_line - 1;
+             i++)
+        {
+            terminal_draw_line(term, i, i - term->top_line + 1);
+        }
+
+        for (size_t i = 0; i < term->operations.get_width(); i++)
+        {
+            term->operations.draw_char_at(' ', i, min_height);
+        }
+
+        term->top_line++;
+    }
+}
+
+void terminal_writechar_impl(char c, struct terminal *term, bool should_scroll)
+{
+    struct array *line =
+        array_get(&term->characters,
+                  ARRAY_LEN(term->characters, sizeof(struct array)) - 1,
+                  sizeof(struct array));
+    array_add(line, &c, 1);
+    size_t width = term->operations.get_width();
+    size_t height = term->operations.get_height();
     switch (c)
     {
     case '\n':
-        y += font->header.height;
-        x = 0;
 
+        terminal_add_newline(term);
         break;
-
     case '\b':
-
-        x -= font->header.width;
-        client_draw_rect(client, x, y, font->header.width, font->header.height,
-                         0xFF00FF);
-        if (x == 0)
-        {
-            client_draw_rect(client, 0, y, WM_CLIENT_WIDTH(client),
-                             font->header.height, 0xFF00FF);
-            x = 0;
-            y -= font->header.height;
-        }
-
-        /* x = 0; */
-        /* y = 0; */
-
-        /* size_t y2; */
-        /* for (y2 = 0; y2 < WM_CLIENT_HEIGHT(client); y2++) */
-        /* { */
-        /*     for (size_t x = 0; x < WM_CLIENT_WIDTH(client); x++) */
-        /*     { */
-        /*         client_draw_pixel(client, x, y2, color); */
-        /*     } */
-        /* } */
+        term->x--;
         break;
     default:
-        /* printf("%d, %d\n", x, y); */
-        client_draw_char(client, font, c, x, y);
-        x += font->header.width;
-        if (x > WM_CLIENT_WIDTH(client))
+        term->operations.draw_char_at(c, term->x, term->y);
+        term->x++;
+
+        if (term->x > width)
         {
-            x = 0;
-            y += font->header.height;
+            terminal_add_newline(term);
         }
+        break;
     }
 }
+
+void terminal_writechar(char c, struct terminal *term)
+{
+    terminal_writechar_impl(c, term, true);
+}
+
+void terminal_writestring(const char *data, size_t len, struct terminal *term)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        terminal_writechar(data[i], term);
+    }
+}
+
+size_t x = 0, y = 0;
+struct PSF_font *font;
+struct wm_client client;
+struct terminal term;
+int pipe_write;
+int mutex; /* TODO: maybe have a mutex in the wm_client variable? */
 
 void key_thread()
 {
@@ -98,7 +157,7 @@ void key_thread()
         }
         write(pipe_write, &c, 1);
         printf("%c ", c);
-        draw_char(c);
+        terminal_writechar(c, &term);
         user_mutex_lock(mutex);
         wm_render(client);
         user_mutex_unlock(mutex);
@@ -106,6 +165,29 @@ void key_thread()
     loge("bad key");
     exit(1);
 }
+
+void wm_terminal_draw_char_at(char character, size_t x, size_t y)
+{
+    /* TODO: client_draw_char, and the framebuffer draw_char function should be
+     * able to draw a background with the character */
+    client_draw_rect(client, x * font->header.width, y * font->header.height,
+                     font->header.width, font->header.height, 0xFF);
+    client_draw_char(client, font, character, x * font->header.width,
+                     y * font->header.height);
+}
+
+size_t wm_terminal_get_width()
+{
+    return client.fb.width / font->header.width;
+}
+
+size_t wm_terminal_get_height()
+{
+    return (client.fb.height / font->header.height) - 2;
+}
+
+const struct terminal_operations term_operations = {
+    wm_terminal_draw_char_at, wm_terminal_get_width, wm_terminal_get_height};
 
 int main()
 {
@@ -175,6 +257,11 @@ int main()
         }
     }
 
+    term = (struct terminal){term_operations, ARRAY_INIT(), 0, 0, 0};
+    terminal_add_newline(&term);
+
+    /* terminal_writechar('a', &term); */
+
     int stdout_pipe[2];
     pipe(stdout_pipe);
 
@@ -224,7 +311,7 @@ int main()
         for (size_t i = 0; i < res; i++)
         {
             char c = buf[i];
-            draw_char(c);
+            terminal_writechar(c, &term);
         }
         if (need_to_read_more)
         {

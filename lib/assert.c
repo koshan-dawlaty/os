@@ -21,8 +21,8 @@ void __panic_func(const char *format, ...)
     vpanic(format, args);
 #else
     char *str = vrprintf(format, args);
-    loge(USER_PANIC_MESSAGE "%s", str);
-    printf(USER_PANIC_MESSAGE "%s", str);
+    loge("%s", str);
+    printf("%s", str);
     exit(1);
 #endif
     va_end(args);

@@ -359,10 +359,6 @@ void change_focus(struct window_queue_entry *new_focus)
     {
         for (size_t x = 0; x < WIN_W(focused->win); x++)
         {
-            /* *(u32 *)(focused->win->fb.buffer + y * WIN_W(focused->win) *
-             * 4 +
-             */
-            /*          (x * 4)) = 0; */
             framebuffer_put_pixel(&focused->win->fb, 0xFF, x, y);
         }
     }
@@ -398,7 +394,6 @@ struct window *new_client_window(size_t x, size_t y, size_t w, size_t h)
     /* the shared memory buffer could be used here, but the way it works
      * now, it will break window decorations */
     out->fb = FRAMEBUFFER_INIT(w, height, w * 4, 32, 4, malloc(w * height * 4));
-    logd("%p", out->fb.buffer + (w * height * 4));
 
     return out;
 }
