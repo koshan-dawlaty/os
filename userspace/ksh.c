@@ -27,7 +27,6 @@ int main()
     char *input = malloc(0);
     size_t input_len = 0;
 
-    printf(">");
     while (1)
     {
         char c = getchar();
@@ -73,7 +72,6 @@ int main()
                     printf("could not execute\nerror:%s", strerror(err));
                     printf("\n");
                 }
-                printf(">");
             }
             free(input);
             input = malloc(0);

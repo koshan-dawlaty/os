@@ -66,6 +66,7 @@ void terminal_addchar(char c, struct terminal *term)
         break;
     case '\b':
         term->x--;
+        term->operations.draw_char_at(' ', term->x, term->y);
         break;
     default:
         term->operations.draw_char_at(c, term->x, term->y);
