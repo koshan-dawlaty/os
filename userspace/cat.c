@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 
     if (fd == -1)
     {
-        printf("error:%s\n", strerror(errno));
+        printf("error:%s\n\n", strerror(errno));
         exit(1);
     }
 

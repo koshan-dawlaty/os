@@ -64,12 +64,14 @@ void key_thread()
     exit(1);
 }
 
+u32 bg_color = 0x4b3973;
+
 void wm_terminal_draw_char_at(char character, size_t x, size_t y)
 {
     /* TODO: client_draw_char, and the framebuffer draw_char function should be
      * able to draw a background with the character */
     client_draw_rect(client, x * font->header.width, y * font->header.height,
-                     font->header.width, font->header.height, 0xFF);
+                     font->header.width, font->header.height, bg_color);
     client_draw_char(client, font, character, x * font->header.width,
                      y * font->header.height);
 }
@@ -132,26 +134,13 @@ int main()
     /* int color = 0xFFFF00; */
     /* int color = 0x0000FF; */
 
-    u32 color = 0x4b3973;
-    switch (client.socket)
-    {
-    case 1:
-        color = 0xFF0000;
-        break;
-    case 2:
-        color = 0x00FF00;
-        break;
-    case 3:
-        color = 0xFF;
-    }
-
     /* memset(w.buffer, 127, win.width * win.height * 4); */
     size_t y2;
     for (y2 = 0; y2 < WM_CLIENT_HEIGHT(client); y2++)
     {
         for (size_t x = 0; x < WM_CLIENT_WIDTH(client); x++)
         {
-            client_draw_pixel(client, x, y2, color);
+            client_draw_pixel(client, x, y2, bg_color);
         }
     }
 
