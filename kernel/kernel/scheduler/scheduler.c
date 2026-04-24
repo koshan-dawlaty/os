@@ -90,7 +90,7 @@ char **create_user_args(int argc, char **argv)
 
     for (int i = 0; i < argc; i++)
     {
-        memcpy(args + string_offset, argv[i], strlen(argv[i]));
+        memcpy(args + string_offset, argv[i], strlen(argv[i]) + 1);
         *(char *)(args + string_offset + strlen(argv[i]) + 1) = 0;
 
         args[i] = (char *)(args + string_offset);

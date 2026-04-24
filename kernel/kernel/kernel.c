@@ -145,15 +145,8 @@ void kernel_init()
         draw_background(f);
     }
 
-    printf("multiboot init done\n");
-
     init_gdt();
-
-    printf("gdt init done\n");
-
     init_idt();
-
-    printf("idt init done\n");
 
     /* volatile char *addr = get_free_pages_zone(1, &gfp_kernel_tree_zone); */
     /* printf("memory allocated\n"); */
@@ -294,12 +287,19 @@ struct task_queue abc = TASK_QUEUE_INIT(abc);
 void kmain()
 {
 
+    u8 *pg = get_free_pages(1);
+    for (size_t i = 0; i < PAGE_SIZE; i++)
+    {
+        logd("%p", pg[i]);
+    }
+
     /* void *x = malloc(10); */
     /* logd("x:%p", x); */
     /* free(x); */
     /* void *y = malloc(10); */
     /* logd("y:%p", y); */
     /* return; */
+    /* PANIC("test"); */
 
     irq_disable();
     /* malloc(1000000); */
