@@ -477,6 +477,7 @@ size_t num_connections = 0;
 
 void process_connection()
 {
+    logd("process_connection");
     int socket;
     socket = current_client;
     int key_socket = current_key_socket;

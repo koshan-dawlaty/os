@@ -29,8 +29,9 @@ extern void panic_asm();
 
 void vpanic(const char *message, va_list parameters)
 {
+    loge("%s", KERNEL_PANIC_MESSAGE);
     char *str = vrprintf(message, parameters);
-    loge(KERNEL_PANIC_MESSAGE "%s", str);
+    loge("%s", str);
     panic_no_malloc(str);
 }
 
