@@ -565,10 +565,12 @@ void process_connection()
         {
             char input;
             /* printf("waiting for input\n"); */
+            logd("waiting for input");
             int retval = recv(conn->input_socket, &input, sizeof(char));
 
             if (retval == -ENOTSOCK)
             {
+                logd("the input socket was closed");
                 goto disconnect;
             }
 
@@ -648,18 +650,27 @@ void keyboard_thread()
 
     while (true)
     {
-        char c = getchar();
+
+        logd("getting a char");
+        char c;
+        int err = read(0, &c, 1);
+        if (err < 0)
+        {
+            loge("%s", strerror(err));
+        }
+
+        logd("got:%d/%c", c, c);
 
         if (c == '\\')
         {
             if (focused != NULL)
             {
+                logd("closing:%d", focused->conn->client_socket);
                 close(focused->conn->client_socket);
                 logd("closed");
             }
         }
-
-        if (c == '\t')
+        else if (c == '\t')
         {
             struct list2c *next = focused->list.next;
             if (next == &window_queue)
@@ -960,7 +971,7 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("/explore", (char *[]){"explore", NULL}); */
-    /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    execv("imgview", (char *[]){"imgview", "dog.tga", NULL});
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */

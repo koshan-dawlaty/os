@@ -16,13 +16,14 @@ int creat(const char *path, mode_t mode)
 {
 
 #ifdef __is_libk
-    file *f = create_file((char *)path);
+    struct file *f = create_file((char *)path);
     if (IS_ERR(f))
     {
         return -1;
     }
+    int retval = fdlist_add(get_current_fdlist(), f);
 
-    return f->descriptor;
+    return retval;
 #else
     return syscall_wrapper_asm(SYS_creat, (uintptr_t)path, mode, 0, 0, 0);
 #endif

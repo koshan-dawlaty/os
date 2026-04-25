@@ -16,14 +16,15 @@
 int open(const char *path, int flags)
 {
 #ifdef __is_libk
-    struct file *f = open_file(path, flags);
+    int fd;
+    struct file *f = open_file(path, flags, &fd);
     if (IS_ERR(f))
     {
         /* TODO: we might want to set errno here */
         return -GET_ERR(f);
     }
 
-    return f->descriptor;
+    return fd;
 #else
     int fd = syscall_wrapper_asm(7, (uintptr_t)path, flags, 0, 0, 0);
     if (fd < 0)

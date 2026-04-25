@@ -1,3 +1,4 @@
+#include "errno.h"
 #include "utils.h"
 #include <kernel_syscall.h>
 #include <sys/syscall.h>
@@ -10,8 +11,14 @@
 int close(int fd)
 {
 #ifdef __is_libk
+    if (fd < 0)
+    {
+        return -EBADF;
+    }
     struct file *f = lookup_descriptor(fd);
-    return close_file(f);
+    int retval = close_file(f);
+    fdlist_close(get_current_fdlist(), fd);
+    return retval;
 
 #else
 

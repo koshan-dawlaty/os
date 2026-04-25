@@ -89,12 +89,9 @@ int unix_socket_close(struct file *f)
     struct list2c *recv_queue = &sock->recv_queue.queue.head;
     struct task *t = containerof(recv_queue->next, struct task, list);
 
-    logd("task:%p", t->start_addr);
-    logd("%p, %p, %p", recv_queue, recv_queue->next, recv_queue->next->next);
-    logd("%p", LIST2C_IS_EMPTY(sock->send_queue.queue.head));
-
     wait_queue_wake_all(&sock->recv_queue);
     wait_queue_wake_all(&sock->send_queue);
+    logd("done");
 
     /* TODO: we want to free the socket, but need to wait for everyone waiting
      * on the queue to be done */

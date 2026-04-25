@@ -26,14 +26,6 @@ char getchar()
     return c;
 
 #else
-
-    char c = fgetc(stdin);
-    while (c == 0)
-    {
-        c = fgetc(stdin);
-    }
-
-    return c;
-
+    return fgetc(stdin);
 #endif
 }
