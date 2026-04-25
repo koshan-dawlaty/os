@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include "strings.h"
 #include <fcntl.h>
 #include <stdio.h>

@@ -1,6 +1,7 @@
 #include "interrupts/idt.h"
 #include "kernel/interrupts.h"
 #include "keyboard_map.h"
+#include "lib/log.h"
 #include "spinlock.h"
 #include "vfs.h"
 #include "wait_queue.h"
@@ -68,6 +69,8 @@ char keyboard_getchar()
 
     char c = keyboard_buffer[keyboard_buffer_tail];
     keyboard_buffer_tail = (keyboard_buffer_tail + 1) % KEYBOARD_BUFFER_SIZE;
+
+    logd("returing %c", c);
 
     mutex_unlock(&keyboard_mutex);
 

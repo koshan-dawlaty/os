@@ -107,7 +107,6 @@ struct file *new_file(struct dentry *entry, int flags)
 {
     struct file *out = malloc(sizeof(struct file));
     out->entry = entry;
-    out->descriptor = 0;
     out->offset = 0;
     out->flags = flags;
 

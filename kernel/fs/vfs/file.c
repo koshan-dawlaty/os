@@ -1,4 +1,5 @@
 #include "dcache.h"
+#include "lib/log.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
 #include <bdev.h>
@@ -89,6 +90,21 @@ struct file *fdlist_lookup(struct fdlist *list, int fd)
     return retval;
 }
 
+struct fdlist *get_current_fdlist()
+{
+    struct task *task = get_current_task();
+    if (task == NULL)
+    {
+        return basic_open_files;
+    }
+    else
+    {
+        NOT_NULL(task->descriptors,
+                 "task file descriptor list was uninitalized");
+        return task->descriptors;
+    }
+}
+
 int fdlist_close(struct fdlist *list, int fd)
 {
     if (fd < 0)
@@ -106,41 +122,19 @@ int fdlist_close(struct fdlist *list, int fd)
     return 0;
 }
 
-/* helper function to get the current list of file descriptors */
-static inline struct fdlist *get_current_fdlist()
-{
-    struct task *task = get_current_task();
-    if (task == NULL)
-    {
-        return basic_open_files;
-    }
-    else
-    {
-        NOT_NULL(task->descriptors,
-                 "task file descriptor list was uninitalized");
-        return task->descriptors;
-    }
-}
-
 int close_file(file *f)
 {
     int retval;
     struct fdlist *list = get_current_fdlist();
-    if (f != NULL)
-    {
-        retval = fdlist_close(list, f->descriptor);
-    }
-    else
-    {
-        return -EBADF;
-    }
 
     if (f->operations.close != NULL)
     {
-        f->operations.close(f);
+        return f->operations.close(f);
     }
 
-    return retval;
+    logw("file had null close operation");
+
+    return 0;
 }
 
 static int read_file_fs(struct file *file, char *buf, size_t n, size_t off)
@@ -182,7 +176,7 @@ extern const struct file_operations device_operations;
 
 /* TODO: the name does not convey that this is always opening a file from the
  * filesystems */
-struct file *open_file(const char *path, int flags)
+struct file *open_file(const char *path, int flags, int *fd)
 {
     struct dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
 
@@ -225,8 +219,8 @@ struct file *open_file(const char *path, int flags)
     }
 
     struct fdlist *list = get_current_fdlist();
-    int fd = fdlist_add(list, out);
-    out->descriptor = fd;
+
+    *fd = fdlist_add(list, out);
 
     return out;
 }
