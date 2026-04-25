@@ -287,6 +287,18 @@ struct task_queue abc = TASK_QUEUE_INIT(abc);
 void kmain()
 {
 
+    int fd = open("/../../../../../one", O_RDONLY);
+    logd("%d", fd);
+
+    char *buf = malloc(100);
+    size_t read_val = read(fd, buf, 100);
+    buf[read_val] = 0;
+
+    const char *expected = "file one\n";
+    printf("%s == %s\n", buf, expected);
+
+    close(fd);
+
     /* void *x = malloc(10); */
     /* logd("x:%p", x); */
     /* free(x); */
