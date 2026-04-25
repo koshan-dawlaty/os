@@ -167,7 +167,7 @@ install-binaries: $(BINARIES_BIN)
 	mkdir -p ../build/$(FS_ROOT)/$(BINARY_PREFIX)
 	# $(foreach binary, $@, $(cp $(binary) ../build/$(FS_ROOT)/$(BINARY_PREFIX)))
 	for f in $(BINARIES_BIN); do \
-		cp $$f ../build/$(FS_ROOT); \
+		cp $$f ../build/$(FS_ROOT)/bin/; \
 	done; 
 
 	# # may break with more files in binaries
