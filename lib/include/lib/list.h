@@ -84,6 +84,7 @@ struct list2c *list2c_pop(struct list2c *head);
 void list2c_remove(struct list2c *value);
 
 void list2c_add_after(struct list2c *new, struct list2c *other);
+void list2c_add_before(struct list2c *new, struct list2c *other);
 
 #define list2c_for_each(pos, head)                                             \
     for (pos = (head)->next; pos != (head); pos = pos->next)
