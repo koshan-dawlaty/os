@@ -482,7 +482,6 @@ size_t num_connections = 0;
 
 void process_connection()
 {
-    logd("process_connection");
     int socket;
     socket = current_client;
     int key_socket = current_key_socket;
@@ -565,7 +564,6 @@ void process_connection()
         {
             char input;
             /* printf("waiting for input\n"); */
-            logd("waiting for input");
             int retval = recv(conn->input_socket, &input, sizeof(char));
 
             if (retval == -ENOTSOCK)
@@ -651,7 +649,6 @@ void keyboard_thread()
     while (true)
     {
 
-        logd("getting a char");
         char c;
         int err = read(0, &c, 1);
         if (err < 0)
@@ -659,15 +656,11 @@ void keyboard_thread()
             loge("%s", strerror(err));
         }
 
-        logd("got:%d/%c", c, c);
-
         if (c == '\\')
         {
             if (focused != NULL)
             {
-                logd("closing:%d", focused->conn->client_socket);
                 close(focused->conn->client_socket);
-                logd("closed");
             }
         }
         else if (c == '\t')
@@ -747,8 +740,6 @@ void mouse_thread()
                 prev = pos;
             }
 
-            /* logd("%p", prev->prev->prev); */
-
             struct window_queue_entry *new_focus = NULL;
 
             for (pos = prev; pos != &window_queue; pos = pos->prev)
@@ -771,7 +762,6 @@ void mouse_thread()
                     WIN_Y(mouse) < WIN_Y(win) + WIN_H(win))
 
                 {
-                    /* logd("intersect"); */
                     new_focus = queue_ent;
                     break;
                 }
@@ -969,9 +959,9 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
-    execv("/elf_test", (char *[]){"elf_test", NULL});
+    execv("/bin/elf_test", (char *[]){"elf_test", NULL});
     /* execv("/explore", (char *[]){"explore", NULL}); */
-    execv("imgview", (char *[]){"imgview", "dog.tga", NULL});
+    execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL});
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */

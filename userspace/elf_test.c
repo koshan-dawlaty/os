@@ -157,7 +157,8 @@ int main()
     /* execv("/ls", (char *[]){"ls", NULL}); */
     /* execv("/ksh", (char *[]){"ksh", NULL}); */
     printf("execv\n");
-    execv_stdio("/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0], stdout_pipe[1]);
+    execv_stdio("/bin/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0],
+                stdout_pipe[1]);
     printf("execv end\n");
 
     pipe_write = stdin_pipe[1];
