@@ -368,7 +368,12 @@ void change_focus(struct window_queue_entry *new_focus)
                              WINDOW_DECORATION_ROWS),
                    buffer);
 
+    user_mutex_lock(window_queue_mutex);
+    list2c_remove(&new_focus->list);
+    list2c_add_before(&new_focus->list, window_queue.prev);
     focused = new_focus;
+    user_mutex_unlock(window_queue_mutex);
+    draw_window(buffer, new_focus->win);
 }
 
 char current_keyboard_char;
