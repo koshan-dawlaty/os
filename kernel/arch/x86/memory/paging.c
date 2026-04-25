@@ -79,7 +79,7 @@ void *get_free_phys_page_dir(struct pagedir dir)
 
     void *addr = (void *)(phys_page_start + (i * PAGE_SIZE));
 
-#ifdef CONFIG_x86_64
+#if defined(CONFIG_x86_64) && defined(CONFIG_CLEAR_PAGES)
     memset(addr + 0xffffc00000000000, 0xFF, PAGE_SIZE);
 #endif
 

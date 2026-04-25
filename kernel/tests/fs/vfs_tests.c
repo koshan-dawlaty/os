@@ -239,7 +239,8 @@ TEST(vfs_dir_dot_dot_on_root_is_root, {
     ASSERT_GE(fd, 0, "file descriptor should be valid");
 
     char *buf = malloc(100);
-    read(fd, buf, 100);
+    size_t num_bytes = read(fd, buf, 100);
+    buf[num_bytes] = 0;
 
     const char *expected = "file one\n";
     ASSERT_EQ_STR(buf, expected, "%s != %s", buf, expected);
@@ -251,7 +252,8 @@ TEST(vfs_dir_dot_dot_on_dir, {
     int fd = open("/dir/../dir/../dir/../dir/../one", O_RDONLY);
     ASSERT_GE(fd, 0, "file descriptor should be valid");
     char *buf = malloc(100);
-    read(fd, buf, 100);
+    size_t num_bytes = read(fd, buf, 100);
+    buf[num_bytes] = 0;
 
     const char *expected = "file one\n";
     ASSERT_EQ_STR(buf, expected, "%s != %s", buf, expected);
