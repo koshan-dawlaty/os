@@ -536,7 +536,7 @@ void process_connection()
         case WM_RES_RENDER:
         {
 
-            for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_ROWS) - 1; y++)
+            for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_ROWS); y++)
             {
                 size_t server_offset =
                     (y + WINDOW_DECORATION_ROWS) * WIN_W(w) * 4;
@@ -911,18 +911,7 @@ int main()
     size_t mouse_h = 10;
     mouse = new_window(0, 0, mouse_w, mouse_h);
 
-    for (size_t y = 0; y < mouse_h; y++)
-    {
-        for (size_t x = 0; x < mouse_w; x++)
-        {
-            /* u32 val = x * x * x * y * y * y * y; */
-            u32 val = 0xFF;
-            framebuffer_put_pixel(&mouse->fb, val, x, y);
-            /* *(u32 *)(mouse->fb.buffer + (x * 4) + (y * mouse_w * 4)) =
-             * val;
-             */
-        }
-    }
+    framebuffer_draw_rect(&mouse->fb, 0, 0, WIN_W(mouse), WIN_H(mouse), 0xFF);
     /* memset(mouse->fb.buffer, 255, 10 * 10 * 4); */
 
     buffer = framebuffer_alloc();

@@ -1,5 +1,6 @@
-#include "compiler.h"
+#include <compiler.h>
 #include <lib/framebuffer.h>
+#include <lib/log.h>
 #include <stdio.h>
 #include <types.h>
 
@@ -22,7 +23,7 @@ void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
     }
     size_t location = y * f->pitch + x * f->pixel_width;
 
-    for (size_t y_pos = y; y_pos < height + y; y_pos++)
+    for (size_t y_pos = y; y_pos < height + y + 1; y_pos++)
     {
         for (size_t x_pos = x; x_pos < width + x; x_pos++)
         {
