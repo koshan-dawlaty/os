@@ -3,6 +3,7 @@
 
 #include "container_of.h"
 #include <stdbool.h>
+#include <stddef.h>
 
 /*
  * singly linked list
@@ -73,12 +74,16 @@ struct list2c
 #define LIST2C_INIT_HEAD(name)                                                 \
     struct list2c name;                                                        \
     name = LIST2C_HEAD_INIT(&name);
+
+#define LIST2C_DEFINE_HEAD(name) struct list2c name = LIST2C_HEAD_INIT(&name);
 #define LIST2C_INIT() ((struct list2c){.prev = NULL, .next = NULL})
 
 void list2c_push(struct list2c *new, struct list2c *head);
 struct list2c *list2c_pop(struct list2c *head);
 // bool list2c_remove(struct list2c *value, struct list2c *head);
 void list2c_remove(struct list2c *value);
+
+void list2c_add_after(struct list2c *new, struct list2c *other);
 
 #define list2c_for_each(pos, head)                                             \
     for (pos = (head)->next; pos != (head); pos = pos->next)

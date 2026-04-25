@@ -54,7 +54,7 @@ struct window_queue_entry
 {
     struct window *win;
     struct wm_connection *conn;
-    struct list2 list;
+    struct list2c list;
 
     /* FIXME: stupid, should use O_NONBLOCK globally or just find a better way
      * of doing this */
@@ -70,7 +70,7 @@ struct window_queue_entry *mouse_queue_ent;
 struct window_queue_entry *background_queue_ent;
 struct window *background;
 
-struct list2 *window_queue;
+LIST2C_DEFINE_HEAD(window_queue);
 int window_queue_mutex = -1;
 struct framebuffer *buffer;
 
@@ -163,8 +163,8 @@ struct array compute_visible(struct window_queue_entry *win_ent,
     array_add(&visible, &intersection, sizeof(struct rect));
     /* array_add(&visible, &WIN_RECT(win), sizeof(struct rect)); */
 
-    struct list2 *pos;
-    for (pos = win_ent->list.next; pos != NULL; pos = pos->next)
+    struct list2c *pos;
+    for (pos = win_ent->list.next; pos != &window_queue; pos = pos->next)
     /* list2_for_each(pos, &win_ent->list) */
     /* list2_for_each(pos, window_queue) */
     {
@@ -214,8 +214,8 @@ void update_area_up(struct rect area, struct framebuffer *fb)
 {
     user_mutex_lock(window_queue_mutex);
 
-    struct list2 *pos;
-    list2_for_each(pos, window_queue)
+    struct list2c *pos;
+    list2c_for_each(pos, &window_queue)
     {
         struct window_queue_entry *ent =
             containerof(pos, struct window_queue_entry, list);
@@ -504,26 +504,16 @@ void process_connection()
     /* x += 40; */
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
-    ent->list = LIST2_INIT();
+    ent->list = LIST2C_INIT();
     ent->win = w;
     ent->conn = conn;
     ent->nonblock_info.is_nonblock = win_info.is_nonblock;
     ent->nonblock_info.current_key = 0;
 
     user_mutex_lock(window_queue_mutex);
-    if (window_queue == NULL)
-    {
-        window_queue = &ent->list;
-    }
-    else
-    {
-        ent->list.prev = window_queue;
-        ent->list.next = window_queue->next;
-        window_queue->next->prev = &ent->list;
 
-        window_queue->next = &ent->list;
-        /* list2_add_front(&ent->list, &window_queue); */
-    }
+    list2c_add_after(&ent->list, window_queue.next);
+
     user_mutex_unlock(window_queue_mutex);
 
     if (num_connections < 1)
@@ -636,7 +626,7 @@ disconnect:;
     struct rect old_area = WIN_RECT(ent->win);
 
     user_mutex_lock(window_queue_mutex);
-    list2_remove(&ent->list, &window_queue);
+    list2c_remove(&ent->list);
     user_mutex_unlock(window_queue_mutex);
 
     update_area_up(old_area, buffer);
@@ -666,23 +656,23 @@ void keyboard_thread()
 
         if (c == '\t')
         {
-            struct list2 *next = focused->list.next;
-            if (next == NULL)
+            struct list2c *next = focused->list.next;
+            if (next == &window_queue)
             {
-                next = window_queue;
+                next = window_queue.next->next;
             }
             struct window_queue_entry *ent =
                 containerof(next, struct window_queue_entry, list);
 
             if (ent->win == mouse)
             {
-                ent =
-                    containerof(window_queue, struct window_queue_entry, list);
+                ent = containerof(window_queue.next->next,
+                                  struct window_queue_entry, list);
             }
             if (ent == background_queue_ent)
             {
-                ent = containerof(window_queue->next, struct window_queue_entry,
-                                  list);
+                ent = containerof(window_queue.next->next,
+                                  struct window_queue_entry, list);
             }
             change_focus(ent);
         }
@@ -734,9 +724,9 @@ void mouse_thread()
             /* TODO: this should be its own function that traverses the list
              * backwards */
             user_mutex_lock(window_queue_mutex);
-            struct list2 *pos;
-            struct list2 *prev = NULL;
-            list2_for_each(pos, window_queue)
+            struct list2c *pos;
+            struct list2c *prev = &window_queue;
+            list2c_for_each(pos, &window_queue)
             {
                 prev = pos;
             }
@@ -745,7 +735,7 @@ void mouse_thread()
 
             struct window_queue_entry *new_focus = NULL;
 
-            for (pos = prev; pos != NULL; pos = pos->prev)
+            for (pos = prev; pos != &window_queue; pos = pos->prev)
             {
 
                 struct window_queue_entry *queue_ent =
@@ -938,19 +928,20 @@ int main()
     mouse_queue_ent = malloc(sizeof(struct window_queue_entry));
     mouse_queue_ent->conn = NULL;
     mouse_queue_ent->win = mouse;
-    mouse_queue_ent->list = LIST2_INIT();
-    window_queue = &mouse_queue_ent->list;
+    mouse_queue_ent->list = LIST2C_INIT();
+
     mouse_queue_ent->nonblock_info.is_nonblock = false;
     mouse_queue_ent->nonblock_info.current_key = 0;
 
     background_queue_ent = malloc(sizeof(struct window_queue_entry));
     background_queue_ent->win = background;
-    background_queue_ent->list = LIST2_INIT();
+    background_queue_ent->list = LIST2C_INIT();
     background_queue_ent->conn = NULL;
     background_queue_ent->nonblock_info.is_nonblock = false;
     background_queue_ent->nonblock_info.current_key = 0;
 
-    list2_add_front(&background_queue_ent->list, &window_queue);
+    list2c_push(&mouse_queue_ent->list, &window_queue);
+    list2c_push(&background_queue_ent->list, &window_queue);
 
     draw_window(buffer, mouse);
     draw_window(buffer, background);
