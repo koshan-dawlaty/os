@@ -204,3 +204,12 @@ void list2c_remove(struct list2c *value)
     value->next = NULL;
     value->prev = NULL;
 }
+
+void list2c_add_after(struct list2c *new, struct list2c *other)
+{
+    struct list2c *temp = other->next;
+    other->next = new;
+    new->next = temp;
+    new->prev = other;
+    temp->prev = new;
+}

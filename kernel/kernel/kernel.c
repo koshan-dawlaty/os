@@ -287,12 +287,6 @@ struct task_queue abc = TASK_QUEUE_INIT(abc);
 void kmain()
 {
 
-    u8 *pg = get_free_pages(1);
-    for (size_t i = 0; i < PAGE_SIZE; i++)
-    {
-        logd("%p", pg[i]);
-    }
-
     /* void *x = malloc(10); */
     /* logd("x:%p", x); */
     /* free(x); */
