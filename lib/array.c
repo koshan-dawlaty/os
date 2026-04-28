@@ -56,7 +56,6 @@ void *array_get(struct array *array, size_t index, size_t item_len)
 
 void *array_pop_end(struct array *array, size_t len)
 {
-    /* this should remove from the start of the array */
     ASSERT(array->len >= len, "array length too high, %d > %d", len,
            array->len);
 
