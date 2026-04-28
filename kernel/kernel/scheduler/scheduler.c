@@ -275,7 +275,6 @@ struct task *user_thread_alloc(ptr ip)
         struct fdlist *current_fds = current_task->descriptors;
         struct fdlist *out_fds = out->descriptors;
 
-        /* FIXME: the open_device calls get evaluated */
         fdlist_copy_device(out_fds, current_fds, 0, keyboard_path);
         fdlist_copy_device(out_fds, current_fds, 1, term_path);
         fdlist_copy_device(out_fds, current_fds, 2, term_path);

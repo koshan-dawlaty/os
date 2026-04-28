@@ -27,9 +27,6 @@ struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
 #elif defined(CONFIG_x86_32)
     .virtual = 0xD0000000,
 #endif
-    /* TODO: FIXME: THIS IS SO STUPID, YOU RUN INTO THIS ADDR AFTER ALLOCATING A
-       FEW WINDOW MANAGER DATA STRUCTURES STOP JUST INCREMENTING IT */
-    .physical = 0x1000000,
     .size = DEFAULT_BITMAP_SIZE,
     .bitmap = gfp_kernel_bitmap,
     .pg_flags = PAGING_WRITEABLE,

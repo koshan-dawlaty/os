@@ -66,7 +66,8 @@ void key_thread()
 
 u32 bg_color = 0x4b3973;
 
-void wm_terminal_draw_char_at(char character, size_t x, size_t y)
+void wm_terminal_draw_char_at(char character, size_t x, size_t y,
+                              bool is_cursor)
 {
     /* TODO: client_draw_char, and the framebuffer draw_char function should be
      * able to draw a background with the character */
