@@ -37,13 +37,10 @@ void terminal_draw_charat(char c, size_t x, size_t y, struct terminal *term)
 {
     if (x == term->x && y == term->y)
     {
-        logd("drawing %c at:%d, %d", c, x, y);
         term->operations.draw_char_at(c, x, y, true);
         if (term->prev_x != term->x || term->prev_y != term->y)
         {
-            logd("getting");
             char c2 = terminal_getchar(*term, term->prev_x, term->prev_y);
-            logd("done getting");
             term->operations.draw_char_at(c2, term->prev_x, term->prev_y,
                                           false);
         }
@@ -109,18 +106,11 @@ void terminal_addchar(char c, struct terminal *term)
         {
             struct array *a =
                 array_get(&term->characters, term->y, sizeof(struct array));
-            logd("pop_middle at:%d for len %d", term->x, a->len);
             array_pop_middle(a, term->x - 1);
-            logd("done");
             term->x -= 1;
 
-            logd("prev:%d", term->prev_y);
-            logd("getting");
             char c = *(char *)array_get(a, term->x - 1, 1);
-            logd("done getting");
-            logd("drawing");
             terminal_draw_charat(c, term->x, term->y, term);
-            logd("done drawing");
             for (size_t i = term->x + 1; i < a->len; i++)
             {
                 char c2 = *(char *)array_get(a, i, 1);
@@ -134,8 +124,6 @@ void terminal_addchar(char c, struct terminal *term)
         }
         break;
     default:;
-        logd("getting line at index:%d, len:%d", term->y,
-             ARRAY_LEN(term->characters, sizeof(struct array)));
         struct array *a =
             array_get(&term->characters, term->y, sizeof(struct array));
         char c2 = ' ';
@@ -143,7 +131,7 @@ void terminal_addchar(char c, struct terminal *term)
         {
             c2 = *(char *)a->data;
         }
-        logd("inserting %c at:%d", c, term->x);
+
         array_insert(a, term->x, &c, 1);
 
         term->x++;
