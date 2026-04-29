@@ -232,17 +232,17 @@ struct task_queue abc = TASK_QUEUE_INIT(abc);
 void kmain()
 {
 
-    int fd = open("/../../../../../one", O_RDONLY);
-    logd("%d", fd);
+    struct array a = ARRAY_INIT();
+    const char *data = "abcdef";
+    char *data2 = "123";
+    array_add(&a, data, strlen(data) + 1);
+    /* char c = array_pop_middle(&a, 7); */
+    /* logd("got:%c", c); */
 
-    char *buf = malloc(100);
-    size_t read_val = read(fd, buf, 100);
-    buf[read_val] = 0;
-
-    const char *expected = "file one\n";
-    printf("%s == %s\n", buf, expected);
-
-    close(fd);
+    array_insert(&a, 5, data2, strlen(data2));
+    logd("%s", a.data);
+    logd("%d", a.len);
+    /* return; */
 
     /* void *x = malloc(10); */
     /* logd("x:%p", x); */

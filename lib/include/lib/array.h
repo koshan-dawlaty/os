@@ -1,6 +1,7 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
+#include "kernel/types.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,5 +57,13 @@ static inline void array_set(struct array *array, size_t index, void *data,
     printf("writing to:%d for index %d\n", index_real, index);
     memcpy(array->data + index_real, data, len);
 }
+
+/*
+ * insert @data into @array at @offset
+ * @offset is in bytes
+ */
+void array_insert(struct array *array, size_t offset, void *data, size_t len);
+
+u8 array_pop_middle(struct array *array, size_t offset);
 
 #endif

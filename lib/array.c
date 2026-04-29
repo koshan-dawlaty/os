@@ -1,5 +1,6 @@
-#include "lib/assert.h"
+#include "lib/log.h"
 #include <lib/array.h>
+#include <lib/assert.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,12 +69,6 @@ void *array_pop_end(struct array *array, size_t len)
 
 void *array_pop(struct array *array, size_t len)
 {
-    /* *(char *)0x1 = 'a'; */
-    /* *(char *)0x1 = 'a'; */
-    /* *(char *)0x1 = 'a'; */
-    /* *(char *)0x1 = 'a'; */
-    /* *(char *)0x1 = 'a'; */
-    /* *(char *)0x1 = 'a'; */
     if (array->len < len)
     {
         printf("array length too high %d > %d\n", len, array->len);
@@ -98,4 +93,60 @@ void *array_pop(struct array *array, size_t len)
     array->len -= len;
 
     return out;
+}
+
+void array_insert(struct array *array, size_t offset, void *data, size_t size)
+{
+
+    if (array->len + size > array->capacity)
+    {
+        array->capacity += array->len + size - array->capacity;
+        array->data = realloc(array->data, array->capacity);
+    }
+
+    u8 *dest = array->data + offset + size;
+    u8 *src = array->data + offset;
+
+    if (array->len != 0)
+    {
+        for (size_t i = array->len; i > 0; i--)
+        {
+            dest[i - 1] = src[i - 1];
+        }
+
+        /* for (size_t i = 0; i < array->len; i++) */
+        /* { */
+        /*     dest[i - 1] = src[i - 1]; */
+        /* } */
+    }
+
+    memcpy(array->data + offset, data, size);
+    array->len += size;
+}
+
+u8 array_pop_middle(struct array *array, size_t offset)
+{
+    ASSERT(offset < array->len, "array index %d out of bounds for len %d",
+           offset, array->len);
+
+    u8 retval = ((u8 *)array->data)[offset];
+
+    u8 *dest = array->data + offset;
+    u8 *src = array->data + offset + 1;
+
+    if (array->len != 0)
+    {
+        /* for (size_t i = array->len; i > 0; i--) */
+        /* { */
+        /*     dest[i - 1] = src[i - 1]; */
+        /* } */
+
+        for (size_t i = 0; i < array->len; i++)
+        {
+            dest[i - 1] = src[i - 1];
+        }
+    }
+
+    array->len--;
+    return retval;
 }

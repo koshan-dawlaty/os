@@ -19,6 +19,9 @@ struct terminal
     size_t top_line; /* line that is currently at the top of the screen */
     size_t x;
     size_t y;
+
+    size_t prev_x;
+    size_t prev_y;
 };
 
 /*
@@ -31,9 +34,10 @@ void terminal_add_newline(struct terminal *term);
 static inline struct terminal
 terminal_init(struct terminal_operations operations)
 {
-    struct terminal out = {operations, ARRAY_INIT(), 0, 0, 0};
+    struct terminal out = {operations, ARRAY_INIT(), 0, 0, 0, 0, 0};
     terminal_add_newline(&out);
     out.y = 0;
+
     return out;
 }
 

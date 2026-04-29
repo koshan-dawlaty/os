@@ -65,14 +65,25 @@ void key_thread()
 }
 
 u32 bg_color = 0x4b3973;
+u32 cursor_color = 0xbd8f13;
 
 void wm_terminal_draw_char_at(char character, size_t x, size_t y,
                               bool is_cursor)
 {
     /* TODO: client_draw_char, and the framebuffer draw_char function should be
      * able to draw a background with the character */
-    client_draw_rect(client, x * font->header.width, y * font->header.height,
-                     font->header.width, font->header.height, bg_color);
+    if (is_cursor)
+    {
+        client_draw_rect(client, x * font->header.width,
+                         y * font->header.height, font->header.width,
+                         font->header.height, cursor_color);
+    }
+    else
+    {
+        client_draw_rect(client, x * font->header.width,
+                         y * font->header.height, font->header.width,
+                         font->header.height, bg_color);
+    }
     client_draw_char(client, font, character, x * font->header.width,
                      y * font->header.height);
 }

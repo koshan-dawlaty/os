@@ -1,10 +1,10 @@
-#include "err_ptr.h"
-#include "lib/log.h"
-#include "lib/term.h"
 #include "wm_lib.h"
+#include <err_ptr.h>
 #include <fcntl.h>
 #include <init.h>
 #include <lib/framebuffer.h>
+#include <lib/log.h>
+#include <lib/term.h>
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -95,9 +95,9 @@ int main()
     /* terminal_addchar('\n', &characters); */
     /* terminal_draw_line(&characters, 0, 0); */
 
-    terminal_add("1\n", 2, &characters);
-    terminal_add("2\n", 2, &characters);
-    terminal_add("3", 1, &characters);
+    terminal_add("abc\b", 4, &characters);
+    /* terminal_add("2\n", 2, &characters); */
+    /* terminal_add("3", 1, &characters); */
 
     /* terminal_set_cursor(&characters, 0, 1); */
 
