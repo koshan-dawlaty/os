@@ -139,6 +139,9 @@ int main()
             case 'l':
                 terminal_move_cursor(&characters, 1, 0);
                 break;
+            case 'w':
+                write_file(&characters);
+                break;
             }
 
             wm_render(client);

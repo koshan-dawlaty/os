@@ -98,9 +98,9 @@ void *array_pop(struct array *array, size_t len)
 void array_insert(struct array *array, size_t offset, void *data, size_t size)
 {
 
-    if (array->len + size > array->capacity)
+    if (array->len + size + offset > array->capacity)
     {
-        array->capacity += array->len + size - array->capacity;
+        array->capacity += (array->len + size + offset) - array->capacity;
         array->data = realloc(array->data, array->capacity);
     }
 
