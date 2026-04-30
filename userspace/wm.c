@@ -951,7 +951,7 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
-    /* execv("/bin/elf_test", (char *[]){"elf_test", NULL}); */
+    execv("/bin/elf_test", (char *[]){"elf_test", NULL});
     execv("/bin/edit", (char *[]){"edit", NULL});
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */

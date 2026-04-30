@@ -86,9 +86,8 @@ void keyboard_isr_disable()
 bool is_shift_pressed = false;
 
 INT_HANDLER(keyboard_interrupt_handler, {
-    uint8_t scancode = inb(0x60);
+    u8 scancode = inb(0x60);
 
-    logd("%p", scancode);
     if (scancode == 0x2A)
     {
         is_shift_pressed = true;
@@ -106,7 +105,6 @@ INT_HANDLER(keyboard_interrupt_handler, {
         char c;
         if (is_shift_pressed)
         {
-            logd("shift");
             c = keyboard_map_shift[scancode];
         }
         else

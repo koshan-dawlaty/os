@@ -96,22 +96,23 @@ void terminal_addchar(char c, struct terminal *term)
                   sizeof(struct array));
     size_t width = term->operations.get_width();
     size_t height = term->operations.get_height();
+
+    struct array *a =
+        array_get(&term->characters, term->y, sizeof(struct array));
     switch (c)
     {
     case '\n':
         terminal_add_newline(term);
         break;
-    case '\b':
+    case '\b':;
         if (term->x > 0)
         {
-            struct array *a =
-                array_get(&term->characters, term->y, sizeof(struct array));
             array_pop_middle(a, term->x - 1);
-            term->x -= 1;
 
+            term->x -= 1;
             char c = *(char *)array_get(a, term->x - 1, 1);
             terminal_draw_charat(c, term->x, term->y, term);
-            for (size_t i = term->x + 1; i < a->len; i++)
+            for (size_t i = term->x + 1; i < a->len - 1; i++)
             {
                 char c2 = *(char *)array_get(a, i, 1);
                 terminal_draw_charat(c2, i, term->y, term);
@@ -124,8 +125,6 @@ void terminal_addchar(char c, struct terminal *term)
         }
         break;
     default:;
-        struct array *a =
-            array_get(&term->characters, term->y, sizeof(struct array));
         char c2 = ' ';
         if (a->data != NULL)
         {

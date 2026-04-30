@@ -287,16 +287,16 @@ struct task_queue abc = TASK_QUEUE_INIT(abc);
 void kmain()
 {
 
-    struct array a = ARRAY_INIT();
-    const char *data = "abcdef";
-    char *data2 = "123";
-    array_add(&a, data, strlen(data) + 1);
-    /* char c = array_pop_middle(&a, 7); */
-    /* logd("got:%c", c); */
+    /* struct array a = ARRAY_INIT(); */
+    /* const char *data = "abcdef"; */
+    /* char *data2 = "123"; */
+    /* array_add(&a, data, strlen(data) + 1); */
+    /* /1* char c = array_pop_middle(&a, 7); *1/ */
+    /* /1* logd("got:%c", c); *1/ */
 
-    array_insert(&a, 5, data2, strlen(data2));
-    logd("%s", a.data);
-    logd("%d", a.len);
+    /* array_insert(&a, 5, data2, strlen(data2)); */
+    /* logd("%s", a.data); */
+    /* logd("%d", a.len); */
     /* return; */
 
     /* void *x = malloc(10); */
