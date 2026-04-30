@@ -323,6 +323,7 @@ void ktask_return()
 
 struct task *new_task_args(ptr ip, void *args)
 {
+    logd("running at:%p", ip);
     struct task *out = new_task(ip);
     scheduler_set_first_arg(args, &out->regs);
     /* *((ptr *)(out->stack - sizeof(ptr))) = (ptr)ktask_return; */
@@ -376,6 +377,7 @@ bool init_task_exists()
     struct list2c *pos;
     list2c_for_each(pos, &scheduler_queue.head)
     {
+        logd("%p, %p", pos, &scheduler_queue.head);
         struct task *t = containerof(pos, struct task, list);
         if (t->start_addr == (void *)0xDEADBEEF)
         {
