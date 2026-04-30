@@ -25,7 +25,7 @@ export CFLAGS :=  -DMYOS1234 -Werror \
 export QEMU_COMMAND := qemu-system-$(shell ./build/qemu-arch.sh $(ARCH))
 
 export QEMU_FLAGS :=  -cdrom build/os.iso \
--m 512M \
+-m 256M \
 -machine pc \
 -d int \
 -D build/log.txt \

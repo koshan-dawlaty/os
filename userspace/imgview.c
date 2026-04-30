@@ -29,14 +29,16 @@ struct tga_header
  */
 void *parse_tga_image(const char *path, struct tga_header *header)
 {
+    logd("reading from:%s", path);
     int fd = open(path, O_RDONLY);
+    logd("fd:%d", fd);
     pread(fd, header, sizeof(struct tga_header), 0);
 
     /* printf("w:%d h:%d, bpp:%d, %d\n", header->w, header->h, header->bpp, */
     /*        header->encoding); */
 
     size_t data_size = header->h * header->w * (header->bpp / 8);
-    void *data = malloc(data_size);
+    void *data = calloc(data_size, 1);
 
     int err = pread(fd, data, data_size, sizeof(struct tga_header));
     if (err < 0)
@@ -54,6 +56,7 @@ int main(int argc, char **argv)
     init_libc();
 
     /* sleep(400); */
+    logd("imgview");
 
     if (argc < 2)
     {
@@ -62,7 +65,9 @@ int main(int argc, char **argv)
     }
 
     struct tga_header header;
+    logd("parsing image");
     u8 *img_data = parse_tga_image(argv[1], &header);
+    logd("img parsed");
 
     struct wm_client client = wm_client_connect(header.h, header.w);
 
@@ -92,7 +97,7 @@ int main(int argc, char **argv)
     {
         wm_render(client);
         char c = wm_get_key(client);
-        logd("a:%c", c);
+
         if (c == 'q' || (u8)c == 0xFF)
         {
             break;

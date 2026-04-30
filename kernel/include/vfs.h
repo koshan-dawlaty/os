@@ -1,5 +1,6 @@
 #ifndef VFS_H
 #define VFS_H
+#include "lib/assert.h"
 #include <device.h>
 #include <dirent.h>
 #include <kernel/types.h>
@@ -183,7 +184,6 @@ typedef struct file
         struct dir_context dir_context;
     };
 
-    fd_t descriptor;
     struct dentry *entry;
 
     struct file_operations operations;
@@ -211,11 +211,14 @@ static inline void add_file_offset(file *f, size_t add)
  * initializes descriptor as 0
  */
 struct file *new_file(struct dentry *entry, int permissions);
-struct file *open_file(const char *path, int permissions);
+struct file *open_file(
+    const char *path, int permissions,
+    int *fd); /* FIXME: this could maybe not add the file descriptor to the
+                 fdlist, having to take a pointer argument is kinda annoying */
 int close_file(file *f);
 int read_file(file *file, char *buf, size_t n, size_t off);
 int write_file(file *file, const char *buf, size_t n, size_t off);
-file *lookup_descriptor(int fd);
+struct file *lookup_descriptor(int fd);
 
 typedef struct
 {
@@ -292,6 +295,10 @@ struct fdlist
 };
 struct fdlist *new_fdlist();
 
+extern struct fdlist *basic_open_files;
+
+struct fdlist *get_current_fdlist();
+
 static inline struct file *fdlist_get(struct fdlist *list, size_t index)
 {
     if (index > list->len)
@@ -311,6 +318,10 @@ static inline struct file *fdlist_get(struct fdlist *list, size_t index)
 int fdlist_add(struct fdlist *list, struct file *f);
 struct file *fdlist_lookup(struct fdlist *list, int fd);
 
+/*
+ * removes at index @fd in @list
+ */
+int fdlist_close(struct fdlist *list, int fd);
 void fdlist_set(struct fdlist *list, size_t pos, struct file *f);
 
 void fdlist_free(struct fdlist *list);

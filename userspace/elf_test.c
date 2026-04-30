@@ -1,3 +1,4 @@
+#include "lib/assert.h"
 #include "wm_lib.h"
 #include <compiler.h>
 #include <container_of.h>
@@ -5,7 +6,10 @@
 #include <extension.h>
 #include <fcntl.h>
 #include <init.h>
+#include <lib/array.h>
 #include <lib/log.h>
+#include <lib/term.h>
+#include <lib/utils.h>
 #include <sched.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -32,56 +36,9 @@ int execv_stdio(const char *path, char *const argv[], int in, int out)
 size_t x = 0, y = 0;
 struct PSF_font *font;
 struct wm_client client;
+struct terminal term;
 int pipe_write;
 int mutex; /* TODO: maybe have a mutex in the wm_client variable? */
-
-void draw_char(char c)
-{
-
-    switch (c)
-    {
-    case '\n':
-        y += font->header.height;
-        x = 0;
-
-        break;
-
-    case '\b':
-
-        x -= font->header.width;
-        client_draw_rect(client, x, y, font->header.width, font->header.height,
-                         0xFF00FF);
-        if (x == 0)
-        {
-            client_draw_rect(client, 0, y, WM_CLIENT_WIDTH(client),
-                             font->header.height, 0xFF00FF);
-            x = 0;
-            y -= font->header.height;
-        }
-
-        /* x = 0; */
-        /* y = 0; */
-
-        /* size_t y2; */
-        /* for (y2 = 0; y2 < WM_CLIENT_HEIGHT(client); y2++) */
-        /* { */
-        /*     for (size_t x = 0; x < WM_CLIENT_WIDTH(client); x++) */
-        /*     { */
-        /*         client_draw_pixel(client, x, y2, color); */
-        /*     } */
-        /* } */
-        break;
-    default:
-        /* printf("%d, %d\n", x, y); */
-        client_draw_char(client, font, c, x, y);
-        x += font->header.width;
-        if (x > WM_CLIENT_WIDTH(client))
-        {
-            x = 0;
-            y += font->header.height;
-        }
-    }
-}
 
 void key_thread()
 {
@@ -98,7 +55,7 @@ void key_thread()
         }
         write(pipe_write, &c, 1);
         printf("%c ", c);
-        draw_char(c);
+        terminal_addchar(c, &term);
         user_mutex_lock(mutex);
         wm_render(client);
         user_mutex_unlock(mutex);
@@ -106,6 +63,43 @@ void key_thread()
     loge("bad key");
     exit(1);
 }
+
+u32 bg_color = 0x4b3973;
+u32 cursor_color = 0xbd8f13;
+
+void wm_terminal_draw_char_at(char character, size_t x, size_t y,
+                              bool is_cursor)
+{
+    /* TODO: client_draw_char, and the framebuffer draw_char function should be
+     * able to draw a background with the character */
+    if (is_cursor)
+    {
+        client_draw_rect(client, x * font->header.width,
+                         y * font->header.height, font->header.width,
+                         font->header.height, cursor_color);
+    }
+    else
+    {
+        client_draw_rect(client, x * font->header.width,
+                         y * font->header.height, font->header.width,
+                         font->header.height, bg_color);
+    }
+    client_draw_char(client, font, character, x * font->header.width,
+                     y * font->header.height);
+}
+
+size_t wm_terminal_get_width()
+{
+    return client.fb.width / font->header.width;
+}
+
+size_t wm_terminal_get_height()
+{
+    return (client.fb.height / font->header.height) - 2;
+}
+
+const struct terminal_operations wm_term_operations = {
+    wm_terminal_draw_char_at, wm_terminal_get_width, wm_terminal_get_height};
 
 int main()
 {
@@ -152,28 +146,19 @@ int main()
     /* int color = 0xFFFF00; */
     /* int color = 0x0000FF; */
 
-    u32 color = 0x4b3973;
-    switch (client.socket)
-    {
-    case 1:
-        color = 0xFF0000;
-        break;
-    case 2:
-        color = 0x00FF00;
-        break;
-    case 3:
-        color = 0xFF;
-    }
-
     /* memset(w.buffer, 127, win.width * win.height * 4); */
     size_t y2;
     for (y2 = 0; y2 < WM_CLIENT_HEIGHT(client); y2++)
     {
         for (size_t x = 0; x < WM_CLIENT_WIDTH(client); x++)
         {
-            client_draw_pixel(client, x, y2, color);
+            client_draw_pixel(client, x, y2, bg_color);
         }
     }
+
+    term = terminal_init(wm_term_operations);
+
+    /* terminal_writechar('a', &term); */
 
     int stdout_pipe[2];
     pipe(stdout_pipe);
@@ -184,7 +169,8 @@ int main()
     /* execv("/ls", (char *[]){"ls", NULL}); */
     /* execv("/ksh", (char *[]){"ksh", NULL}); */
     printf("execv\n");
-    execv_stdio("/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0], stdout_pipe[1]);
+    execv_stdio("/bin/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0],
+                stdout_pipe[1]);
     printf("execv end\n");
 
     pipe_write = stdin_pipe[1];
@@ -221,11 +207,7 @@ int main()
             need_to_read_more = true;
         }
 
-        for (size_t i = 0; i < res; i++)
-        {
-            char c = buf[i];
-            draw_char(c);
-        }
+        terminal_add(buf, res, &term);
         if (need_to_read_more)
         {
             goto read_and_draw_char;

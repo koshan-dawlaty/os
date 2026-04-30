@@ -33,6 +33,11 @@ struct mouse_event ps2_mouse_event = {0, 0, {false, false, false}};
 
 INT_HANDLER(mouse_interrupt_handler, {
     u8 buttons = inb(0x60);
+
+    if (!(buttons & (1 << 3)))
+    {
+        goto end;
+    }
     int8_t x = inb(0x60);
     int8_t y = inb(0x60);
 

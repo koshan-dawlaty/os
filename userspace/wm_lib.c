@@ -119,7 +119,6 @@ char wm_get_key_nonblock(struct wm_client client)
 
     char out;
     retval = recv(client.socket, &out, sizeof(char));
-    logd("%d", retval);
     if (retval == -ENOTSOCK)
     {
         return 0xFF;

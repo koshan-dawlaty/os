@@ -54,7 +54,7 @@ struct window_queue_entry
 {
     struct window *win;
     struct wm_connection *conn;
-    struct list2 list;
+    struct list2c list;
 
     /* FIXME: stupid, should use O_NONBLOCK globally or just find a better way
      * of doing this */
@@ -70,7 +70,7 @@ struct window_queue_entry *mouse_queue_ent;
 struct window_queue_entry *background_queue_ent;
 struct window *background;
 
-struct list2 *window_queue;
+LIST2C_DEFINE_HEAD(window_queue);
 int window_queue_mutex = -1;
 struct framebuffer *buffer;
 
@@ -163,8 +163,8 @@ struct array compute_visible(struct window_queue_entry *win_ent,
     array_add(&visible, &intersection, sizeof(struct rect));
     /* array_add(&visible, &WIN_RECT(win), sizeof(struct rect)); */
 
-    struct list2 *pos;
-    for (pos = win_ent->list.next; pos != NULL; pos = pos->next)
+    struct list2c *pos;
+    for (pos = win_ent->list.next; pos != &window_queue; pos = pos->next)
     /* list2_for_each(pos, &win_ent->list) */
     /* list2_for_each(pos, window_queue) */
     {
@@ -214,8 +214,8 @@ void update_area_up(struct rect area, struct framebuffer *fb)
 {
     user_mutex_lock(window_queue_mutex);
 
-    struct list2 *pos;
-    list2_for_each(pos, window_queue)
+    struct list2c *pos;
+    list2c_for_each(pos, &window_queue)
     {
         struct window_queue_entry *ent =
             containerof(pos, struct window_queue_entry, list);
@@ -359,10 +359,6 @@ void change_focus(struct window_queue_entry *new_focus)
     {
         for (size_t x = 0; x < WIN_W(focused->win); x++)
         {
-            /* *(u32 *)(focused->win->fb.buffer + y * WIN_W(focused->win) *
-             * 4 +
-             */
-            /*          (x * 4)) = 0; */
             framebuffer_put_pixel(&focused->win->fb, 0xFF, x, y);
         }
     }
@@ -372,7 +368,12 @@ void change_focus(struct window_queue_entry *new_focus)
                              WINDOW_DECORATION_ROWS),
                    buffer);
 
+    user_mutex_lock(window_queue_mutex);
+    list2c_remove(&new_focus->list);
+    list2c_add_before(&new_focus->list, window_queue.prev);
     focused = new_focus;
+    user_mutex_unlock(window_queue_mutex);
+    draw_window(buffer, new_focus->win);
 }
 
 char current_keyboard_char;
@@ -398,7 +399,6 @@ struct window *new_client_window(size_t x, size_t y, size_t w, size_t h)
     /* the shared memory buffer could be used here, but the way it works
      * now, it will break window decorations */
     out->fb = FRAMEBUFFER_INIT(w, height, w * 4, 32, 4, malloc(w * height * 4));
-    logd("%p", out->fb.buffer + (w * height * 4));
 
     return out;
 }
@@ -508,26 +508,16 @@ void process_connection()
     /* x += 40; */
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
-    ent->list = LIST2_INIT();
+    ent->list = LIST2C_INIT();
     ent->win = w;
     ent->conn = conn;
     ent->nonblock_info.is_nonblock = win_info.is_nonblock;
     ent->nonblock_info.current_key = 0;
 
     user_mutex_lock(window_queue_mutex);
-    if (window_queue == NULL)
-    {
-        window_queue = &ent->list;
-    }
-    else
-    {
-        ent->list.prev = window_queue;
-        ent->list.next = window_queue->next;
-        window_queue->next->prev = &ent->list;
 
-        window_queue->next = &ent->list;
-        /* list2_add_front(&ent->list, &window_queue); */
-    }
+    list2c_add_after(&ent->list, window_queue.next);
+
     user_mutex_unlock(window_queue_mutex);
 
     if (num_connections < 1)
@@ -546,7 +536,7 @@ void process_connection()
         case WM_RES_RENDER:
         {
 
-            for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_ROWS) - 1; y++)
+            for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_ROWS); y++)
             {
                 size_t server_offset =
                     (y + WINDOW_DECORATION_ROWS) * WIN_W(w) * 4;
@@ -578,6 +568,7 @@ void process_connection()
 
             if (retval == -ENOTSOCK)
             {
+                logd("the input socket was closed");
                 goto disconnect;
             }
 
@@ -640,7 +631,7 @@ disconnect:;
     struct rect old_area = WIN_RECT(ent->win);
 
     user_mutex_lock(window_queue_mutex);
-    list2_remove(&ent->list, &window_queue);
+    list2c_remove(&ent->list);
     user_mutex_unlock(window_queue_mutex);
 
     update_area_up(old_area, buffer);
@@ -657,36 +648,40 @@ void keyboard_thread()
 
     while (true)
     {
-        char c = getchar();
+
+        char c;
+        int err = read(0, &c, 1);
+        if (err < 0)
+        {
+            loge("%s", strerror(err));
+        }
 
         if (c == '\\')
         {
             if (focused != NULL)
             {
                 close(focused->conn->client_socket);
-                logd("closed");
             }
         }
-
-        if (c == '\t')
+        else if (c == '\t')
         {
-            struct list2 *next = focused->list.next;
-            if (next == NULL)
+            struct list2c *next = focused->list.next;
+            if (next == &window_queue)
             {
-                next = window_queue;
+                next = window_queue.next->next;
             }
             struct window_queue_entry *ent =
                 containerof(next, struct window_queue_entry, list);
 
             if (ent->win == mouse)
             {
-                ent =
-                    containerof(window_queue, struct window_queue_entry, list);
+                ent = containerof(window_queue.next->next,
+                                  struct window_queue_entry, list);
             }
             if (ent == background_queue_ent)
             {
-                ent = containerof(window_queue->next, struct window_queue_entry,
-                                  list);
+                ent = containerof(window_queue.next->next,
+                                  struct window_queue_entry, list);
             }
             change_focus(ent);
         }
@@ -738,18 +733,16 @@ void mouse_thread()
             /* TODO: this should be its own function that traverses the list
              * backwards */
             user_mutex_lock(window_queue_mutex);
-            struct list2 *pos;
-            struct list2 *prev = NULL;
-            list2_for_each(pos, window_queue)
+            struct list2c *pos;
+            struct list2c *prev = &window_queue;
+            list2c_for_each(pos, &window_queue)
             {
                 prev = pos;
             }
 
-            /* logd("%p", prev->prev->prev); */
-
             struct window_queue_entry *new_focus = NULL;
 
-            for (pos = prev; pos != NULL; pos = pos->prev)
+            for (pos = prev; pos != &window_queue; pos = pos->prev)
             {
 
                 struct window_queue_entry *queue_ent =
@@ -769,7 +762,6 @@ void mouse_thread()
                     WIN_Y(mouse) < WIN_Y(win) + WIN_H(win))
 
                 {
-                    /* logd("intersect"); */
                     new_focus = queue_ent;
                     break;
                 }
@@ -918,18 +910,7 @@ int main()
     size_t mouse_h = 10;
     mouse = new_window(0, 0, mouse_w, mouse_h);
 
-    for (size_t y = 0; y < mouse_h; y++)
-    {
-        for (size_t x = 0; x < mouse_w; x++)
-        {
-            /* u32 val = x * x * x * y * y * y * y; */
-            u32 val = 0xFF;
-            framebuffer_put_pixel(&mouse->fb, val, x, y);
-            /* *(u32 *)(mouse->fb.buffer + (x * 4) + (y * mouse_w * 4)) =
-             * val;
-             */
-        }
-    }
+    framebuffer_draw_rect(&mouse->fb, 0, 0, WIN_W(mouse), WIN_H(mouse), 0xFF);
     /* memset(mouse->fb.buffer, 255, 10 * 10 * 4); */
 
     buffer = framebuffer_alloc();
@@ -942,19 +923,20 @@ int main()
     mouse_queue_ent = malloc(sizeof(struct window_queue_entry));
     mouse_queue_ent->conn = NULL;
     mouse_queue_ent->win = mouse;
-    mouse_queue_ent->list = LIST2_INIT();
-    window_queue = &mouse_queue_ent->list;
+    mouse_queue_ent->list = LIST2C_INIT();
+
     mouse_queue_ent->nonblock_info.is_nonblock = false;
     mouse_queue_ent->nonblock_info.current_key = 0;
 
     background_queue_ent = malloc(sizeof(struct window_queue_entry));
     background_queue_ent->win = background;
-    background_queue_ent->list = LIST2_INIT();
+    background_queue_ent->list = LIST2C_INIT();
     background_queue_ent->conn = NULL;
     background_queue_ent->nonblock_info.is_nonblock = false;
     background_queue_ent->nonblock_info.current_key = 0;
 
-    list2_add_front(&background_queue_ent->list, &window_queue);
+    list2c_push(&mouse_queue_ent->list, &window_queue);
+    list2c_push(&background_queue_ent->list, &window_queue);
 
     draw_window(buffer, mouse);
     draw_window(buffer, background);
@@ -966,9 +948,10 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
-    execv("/elf_test", (char *[]){"elf_test", NULL});
     /* execv("/explore", (char *[]){"explore", NULL}); */
-    /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    execv("/bin/elf_test", (char *[]){"elf_test", NULL});
+    execv("/bin/edit", (char *[]){"edit", NULL});
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */

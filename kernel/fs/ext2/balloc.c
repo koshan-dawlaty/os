@@ -231,8 +231,6 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
         {
             size_t new_len = ptr_align(8 + (*(u8 *)(raw_entry + 6)), 4);
 
-            logd("name:%s, %d", raw_entry + 8, i);
-
             i += new_len;
             *(u16 *)(raw_entry + 4) = new_len;
 
@@ -242,8 +240,6 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
 
         i += len;
     }
-
-    logd("%d", i);
 
     size_t buf_len = align_long((strlen(name) + 8), 4);
     u8 *new_buf = buf + i;

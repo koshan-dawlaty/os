@@ -15,8 +15,10 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define DEFAULT_BITMAP_SIZE 4096 /* size in pages */
+/* #define DEFAULT_BITMAP_SIZE 8000 /1* size in pages *1/ */
 u8 gfp_kernel_bitmap[DEFAULT_BITMAP_SIZE / 8] = {GFP_FREE};
 
 struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
@@ -25,9 +27,6 @@ struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
 #elif defined(CONFIG_x86_32)
     .virtual = 0xD0000000,
 #endif
-    /* TODO: FIXME: THIS IS SO STUPID, YOU RUN INTO THIS ADDR AFTER ALLOCATING A
-       FEW WINDOW MANAGER DATA STRUCTURES STOP JUST INCREMENTING IT */
-    .physical = 0x1000000,
     .size = DEFAULT_BITMAP_SIZE,
     .bitmap = gfp_kernel_bitmap,
     .pg_flags = PAGING_WRITEABLE,
@@ -53,7 +52,6 @@ struct memory_zone gfp_user_zone = BITMAP_TO_GFP_ZONE(&gfp_bitmap_user_zone);
  */
 void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
 {
-
     spinlock_lock(&z->lock);
 
     struct bitmap_memory_zone *zone = z->zone_private;
@@ -61,6 +59,7 @@ void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
     ptr i;
     size_t consecutive = 0;
     size_t consecutive_start = 0;
+
     for (i = 0; i < zone->size; i++)
     {
         if (((zone->bitmap[i / 8] >> (i % 8)) & 1) == GFP_FREE)
@@ -332,6 +331,7 @@ void init_gfp_zones()
     struct bitmap_memory_zone *user_bitmap = gfp_user_zone.zone_private;
 
     user_bitmap->bitmap = malloc(user_bitmap->size / 8);
+    memset(user_bitmap->bitmap, GFP_FREE, user_bitmap->size / 8);
 
     struct tree_memory_zone *tree_zone =
         malloc(sizeof(struct tree_memory_zone));

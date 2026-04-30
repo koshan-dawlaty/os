@@ -1,4 +1,5 @@
 #include "dirent.h"
+#include "lib/log.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <init.h>
@@ -27,7 +28,6 @@ int main()
     char *input = malloc(0);
     size_t input_len = 0;
 
-    printf(">");
     while (1)
     {
         char c = getchar();
@@ -67,13 +67,21 @@ int main()
             }
             else
             {
-                int err = execv(args[0], args);
+                char *program = strdup(args[0]);
+                const char *bin_dir = "/bin/";
+                char *full_path =
+                    calloc(strlen(program) + strlen(bin_dir) + 1, 1);
+
+                strcat(full_path, bin_dir);
+                strcat(full_path, program);
+                logd("path:%s", full_path);
+
+                int err = execv(full_path, args);
                 if (err < 0)
                 {
                     printf("could not execute\nerror:%s", strerror(err));
                     printf("\n");
                 }
-                printf(">");
             }
             free(input);
             input = malloc(0);

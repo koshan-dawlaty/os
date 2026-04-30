@@ -66,6 +66,7 @@ START_OBJ=\
 
 BINARIES=\
 	elf_test \
+	edit \
 	elf_test2 \
 	overwrite \
 	touch \
@@ -138,6 +139,10 @@ $(BIN)/explore : $(OBJS_START_BIN) $(BIN)/explore.o $(BIN)/wm_lib.o $(DEPENDENCI
 	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
 
 
+$(BIN)/edit : $(OBJS_START_BIN) $(BIN)/edit.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+
 
 $(BIN)/%.o: %.S
 	@mkdir -p $(BIN)/$(dir $<)
@@ -167,7 +172,7 @@ install-binaries: $(BINARIES_BIN)
 	mkdir -p ../build/$(FS_ROOT)/$(BINARY_PREFIX)
 	# $(foreach binary, $@, $(cp $(binary) ../build/$(FS_ROOT)/$(BINARY_PREFIX)))
 	for f in $(BINARIES_BIN); do \
-		cp $$f ../build/$(FS_ROOT); \
+		cp $$f ../build/$(FS_ROOT)/bin/; \
 	done; 
 
 	# # may break with more files in binaries

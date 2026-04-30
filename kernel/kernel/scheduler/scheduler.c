@@ -90,7 +90,7 @@ char **create_user_args(int argc, char **argv)
 
     for (int i = 0; i < argc; i++)
     {
-        memcpy(args + string_offset, argv[i], strlen(argv[i]));
+        memcpy(args + string_offset, argv[i], strlen(argv[i]) + 1);
         *(char *)(args + string_offset + strlen(argv[i]) + 1) = 0;
 
         args[i] = (char *)(args + string_offset);
@@ -275,7 +275,6 @@ struct task *user_thread_alloc(ptr ip)
         struct fdlist *current_fds = current_task->descriptors;
         struct fdlist *out_fds = out->descriptors;
 
-        /* FIXME: the open_device calls get evaluated */
         fdlist_copy_device(out_fds, current_fds, 0, keyboard_path);
         fdlist_copy_device(out_fds, current_fds, 1, term_path);
         fdlist_copy_device(out_fds, current_fds, 2, term_path);

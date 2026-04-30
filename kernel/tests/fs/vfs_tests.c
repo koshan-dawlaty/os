@@ -161,7 +161,8 @@ TEST(stdlib_FILE, {
  * with the test macro that prevents it from being there */
 char *vfs_read_dir_dots_expected[] = {".", ".."};
 TEST(vfs_read_dir_dots, {
-    struct file *f = open_file("/", O_DIRECTORY);
+    int fd;
+    struct file *f = open_file("/", O_DIRECTORY, &fd);
 
     char **expected = {};
 
@@ -183,7 +184,8 @@ TEST(vfs_read_dir_dots, {
 char *vfs_create_read_dir_expected[] = {".", "..", "testfile"};
 TEST(vfs_create_read_dir, {
     mkdir("/testdirfortest", 0);
-    struct file *f = open_file("/testdirfortest", O_DIRECTORY);
+    int fd;
+    struct file *f = open_file("/testdirfortest", O_DIRECTORY, &fd);
     creat("/testdirfortest/testfile", 0);
 
     size_t num = 3;
@@ -217,7 +219,8 @@ TEST(vfs_create_readdir, {
     mkdir("dirtest123", 0);
     creat(file_one, 0);
     creat(file_two, 0);
-    struct file *f = open_file(dirname, O_DIRECTORY);
+    int fd;
+    struct file *f = open_file(dirname, O_DIRECTORY, &fd);
 
     size_t num = 4;
     /* we want this to be zeroed because we check if the name is null later */
@@ -236,7 +239,8 @@ TEST(vfs_dir_dot_dot_on_root_is_root, {
     ASSERT_GE(fd, 0, "file descriptor should be valid");
 
     char *buf = malloc(100);
-    read(fd, buf, 100);
+    size_t num_bytes = read(fd, buf, 100);
+    buf[num_bytes] = 0;
 
     const char *expected = "file one\n";
     ASSERT_EQ_STR(buf, expected, "%s != %s", buf, expected);
@@ -248,7 +252,8 @@ TEST(vfs_dir_dot_dot_on_dir, {
     int fd = open("/dir/../dir/../dir/../dir/../one", O_RDONLY);
     ASSERT_GE(fd, 0, "file descriptor should be valid");
     char *buf = malloc(100);
-    read(fd, buf, 100);
+    size_t num_bytes = read(fd, buf, 100);
+    buf[num_bytes] = 0;
 
     const char *expected = "file one\n";
     ASSERT_EQ_STR(buf, expected, "%s != %s", buf, expected);

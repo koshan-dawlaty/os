@@ -79,8 +79,8 @@ void *get_free_phys_page_dir(struct pagedir dir)
 
     void *addr = (void *)(phys_page_start + (i * PAGE_SIZE));
 
-#ifdef CONFIG_x86_64
-    /* memset(addr + 0xffffc00000000000, 0, PAGE_SIZE); */
+#if defined(CONFIG_x86_64) && defined(CONFIG_CLEAR_PAGES)
+    memset(addr + 0xffffc00000000000, 0xFF, PAGE_SIZE);
 #endif
 
     spinlock_unlock(&phys_page_lock);
@@ -151,6 +151,7 @@ struct pagedir *new_pagedir()
 {
     struct pagedir *out = malloc(sizeof(struct pagedir));
     out->pgdir_virtual = get_free_pages(1);
+    bzero(out->pgdir_virtual, PAGE_SIZE);
     out->pgdir = get_physaddr(out->pgdir_virtual);
     out->pagetable = get_free_pages(1);
 

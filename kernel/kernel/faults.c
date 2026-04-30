@@ -41,6 +41,9 @@ void page_fault(void *addr, void *ip, struct page_fault_flags flags)
                addr); /* TODO: make this print to the task's stdout */
         print_page_fault_flags(flags);
         printf("\n");
+        while (1)
+        {
+        }
 
         /* TODO: free task (maybe make a separate function to remove and free at
          * the same time */

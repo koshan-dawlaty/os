@@ -1,6 +1,7 @@
 #include "interrupts/idt.h"
 #include "kernel/interrupts.h"
 #include "keyboard_map.h"
+#include "lib/log.h"
 #include "spinlock.h"
 #include "vfs.h"
 #include "wait_queue.h"
@@ -82,12 +83,34 @@ void keyboard_isr_disable()
 {
     IRQ_set_mask(1);
 }
+bool is_shift_pressed = false;
 
 INT_HANDLER(keyboard_interrupt_handler, {
-    uint8_t scancode = inb(0x60);
+    u8 scancode = inb(0x60);
+
+    if (scancode == 0x2A)
+    {
+        is_shift_pressed = true;
+        goto end;
+    }
+    else if (scancode == 0xAA)
+    {
+        is_shift_pressed = false;
+        goto end;
+    }
+
     if (scancode < 0x81)
     {
-        char c = keyboard_map[scancode];
+
+        char c;
+        if (is_shift_pressed)
+        {
+            c = keyboard_map_shift[scancode];
+        }
+        else
+        {
+            c = keyboard_map[scancode];
+        }
 
         key_available = 1;
         push_keyboard_buffer(c);
@@ -98,6 +121,7 @@ INT_HANDLER(keyboard_interrupt_handler, {
         }
     }
 
+end:
     PIC_sendEOI(1);
 })
 

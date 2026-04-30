@@ -232,12 +232,25 @@ struct task_queue abc = TASK_QUEUE_INIT(abc);
 void kmain()
 {
 
+    /* struct array a = ARRAY_INIT(); */
+    /* const char *data = "abcdef"; */
+    /* char *data2 = "123"; */
+    /* array_add(&a, data, strlen(data) + 1); */
+    /* /1* char c = array_pop_middle(&a, 7); *1/ */
+    /* /1* logd("got:%c", c); *1/ */
+
+    /* array_insert(&a, 5, data2, strlen(data2)); */
+    /* logd("%s", a.data); */
+    /* logd("%d", a.len); */
+    /* return; */
+
     /* void *x = malloc(10); */
     /* logd("x:%p", x); */
     /* free(x); */
     /* void *y = malloc(10); */
     /* logd("y:%p", y); */
     /* return; */
+    /* PANIC("test"); */
 
     irq_disable();
     /* malloc(1000000); */
@@ -291,7 +304,7 @@ void kmain()
 
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
 
-    int err = execv("/wm", (char *[]){"wm", NULL});
+    int err = execv("/bin/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
