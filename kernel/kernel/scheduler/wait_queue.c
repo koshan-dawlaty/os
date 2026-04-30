@@ -7,8 +7,7 @@
 #include <utils.h>
 #include <wait_queue.h>
 
-extern struct task_queue scheduler_queue;
-extern struct task *current_task;
+extern struct sched_queue scheduler_queue;
 extern void print_tasks();
 
 /* FIXME: might be duplicated somewhere */
@@ -22,17 +21,21 @@ void wait_queue_wait(struct wait_queue *queue)
 
     save_registers(&current->regs);
 
-    task_queue_remove(&scheduler_queue, current);
-    if (current == current_task)
+    task_queue_remove(&scheduler_queue.queue, current);
+    if (current == SCHED_QUEUE_CURRENT_TASK(scheduler_queue))
     {
-        current_task =
-            containerof(scheduler_queue.head.next, struct task, list);
-        if (&current_task->list == &scheduler_queue.head)
+
+        struct list2c *list = scheduler_queue.queue.head.next;
+        scheduler_queue.current_task =
+            containerof(list, struct task_queue_entry, list);
+
+        if (&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->list ==
+            &scheduler_queue.queue.head)
         {
             panic("task queue might be empty!");
-            if (current_task == NULL)
+            if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue) == NULL)
             {
-                printf("why is this null:%p\n", scheduler_queue.head);
+                printf("why is this null:%p\n", scheduler_queue.queue.head);
             }
         }
     }
@@ -41,15 +44,15 @@ void wait_queue_wait(struct wait_queue *queue)
 
     /* print_tasks(); */
 
-    if (current_task->addr_space.dir != NULL)
+    if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space.dir != NULL)
     {
-        addr_space_load(&current_task->addr_space);
+        addr_space_load(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
     }
-    set_kernel_stack((ptr)current_task->stack);
+    set_kernel_stack((ptr)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
 
     /* FIXME: this should maybe be in load_registers() or something */
     preempt_enable();
-    load_registers(&current_task->regs);
+    load_registers(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->regs);
 }
 
 void wait_queue_done(struct wait_queue *queue)

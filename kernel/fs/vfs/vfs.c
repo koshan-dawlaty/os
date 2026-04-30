@@ -1,4 +1,5 @@
 #include "dcache.h"
+#include "lib/log.h"
 #include "mutex.h"
 #include "spinlock.h"
 #include "vfs_internal.h"
@@ -217,27 +218,31 @@ struct file *fs_poll(struct file **files, size_t num)
 
     struct wait_queue **queues = calloc(num, sizeof(struct wait_queue *));
     struct file *retval = NULL;
+    struct task *current = get_current_task();
+    current->can_sleep = false;
     for (size_t i = 0; i < num; i++)
     {
-        struct task *current = get_current_task();
-        current->can_sleep = false;
         bool result = file_poll(files[i], &queues[i]);
-        if (queues[i] != NULL)
-        {
-            task_queue_push(&queues[i]->queue, current);
-        }
         if (result)
         {
             retval = files[i];
             goto end;
         }
+
+        if (queues[i] != NULL)
+        {
+            task_queue_push(&queues[i]->queue, current);
+        }
     }
+    logd("test");
+    current->can_sleep = true;
+    remove_task(current);
     for (size_t i = 0; i < num; i++)
     {
-        wait_queue_wait(queues[i]);
     }
 
 end:
+    current->can_sleep = true;
     free(queues);
 
     return retval;

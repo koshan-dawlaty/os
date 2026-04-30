@@ -21,7 +21,7 @@ mkfifo "${SERIAL_PIPE}.in"
 mkfifo "${SERIAL_PIPE}.out"
 
 # -v is for vertial -b is for above current, -d is to keep old focus
-tmux split-window -h -b -d -t "$TMUX_PANE" "cat $SERIAL_PIPE.out"
+tmux split-window -h -d -t "$TMUX_PANE" "cat $SERIAL_PIPE.out"
 
 gdb \
 	-ex "source pretty-print.py" \

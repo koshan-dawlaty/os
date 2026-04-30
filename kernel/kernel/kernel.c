@@ -164,7 +164,7 @@ void kernel_init()
     /* irq_wait(); */
 
 #ifndef CONFIG_PLEASE_DONT_USE_THE_SERIAL_PORT
-    serial_init(0x3f8);
+    /* serial_init(0x3f8); */
 #endif
     /* irq_enable(); */
     /* char *str = "asjdfakldf"; */
@@ -204,33 +204,38 @@ WAIT_QUEUE_DEFINE(poll_wait_queue);
 
 void t2(void *a)
 {
-    while (1)
-    {
-    }
+    struct file *f = a;
+    logd("t2");
 }
 
 void t3(void *a)
 {
-    while (1)
-    {
-    }
+    struct file *f = a;
+    logd("writing");
+    write_file(f, "abc", 4, 0);
+    logd("t3");
 }
 
 void t1(void *a)
 {
+    logd("test");
     struct file *read, *write;
     pipe_open(&read, &write);
 
     ktask_run(t2, read);
     ktask_run(t3, write);
+    schedule();
 
-    fs_poll((struct file *[]){read}, 2);
+    /* fs_poll((struct file *[]){read}, 1); */
+    logd("done");
 }
 
 struct task_queue abc = TASK_QUEUE_INIT(abc);
+extern void scheduler_init();
 
 void kmain()
 {
+    scheduler_init();
 
     /* struct array a = ARRAY_INIT(); */
     /* const char *data = "abcdef"; */
@@ -292,10 +297,10 @@ void kmain()
     create_device("/serial0", serial_cdev_create(0x3F8));
 #endif
 
-    ktask_run(t1, NULL);
-    enable_scheduler();
-    irq_enable();
-    return;
+    /* ktask_run(t1, NULL); */
+    /* irq_enable(); */
+    /* enable_scheduler(); */
+    /* return; */
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */

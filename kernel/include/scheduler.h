@@ -1,6 +1,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
+#include "lib/log.h"
 #include <compiler.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
@@ -131,6 +132,7 @@ void remove_task_add_queue(struct task *task, struct task_queue *queue);
 static inline void preempt_disable()
 {
     struct task *task = get_current_task();
+    logd("%p", task);
     if (task == NULL)
     {
         return;
@@ -162,5 +164,12 @@ static inline void preempt_enable()
  * removes task from scheduler queue, and frees it atomically
  */
 void task_remove_free(struct task *task);
+
+struct sched_queue
+{
+    struct task_queue_entry *current_task;
+    struct task_queue queue;
+};
+#define SCHED_QUEUE_CURRENT_TASK(q) (q.current_task->task)
 
 #endif
