@@ -52,6 +52,14 @@ struct task
     int preempt_count; /* using int makes it easier to see if it is negative */
 
     void *start_addr; /* used for debugging */
+
+    /*
+     * if true, the task can be safely removed from / added to the scheduler
+     * queue, the task might already be on the scheduler queue
+     *
+     * used by the poll implementation with waiting on multiple wait queues
+     */
+    bool can_sleep;
 };
 
 void switch_tasks();

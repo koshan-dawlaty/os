@@ -225,11 +225,6 @@ void t1(void *a)
 
     ktask_run(t2, read);
     ktask_run(t3, write);
-
-    if (file_poll(read))
-    {
-        printf("test\n");
-    }
 }
 
 struct task_queue abc = TASK_QUEUE_INIT(abc);

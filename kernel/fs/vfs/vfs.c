@@ -220,6 +220,9 @@ struct file *fs_poll(struct file **files, size_t num)
     struct file *retval = NULL;
     for (size_t i = 0; i < num; i++)
     {
+        queues[i] = malloc(sizeof(struct wait_queue));
+        wait_queue_init(queues[i]);
+        task_queue_push(&queues[i]->queue, get_current_task());
         bool result = file_poll(files[i], &queues[i]);
         if (result)
         {

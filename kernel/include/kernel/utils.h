@@ -1,5 +1,5 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef KERNEL_UTILS_H
+#define KERNEL_UTILS_H
 #include <kernel/types.h>
 #include <scheduler.h>
 #include <stdint.h>

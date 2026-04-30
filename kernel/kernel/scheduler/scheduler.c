@@ -124,7 +124,7 @@ static void fdlist_copy_device(struct fdlist *dest, struct fdlist *src,
 
 struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 {
-    struct task *out = malloc(sizeof(struct task));
+    struct task *out = new_task(ip);
     out->preempt_count = 0;
 
     out->list = LIST2C_INIT();
@@ -215,7 +215,7 @@ struct task *user_thread_alloc(ptr ip)
            "null pagedir for current task, this might be because a kernel "
            "thread called this");
 
-    struct task *out = malloc(sizeof(struct task));
+    struct task *out = new_task(ip);
     out->preempt_count = 0;
     out->list = LIST2C_INIT();
 
@@ -300,26 +300,6 @@ SYSCALL_DEFINE1(SYS_clone, int, ptr, ip)
     return 0;
 }
 
-/*
-struct task *new_task(ptr ip)
-{
-    struct task *out = malloc(sizeof(struct task));
-
-    out->next = NULL;
-
-    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x30);
-    out->working_dir = NULL;
-
-    out->regs.esp = (ptr)out->stack;
-    out->regs.eflags = 1 << 9;
-
-    *(ptr *)(out->stack) = ip;
-    out->pgdir = new_pagedir();
-    write_kernel_page_tables(out->pgdir);
-
-    return out;
-}*/
-
 void ktask_run(void (*task)(void *), void *args)
 {
     add_task(new_task_args((ptr)task, args));
@@ -374,6 +354,8 @@ struct task *new_task(ptr ip)
     out->start_addr = (void *)ip;
     out->list = LIST2C_INIT();
     out->preempt_count = 0;
+
+    out->can_sleep = false;
 
     return out;
 }

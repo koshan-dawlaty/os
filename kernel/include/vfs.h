@@ -1,11 +1,9 @@
 #ifndef VFS_H
 #define VFS_H
-#include "lib/assert.h"
-#include "task_queue.h"
-#include "wait_queue.h"
 #include <device.h>
 #include <dirent.h>
 #include <kernel/types.h>
+#include <lib/assert.h>
 #include <lib/log.h>
 #include <mutex.h>
 #include <scheduler.h>
@@ -14,6 +12,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <task_queue.h>
+#include <wait_queue.h>
 
 struct fs_type;
 
