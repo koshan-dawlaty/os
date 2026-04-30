@@ -216,14 +216,17 @@ struct dentry *dir_readdir(struct dentry *entry, struct dir_context *context)
 struct file *fs_poll(struct file **files, size_t num)
 {
 
-    struct wait_queue **queues = malloc(sizeof(struct wait_queue *) * num);
+    struct wait_queue **queues = calloc(num, sizeof(struct wait_queue *));
     struct file *retval = NULL;
     for (size_t i = 0; i < num; i++)
     {
-        queues[i] = malloc(sizeof(struct wait_queue));
-        wait_queue_init(queues[i]);
-        task_queue_push(&queues[i]->queue, get_current_task());
+        struct task *current = get_current_task();
+        current->can_sleep = false;
         bool result = file_poll(files[i], &queues[i]);
+        if (queues[i] != NULL)
+        {
+            task_queue_push(&queues[i]->queue, current);
+        }
         if (result)
         {
             retval = files[i];

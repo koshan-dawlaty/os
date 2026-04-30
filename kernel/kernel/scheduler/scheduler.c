@@ -355,7 +355,7 @@ struct task *new_task(ptr ip)
     out->list = LIST2C_INIT();
     out->preempt_count = 0;
 
-    out->can_sleep = false;
+    out->can_sleep = true;
 
     return out;
 }

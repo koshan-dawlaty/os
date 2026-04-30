@@ -1,6 +1,7 @@
 #include "gdt.h"
-#include "panic.h"
+#include "lib/log.h"
 #include <container_of.h>
+#include <lib/assert.h>
 #include <scheduler.h>
 #include <task_queue.h>
 #include <utils.h>
@@ -16,6 +17,8 @@ void wait_queue_wait(struct wait_queue *queue)
     preempt_disable();
 
     struct task *current = get_current_task();
+
+    ASSERT(current->can_sleep, "current task can't sleep");
 
     save_registers(&current->regs);
 
@@ -52,6 +55,8 @@ void wait_queue_wait(struct wait_queue *queue)
 void wait_queue_done(struct wait_queue *queue)
 {
     struct task *t = task_queue_pop(&queue->queue);
+    logd("%p", t);
+    ASSERT(t->can_sleep, "attempt to add a task that can't sleep");
     if (t != NULL)
     {
         add_task(t);

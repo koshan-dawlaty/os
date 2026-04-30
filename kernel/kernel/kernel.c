@@ -145,15 +145,8 @@ void kernel_init()
         draw_background(f);
     }
 
-    printf("multiboot init done\n");
-
     init_gdt();
-
-    printf("gdt init done\n");
-
     init_idt();
-
-    printf("idt init done\n");
 
     /* volatile char *addr = get_free_pages_zone(1, &gfp_kernel_tree_zone); */
     /* printf("memory allocated\n"); */
@@ -171,7 +164,6 @@ void kernel_init()
     /* irq_wait(); */
 
 #ifndef CONFIG_PLEASE_DONT_USE_THE_SERIAL_PORT
-    printf("init\n");
     serial_init(0x3f8);
 #endif
     /* irq_enable(); */
@@ -212,10 +204,16 @@ WAIT_QUEUE_DEFINE(poll_wait_queue);
 
 void t2(void *a)
 {
+    while (1)
+    {
+    }
 }
 
 void t3(void *a)
 {
+    while (1)
+    {
+    }
 }
 
 void t1(void *a)
@@ -225,6 +223,8 @@ void t1(void *a)
 
     ktask_run(t2, read);
     ktask_run(t3, write);
+
+    fs_poll((struct file *[]){read}, 2);
 }
 
 struct task_queue abc = TASK_QUEUE_INIT(abc);
@@ -279,10 +279,10 @@ void kmain()
     create_device("/serial0", serial_cdev_create(0x3F8));
 #endif
 
-    /* ktask_run(t1, NULL); */
-    /* enable_scheduler(); */
-    /* irq_enable(); */
-    /* return; */
+    ktask_run(t1, NULL);
+    enable_scheduler();
+    irq_enable();
+    return;
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */
