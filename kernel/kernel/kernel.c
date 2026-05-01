@@ -218,6 +218,7 @@ void t3(void *a)
 
 void t1(void *a)
 {
+    logd("test");
     struct file *read, *write;
     pipe_open(&read, &write);
 
@@ -225,14 +226,16 @@ void t1(void *a)
     ktask_run(t3, write);
     schedule();
 
-    fs_poll((struct file *[]){read}, 1);
+    /* fs_poll((struct file *[]){read}, 1); */
     logd("done");
 }
 
 struct task_queue abc = TASK_QUEUE_INIT(abc);
+extern void scheduler_init();
 
 void kmain()
 {
+    scheduler_init();
 
     /* struct array a = ARRAY_INIT(); */
     /* const char *data = "abcdef"; */
@@ -294,10 +297,10 @@ void kmain()
     create_device("/serial0", serial_cdev_create(0x3F8));
 #endif
 
-    ktask_run(t1, NULL);
-    irq_enable();
-    enable_scheduler();
-    return;
+    /* ktask_run(t1, NULL); */
+    /* irq_enable(); */
+    /* enable_scheduler(); */
+    /* return; */
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */

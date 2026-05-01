@@ -1,6 +1,7 @@
 #include "kernel/syscall.h"
 #include "kmalloc.h"
 #include "lib/log.h"
+#include "malloc_internal.h"
 #include "sleep.h"
 #include "sys/syscall.h"
 #include "unistd.h"
@@ -20,6 +21,7 @@
 #include <memory/get_free_pages.h>
 #include <panic.h>
 #include <scheduler.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -28,11 +30,24 @@
 #include <string.h>
 #include <task_queue.h>
 
-TASK_QUEUE_DEFINE(scheduler_queue);
+#define SCHED_QUEUE_INIT(name)                                                 \
+    ((struct sched_queue){.queue = TASK_QUEUE_INIT((name).queue),              \
+                          .current_task = NULL})
+
+struct sched_queue scheduler_queue = SCHED_QUEUE_INIT(scheduler_queue);
+
+void scheduler_init()
+{
+}
+
+#define SCHED_QUEUE_EMPTY(q) (q.current_task->task == NULL)
+
+static inline void sched_queue_init(struct sched_queue *queue)
+{
+    *queue = SCHED_QUEUE_INIT(*queue);
+}
 
 bool scheduler_enabled = false;
-struct task *current_task = NULL;
-struct task *first_task = NULL;
 
 extern struct pagedir init_pgdir;
 
@@ -65,8 +80,6 @@ void new_task_usermode_start(int argc, char **argv, ptr addr)
 
 void user_thread_kernel_start(ptr addr)
 {
-
-    logd("user thread:%p", addr);
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = (struct registers){0};
@@ -126,8 +139,6 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 {
     struct task *out = new_task(ip);
     out->preempt_count = 0;
-
-    out->list = LIST2C_INIT();
 
     out->start_addr = (void *)ip;
 
@@ -210,14 +221,13 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 struct task *user_thread_alloc(ptr ip)
 {
 
-    struct addr_space current_addr_space = current_task->addr_space;
+    struct addr_space current_addr_space = get_current_task()->addr_space;
     ASSERT(current_addr_space.dir != NULL,
            "null pagedir for current task, this might be because a kernel "
            "thread called this");
 
     struct task *out = new_task(ip);
     out->preempt_count = 0;
-    out->list = LIST2C_INIT();
 
     out->start_addr = (void *)ip;
 
@@ -270,9 +280,9 @@ struct task *user_thread_alloc(ptr ip)
     /* fdlist_set(out->descriptors, 1, open_device(term_path)); */
     /* fdlist_set(out->descriptors, 2, open_device(term_path)); */
 
-    if (current_task->start_addr != (void *)0xDEADBEEF)
+    if (get_current_task()->start_addr != (void *)0xDEADBEEF)
     {
-        struct fdlist *current_fds = current_task->descriptors;
+        struct fdlist *current_fds = get_current_task()->descriptors;
         struct fdlist *out_fds = out->descriptors;
 
         fdlist_copy_device(out_fds, current_fds, 0, keyboard_path);
@@ -323,7 +333,7 @@ void ktask_return()
 
 struct task *new_task_args(ptr ip, void *args)
 {
-    logd("running at:%p", ip);
+
     struct task *out = new_task(ip);
     scheduler_set_first_arg(args, &out->regs);
     /* *((ptr *)(out->stack - sizeof(ptr))) = (ptr)ktask_return; */
@@ -375,10 +385,9 @@ struct task *create_kernel_task()
 bool init_task_exists()
 {
     struct list2c *pos;
-    list2c_for_each(pos, &scheduler_queue.head)
+    list2c_for_each(pos, &scheduler_queue.queue.head)
     {
-        logd("%p, %p", pos, &scheduler_queue.head);
-        struct task *t = containerof(pos, struct task, list);
+        struct task *t = TASK_QUEUE_GET_TASK(pos);
         if (t->start_addr == (void *)0xDEADBEEF)
         {
             return true;
@@ -392,34 +401,41 @@ static void remove_task_sched_queue(struct task *task)
 
     if ((ptr)task->start_addr == 0xDEADBEEF)
     {
-        panic("attempt to remove initial task");
+        PANIC("attempt to remove initial task");
     }
 
     irq_state_t state = irq_save_disable();
     if (!init_task_exists())
     {
-        printf("INIT TASK IS GONE!! in remove_task()\n");
+        PANIC("INIT TASK IS GONE!! in remove_task()\n");
         while (1)
         {
             irq_wait();
         }
     }
+
+    logd("removing:%p", task);
+    logd("removing:%p list", task->list);
     /* save_registers(&current_task->regs); */
-    task_queue_remove(&scheduler_queue, task);
+    task_queue_remove(&scheduler_queue.queue, task);
+    logd("done removing");
 
     /* printf("this is the  sched queue head:%p\n", scheduler_queue.head);
      */
 
-    if (task == current_task)
+    if (task == get_current_task())
     {
-        current_task =
-            containerof(scheduler_queue.head.next, struct task, list);
-        if (&current_task->list == &scheduler_queue.head)
+        struct list2c *list = scheduler_queue.queue.head.next;
+        scheduler_queue.current_task =
+            containerof(list, struct task_queue_entry, list);
+
+        /* scheduler_queue.queue.head = TASK_QUEUE_GET_TASK(list)->list; */
+        if (list == &scheduler_queue.queue.head)
         {
-            panic("task queue might be empty!");
-            if (current_task == NULL)
+            PANIC("task queue might be empty!");
+            if (scheduler_queue.current_task == NULL)
             {
-                printf("why is this null:%p\n", scheduler_queue.head);
+                PANIC("why is this null:%p\n", scheduler_queue.queue.head);
             }
         }
     }
@@ -432,13 +448,13 @@ static void remove_task_sched_queue(struct task *task)
 
 static void remove_task_load(struct task *task)
 {
-    if (current_task->addr_space.dir != NULL)
+    if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space.dir != NULL)
     {
-        addr_space_load(&current_task->addr_space);
+        addr_space_load(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
     }
-    set_kernel_stack((ptr)current_task->stack);
+    set_kernel_stack((ptr)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
 
-    load_registers(&current_task->regs);
+    load_registers(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->regs);
 }
 
 void remove_task_add_queue(struct task *task, struct task_queue *queue)
@@ -446,7 +462,7 @@ void remove_task_add_queue(struct task *task, struct task_queue *queue)
     preempt_disable();
 
     remove_task_sched_queue(task);
-    task->list.next = NULL;
+
     task_queue_push(queue, task);
     remove_task_load(task);
 
@@ -475,42 +491,34 @@ void task_remove_free(struct task *task)
 void add_task(struct task *task)
 {
     IRQ_OFF({
-        if (current_task == NULL)
+        if (scheduler_queue.current_task == NULL)
         {
-            current_task = task;
+            struct task_queue_entry *ent = task_queue_entry_alloc(task);
+
+            list2c_push(&ent->list, &scheduler_queue.queue.head);
+
+            scheduler_queue.current_task = ent;
         }
 
-        task_queue_push(&scheduler_queue, task);
+        task_queue_push(&scheduler_queue.queue, task);
     })
 }
 
 int num_task_switches = 0;
 void switch_tasks()
 {
-    struct list2c *temp = current_task->list.next;
+    struct task_queue_entry *ent = scheduler_queue.current_task;
+    struct list2c *temp = ent->list.next;
 
-    if (temp == &scheduler_queue.head)
+    if (temp == &scheduler_queue.queue.head)
     {
-        temp = scheduler_queue.head.next;
+        temp = scheduler_queue.queue.head.next;
     }
-    /*     if (temp == NULL) */
-    /*     { */
-    /*         temp = &scheduler_queue.head; */
-    /*     } */
+    struct task_queue_entry *new_task =
+        containerof(temp, struct task_queue_entry, list);
 
-    struct task *new_current = containerof(temp, struct task, list);
-    /*
-printf("START\n");
-printf("%p\n", new_current);
-printf("%p\n", &new_current->list);
-printf("shouldnt be true:%d\n",
-       &new_current->list == &scheduler_queue.head);
-printf("%p\n", new_current->list.next);
-printf("%p\n", new_current->list.next->next);
-printf("start_addr:%p\n", new_current->start_addr);
-    */
-
-    current_task = new_current;
+    scheduler_queue.current_task = new_task;
+    /* current_task = new_current; */
 }
 
 void schedule_impl()
@@ -520,16 +528,20 @@ void schedule_impl()
 
     increment_sleep_queue();
 
-    if (!scheduler_enabled || current_task == NULL)
+    if (!scheduler_enabled || scheduler_queue.current_task->task == NULL)
     {
         return;
     }
 
-    save_registers(&current_task->regs);
+    struct task *current = SCHED_QUEUE_CURRENT_TASK(scheduler_queue);
+
+    struct task_queue_entry *ent = scheduler_queue.current_task;
+
+    save_registers(&current->regs);
 
     switch_tasks();
 
-    if (current_task == NULL)
+    if (SCHED_QUEUE_EMPTY(scheduler_queue))
     {
         return;
     }
@@ -537,16 +549,16 @@ void schedule_impl()
     /* printf("%p\n", current_task->pgdir->pgdir); */
     /* printf("%p\n", current_task->pgdir->pgdir_virtual); */
 
-    if (current_task->addr_space.dir != NULL)
+    if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space.dir != NULL)
     {
-        addr_space_load(&current_task->addr_space);
+        addr_space_load(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
     }
 
-    set_kernel_stack((ptr)current_task->stack);
+    set_kernel_stack((ptr)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
 
     /* PIC_sendEOI(0); */
 
-    load_registers(&current_task->regs);
+    load_registers(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->regs);
 }
 
 void schedule()
@@ -560,7 +572,12 @@ void schedule()
 
 struct task *get_current_task()
 {
-    return current_task;
+    /* logd("%p", scheduler_queue.current_task); */
+    if (scheduler_queue.current_task == NULL)
+    {
+        return NULL;
+    }
+    return SCHED_QUEUE_CURRENT_TASK(scheduler_queue);
 }
 
 void free_task(struct task *t)
@@ -575,9 +592,9 @@ void free_task(struct task *t)
 void print_tasks()
 {
     struct list2c *pos;
-    list2c_for_each(pos, &scheduler_queue.head)
+    list2c_for_each(pos, &scheduler_queue.queue.head)
     {
-        struct task *t = containerof(pos, struct task, list);
+        struct task *t = TASK_QUEUE_GET_TASK(pos);
         printf("%p ", t->start_addr);
     }
     printf("\n");
