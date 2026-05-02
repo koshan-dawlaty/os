@@ -144,6 +144,11 @@ typedef uint32_t fd_t;
 #define FLAGS_IS_WRITABLE(flags)                                               \
     (((flags & O_WRONLY) != 0) || ((flags & O_RDWR) != 0))
 
+/* this probably shouldn't be defined in vfs */
+typedef u32 poll_flags;
+#define POLL_READ (1 << 0)
+#define POLL_WRITE (1 << 1)
+
 struct file;
 struct file_operations
 {
@@ -159,12 +164,13 @@ struct file_operations
     /*
      * returns true if file is readable
      */
-    bool (*poll)(struct file *, struct wait_queue **);
+    poll_flags (*poll)(struct file *, struct wait_queue **);
 };
 
-static inline bool file_default_poll(struct file *f, struct wait_queue **q)
+static inline poll_flags file_default_poll(struct file *f,
+                                           struct wait_queue **q)
 {
-    return true;
+    return POLL_READ | POLL_WRITE;
 }
 
 #define FILE_OPERATIONS_EMPTY                                                  \

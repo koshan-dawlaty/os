@@ -1,4 +1,6 @@
 #include <cdev.h>
+#include <vfs.h>
+#include <wait_queue.h>
 
 int cdev_read(struct cdev *dev, u8 *buf, size_t len)
 {
@@ -18,4 +20,9 @@ struct device *new_cdev(void *private, struct cdev_functions functions)
     dev->functions = functions;
 
     return new_character_device(dev);
+}
+
+poll_flags cdev_poll(struct cdev *dev, struct wait_queue **queue)
+{
+    return dev->functions.poll(dev, queue);
 }

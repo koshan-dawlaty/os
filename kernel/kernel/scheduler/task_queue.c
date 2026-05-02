@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include "panic.h"
 #include <lib/list.h>
 #include <scheduler.h>
@@ -66,9 +67,13 @@ void task_queue_remove(struct task_queue *queue, struct task *t)
     {
         if (t == TASK_QUEUE_GET_TASK(pos))
         {
-            break;
+            goto found;
         }
     }
+
+    return;
+
+found:
 
     list2c_remove(pos);
 }
