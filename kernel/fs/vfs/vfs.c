@@ -1,16 +1,18 @@
 #include "dcache.h"
-#include "lib/log.h"
-#include "mutex.h"
-#include "spinlock.h"
-#include "task_queue.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
 #include <err_ptr.h>
 #include <fcntl.h>
+#include <kernel/syscall.h>
 #include <lib/assert.h>
+#include <lib/log.h>
+#include <mutex.h>
 #include <scheduler.h>
+#include <spinlock.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/syscall.h>
+#include <task_queue.h>
 #include <time.h>
 #include <vfs.h>
 /* TODO: bad */
@@ -261,4 +263,27 @@ struct file *fs_poll(struct file **files, size_t num)
     free(queues);
 
     return retval;
+}
+
+SYSCALL_DEFINE2(SYS_poll, int, int *, fds, size_t, num)
+{
+    /* FIXME: bounds check on @fds */
+    struct file **files = malloc(num * sizeof(struct file));
+    for (size_t i = 0; i < num; i++)
+    {
+        files[i] = lookup_descriptor(fds[i]);
+    }
+
+    struct file *file = fs_poll(files, num);
+
+    /* TODO: this loop could be replaced if a struct file knew its descriptor */
+    for (size_t i = 0; i < num; i++)
+    {
+        if (files[i] == file)
+        {
+            return fds[i];
+        }
+    }
+
+    return -1;
 }

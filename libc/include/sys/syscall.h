@@ -39,4 +39,6 @@
 #define SYS_connect 34
 #define SYS_accept 35
 
+#define SYS_poll 36
+
 #endif
