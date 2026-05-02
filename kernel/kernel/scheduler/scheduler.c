@@ -597,3 +597,33 @@ void print_tasks()
     }
     printf("\n");
 }
+
+void preempt_disable()
+{
+    struct task *task = get_current_task();
+    if (task == NULL)
+    {
+        return;
+    }
+
+    task->preempt_count--;
+    if (task->preempt_count <= 0)
+    {
+        irq_disable();
+    }
+    task->preempt_count++;
+}
+void preempt_enable()
+{
+    struct task *task = get_current_task();
+    if (task == NULL)
+    {
+        return;
+    }
+
+    task->preempt_count--;
+    if (task->preempt_count <= 0)
+    {
+        irq_enable();
+    }
+}

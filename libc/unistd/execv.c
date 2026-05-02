@@ -1,8 +1,10 @@
+#include "lib/log.h"
 #include "sys/syscall.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <kernel_syscall.h>
 #include <stdint.h>
+#include <string.h>
 #include <syscall.h>
 #include <unistd.h>
 #include <utils.h>
@@ -20,11 +22,14 @@ int execv(const char *path, char *const argv[])
 
 #else
 
+    logd("execv start");
+
     /* TODO: wrong oflags */
-    int f = open((char *)path, O_RDONLY);
+    int f = open(path, O_RDONLY);
 
     if (f < 0)
     {
+        logd("%s, %s", path, strerror(f));
         return -ENOENT;
     }
 
@@ -38,9 +43,11 @@ int execv(const char *path, char *const argv[])
         {
             argc++;
         }
+
         struct task *t = load_elf(elf, argc, (char **)argv);
         add_task(t);
         free_elf(elf);
+        logd("execv done");
         /* this the old task from running soon after this is called, it also
          * makes this function more responsive as the new task should be
          * immediately switched to

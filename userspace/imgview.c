@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 
     if (argc < 2)
     {
-        printf("no image file\n");
+        loge("no image file\n");
         exit(1);
     }
 

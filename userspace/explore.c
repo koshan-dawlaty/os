@@ -199,7 +199,8 @@ int main(int argc, char **argv)
                     wm_get_key(client);
                     break;
                 case EXPLORER_IMAGE:
-                    execv("imgview", (char *[]){"imgview", e->d_name, NULL});
+                    execv("/bin/imgview",
+                          (char *[]){"/bin/imgview", e->d_name, NULL});
                     break;
                 case EXPLORER_EXECUTABLE:
                     logd("execving:%s", e->d_name);

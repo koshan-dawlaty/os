@@ -2,7 +2,6 @@
 #include "lib/log.h"
 #include <container_of.h>
 #include <lib/assert.h>
-#include <math.h>
 #include <scheduler.h>
 #include <task_queue.h>
 #include <utils.h>

@@ -1,12 +1,13 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include "lib/log.h"
 #include <compiler.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
+#include <kernel/preempt.h>
 #include <kernel/types.h>
 #include <lib/list.h>
+#include <lib/log.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <task_queue.h>
@@ -128,36 +129,6 @@ struct task *new_task_args(ptr ip, void *args);
 void ktask_run(void (*task)(void *), void *args);
 /* TODO: make this a good api */
 void remove_task_add_queue(struct task *task, struct task_queue *queue);
-
-static inline void preempt_disable()
-{
-    struct task *task = get_current_task();
-    if (task == NULL)
-    {
-        return;
-    }
-
-    task->preempt_count--;
-    if (task->preempt_count <= 0)
-    {
-        irq_disable();
-    }
-    task->preempt_count++;
-}
-static inline void preempt_enable()
-{
-    struct task *task = get_current_task();
-    if (task == NULL)
-    {
-        return;
-    }
-
-    task->preempt_count--;
-    if (task->preempt_count <= 0)
-    {
-        irq_enable();
-    }
-}
 
 /*
  * removes task from scheduler queue, and frees it atomically
