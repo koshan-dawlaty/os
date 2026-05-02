@@ -55,8 +55,7 @@ void task_queue_remove(struct task_queue *queue, struct task *t)
 {
     if (LIST2C_IS_EMPTY(queue->head))
     {
-        printf("task queue empty\n");
-        return; /* TODO: this is probably an error */
+        return;
     }
 
     /* TODO: this would be possible to do without a loop if list2c_remove() was

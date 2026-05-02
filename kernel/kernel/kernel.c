@@ -297,10 +297,10 @@ void kmain()
     create_device("/serial0", serial_cdev_create(0x3F8));
 #endif
 
-    ktask_run(t1, NULL);
-    irq_enable();
-    enable_scheduler();
-    return;
+    /* ktask_run(t1, NULL); */
+    /* irq_enable(); */
+    /* enable_scheduler(); */
+    /* return; */
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */

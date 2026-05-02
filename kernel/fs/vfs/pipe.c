@@ -53,11 +53,8 @@ int pipe_write(struct file *file, const char *buf, size_t n, size_t off)
     /* printf("buf:%s\n", buf); */
     array_add(&pipe->buffer, buf, n);
 
-    logd("checking ig queue:%p is empty", pipe->queue);
-    logd("%p", pipe->queue.queue.head.next);
     if (!WAIT_QUEUE_EMPTY(pipe->queue))
     {
-        logd("woke:%p", pipe->queue);
         wait_queue_done(&pipe->queue);
     }
 
@@ -68,12 +65,11 @@ bool pipe_poll(struct file *f, struct wait_queue **queue)
 {
     struct pipe *pipe = f->file_private;
     struct wait_queue *q = &pipe->other->queue;
-    logd("setting to %p", q);
     *queue = q;
 
     /* might only work for read side, need a way of determining which side is
      * which */
-    return !(pipe->buffer.len == 0);
+    return !(pipe->other->buffer.len == 0);
 }
 
 const struct file_operations pipe_operations = {
