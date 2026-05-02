@@ -2,6 +2,7 @@
 #include "lib/log.h"
 #include "mutex.h"
 #include "spinlock.h"
+#include "task_queue.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
 #include <err_ptr.h>
@@ -218,34 +219,44 @@ struct file *fs_poll(struct file **files, size_t num)
 
     struct wait_queue **queues = calloc(num, sizeof(struct wait_queue *));
     struct file *retval = NULL;
-    struct task *current = get_current_task();
-    current->can_sleep = false;
-    for (size_t i = 0; i < num; i++)
-    {
-        bool result = file_poll(files[i], &queues[i]);
-        if (result)
-        {
-            retval = files[i];
-            goto end;
-        }
 
-        if (queues[i] != NULL)
-        {
-            logd("pushing to:%p", &queues[i]->queue);
-            task_queue_push(&queues[i]->queue, current);
-        }
-    }
-    logd("sleeping");
-    current->can_sleep = true;
-    /* save_registers(&current->regs); */
-    remove_task(current);
-    logd("done sleeping");
-    for (size_t i = 0; i < num; i++)
+    while (retval == NULL)
     {
-    }
+        struct task *current = get_current_task();
+        current->can_sleep = false;
+        for (size_t i = 0; i < num; i++)
+        {
+            bool result = file_poll(files[i], &queues[i]);
+            if (result)
+            {
+                retval = files[i];
+                goto end;
+            }
 
-end:
-    current->can_sleep = true;
+            if (queues[i] != NULL)
+            {
+                task_queue_push(&queues[i]->queue, current);
+            }
+        }
+        current->can_sleep = true;
+        /* save_registers(&current->regs); */
+        remove_task(current);
+        current->can_sleep = false;
+        for (size_t i = 0; i < num; i++)
+        {
+            if (queues[i] != NULL)
+            {
+                /* TODO: this function will iterate through all tasks in the
+                 * queue as of right now (2026-05-01), which might make this
+                 * slow */
+                task_queue_remove(&queues[i]->queue, current);
+            }
+        }
+        current->can_sleep = true;
+
+    end:
+        current->can_sleep = true;
+    }
     free(queues);
 
     return retval;
