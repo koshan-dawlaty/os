@@ -413,12 +413,7 @@ static void remove_task_sched_queue(struct task *task)
             irq_wait();
         }
     }
-
-    logd("removing:%p", task);
-    logd("removing:%p list", task->list);
-    /* save_registers(&current_task->regs); */
     task_queue_remove(&scheduler_queue.queue, task);
-    logd("done removing");
 
     /* printf("this is the  sched queue head:%p\n", scheduler_queue.head);
      */
@@ -448,13 +443,14 @@ static void remove_task_sched_queue(struct task *task)
 
 static void remove_task_load(struct task *task)
 {
-    if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space.dir != NULL)
+    struct task *current = SCHED_QUEUE_CURRENT_TASK(scheduler_queue);
+    if (current->addr_space.dir != NULL)
     {
-        addr_space_load(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
+        addr_space_load(&current->addr_space);
     }
-    set_kernel_stack((ptr)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
+    set_kernel_stack((ptr)current->stack);
 
-    load_registers(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->regs);
+    load_registers(&current->regs);
 }
 
 void remove_task_add_queue(struct task *task, struct task_queue *queue)
@@ -473,6 +469,7 @@ void remove_task(struct task *task)
 {
     preempt_disable();
 
+    save_registers(&task->regs);
     remove_task_sched_queue(task);
     remove_task_load(task);
 
@@ -545,6 +542,7 @@ void schedule_impl()
     {
         return;
     }
+    current = SCHED_QUEUE_CURRENT_TASK(scheduler_queue);
 
     /* printf("%p\n", current_task->pgdir->pgdir); */
     /* printf("%p\n", current_task->pgdir->pgdir_virtual); */

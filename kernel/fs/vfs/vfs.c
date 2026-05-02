@@ -231,12 +231,15 @@ struct file *fs_poll(struct file **files, size_t num)
 
         if (queues[i] != NULL)
         {
+            logd("pushing to:%p", &queues[i]->queue);
             task_queue_push(&queues[i]->queue, current);
         }
     }
-    logd("test");
+    logd("sleeping");
     current->can_sleep = true;
+    /* save_registers(&current->regs); */
     remove_task(current);
+    logd("done sleeping");
     for (size_t i = 0; i < num; i++)
     {
     }
