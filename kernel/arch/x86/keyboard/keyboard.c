@@ -17,8 +17,8 @@
 
 volatile int key_available;
 
-uint8_t keyboard_buffer_head = 0;
-uint8_t keyboard_buffer_tail = 0;
+u8 keyboard_buffer_head = 0;
+u8 keyboard_buffer_tail = 0;
 
 MUTEX_DEFINE(keyboard_mutex);
 WAIT_QUEUE_DEFINE(keyboard_queue);

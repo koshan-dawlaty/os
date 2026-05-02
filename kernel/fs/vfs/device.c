@@ -1,4 +1,6 @@
+#include "device.h"
 #include "lib/assert.h"
+#include "wait_queue.h"
 #include <bdev.h>
 #include <cdev.h>
 #include <err_ptr.h>
@@ -54,8 +56,27 @@ int dev_write(struct file *file, const char *buf, size_t n, size_t off)
     }
 }
 
+poll_flags dev_poll(struct file *f, struct wait_queue **queue)
+{
+    struct device *dev = f->entry->dev;
+
+    if (dev->type == DEV_BLOCK)
+    {
+        /* TODO: this is probably wrong */
+        return POLL_READ | POLL_WRITE;
+    }
+    else if (dev->type == DEV_CHARACTER)
+    {
+        return cdev_poll(dev->character, queue);
+    }
+    else
+    {
+        UNREACHABLE("invalid device type %d", dev->type);
+    }
+}
+
 const struct file_operations device_operations = {
-    .read = dev_read, .write = dev_write, .poll = file_default_poll};
+    .read = dev_read, .write = dev_write, .poll = dev_poll};
 
 /* TODO: this probably shouldnt just create devices in /dev/ instead maybe have
  * separate directories for device types */

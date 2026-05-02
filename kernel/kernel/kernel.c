@@ -225,8 +225,13 @@ void t1(void *a)
     ktask_run(t2, read);
     ktask_run(t3, write);
 
-    struct file *f = fs_poll((struct file *[]){read}, 1);
-    logd("%p, %p", f, read);
+    int fd;
+    struct file *keyboard = open_file("/keyboard", O_RDONLY, &fd);
+    struct file *mouse = open_file("/mouse", O_RDONLY, &fd);
+    struct file *f = fs_poll((struct file *[]){read, keyboard, mouse}, 3);
+    logd("keyboard:%p", keyboard);
+    logd("mouse:%p", mouse);
+    logd("read:%p", f);
     logd("done");
 }
 

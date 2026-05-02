@@ -1,3 +1,4 @@
+#include "vfs.h"
 #include <cdev.h>
 #include <device.h>
 #include <drivers/character/mouse.h>
@@ -19,6 +20,7 @@
 #include <utils.h>
 #include <wait_queue.h>
 
+/* TODO: this should be defined in the device, so multiple mice can exist */
 WAIT_QUEUE_DEFINE(mouse_waitqueue);
 
 #define PS2_MOUSE_LEFT_CLICK (1 << 0)
@@ -100,10 +102,14 @@ int mouse_write(struct cdev *dev, u8 *buf, size_t len)
     return -EINVAL;
 }
 
+poll_flags mouse_poll(struct cdev *dev, struct wait_queue **queue)
+{
+    *queue = &mouse_waitqueue;
+    return !((ps2_mouse_event.x_change == 0 && ps2_mouse_event.y_change == 0));
+}
+
 struct cdev_functions mouse_cdev_functions = {
-    .read = mouse_read,
-    .write = mouse_write,
-};
+    .read = mouse_read, .write = mouse_write, .poll = mouse_poll};
 
 struct device *mouse_device = NULL;
 struct device *mouse_get()

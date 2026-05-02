@@ -61,15 +61,20 @@ int pipe_write(struct file *file, const char *buf, size_t n, size_t off)
     return n;
 }
 
-bool pipe_poll(struct file *f, struct wait_queue **queue)
+poll_flags pipe_poll(struct file *f, struct wait_queue **queue)
 {
     struct pipe *pipe = f->file_private;
     struct wait_queue *q = &pipe->other->queue;
     *queue = q;
 
+    poll_flags out = 0;
     /* might only work for read side, need a way of determining which side is
      * which */
-    return !(pipe->other->buffer.len == 0);
+    if (!(pipe->other->buffer.len == 0))
+    {
+        out |= POLL_READ;
+    }
+    return out;
 }
 
 const struct file_operations pipe_operations = {

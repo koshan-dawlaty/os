@@ -235,12 +235,14 @@ struct file *fs_poll(struct file **files, size_t num)
 
             if (queues[i] != NULL)
             {
+
                 task_queue_push(&queues[i]->queue, current);
             }
         }
         current->can_sleep = true;
         /* save_registers(&current->regs); */
         remove_task(current);
+    end:
         current->can_sleep = false;
         for (size_t i = 0; i < num; i++)
         {
@@ -249,12 +251,11 @@ struct file *fs_poll(struct file **files, size_t num)
                 /* TODO: this function will iterate through all tasks in the
                  * queue as of right now (2026-05-01), which might make this
                  * slow */
+
                 task_queue_remove(&queues[i]->queue, current);
             }
         }
-        current->can_sleep = true;
 
-    end:
         current->can_sleep = true;
     }
     free(queues);
