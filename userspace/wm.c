@@ -1,5 +1,4 @@
 #include "wm_lib.h"
-
 #include <container_of.h>
 #include <errno.h>
 #include <extension.h>
@@ -12,6 +11,7 @@
 #include <lib/log.h>
 #include <lib/rect.h>
 #include <lib/utils.h>
+#include <poll.h>
 #include <sched.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -643,228 +643,160 @@ disconnect:;
     exit(1);
 }
 
-void keyboard_thread()
+int drag_count = 0;
+
+static void process_mouse(struct mouse_event *ev)
 {
 
-    while (true)
+    move_window(mouse_queue_ent, ev->x_change, ev->y_change, buffer);
+
+    if (ev->buttons.left_click && drag_count < 3)
     {
 
-        char c;
-        int err = read(0, &c, 1);
-        if (err < 0)
+        drag_count++;
+
+        /* TODO: this should be its own function that traverses the list
+         * backwards */
+        user_mutex_lock(window_queue_mutex);
+        struct list2c *pos;
+        struct list2c *prev = &window_queue;
+        list2c_for_each(pos, &window_queue)
         {
-            loge("%s", strerror(err));
+            prev = pos;
         }
 
-        if (c == '\\')
+        struct window_queue_entry *new_focus = NULL;
+
+        for (pos = prev; pos != &window_queue; pos = pos->prev)
         {
-            if (focused != NULL)
+
+            struct window_queue_entry *queue_ent =
+                LIST_ENTRY(pos, struct window_queue_entry, list);
+
+            if (queue_ent == mouse_queue_ent ||
+                queue_ent == background_queue_ent)
             {
-                close(focused->conn->client_socket);
+                continue;
+            }
+
+            struct window *win = queue_ent->win;
+
+            if (WIN_X(mouse) > WIN_X(win) &&
+                WIN_X(mouse) < WIN_X(win) + WIN_W(win) &&
+                WIN_Y(mouse) > WIN_Y(win) &&
+                WIN_Y(mouse) < WIN_Y(win) + WIN_H(win))
+
+            {
+                new_focus = queue_ent;
+                break;
             }
         }
-        else if (c == '\t')
-        {
-            struct list2c *next = focused->list.next;
-            if (next == &window_queue)
-            {
-                next = window_queue.next->next;
-            }
-            struct window_queue_entry *ent =
-                containerof(next, struct window_queue_entry, list);
+        user_mutex_unlock(window_queue_mutex);
 
-            if (ent->win == mouse)
-            {
-                ent = containerof(window_queue.next->next,
-                                  struct window_queue_entry, list);
-            }
-            if (ent == background_queue_ent)
-            {
-                ent = containerof(window_queue.next->next,
-                                  struct window_queue_entry, list);
-            }
-            change_focus(ent);
+        if (new_focus != NULL)
+        {
+            change_focus(new_focus);
         }
-        else
+    }
+    else if (ev->buttons.left_click)
+    {
+        if (focused != NULL)
         {
+            move_window(focused, ev->x_change, ev->y_change, buffer);
+        }
+    }
+    else
+    {
+        drag_count = 0;
+    }
+}
 
-            if (focused != NULL)
+static void process_keyboard(char c)
+{
+    if (c == '\\')
+    {
+        if (focused != NULL)
+        {
+            close(focused->conn->client_socket);
+        }
+    }
+    else if (c == '\t')
+    {
+        struct list2c *next = focused->list.next;
+        if (next == &window_queue)
+        {
+            next = window_queue.next->next;
+        }
+        struct window_queue_entry *ent =
+            containerof(next, struct window_queue_entry, list);
+
+        if (ent->win == mouse)
+        {
+            ent = containerof(window_queue.next->next,
+                              struct window_queue_entry, list);
+        }
+        if (ent == background_queue_ent)
+        {
+            ent = containerof(window_queue.next->next,
+                              struct window_queue_entry, list);
+        }
+        change_focus(ent);
+    }
+    else
+    {
+
+        if (focused != NULL)
+        {
+            if (focused->nonblock_info.is_nonblock)
             {
-                if (focused->nonblock_info.is_nonblock)
-                {
-                    focused->nonblock_info.current_key = c;
-                }
-                else
-                {
-                    struct wm_connection *conn = focused->conn;
-                    current_keyboard_char = c;
+                focused->nonblock_info.current_key = c;
+            }
+            else
+            {
+                struct wm_connection *conn = focused->conn;
+                current_keyboard_char = c;
 
-                    send(conn->client_key_socket, &c, sizeof(char));
-                }
+                send(conn->client_key_socket, &c, sizeof(char));
             }
         }
     }
 }
 
-int drag_count = 0;
-
-void mouse_thread()
+void input_thread()
 {
-
     int mouse_fd = open("/mouse", O_RDONLY);
+    int keyboard_fd = 0; /* TODO: make this use the keyboard device instead */
+    int fds[] = {mouse_fd, keyboard_fd};
     struct mouse_event *ev = malloc(sizeof(struct mouse_event));
     while (true)
     {
-        int size = read(mouse_fd, ev, sizeof(struct mouse_event));
-
-        if (size != sizeof(struct mouse_event))
+        int fd = poll(fds, 2);
+        if (fd == keyboard_fd)
         {
-            /* printf("reading from the mouse returned invalid size!\n"); */
+            char c;
+            int err = read(0, &c, 1);
+            if (err < 0)
+            {
+                PANIC("error reading from keyboard %s", strerror(err));
+            }
+
+            process_keyboard(c);
         }
-
-        move_window(mouse_queue_ent, ev->x_change, ev->y_change, buffer);
-        /* update_area_down(mouse_queue_ent, old_mouse, buffer); */
-
-        if (ev->buttons.left_click && drag_count < 3)
+        else if (fd == mouse_fd)
         {
-
-            drag_count++;
-
-            /* TODO: this should be its own function that traverses the list
-             * backwards */
-            user_mutex_lock(window_queue_mutex);
-            struct list2c *pos;
-            struct list2c *prev = &window_queue;
-            list2c_for_each(pos, &window_queue)
+            size_t size = read(mouse_fd, ev, sizeof(struct mouse_event));
+            if (size != sizeof(struct mouse_event))
             {
-                prev = pos;
+                PANIC("reading from the mouse returned invalid size!\n");
             }
 
-            struct window_queue_entry *new_focus = NULL;
-
-            for (pos = prev; pos != &window_queue; pos = pos->prev)
-            {
-
-                struct window_queue_entry *queue_ent =
-                    LIST_ENTRY(pos, struct window_queue_entry, list);
-
-                if (queue_ent == mouse_queue_ent ||
-                    queue_ent == background_queue_ent)
-                {
-                    continue;
-                }
-
-                struct window *win = queue_ent->win;
-
-                if (WIN_X(mouse) > WIN_X(win) &&
-                    WIN_X(mouse) < WIN_X(win) + WIN_W(win) &&
-                    WIN_Y(mouse) > WIN_Y(win) &&
-                    WIN_Y(mouse) < WIN_Y(win) + WIN_H(win))
-
-                {
-                    new_focus = queue_ent;
-                    break;
-                }
-            }
-            user_mutex_unlock(window_queue_mutex);
-
-            if (new_focus != NULL)
-            {
-                /* memset(focused->win->buffer, 127,
-                 * focused->win->w * 4 * 10);
-                 */
-
-                /* memset(focused->win->buffer, 0, */
-                /*        focused->win->w * focused->win->h *
-                 * 4); */
-
-                change_focus(new_focus);
-            }
-        }
-        else if (ev->buttons.left_click)
-        {
-            if (focused != NULL)
-            {
-                move_window(focused, ev->x_change, ev->y_change, buffer);
-
-                /* printf("%d ", move_area.h); */
-
-                /* struct rect *rects = malloc(sizeof(struct rect) * 4); */
-                /* u8 num_rects = rect_split_intersect( */
-                /*     WIN_RECT(background), WIN_RECT(focused->win), rects); */
-                /* for (size_t i = 0; i < num_rects; i++) */
-                /* { */
-                /*     win_draw_rect(background, rects[i], buffer); */
-                /*     /1* struct rect r = rects[i]; *1/ */
-                /*     /1* u32 color; *1/ */
-                /*     /1* switch (i) *1/ */
-                /*     /1* { *1/ */
-                /*     /1* case 0: *1/ */
-                /*     /1*     color = 0xFFFF; *1/ */
-                /*     /1*     break; *1/ */
-                /*     /1* case 1: *1/ */
-                /*     /1*     color = 0xFFFF00; *1/ */
-                /*     /1*     break; *1/ */
-                /*     /1* case 2: *1/ */
-                /*     /1*     color = 0xFFFFFF; *1/ */
-                /*     /1*     break; *1/ */
-                /*     /1* case 3: *1/ */
-                /*     /1*     color = 0x00FF00; *1/ */
-                /*     /1*     break; *1/ */
-                /*     /1* default: *1/ */
-                /*     /1*     color = 0xFF00FF; *1/ */
-                /*     /1* } *1/ */
-                /*     /1* framebuffer_draw_rect(buffer, r.x, r.y, r.w, r.h, */
-                /*      * color); */
-                /*      *1/ */
-                /* } */
-                /* draw_window(buffer, focused->win); */
-
-                /* struct rect current_area = WIN_RECT(win); */
-                /* if (rect_intersect(old_area, current_area)) */
-                /* { */
-                /*     struct rect intersect = */
-                /*         rect_get_intersect(current_area, old_area); */
-                /*     struct rect *results = malloc(sizeof(struct rect) * 4);
-                 */
-                /*     u8 num_rects = */
-                /*         rect_split_intersect(old_area, current_area,
-                 * results); */
-                /*     for (size_t i = 0; i < num_rects; i++) */
-                /*     { */
-                /*         struct rect r = results[i]; */
-                /*         // framebuffer_draw_rect(buffer, r.x, r.y, r.w, r.h,
-                 */
-                /*         //                      0xFF0000); */
-                /*         update_area_up(focused, r, buffer); */
-                /*     } */
-                /*     update_area_up(focused, intersect, buffer); */
-                /*     //  framebuffer_draw_rect(buffer, intersect.x,
-                 * intersect.y, */
-                /*     //                       intersect.w, intersect.h, 0xFF);
-                 */
-                /* } */
-
-                /* update_area_up(focused, old_area, buffer); */
-                /* update_area_up(focused, move_area, buffer); */
-                /* update_area_up(focused, */
-                /*                (struct rect){.x = 0, */
-                /*                              .y = 0, */
-                /*                              .h =
-                 * buffer->height, */
-                /*                              .w =
-                 * buffer->width}, */
-                /*                buffer); */
-            }
+            process_mouse(ev);
         }
         else
         {
-            drag_count = 0;
+            PANIC("invalid fd %d returned by poll()", fd);
         }
-
-        /* printf("%d, %d\n", mouse->x, mouse->y); */
     }
-    free(ev);
 }
 
 void thread1()
@@ -941,8 +873,7 @@ int main()
     draw_window(buffer, mouse);
     draw_window(buffer, background);
 
-    clone((ptr)mouse_thread);
-    clone((ptr)keyboard_thread);
+    clone((ptr)input_thread);
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */

@@ -67,3 +67,5 @@ read() seems to get called a lot with the window manager
 window manager seems to maybe hang when invalid values are passed when connecting
 
 framebuffer draw character function does not have good error handling
+
+test of task->can_sleep
