@@ -132,7 +132,6 @@ void remove_task_add_queue(struct task *task, struct task_queue *queue);
 static inline void preempt_disable()
 {
     struct task *task = get_current_task();
-    logd("%p", task);
     if (task == NULL)
     {
         return;

@@ -58,7 +58,7 @@ void wait_queue_wait(struct wait_queue *queue)
 void wait_queue_done(struct wait_queue *queue)
 {
     struct task *t = task_queue_pop(&queue->queue);
-    logd("%p", t);
+
     ASSERT(t->can_sleep, "attempt to add a task that can't sleep");
     if (t != NULL)
     {
