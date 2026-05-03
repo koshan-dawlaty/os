@@ -2,6 +2,7 @@
 #include <err_ptr.h>
 #include <fcntl.h>
 #include <init.h>
+#include <lib/assert.h>
 #include <lib/framebuffer.h>
 #include <lib/log.h>
 #include <lib/term.h>
@@ -32,6 +33,13 @@ void wm_terminal_draw_char_at(char character, size_t x, size_t y,
                               bool is_cursor)
 {
 
+    if (character == -1)
+    {
+        /* PANIC("invalid character"); */
+        logw("invalid character at position:%d, %d", x, y);
+        return;
+    }
+
     if (is_cursor)
     {
         client_draw_rect(client, x * font->header.width,
@@ -54,7 +62,7 @@ struct terminal_operations term_ops = {
     .get_width = wm_terminal_get_width,
 };
 
-void write_file(struct terminal *characters)
+void write_to_file(struct terminal *characters)
 {
     int fd = open("/one", O_WRONLY);
     for (size_t i = 0; i < characters->characters.len / sizeof(struct array);
@@ -95,7 +103,10 @@ int main()
     /* terminal_addchar('\n', &characters); */
     /* terminal_draw_line(&characters, 0, 0); */
 
-    terminal_add("abc\b", 4, &characters);
+    terminal_add("abcdef", 6, &characters);
+    terminal_move_cursor(&characters, 2, 0);
+    /* terminal_add("\b", 1, &characters); */
+    /* terminal_add("123\b\n", 5, &characters); */
     /* terminal_add("2\n", 2, &characters); */
     /* terminal_add("3", 1, &characters); */
 
@@ -140,7 +151,7 @@ int main()
                 terminal_move_cursor(&characters, 1, 0);
                 break;
             case 'w':
-                write_file(&characters);
+                write_to_file(&characters);
                 break;
             }
 

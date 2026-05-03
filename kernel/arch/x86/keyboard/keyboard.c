@@ -88,6 +88,16 @@ bool is_shift_pressed = false;
 INT_HANDLER(keyboard_interrupt_handler, {
     u8 scancode = inb(0x60);
 
+    /* caps lock to escape */
+    if (scancode == 0x3A)
+    {
+        scancode = 1;
+    }
+    else if (scancode == 0x81)
+    {
+        scancode = 0xBA;
+    }
+
     if (scancode == 0x2A)
     {
         is_shift_pressed = true;

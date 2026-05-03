@@ -105,23 +105,40 @@ void terminal_addchar(char c, struct terminal *term)
         terminal_add_newline(term);
         break;
     case '\b':;
-        if (term->x > 0)
+        if (term->x > 1)
         {
-            array_pop_middle(a, term->x - 1);
 
+            logd("pop at:%d", term->x);
+            char removed = array_pop_middle(a, term->x);
+            logd("removed:%c", removed);
             term->x -= 1;
-            char c = *(char *)array_get(a, term->x - 1, 1);
+            logd("index at:%d", term->x);
+            char c = *(char *)array_get(a, term->x, 1);
+            logd("got:%c, %d, %d", c, term->x, term->y);
             terminal_draw_charat(c, term->x, term->y, term);
-            for (size_t i = term->x + 1; i < a->len - 1; i++)
+            logd("loop");
+            /* for (size_t i = term->x + 1; i < a->len - 1; i++) */
+            for (size_t i = term->x + 1; i < a->len; i++)
             {
                 char c2 = *(char *)array_get(a, i, 1);
+
+                /* logd("pos:%d char:%d", i, c2); */
                 terminal_draw_charat(c2, i, term->y, term);
             }
-            terminal_draw_charat(' ', a->len + 1, term->y, term);
+            terminal_draw_charat(' ', a->len, term->y, term);
 
-            /* array_pop_end(line, 1); */
             /* term->operations.draw_char_at(' ', term->x + 1, term->y, false);
              */
+        }
+        else if (term->x > 0)
+        {
+            term->x = 0;
+            array_pop_middle(a, 0);
+            terminal_draw_charat(' ', 0, term->y, term);
+        }
+        else
+        {
+            /* TODO: remove line */
         }
         break;
     default:;
