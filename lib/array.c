@@ -126,8 +126,14 @@ void array_insert(struct array *array, size_t offset, void *data, size_t size)
 
 u8 array_pop_middle(struct array *array, size_t offset)
 {
-    ASSERT(offset < array->len, "array index %d out of bounds for len %d",
+    ASSERT(offset <= array->len, "array index %d out of bounds for len %d",
            offset, array->len);
+
+    if (offset > array->len)
+    {
+        array->len--;
+        return ((u8 *)array->data)[offset];
+    }
 
     u8 retval = ((u8 *)array->data)[offset];
 

@@ -1,3 +1,4 @@
+#include "lib/assert.h"
 #include <lib/array.h>
 #include <lib/list.h>
 #include <lib/log.h>
@@ -6,7 +7,18 @@
 
 void terminal_set_pos(struct terminal *term, size_t new_x, size_t new_y)
 {
-    term->prev_x = term->x;
+    struct array *line =
+        array_get(&term->characters, new_y, sizeof(struct array));
+
+    if (term->x < line->len)
+    {
+        term->prev_x = term->x;
+    }
+    else
+    {
+        term->prev_x = line->len;
+    }
+
     term->prev_y = term->y;
 
     term->x = new_x;
@@ -35,24 +47,47 @@ void terminal_draw_line(struct terminal *term, size_t index, size_t y)
 
 void terminal_draw_charat(char c, size_t x, size_t y, struct terminal *term)
 {
+
+    bool is_cursor = false;
+    struct array *line = array_get(&term->characters, y, sizeof(struct array));
+
     if (x == term->x && y == term->y)
     {
-        term->operations.draw_char_at(c, x, y, true);
-        if (term->prev_x != term->x || term->prev_y != term->y)
+        is_cursor = true;
+        if (term->prev_x == term->x && term->prev_y == term->y)
         {
-            char c2 = terminal_getchar(*term, term->prev_x, term->prev_y);
+            /* cursor was already drawn here, so return */
+            return;
+            /* logd("drawing at:%d, %d", term->prev_x, term->prev_y); */
+        }
+        else
+        {
+            char c2;
+            if (term->prev_x >= line->len)
+            {
+                c2 = ' ';
+            }
+            else
+            {
+                c2 = terminal_getchar(*term, term->prev_x, term->prev_y);
+            }
+
             term->operations.draw_char_at(c2, term->prev_x, term->prev_y,
                                           false);
         }
     }
-    else
+
+draw_normal:
+    if (x >= line->len)
     {
-        term->operations.draw_char_at(c, x, y, false);
+        c = ' ';
     }
+    term->operations.draw_char_at(c, x, y, is_cursor);
 }
 
 void terminal_add_newline(struct terminal *term)
 {
+
     struct array new_line = ARRAY_INIT();
     array_add(&term->characters, &new_line, sizeof(struct array));
     /* term->operations.draw_char_at(' ', term->x, term->y, */
@@ -89,7 +124,6 @@ void terminal_add_newline(struct terminal *term)
 
 void terminal_addchar(char c, struct terminal *term)
 {
-
     struct array *line =
         array_get(&term->characters,
                   ARRAY_LEN(term->characters, sizeof(struct array)) - 1,
@@ -107,6 +141,16 @@ void terminal_addchar(char c, struct terminal *term)
     case '\b':;
         if (term->x > 1)
         {
+
+            if (term->x >= a->len)
+            {
+                term->x--;
+                array_pop_end(a, 1);
+                char c = terminal_getchar(*term, term->x, term->y);
+                terminal_draw_charat(c, term->x, term->y, term);
+                terminal_draw_charat(' ', term->x + 1, term->y, term);
+                break;
+            }
 
             logd("pop at:%d", term->x);
             char removed = array_pop_middle(a, term->x);
@@ -142,15 +186,13 @@ void terminal_addchar(char c, struct terminal *term)
         }
         break;
     default:;
-        char c2 = ' ';
-        if (a->data != NULL)
-        {
-            c2 = *(char *)a->data;
-        }
 
         array_insert(a, term->x, &c, 1);
+        logd("len is now:%d", a->len);
 
+        term->prev_x = term->x;
         term->x++;
+        logd("x is now:%d", term->x);
         /* terminal_set_pos(term, term->x + 1, term->y); */
         /* if (term->x < a->len - 1) */
         /* { */
@@ -162,11 +204,13 @@ void terminal_addchar(char c, struct terminal *term)
         /* { */
         /*     term->operations.draw_char_at(' ', term->x, term->y, true); */
         /* } */
+
         size_t old_x = term->x;
         if (old_x > 0)
         {
             old_x = term->x - 1;
         }
+
         terminal_draw_charat(terminal_getchar(*term, old_x, term->y), old_x,
                              term->y, term);
         for (size_t i = term->x; i < a->len; i++)
@@ -231,21 +275,18 @@ void terminal_set_cursor(struct terminal *term, int x, int y)
         }
         else
         {
-            x = line->len - 1;
+            /* x = line->len - 1; */
+            x = line->len; /* let cursor go beyond end of line */
         }
     }
     logd("%d, %d", x, y);
 
     /* terminal_draw_line(term, y, y); */
+    logd("drawing at:%d, %d", term->x, term->y);
     char c = terminal_getchar(*term, term->x, term->y);
     terminal_draw_charat(c, term->x, term->y, term);
 
     terminal_set_pos(term, x, y);
-    /* term->prev_x = term->x; */
-    /* term->prev_y = term->y; */
-
-    /* term->x = x; */
-    /* term->y = y; */
 
     c = ((char *)line->data)[x];
     terminal_draw_charat(c, term->x, term->y, term);

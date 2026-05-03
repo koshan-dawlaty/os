@@ -104,7 +104,7 @@ int main()
     /* terminal_draw_line(&characters, 0, 0); */
 
     terminal_add("abcdef", 6, &characters);
-    terminal_move_cursor(&characters, 2, 0);
+    terminal_move_cursor(&characters, -1, 0);
     /* terminal_add("\b", 1, &characters); */
     /* terminal_add("123\b\n", 5, &characters); */
     /* terminal_add("2\n", 2, &characters); */

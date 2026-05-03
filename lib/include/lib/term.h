@@ -66,7 +66,15 @@ static inline char terminal_getchar(struct terminal term, int x, int y)
     }
     else if (x >= line->len)
     {
-        x = line->len - 1;
+
+        if (line->len <= 0)
+        {
+            x = 0;
+        }
+        else
+        {
+            x = line->len - 1;
+        }
     }
 
     return ((char *)line->data)[x];
