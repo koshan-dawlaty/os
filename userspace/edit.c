@@ -103,7 +103,7 @@ int main()
     /* terminal_addchar('\n', &characters); */
     /* terminal_draw_line(&characters, 0, 0); */
 
-    terminal_add("abcdef", 6, &characters);
+    /* terminal_add("a\ba", 3, &characters); */
     terminal_move_cursor(&characters, -1, 0);
     /* terminal_add("\b", 1, &characters); */
     /* terminal_add("123\b\n", 5, &characters); */

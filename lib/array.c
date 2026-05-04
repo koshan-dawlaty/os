@@ -62,7 +62,14 @@ void *array_pop_end(struct array *array, size_t len)
 
     void *out = array->data + array->len - len;
 
-    array->len -= len;
+    if ((int)array->len - (int)len < 0)
+    {
+        array->len = 0;
+    }
+    else
+    {
+        array->len -= len;
+    }
 
     return out;
 }

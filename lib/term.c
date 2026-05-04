@@ -181,7 +181,7 @@ void terminal_addchar(char c, struct terminal *term)
         else if (term->x > 0)
         {
             term->x = 0;
-            array_pop_middle(a, 0);
+            array_pop(a, 1);
             terminal_draw_charat(' ', 0, term->y, term);
         }
         else
@@ -191,6 +191,9 @@ void terminal_addchar(char c, struct terminal *term)
         break;
     default:;
 
+        logd("inserting to:%p", a->data);
+        logd("inserting to:%p", a->capacity);
+        logd("inserting to:%p", a->len);
         array_insert(a, term->x, &c, 1);
         terminal_set_pos(term, term->x + 1, term->y);
 
