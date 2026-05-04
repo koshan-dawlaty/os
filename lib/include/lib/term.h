@@ -77,7 +77,7 @@ static inline char terminal_getchar(struct terminal term, int x, int y)
         }
     }
 
-    return ((char *)line->data)[x];
+    return *(char *)array_get(line, x, 1);
 }
 
 void terminal_add(const char *data, size_t len, struct terminal *term);
