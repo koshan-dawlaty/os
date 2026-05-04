@@ -70,9 +70,9 @@ void write_to_file(struct terminal *characters)
     {
         struct array *line =
             array_get(&characters->characters, i, sizeof(struct array));
-        logd("writing:%s", line->data);
         if (line->data != NULL)
         {
+            logd("writing:%s", line->data);
             write(fd, line->data, line->len);
         }
         char newline = '\n';
@@ -103,8 +103,10 @@ int main()
     /* terminal_addchar('\n', &characters); */
     /* terminal_draw_line(&characters, 0, 0); */
 
-    /* terminal_add("a\ba", 3, &characters); */
-    terminal_move_cursor(&characters, -1, 0);
+    /* terminal_add("abcdef", 6, &characters); */
+    /* terminal_draw_line(&characters, 0, 0); */
+    terminal_add("a\nb\nc\nd\ne", 7, &characters);
+
     /* terminal_add("\b", 1, &characters); */
     /* terminal_add("123\b\n", 5, &characters); */
     /* terminal_add("2\n", 2, &characters); */
