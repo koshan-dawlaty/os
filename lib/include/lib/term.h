@@ -93,4 +93,7 @@ static inline void terminal_move_cursor(struct terminal *term, int x, int y)
 
 void terminal_draw_line(struct terminal *term, size_t index, size_t y);
 
+void term_scroll_up(struct terminal *term);
+void term_scroll_down(struct terminal *term);
+
 #endif

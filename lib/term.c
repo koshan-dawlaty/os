@@ -29,7 +29,7 @@ void terminal_draw_charat(char c, size_t x, size_t y, struct terminal *term)
 {
 
     /* if (y < term->top_line || */
-    /*     y > term->operations.get_height() + term->top_line) */
+    /*     y >= term->operations.get_height() + term->top_line) */
     /* { */
     /*     logd("terminal_draw_charat position rejected:%d, %d, %d", y, */
     /*          term->top_line, term->operations.get_height()); */
@@ -130,11 +130,27 @@ void term_scroll_up(struct terminal *term)
     size_t min_height =
         MIN(height, ARRAY_LEN(term->characters, sizeof(struct array)));
 
-    for (size_t i = term->top_line - 1; i < min_height + term->top_line + 1;
-         i++)
+    for (size_t i = term->top_line; i < min_height + term->top_line + 1; i++)
     {
         terminal_update_line(term, i);
     }
+    /* terminal_redraw_char(term, term->x, term->y); */
+}
+
+void term_scroll_down(struct terminal *term)
+{
+    term->top_line++;
+    size_t min_height = MIN(term->operations.get_height(),
+                            ARRAY_LEN(term->characters, sizeof(struct array)));
+
+    logd("loop %d:%d", term->top_line - 1, min_height + term->top_line);
+    for (size_t i = term->top_line - 1; i < min_height + term->top_line; i++)
+    {
+        /* terminal_draw_line(term, i, i + 1); */
+        logd("drawing line at %d", i);
+        terminal_update_line(term, i);
+    }
+    terminal_redraw_char(term, term->x, term->y);
 }
 
 void terminal_add_newline(struct terminal *term)
@@ -151,20 +167,8 @@ void terminal_add_newline(struct terminal *term)
 
     if (term->y - term->top_line > height)
     {
+        term_scroll_down(term);
         /* term->top_line++; */
-        term->top_line++;
-        size_t min_height =
-            MIN(height, ARRAY_LEN(term->characters, sizeof(struct array)));
-
-        logd("loop %d:%d", term->top_line - 1, min_height + term->top_line);
-        for (size_t i = term->top_line - 1; i < min_height + term->top_line + 1;
-             i++)
-        {
-            /* terminal_draw_line(term, i, i + 1); */
-            logd("drawing line at %d", i);
-            terminal_update_line(term, i);
-        }
-        terminal_redraw_char(term, term->x, term->y);
 
         /* for (size_t i = 0; i < term->operations.get_width(); i++) */
         /* { */

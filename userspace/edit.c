@@ -23,6 +23,7 @@ size_t wm_terminal_get_width()
 
 size_t wm_terminal_get_height()
 {
+    return 3;
     return (client.fb.height / font->header.height) - 2;
 }
 
@@ -139,6 +140,12 @@ int main()
             {
             case 'i':
                 insert_mode = true;
+                break;
+            case 'a':
+                term_scroll_up(&characters);
+                break;
+            case 's':
+                term_scroll_down(&characters);
                 break;
             case 'k':
                 terminal_move_cursor(&characters, 0, -1);
