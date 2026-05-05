@@ -107,6 +107,10 @@ struct PSF_font
 
 void client_draw_char(struct wm_client client, struct PSF_font *font, char c,
                       size_t x, size_t y);
+
+void client_draw_string(struct wm_client client, struct PSF_font *font,
+                        const char *str, size_t x, size_t y);
+
 struct PSF_font *font_parse(int fd);
 
 typedef uintptr_t ptr;

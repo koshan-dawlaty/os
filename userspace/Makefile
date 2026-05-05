@@ -66,6 +66,7 @@ START_OBJ=\
 
 BINARIES=\
 	elf_test \
+	flashcards \
 	edit \
 	elf_test2 \
 	overwrite \
@@ -137,6 +138,10 @@ $(BIN)/tron : $(OBJS_START_BIN) $(BIN)/tron.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(
 $(BIN)/explore : $(OBJS_START_BIN) $(BIN)/explore.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+
+$(BIN)/flashcards : $(OBJS_START_BIN) $(BIN)/flashcards.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
 
 
 $(BIN)/edit : $(OBJS_START_BIN) $(BIN)/edit.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)

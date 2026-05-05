@@ -10,6 +10,7 @@ void *memset(void *dest, int c, size_t n);
 void bzero(void *s, size_t n);
 
 char *strdup(char *str);
+char *strndup(const char *str, size_t n);
 
 /* TODO: does not return which string is alphabetically greater */
 int strcmp(const char *s1, const char *s2);

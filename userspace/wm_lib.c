@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 void client_draw_char(struct wm_client client, struct PSF_font *font, char c,
@@ -25,9 +26,18 @@ void client_draw_char(struct wm_client client, struct PSF_font *font, char c,
             }
             else
             {
-                /* client_draw_pixel(w, x + 4, y, 0); */
+                /* client_draw_pixel(client, x + 4, y, 0); */
             }
         }
+    }
+}
+
+void client_draw_string(struct wm_client client, struct PSF_font *font,
+                        const char *str, size_t x, size_t y)
+{
+    for (size_t i = 0; i < strlen(str); i++)
+    {
+        client_draw_char(client, font, str[i], x + (i * font->header.width), y);
     }
 }
 
