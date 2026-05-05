@@ -62,17 +62,6 @@ void parse_flashcards(char *buf, struct list2c *head)
     }
 }
 
-void display_entry(struct set_entry *entry)
-{
-    client_draw_rect(client, 0, 0,
-                     MAX(strlen(entry->question), strlen(entry->answer)) *
-                         font->header.width,
-                     font->header.height * 2, 0);
-    client_draw_string(client, font, entry->question, 0, 0);
-    client_draw_string(client, font, entry->answer, 0, font->header.height);
-    wm_render(client);
-}
-
 void free_entries(struct list2c *head)
 {
     struct set_entry *prev = NULL;
@@ -96,6 +85,14 @@ void free_entries(struct list2c *head)
     }
 }
 
+void draw_string(struct wm_client client, const char *str, size_t x, size_t y)
+{
+    client_draw_rect(client, x * font->header.width, y * font->header.height,
+                     client.fb.width, font->header.height, 0);
+    client_draw_string(client, font, str, x * font->header.width,
+                       y * font->header.height);
+}
+
 #define OUT_OF_ENTRIES_STR "out of entries"
 
 int main(int argc, char **argv)
@@ -103,13 +100,14 @@ int main(int argc, char **argv)
 
     init_libc();
 
-    client = wm_client_connect(600, 200);
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse(font_fd);
+    client = wm_client_connect(font->header.height * 2, 500);
 
     wm_render(client);
 
-    int fd = open("/flashcards", O_RDONLY);
+    /* int fd = open("/flashcards/test2", O_RDONLY); */
+    int fd = open("/flashcards/spanish-lesson-5-vocab", O_RDONLY);
     size_t read_size = 10;
     size_t result = 0;
     char *flashcards = malloc(read_size);
@@ -148,7 +146,17 @@ int main(int argc, char **argv)
         }
         struct set_entry *entry = containerof(current, struct set_entry, list);
         current = current->next;
-        display_entry(entry);
+
+        draw_string(client, "question:", 0, 0);
+        draw_string(client, entry->question, 0, 1);
+        wm_render(client);
+
+        wm_get_key(client);
+
+        draw_string(client, "answer:", 0, 0);
+        draw_string(client, entry->answer, 0, 1);
+
+        wm_render(client);
         wm_get_key(client);
     }
     free_entries(&head);
