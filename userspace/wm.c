@@ -325,7 +325,41 @@ void move_window_step(struct window_queue_entry *ent, int x, int y,
     }
 }
 
-#define WINDOW_DECORATION_ROWS 10
+#define WINDOW_DECORATION_ROWS 15
+#define WINDOW_CLOSE_WIDTH 15
+
+static void draw_window_decoration(struct window *win, bool focused)
+{
+    if (focused)
+    {
+        framebuffer_draw_rect(&win->fb, 0, 0, win->fb.width,
+                              WINDOW_DECORATION_ROWS, 0xFF00FF);
+    }
+    else
+    {
+        framebuffer_draw_rect(&win->fb, 0, 0, win->fb.width,
+                              WINDOW_DECORATION_ROWS, 0x0000FF);
+    }
+
+    /* draw 'x' pattern for closing a window */
+    for (size_t y = 0, x = 0;
+         y < WINDOW_DECORATION_ROWS && x < WINDOW_CLOSE_WIDTH; y++)
+    {
+        framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y);
+        x++;
+    }
+
+    for (size_t y = WINDOW_DECORATION_ROWS, x = 0;
+         y >= 0 && x < WINDOW_CLOSE_WIDTH + 1; y--)
+    {
+        framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y);
+        x++;
+    }
+    update_area_up(
+        RECT_INIT(WIN_X(win), WIN_Y(win), WIN_W(win), WINDOW_DECORATION_ROWS),
+        buffer);
+}
+
 struct window_queue_entry *focused = NULL;
 
 /* correctly applys window decorations to newly focused window */
@@ -339,34 +373,8 @@ void change_focus(struct window_queue_entry *new_focus)
         return;
     }
 
-    for (size_t y = 0; y < WINDOW_DECORATION_ROWS; y++)
-    {
-        for (size_t x = 0; x < WIN_W(new_focus->win); x++)
-        {
-            framebuffer_put_pixel(&new_focus->win->fb, 0xFF00FF, x, y);
-
-            /* *(u32 *)(new_focus->win->fb.buffer + y *
-             * WIN_W(new_focus->win) * 4 + */
-            /*          (x * 4)) = 0xFF00FF; */
-        }
-    }
-    struct rect new_rect = WIN_RECT(new_focus->win);
-    update_area_up(
-        RECT_INIT(new_rect.x, new_rect.y, new_rect.w, WINDOW_DECORATION_ROWS),
-        buffer);
-
-    for (size_t y = 0; y < WINDOW_DECORATION_ROWS; y++)
-    {
-        for (size_t x = 0; x < WIN_W(focused->win); x++)
-        {
-            framebuffer_put_pixel(&focused->win->fb, 0xFF, x, y);
-        }
-    }
-
-    struct rect prev_rect = WIN_RECT(focused->win);
-    update_area_up(RECT_INIT(prev_rect.x, prev_rect.y, prev_rect.w,
-                             WINDOW_DECORATION_ROWS),
-                   buffer);
+    draw_window_decoration(new_focus->win, true);
+    draw_window_decoration(focused->win, false);
 
     user_mutex_lock(window_queue_mutex);
     list2c_remove(&new_focus->list);
@@ -650,8 +658,16 @@ static void process_mouse(struct mouse_event *ev)
 
     move_window(mouse_queue_ent, ev->x_change, ev->y_change, buffer);
 
-    if (ev->buttons.left_click && drag_count < 3)
+    if (ev->buttons.left_click)
     {
+
+        if (drag_count > 3)
+        {
+            if (focused != NULL)
+            {
+                move_window(focused, ev->x_change, ev->y_change, buffer);
+            }
+        }
 
         drag_count++;
 
@@ -685,24 +701,31 @@ static void process_mouse(struct mouse_event *ev)
                 WIN_X(mouse) < WIN_X(win) + WIN_W(win) &&
                 WIN_Y(mouse) > WIN_Y(win) &&
                 WIN_Y(mouse) < WIN_Y(win) + WIN_H(win))
-
             {
                 new_focus = queue_ent;
                 break;
             }
         }
+
         user_mutex_unlock(window_queue_mutex);
 
         if (new_focus != NULL)
         {
-            change_focus(new_focus);
-        }
-    }
-    else if (ev->buttons.left_click)
-    {
-        if (focused != NULL)
-        {
-            move_window(focused, ev->x_change, ev->y_change, buffer);
+
+            struct window *win = new_focus->win;
+
+            if (WIN_X(mouse) > WIN_X(win) &&
+                WIN_X(mouse) < WIN_X(win) + WINDOW_CLOSE_WIDTH &&
+                WIN_Y(mouse) > WIN_Y(win) &&
+                WIN_Y(mouse) < WIN_Y(win) + WINDOW_DECORATION_ROWS)
+            {
+
+                close(new_focus->conn->client_socket);
+            }
+            else
+            {
+                change_focus(new_focus);
+            }
         }
     }
     else
@@ -842,7 +865,7 @@ int main()
     size_t mouse_h = 10;
     mouse = new_window(0, 0, mouse_w, mouse_h);
 
-    framebuffer_draw_rect(&mouse->fb, 0, 0, WIN_W(mouse), WIN_H(mouse), 0xFF);
+    framebuffer_draw_rect(&mouse->fb, 0, 0, WIN_W(mouse), WIN_H(mouse), 0xFF00);
     /* memset(mouse->fb.buffer, 255, 10 * 10 * 4); */
 
     buffer = framebuffer_alloc();
