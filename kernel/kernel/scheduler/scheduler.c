@@ -187,9 +187,9 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 
     load_pgdir(temp);
 
-    const char *term_path = "/terminal";
-    const char *serial_path = "/serial0";
-    const char *keyboard_path = "/keyboard";
+    const char *term_path = "/dev/terminal";
+    const char *serial_path = "/dev/serial0";
+    const char *keyboard_path = "/dev/keyboard";
     /* TODO: maybe have a function to index into the fdlist, like dup2() */
     /* TODO: maybe make stdin/out not readable/writeable in the kernel */
 
@@ -264,9 +264,9 @@ struct task *user_thread_alloc(ptr ip)
     out->descriptors = parent_fdlist;
 
     /* TODO: this should duplicate file descriptors */
-    const char *term_path = "/terminal";
-    const char *keyboard_path = "/keyboard";
-    const char *serial_path = "/serial0";
+    const char *term_path = "/dev/terminal";
+    const char *keyboard_path = "/dev/keyboard";
+    const char *serial_path = "/dev/serial0";
     /* TODO: maybe have a function to index into the fdlist, like dup2() */
     /* TODO: maybe make stdin/out not readable/writeable in the kernel */
     /* fdlist_add(out->descriptors, open_device(keyboard_path)); /1* 0, stdin

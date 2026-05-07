@@ -764,7 +764,7 @@ static void process_keyboard(char c)
 
 void input_thread()
 {
-    int mouse_fd = open("/mouse", O_RDONLY);
+    int mouse_fd = open("/dev/mouse", O_RDONLY);
     int keyboard_fd = 0; /* TODO: make this use the keyboard device instead */
     int fds[] = {mouse_fd, keyboard_fd};
     struct mouse_event *ev = malloc(sizeof(struct mouse_event));

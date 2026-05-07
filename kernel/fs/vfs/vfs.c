@@ -47,6 +47,8 @@ void init_vfs()
     init_dcache();
 
     vfs_mount(rootdir, "tmpfs", tmpfs_type, NULL);
+    /* create directory for devices */
+    vfs_mount(rootdir, "dev", tmpfs_type, NULL);
 }
 
 int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,

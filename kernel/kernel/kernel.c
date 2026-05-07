@@ -218,21 +218,6 @@ void t3(void *a)
 
 void t1(void *a)
 {
-    logd("test");
-    struct file *read, *write;
-    pipe_open(&read, &write);
-
-    ktask_run(t2, read);
-    ktask_run(t3, write);
-
-    int fd;
-    struct file *keyboard = open_file("/keyboard", O_RDONLY, &fd);
-    struct file *mouse = open_file("/mouse", O_RDONLY, &fd);
-    struct file *f = fs_poll((struct file *[]){read, keyboard, mouse}, 3);
-    logd("keyboard:%p", keyboard);
-    logd("mouse:%p", mouse);
-    logd("read:%p", f);
-    logd("done");
 }
 
 struct task_queue abc = TASK_QUEUE_INIT(abc);
@@ -295,11 +280,11 @@ void kmain()
     printf("this is the initial kernel task:%p\n", kernel_task);
     add_task(kernel_task);
 
-    create_device("/terminal", get_terminal());
-    create_device("/keyboard", get_keyboard());
-    create_device("/mouse", mouse_get());
+    create_device("/dev/terminal", get_terminal());
+    create_device("/dev/keyboard", get_keyboard());
+    create_device("/dev/mouse", mouse_get());
 #ifndef CONFIG_PLEASE_DONT_USE_THE_SERIAL_PORT
-    create_device("/serial0", serial_cdev_create(0x3F8));
+    create_device("/dev/serial0", serial_cdev_create(0x3F8));
 #endif
 
     /* ktask_run(t1, NULL); */
