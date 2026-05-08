@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include "vfs.h"
 #include <cdev.h>
 #include <device.h>
@@ -32,6 +33,19 @@ WAIT_QUEUE_DEFINE(mouse_waitqueue);
 #define PS2_MOUSE_Y_OVERFLOW (1 << 7)
 
 struct mouse_event ps2_mouse_event = {0, 0, {false, false, false}};
+struct mouse_event ps2_mouse_event_prev = {0, 0, {false, false, false}};
+
+static bool ps2_mouse_has_changed()
+{
+    return !(ps2_mouse_event.x_change == ps2_mouse_event_prev.x_change &&
+             ps2_mouse_event.y_change == ps2_mouse_event_prev.y_change &&
+             ps2_mouse_event.buttons.left_click ==
+                 ps2_mouse_event_prev.buttons.left_click &&
+             ps2_mouse_event.buttons.right_click ==
+                 ps2_mouse_event_prev.buttons.right_click &&
+             ps2_mouse_event.buttons.middle_click ==
+                 ps2_mouse_event_prev.buttons.middle_click);
+}
 
 INT_HANDLER(mouse_interrupt_handler, {
     u8 buttons = inb(0x60);
@@ -43,33 +57,32 @@ INT_HANDLER(mouse_interrupt_handler, {
     int8_t x = inb(0x60);
     int8_t y = inb(0x60);
 
-    /* TODO: maybe use the overflow bit
-     * i think it will make the mouse get offset from the real mouse less
-     */
-    if (!(buttons & PS2_MOUSE_ALWAYS_ONE) || (buttons & PS2_MOUSE_X_OVERFLOW) ||
-        (buttons & PS2_MOUSE_Y_OVERFLOW))
+    if (!(buttons & PS2_MOUSE_ALWAYS_ONE))
     {
         goto end;
     }
 
-    if (buttons & PS2_MOUSE_LEFT_CLICK)
+    /* TODO: maybe use the overflow bit
+     * i think it will make the mouse get offset from the real mouse less
+     */
+    if ((buttons & PS2_MOUSE_X_OVERFLOW) || (buttons & PS2_MOUSE_Y_OVERFLOW))
     {
-        ps2_mouse_event.buttons.left_click = true;
-    }
-    if (buttons & PS2_MOUSE_RIGHT_CLICK)
-    {
-        ps2_mouse_event.buttons.right_click = true;
+        goto end;
     }
 
-    if (buttons & PS2_MOUSE_MIDDLE_CLICK)
-    {
-        ps2_mouse_event.buttons.middle_click = true;
-    }
+    ps2_mouse_event.buttons.left_click = (buttons & PS2_MOUSE_LEFT_CLICK) != 0;
+    ps2_mouse_event.buttons.right_click =
+        (buttons & PS2_MOUSE_RIGHT_CLICK) != 0;
+    ps2_mouse_event.buttons.middle_click =
+        (buttons & PS2_MOUSE_MIDDLE_CLICK) != 0;
+
+    /* logd("left click in mouse interrupt handler:%d", */
+    /*      ps2_mouse_event.buttons.left_click); */
 
     ps2_mouse_event.x_change += x;
     ps2_mouse_event.y_change -= y;
 
-    if (!WAIT_QUEUE_EMPTY(mouse_waitqueue))
+    if (!WAIT_QUEUE_EMPTY(mouse_waitqueue) && ps2_mouse_has_changed())
     {
         wait_queue_done(&mouse_waitqueue);
     }
@@ -81,8 +94,10 @@ end:
 int mouse_read(struct cdev *dev, u8 *buf, size_t len)
 {
 
-    if ((ps2_mouse_event.x_change == 0 && ps2_mouse_event.y_change == 0))
+    if (!(ps2_mouse_has_changed()))
     {
+
+        logd("not changed");
         wait_queue_wait(&mouse_waitqueue);
     }
 
@@ -93,6 +108,8 @@ int mouse_read(struct cdev *dev, u8 *buf, size_t len)
     ps2_mouse_event.y_change = 0;
 
     ps2_mouse_event.buttons = (struct mouse_buttons){false, false, false};
+
+    ps2_mouse_event_prev = ps2_mouse_event;
 
     return bytes_written;
 }
@@ -105,7 +122,13 @@ int mouse_write(struct cdev *dev, u8 *buf, size_t len)
 poll_flags mouse_poll(struct cdev *dev, struct wait_queue **queue)
 {
     *queue = &mouse_waitqueue;
-    return !((ps2_mouse_event.x_change == 0 && ps2_mouse_event.y_change == 0));
+
+    poll_flags out = 0;
+    if (ps2_mouse_has_changed())
+    {
+        out |= POLL_READ;
+    }
+    return out;
 }
 
 struct cdev_functions mouse_cdev_functions = {
