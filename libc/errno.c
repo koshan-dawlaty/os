@@ -28,6 +28,8 @@ const char *strerror(int errnum)
         return "EINVAL, invalid argument";
     case EBADF:
         return "bad file descriptor";
+    case EISDIR:
+        return "is a directory";
     default:
         return "no error message for this";
     }

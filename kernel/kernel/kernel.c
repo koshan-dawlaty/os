@@ -227,6 +227,20 @@ void kmain()
 {
     scheduler_init();
 
+    size_t malloc_before = malloc_count, free_before = free_count;
+    struct dentry *ent = lookup_path("/one", PATHNAME_LOOKUP_FIND);
+
+    dentry_put(ent);
+    /* int fd = open("/one", O_RDONLY); */
+    /* int fd2 = open("/one", O_RDONLY); */
+    /* close(fd); */
+    /* close(fd2); */
+
+    size_t malloc_after = malloc_count, free_after = free_count;
+    size_t malloc_diff = malloc_after - malloc_before,
+           free_diff = free_after - free_before;
+    logd("m:%d f:%d", malloc_diff, free_diff);
+
     /* struct array a = ARRAY_INIT(); */
     /* const char *data = "abcdef"; */
     /* char *data2 = "123"; */

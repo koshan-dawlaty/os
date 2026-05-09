@@ -1,4 +1,5 @@
 #include "dcache.h"
+#include "lib/refcount.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
 #include <err_ptr.h>
@@ -46,9 +47,9 @@ void init_vfs()
 
     init_dcache();
 
-    vfs_mount(rootdir, "tmpfs", tmpfs_type, NULL);
+    vfs_mount(rootdir, strdup("tmpfs"), tmpfs_type, NULL);
     /* create directory for devices */
-    vfs_mount(rootdir, "dev", tmpfs_type, NULL);
+    vfs_mount(rootdir, strdup("dev"), tmpfs_type, NULL);
 }
 
 int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
@@ -82,8 +83,11 @@ struct dentry *new_dentry(char *name, dentry *parent, inode *inode,
     /* logd("creating dentry with name:%s", name); */
     struct dentry *out = malloc(sizeof(dentry));
 
+    out->rc = REFCOUNT_INIT();
     out->inode = inode;
-    out->name = name;
+    out->name = name; /* TODO: this should probably be allocated with strdup()
+                         but many of the callers of this function already pass a
+                         strdup() string to this function */
     out->parent = parent;
     out->type = type;
 
@@ -93,7 +97,10 @@ struct dentry *new_dentry(char *name, dentry *parent, inode *inode,
 struct dentry *dentry_mount_point_alloc(struct superblock *sb,
                                         struct inode *root)
 {
-    struct dentry *out = malloc(sizeof(struct dentry));
+    struct dentry *out =
+        malloc(sizeof(struct dentry)); /* TODO: separate function to malloc a
+                                          struct dentry that everything uses */
+    out->rc = REFCOUNT_INIT();
     out->type = DENTRY_MOUNT_POINT;
     out->name = ".";
     out->parent = NULL;
@@ -107,7 +114,9 @@ struct dentry *dentry_mount_point_alloc(struct superblock *sb,
 void free_dentry(dentry *entry)
 {
     free(entry->name);
-    inode_free(entry->inode);
+
+    /* TODO: this probably needs a refrence count */
+    /* inode_free(entry->inode); */
 }
 
 struct file *new_file(struct dentry *entry, int flags)
@@ -143,7 +152,7 @@ struct file *new_file(struct dentry *entry, int flags)
 void file_free(struct file *file)
 {
     /* TODO: drop dentry? */
-    /* free(file); */
+    free(file);
 }
 
 struct inode *new_inode(ino_t number, inode_size size, void *fs_private,

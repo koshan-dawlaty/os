@@ -19,4 +19,7 @@ static inline int abs(int x)
     return (x < 0) ? -x : x;
 }
 
+extern size_t malloc_count;
+extern size_t free_count;
+
 #endif

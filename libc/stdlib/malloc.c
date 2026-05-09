@@ -221,6 +221,7 @@ heap_block *get_block_from_bin(heap_block **bin, size_t new_size,
 
 void free_zone(void *ptr, struct malloc_zone *zone)
 {
+    free_count++;
     if (ptr == NULL)
     {
         return;
@@ -264,6 +265,7 @@ void free_zone(void *ptr, struct malloc_zone *zone)
 void *malloc_zone(size_t size, struct malloc_zone *zone)
 {
 
+    malloc_count++;
     void *retval = NULL;
     int total_size = align_long2(size + sizeof(heap_block), ALIGN);
 
@@ -325,6 +327,9 @@ static inline void unlock_heap()
     }
 #endif
 }
+
+size_t malloc_count = 0;
+size_t free_count = 0;
 
 void *malloc(size_t size)
 {

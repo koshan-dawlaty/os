@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include <container_of.h>
 #include <err_ptr.h>
 #include <errno.h>
@@ -35,7 +36,8 @@ struct dcache_value
 
 void dcache_free_value(struct dcache_value *value)
 {
-    free_dentry(value->entry);
+    dentry_put(value->entry);
+    /* free_dentry(value->entry); */
 }
 
 void dcache_rc_value_release(struct refcount *rc)
@@ -185,6 +187,7 @@ struct dentry *get_dcache(char *component, struct dentry *parent)
         return NULL;
     }
 
+    dentry_get(value->entry);
     return value->entry;
 }
 
@@ -288,7 +291,8 @@ struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
     {
         context->dcache_offset++;
         /* TODO: DONT ALLOCATE A DENTRY THIS IS STUPID */
-        return new_dentry(".", entry->parent, entry->inode, entry->type);
+        return new_dentry(strdup("."), entry->parent, entry->inode,
+                          entry->type);
     }
     else if (context->dcache_offset == 1) /* equivalent to the path being "..",
               so return the directory that is being read from's parent  */
@@ -297,7 +301,8 @@ struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
         struct dentry *parent = entry->parent;
 
         /* TODO: DONT ALLOCATE A DENTRY THIS IS STUPID */
-        return new_dentry("..", parent->parent, parent->inode, parent->type);
+        return new_dentry(strdup(".."), parent->parent, parent->inode,
+                          parent->type);
     }
 
     struct dcache_dir *dir = get_dcache_dir(entry);
@@ -318,6 +323,8 @@ struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
         if (i == context->dcache_offset)
         {
             context->dcache_offset++;
+            /* logd("%p", value->entry->rc.count); */
+            dentry_get(value->entry);
             return value->entry;
         }
 

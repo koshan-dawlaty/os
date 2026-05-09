@@ -1,5 +1,6 @@
 #include "device.h"
 #include "lib/assert.h"
+#include "lib/refcount.h"
 #include "wait_queue.h"
 #include <bdev.h>
 #include <cdev.h>
@@ -11,6 +12,7 @@
 dentry *new_dentry_dev(char *name, dentry *parent, struct device *dev)
 {
     dentry *out = malloc(sizeof(dentry));
+    out->rc = REFCOUNT_INIT();
     out->dev = dev;
     out->name = name;
     out->parent = parent;

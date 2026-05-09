@@ -1,6 +1,7 @@
 #include "fcntl.h"
 #include "kernel/userspace.h"
 #include "lib/assert.h"
+#include "lib/refcount.h"
 #include "panic.h"
 #include "scheduler.h"
 #include "spinlock.h"
@@ -204,6 +205,7 @@ struct dentry *dentry_socket_alloc(const char *name, struct dentry *parent,
                                    struct unix_socket *socket)
 {
     struct dentry *out = malloc(sizeof(struct dentry));
+    out->rc = REFCOUNT_INIT();
     out->name = (char *)name;
     out->parent = parent;
     out->type = DENTRY_SOCKET;

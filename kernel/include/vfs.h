@@ -1,6 +1,7 @@
 #ifndef VFS_H
 #define VFS_H
 #include "lib/assert.h"
+#include "lib/refcount.h"
 #include <device.h>
 #include <dirent.h>
 #include <kernel/types.h>
@@ -97,6 +98,9 @@ typedef struct dentry
     char *name;
     struct dentry *parent;
 
+    struct refcount rc; /* dcache could already count refrences, but some things
+               (like readdir) don't take dcache_values as refrences */
+
     union
     {
         inode *inode; /* type == DENTRY_FILE || DENTRY_DIR || DENTRY_MOUNT_POINT
@@ -110,6 +114,24 @@ typedef struct dentry
 
     dentry_type type;
 } dentry;
+void free_dentry(struct dentry *entry);
+
+static inline void dentry_get(struct dentry *entry)
+{
+    refcount_get(&entry->rc);
+}
+
+static inline void dentry_refcount_drop(struct refcount *rc)
+{
+    struct dentry *entry = containerof(rc, struct dentry, rc);
+
+    free_dentry(entry);
+}
+
+static inline void dentry_put(struct dentry *entry)
+{
+    refcount_drop(&entry->rc, dentry_refcount_drop);
+}
 
 struct dir_context
 {
@@ -125,7 +147,6 @@ struct dir_context
 dentry *new_dentry(char *name, dentry *parent, inode *inode, dentry_type type);
 
 dentry *dentry_mount_point_alloc(struct superblock *sb, struct inode *root);
-void free_dentry(dentry *entry);
 
 typedef struct
 {

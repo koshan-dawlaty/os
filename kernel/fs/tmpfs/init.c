@@ -216,7 +216,8 @@ dentry *tmpfs_mount(struct bdev *dev)
 {
     /* assume that the caller wants to create a new filesystem */
     struct superblock *sb = tmpfs_parse_superblock(dev);
-    struct tmpfs_node *node = tmpfs_node_alloc_dir(".", TMPFS_NODE_DIR, sb);
+    struct tmpfs_node *node =
+        tmpfs_node_alloc_dir(strdup("."), TMPFS_NODE_DIR, sb);
     struct inode *root = new_inode(TMPFS_SB(sb)->inode_count, 0, node, sb);
     TMPFS_SB(sb)->inode_count++;
 
