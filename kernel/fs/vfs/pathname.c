@@ -22,8 +22,9 @@ static dentry *parse_dentries_component(dentry *dir, const char *component)
 
     while (ent != NULL && !IS_ERR(ent))
     {
-        logd("ent:%p read:%s inode:%p refcount:%d name ptr:%p", ent, ent->name,
-             ent->inode, ent->rc.count, ent->name);
+        struct inode *inode = ent->inode;
+        logd("ent:%p read:%s inode:%p inode sb:%p refcount:%d name ptr:%p", ent,
+             ent->name, inode, inode->sb, ent->rc.count, ent->name);
 
         if (!strcmp(ent->name, component))
         {

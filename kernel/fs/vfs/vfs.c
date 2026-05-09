@@ -102,7 +102,7 @@ struct dentry *dentry_mount_point_alloc(struct superblock *sb,
                                           struct dentry that everything uses */
     out->rc = REFCOUNT_INIT();
     out->type = DENTRY_MOUNT_POINT;
-    out->name = ".";
+    out->name = strdup(".");
     out->parent = NULL;
     out->inode = root;
     /* might be redundant */
@@ -114,9 +114,7 @@ struct dentry *dentry_mount_point_alloc(struct superblock *sb,
 void free_dentry(dentry *entry)
 {
     free(entry->name);
-
-    /* TODO: this probably needs a refrence count */
-    /* inode_free(entry->inode); */
+    inode_put(entry->inode);
 }
 
 struct file *new_file(struct dentry *entry, int flags)
@@ -160,6 +158,7 @@ struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
 {
     struct inode *out = malloc(sizeof(struct inode));
 
+    out->rc = REFCOUNT_INIT();
     out->number = number;
     out->size = size;
 

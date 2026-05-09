@@ -229,6 +229,7 @@ void kmain()
 
     size_t malloc_before = malloc_count, free_before = free_count;
     struct dentry *ent = lookup_path("/one", PATHNAME_LOOKUP_FIND);
+    logd("superblock:%p", ent->inode->sb);
 
     dentry_put(ent);
     /* int fd = open("/one", O_RDONLY); */

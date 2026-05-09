@@ -290,6 +290,7 @@ struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
               being read from  */
     {
         context->dcache_offset++;
+        inode_get(entry->inode);
         /* TODO: DONT ALLOCATE A DENTRY THIS IS STUPID */
         return new_dentry(strdup("."), entry->parent, entry->inode,
                           entry->type);
@@ -300,6 +301,7 @@ struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
         context->dcache_offset++;
         struct dentry *parent = entry->parent;
 
+        inode_get(parent->inode);
         /* TODO: DONT ALLOCATE A DENTRY THIS IS STUPID */
         return new_dentry(strdup(".."), parent->parent, parent->inode,
                           parent->type);

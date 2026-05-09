@@ -1,12 +1,11 @@
 #ifndef VFS_H
 #define VFS_H
-#include "lib/assert.h"
-#include "lib/refcount.h"
 #include <device.h>
 #include <dirent.h>
 #include <kernel/types.h>
 #include <lib/assert.h>
 #include <lib/log.h>
+#include <lib/refcount.h>
 #include <mutex.h>
 #include <scheduler.h>
 #include <socket.h>
@@ -48,6 +47,7 @@ typedef struct inode
     struct mutex lock;
 
     void *fs_private;
+    struct refcount rc;
 } inode;
 
 struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
@@ -57,6 +57,22 @@ struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
  * frees @node, including filesystem specific data
  */
 void inode_free(struct inode *node);
+
+static inline void inode_get(struct inode *node)
+{
+    refcount_get(&node->rc);
+}
+
+static inline void inode_refcount_drop(struct refcount *rc)
+{
+    struct inode *inode = containerof(rc, struct inode, rc);
+    inode_free(inode);
+}
+
+static inline void inode_put(struct inode *node)
+{
+    refcount_drop(&node->rc, inode_refcount_drop);
+}
 
 typedef struct
 {
