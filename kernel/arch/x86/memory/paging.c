@@ -47,7 +47,7 @@ extern long paging_page_table_addr;
 #define IN_USE 1
 
 #define free_page_bitmap_size NUM_PAGES / 8
-uint8_t phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
+u8 phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
 
 void *phys_page_start = (void *)0x200000;
 
@@ -80,7 +80,7 @@ void *get_free_phys_page_dir(struct pagedir dir)
     void *addr = (void *)(phys_page_start + (i * PAGE_SIZE));
 
 #if defined(CONFIG_x86_64) && defined(CONFIG_CLEAR_PAGES)
-    memset(addr + 0xffffc00000000000, 0xFF, PAGE_SIZE);
+    memset(addr + 0xffffc00000000000, 'b', PAGE_SIZE);
 #endif
 
     spinlock_unlock(&phys_page_lock);

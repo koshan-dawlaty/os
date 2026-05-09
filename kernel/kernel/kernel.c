@@ -220,6 +220,18 @@ void t1(void *a)
 {
 }
 
+void ls(const char *path)
+{
+    DIR *d = opendir(path);
+
+    struct dirent *e = readdir(d);
+    while (e != NULL)
+    {
+        logd("%s", e->d_name);
+        e = readdir(d);
+    }
+}
+
 struct task_queue abc = TASK_QUEUE_INIT(abc);
 extern void scheduler_init();
 
@@ -227,9 +239,14 @@ void kmain()
 {
     scheduler_init();
 
+    /*     ls("/bin"); */
+    /*     ls("/bin"); */
+    /*     return; */
+
+    open("/bin/cat", O_RDONLY);
+
     size_t malloc_before = malloc_count, free_before = free_count;
     struct dentry *ent = lookup_path("/one", PATHNAME_LOOKUP_FIND);
-    logd("superblock:%p", ent->inode->sb);
 
     dentry_put(ent);
     /* int fd = open("/one", O_RDONLY); */
@@ -316,6 +333,8 @@ void kmain()
 
     int err = execv("/bin/wm", (char *[]){"wm", NULL});
     /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
+    /* int err = execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
+    /* int err = execv("/bin/ls", (char *[]){"/bin/ls", "/dev", NULL}); */
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
     enable_scheduler();

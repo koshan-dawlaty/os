@@ -1,5 +1,6 @@
 #include "dcache.h"
 #include "lib/assert.h"
+#include "utils.h"
 #include "vfs.h"
 #include "vfs_internal.h"
 #include <err_ptr.h>
@@ -22,9 +23,18 @@ static dentry *parse_dentries_component(dentry *dir, const char *component)
 
     while (ent != NULL && !IS_ERR(ent))
     {
+
         struct inode *inode = ent->inode;
-        logd("ent:%p read:%s inode:%p inode sb:%p refcount:%d name ptr:%p", ent,
+        /* logd("rc:%d", ent->rc.count); */
+        /* logd("inode:%p sb:%p name ptr:%p name:%s refcount:%d", inode,
+         * inode->sb, */
+        /*      ent->name, ent->name, ent->rc); */
+
+        /* logd("ent:%p", ent); */
+        /*
+logd("ent:%p read:%s inode:%p inode sb:%p refcount:%d name ptr:%p", ent,
              ent->name, inode, inode->sb, ent->rc.count, ent->name);
+        */
 
         if (!strcmp(ent->name, component))
         {

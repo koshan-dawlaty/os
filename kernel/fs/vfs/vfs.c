@@ -149,8 +149,10 @@ struct file *new_file(struct dentry *entry, int flags)
 
 void file_free(struct file *file)
 {
-    /* TODO: drop dentry? */
-    free(file);
+    /* TODO: drop dentry */
+    /* TODO: files need a refrence count */
+    logd("freeing:%p", file);
+    /* free(file); */
 }
 
 struct inode *new_inode(ino_t number, inode_size size, void *fs_private,

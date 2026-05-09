@@ -1,3 +1,5 @@
+#include "lib/assert.h"
+#include "lib/log.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <init.h>
@@ -11,6 +13,9 @@
 int main(int argc, char **argv)
 {
     init_libc();
+
+    logd("cat");
+    exit(1);
 
     if (argc <= 1)
     {
@@ -47,6 +52,8 @@ int main(int argc, char **argv)
             printf("invalid fd\n");
         }
 
+        logd("reading in cat");
+
         buf_len += read_size;
         buf_offset += read_size;
         buf = realloc(buf, buf_len);
@@ -55,6 +62,11 @@ int main(int argc, char **argv)
     buf[buf_offset + bytes_read] = 0;
     printf("%s\n", buf);
     close(fd);
+
+    while (1)
+    {
+        sched_yield();
+    }
 
     exit(0);
 }

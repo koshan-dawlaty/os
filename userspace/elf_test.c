@@ -171,10 +171,12 @@ int main()
     printf("execv\n");
     execv_stdio("/bin/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0],
                 stdout_pipe[1]);
+    /* execv("/bin/ksh", (char *[]){"ksh", NULL}); */
     printf("execv end\n");
 
     pipe_write = stdin_pipe[1];
     clone((ptr)key_thread);
+
     /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); */
 
     /* char *buf = malloc(len); */
@@ -196,11 +198,14 @@ int main()
     while (1)
     {
 
+        sched_yield();
+
         char *buf = malloc(100);
     read_and_draw_char:;
         bool need_to_read_more = false;
         /* printf("malloc this\n"); */
         size_t res = read(stdout_pipe[0], buf, 100);
+        /* size_t res = 0; */
 
         if (res == 100)
         {
