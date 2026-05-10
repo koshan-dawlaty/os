@@ -275,7 +275,6 @@ void kmain()
         close(fd);
     }
 
-    return;
     /* create_device("/dev/terminal", get_terminal()); */
     /* create_device("/dev/keyboard", get_keyboard()); */
 

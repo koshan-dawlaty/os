@@ -17,7 +17,6 @@ int main(int argc, char *argv[])
     creat(file, 000);
     printf("created:%s\n", file);
     /* int fd = open(file, O_RDONLY); */
-    /* printf("opened as:%d\n", fd); */
 
     exit(0);
 }

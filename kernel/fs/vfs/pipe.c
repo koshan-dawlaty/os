@@ -46,12 +46,8 @@ int pipe_read(struct file *file, char *buf, size_t n, size_t off)
 
 int pipe_write(struct file *file, const char *buf, size_t n, size_t off)
 {
-
-    logd("pipe_write: file:%p", file);
     struct pipe *pipe = file->file_private;
-    logd("pipe_write: pipe:%p", pipe);
     struct pipe *read = pipe->other;
-    logd("pipe_write: read end:%p", read);
 
     /* printf("buf:%s\n", buf); */
     array_add(&pipe->buffer, buf, n);

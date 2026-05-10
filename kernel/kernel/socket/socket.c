@@ -146,7 +146,6 @@ struct file *unix_socket_create_fs(const char *path)
         .create = true,
         .type = DENTRY_SOCKET, /* TODO: dentry type here is bad */
     };
-    logd("making socket");
     struct unix_socket *socket = unix_socket_alloc();
     struct dentry *entry = lookup_path(path, flags);
 

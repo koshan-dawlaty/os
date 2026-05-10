@@ -195,7 +195,6 @@ struct file *open_file(const char *path, int flags, int *fd)
     }
 
     struct file *out = new_file(dentry, flags);
-    logd("opened %s as %p", path, out);
 
     switch (dentry->type)
     {

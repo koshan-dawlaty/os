@@ -24,8 +24,6 @@ static dentry *parse_dentries_component(dentry *dir, const char *component)
     while (ent != NULL && !IS_ERR(ent))
     {
 
-        logd("%p %s", ent, ent->name);
-
         struct inode *inode = ent->inode;
         /* logd("rc:%d", ent->rc.count); */
         /* logd("inode:%p sb:%p name ptr:%p name:%s refcount:%d", inode,
@@ -107,7 +105,6 @@ static size_t parse_component(const char *path, dentry **current_dir,
                 }
                 else if (flags.type == DENTRY_SOCKET)
                 {
-                    logd("%p %p", component, *current_dir);
                     entry = dentry_socket_alloc(strdup(component), *current_dir,
                                                 unix_socket_alloc());
                 }
