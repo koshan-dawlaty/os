@@ -8,7 +8,7 @@ mkdir -p isodir
 mkdir -p isodir/boot
 mkdir -p isodir/boot/grub
 
-cp sysroot/boot/os.kernel isodir/boot/os.kernel
+cp sysroot/boot/os.kernel$TEST_SUFFIX isodir/boot/os.kernel$TEST_SUFFIX
 cat > isodir/boot/grub/grub.cfg << EOF
 set timeout=0
 
@@ -28,7 +28,7 @@ menuentry "os" {
     terminal_output gfxterm
 
     # Boot the Multiboot1 kernel
-    multiboot /boot/os.kernel
+    multiboot /boot/os.kernel$TEST_SUFFIX
     boot
 }
 EOF

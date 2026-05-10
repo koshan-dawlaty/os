@@ -22,6 +22,8 @@ CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
+TEST_SUFFIX?=
+
 
 ARCHDIR_x86=$(notdir $(HOSTARCH))
 ARCHDIR=arch/$(firstword $(subst /, ,$(HOSTARCH)))
@@ -128,9 +130,13 @@ $(KERNEL_OBJS) \
 $(TEST_OBJS) \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
  
-OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj)) \
+OBJS_BIN_NO_SUFFIX = $(foreach obj,$(OBJS),bin/$(obj)) \
 		   $(ACPICA_OBJ) \
 		$(ACPI_OBJ_BIN)
+
+OBJS_BIN= $(addsuffix $(TEST_SUFFIX), $(OBJS_BIN_NO_SUFFIX))
+
+$(info $(OBJS_BIN))
 
 
 LINK_LIST=\
@@ -141,23 +147,23 @@ $(TEST_OBJS) \
 $(LIBS) \
 $(ARCHDIR)/$(ARCHDIR_x86)/crtn.o \
 
-LINK_LIST_BIN = $(foreach obj,$(LINK_LIST),bin/$(obj)) \
+LINK_LIST_BIN_NO_SUFFIX = $(foreach obj,$(LINK_LIST),bin/$(obj)) \
 				$(ACPICA_OBJ)
 				
-
+LINK_LIST_BIN= $(addsuffix $(TEST_SUFFIX), $(LINK_LIST_BIN_NO_SUFFIX))
 BIN=bin
 
 
 .PHONY: all clean install install-headers install-kernel
 
-all: $(BIN)/os.kernel
+all: $(BIN)/os.kernel$(TEST_SUFFIX)
 
 
 
 # ../libc/libk.a is bad
-$(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk.a  ../lib/bin/libutil.a 
-	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -Wl,--whole-archive -lk -lutilkernel -Wl,--no-whole-archive -lgcc
-	grub-file --is-x86-multiboot $(BIN)/os.kernel
+$(BIN)/os.kernel$(TEST_SUFFIX): $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk$(TEST_SUFFIX).a  ../lib/bin/libutil.a 
+	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -Wl,--whole-archive -lk$(TEST_SUFFIX) -lutilkernel -Wl,--no-whole-archive -lgcc
+	grub-file --is-x86-multiboot $(BIN)/os.kernel$(TEST_SUFFIX)
 
 
 
@@ -165,11 +171,11 @@ $(BIN)/os.kernel: $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk.a
 # 	OBJ=`$(CC) $(CFLAGS) -fno-pie -fno-pic $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
 
 
-$(BIN)/%.o: %.S
+$(BIN)/%.o$(TEST_SUFFIX): %.S
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
-$(BIN)/%.o: %.c
+$(BIN)/%.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
@@ -186,8 +192,8 @@ install-headers:
 	@mkdir -p $(DESTDIR)$(INCLUDEDIR)
 	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
 
-install-kernel: $(BIN)/os.kernel
+install-kernel: $(BIN)/os.kernel$(TEST_SUFFIX)
 	@mkdir -p $(DESTDIR)$(BOOTDIR)
-	cp $(BIN)/os.kernel $(DESTDIR)$(BOOTDIR)
+	cp $(BIN)/os.kernel$(TEST_SUFFIX) $(DESTDIR)$(BOOTDIR)
 
 -include $(BIN)/$(OBJS:.o=.d)

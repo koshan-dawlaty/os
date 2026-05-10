@@ -95,5 +95,5 @@ kill $QEMU_PID 2>/dev/null
 rm $SERIAL_PIPE.out
 rm $SERIAL_PIPE.in
 
-make clean >/dev/null 2>&1
+# make clean >/dev/null 2>&1
 

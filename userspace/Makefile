@@ -82,7 +82,7 @@ BINARIES=\
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
-DEPENDENCIES=../libc/libc.a ../lib/bin/libutil.a
+DEPENDENCIES=../libc/libc$(TEST_SUFFIX).a ../lib/bin/libutil$(TEST_SUFFIX).a
 
 .PHONY : all clean install install-binaries install-headers
 

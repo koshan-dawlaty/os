@@ -128,5 +128,6 @@ debug : $(ISO)
 	./build/debug.sh
 
 test : CFLAGS += -DTESTS
-test : clean $(ISO) 
+test : export TEST_SUFFIX=.test
+test : $(ISO) 
 	./build/test.sh

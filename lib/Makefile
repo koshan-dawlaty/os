@@ -22,6 +22,8 @@ LIBDIR?=$(PREFIX)/lib
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
+TEST_SUFFIX?=
+
 
 CFLAGS:=$(CFLAGS) -Iinclude $(KERNEL_ARCH_CFLAGS)
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
@@ -38,15 +40,21 @@ OBJS=\
 	rect.o \
 	assert.o \
 
-OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
+
+OBJS_BIN_NO_SUFFIX = $(foreach obj,$(OBJS),bin/$(obj))
+OBJS_BIN = $(addsuffix $(TEST_SUFFIX), $(OBJS_BIN_NO_SUFFIX))
+
+$(info $(OBJS_BIN))
 
 LIBK_OBJS=$(OBJS:.o=.libk.o)
-LIBK_OBJS_BIN = $(foreach obj,$(LIBK_OBJS),bin/$(obj))
+LIBK_OBJS_BIN_NO_SUFFIX = $(foreach obj,$(LIBK_OBJS),bin/$(obj))
+LIBK_OBJS_BIN = $(addsuffix $(TEST_SUFFIX), $(LIBK_OBJS_BIN_NO_SUFFIX))
 
+$(info $(LIBK_OBJS_BIN))
+# LIBK_OBJS_BIN = $(foreach obj,$(LIBK_OBJS),bin/$(obj))
 
-
-LIB_BINARY=$(BIN)/libutil.a
-KERNEL_LIB_BINARY=$(BIN)/libutilkernel.a
+LIB_BINARY=$(BIN)/libutil$(TEST_SUFFIX).a
+KERNEL_LIB_BINARY=$(BIN)/libutilkernel$(TEST_SUFFIX).a
 .PHONY : all install install-headers install-lib clean
 
 all : $(LIB_BINARY) $(KERNEL_LIB_BINARY)
@@ -60,11 +68,11 @@ $(KERNEL_LIB_BINARY) : $(LIBK_OBJS_BIN)
 	$(AR) rcs $@ $^
 
 
-$(BIN)/%.libk.o: %.c
+$(BIN)/%.libk.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -D__is_libk
 
-$(BIN)/%.o: %.c
+$(BIN)/%.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -D__is_libc
 

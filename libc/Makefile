@@ -29,6 +29,8 @@ CPPFLAGS:=$(CPPFLAGS) $(ARCH_CPPFLAGS)
 LIBK_CFLAGS:=$(LIBK_CFLAGS) $(KERNEL_ARCH_CFLAGS)
 LIBK_CPPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 
+TEST_SUFFIX?=
+
 FREEOBJS=\
 $(ARCH_FREEOBJS) \
 string/strlen.o \
@@ -77,13 +79,15 @@ OBJS=\
 $(FREEOBJS) \
 $(HOSTEDOBJS) \
 
-OBJS_BIN = $(foreach obj,$(OBJS),bin/$(obj))
+OBJS_BIN_NO_SUFFIX = $(foreach obj,$(OBJS),bin/$(obj))
+OBJS_BIN= $(addsuffix $(TEST_SUFFIX), $(OBJS_BIN_NO_SUFFIX))
 
 LIBK_OBJS=$(FREEOBJS:.o=.libk.o)
+LIBK_OBJS_BIN_NO_SUFFIX = $(foreach obj,$(LIBK_OBJS),bin/$(obj))
+LIBK_OBJS_BIN= $(addsuffix $(TEST_SUFFIX), $(LIBK_OBJS_BIN_NO_SUFFIX))
 
-LIBK_OBJS_BIN = $(foreach obj,$(LIBK_OBJS),bin/$(obj))
 
-BINARIES=libc.a libk.a 
+BINARIES=libc$(TEST_SUFFIX).a libk$(TEST_SUFFIX).a 
 # BINARIES=libk.a
 
 .PHONY: all clean install install-headers install-libs
@@ -96,25 +100,25 @@ BIN=bin
 # all: $(BINARIES)
 all: install-libs
 
-libc.a: $(OBJS_BIN)
+libc$(TEST_SUFFIX).a: $(OBJS_BIN)
 	$(AR) rcs $@ $(OBJS_BIN)
 
-libk.a: $(LIBK_OBJS_BIN)
+libk$(TEST_SUFFIX).a: $(LIBK_OBJS_BIN)
 	$(AR) rcs $@ $(LIBK_OBJS_BIN)
 
-$(BIN)/%.o: %.c
+$(BIN)/%.o$(TEST_SUFFIX): %.c
 	mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
-$(BIN)/%.o: %.S
+$(BIN)/%.o$(TEST_SUFFIX): %.S
 	mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-$(BIN)/%.libk.o: %.c
+$(BIN)/%.libk.o$(TEST_SUFFIX): %.c
 	mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.libk.d -c $< -o $@ -std=gnu11 $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
 
-$(BIN)/%.libk.o: %.S
+$(BIN)/%.libk.o$(TEST_SUFFIX): %.S
 	mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
 
