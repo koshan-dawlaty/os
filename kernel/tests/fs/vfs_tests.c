@@ -74,11 +74,6 @@ TEST(vfs_create, {
 
         creat(pathname, 000);
 
-        char *good_pathname = malloc(name_len + 1);
-        memcpy(good_pathname + 1, pathname, strlen(pathname));
-        good_pathname[strlen(pathname) + 1] = 0;
-        good_pathname[0] = '/';
-
         int fd = open(pathname, 0);
 
         if (fd == -1)

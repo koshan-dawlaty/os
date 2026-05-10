@@ -238,6 +238,44 @@ extern void scheduler_init();
 void kmain()
 {
     scheduler_init();
+
+    size_t name_len = 2;
+    char *name = malloc(name_len);
+    name[0] = 'a';
+    name[1] = 0;
+
+    const char *literal = "testfile123";
+
+    for (size_t i = 0; i < 1; i++)
+    {
+
+        char *pathname = malloc(strlen(name) + strlen(literal) + 1);
+        memcpy(pathname, literal, strlen(literal));
+        memcpy(pathname + strlen(literal), name, strlen(name));
+        pathname[strlen(literal) + strlen(name)] = 0;
+
+        name_len++;
+        name = realloc(name, name_len);
+        /* name[name_len - 2] = i + 0x60; */
+        /* name[name_len - 1] = 0; */
+
+        logd("pathname:%p", pathname);
+        creat(pathname, 000);
+        logd("done with creat");
+
+        int fd = open(pathname, 0);
+
+        if (fd == -1)
+        {
+            logd("bad fd");
+        }
+
+        free(pathname);
+
+        close(fd);
+    }
+
+    return;
     /* create_device("/dev/terminal", get_terminal()); */
     /* create_device("/dev/keyboard", get_keyboard()); */
 
