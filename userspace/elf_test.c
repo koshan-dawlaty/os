@@ -198,8 +198,6 @@ int main()
     while (1)
     {
 
-        sched_yield();
-
         char *buf = malloc(100);
     read_and_draw_char:;
         bool need_to_read_more = false;

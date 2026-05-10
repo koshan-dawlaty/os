@@ -856,6 +856,7 @@ int main()
 
     int server_sock = syscall_wrapper_asm(SYS_create_socket_fs,
                                           (ptr) "wm_socket", 0, 0, 0, 0);
+
     int input_sock = syscall_wrapper_asm(SYS_create_socket_fs,
                                          (ptr) "input_socket", 0, 0, 0, 0);
 

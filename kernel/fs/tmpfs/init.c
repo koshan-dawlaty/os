@@ -59,7 +59,7 @@ static struct tmpfs_node *tmpfs_node_alloc(const char *name,
     struct tmpfs_node *out = malloc(sizeof(struct tmpfs_node));
 
     /* TODO: strdup? */
-    out->name = name;
+    out->name = strdup((char *)name);
     out->list = LIST2_INIT();
     out->type = type;
 
@@ -111,8 +111,9 @@ struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, const char *name,
         new_inode(TMPFS_SB(sb)->inode_count++, 0, node, sb);
     TMPFS_SB(sb)->inode_count++;
     /*TODO: cast discards qualifiers */
+    dentry_get(vfs_parent);
     struct dentry *entry_new =
-        new_dentry((char *)name, vfs_parent, inode_new, type);
+        new_dentry(strdup((char *)name), vfs_parent, inode_new, type);
 
     /* if (parent->dir_head == NULL) */
     /* { */
@@ -170,9 +171,9 @@ found_entry:;
         new_inode(TMPFS_SB(sb)->inode_count, node->file.len, node, sb);
     TMPFS_SB(sb)->inode_count++;
 
-    struct dentry *out =
-        new_dentry(/* TODO: cast discards qualifiers */ (char *)node->name,
-                   vfs_dir, out_node, DENTRY_FILE);
+    struct dentry *out = new_dentry(
+        /* TODO: cast discards qualifiers */ strdup((char *)node->name),
+        vfs_dir, out_node, DENTRY_FILE);
 
     return out;
 }

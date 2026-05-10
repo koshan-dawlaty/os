@@ -238,12 +238,12 @@ extern void scheduler_init();
 void kmain()
 {
     scheduler_init();
+    /* create_device("/dev/terminal", get_terminal()); */
+    /* create_device("/dev/keyboard", get_keyboard()); */
 
     /*     ls("/bin"); */
     /*     ls("/bin"); */
     /*     return; */
-
-    open("/bin/cat", O_RDONLY);
 
     size_t malloc_before = malloc_count, free_before = free_count;
     struct dentry *ent = lookup_path("/one", PATHNAME_LOOKUP_FIND);

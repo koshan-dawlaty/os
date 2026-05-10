@@ -14,9 +14,6 @@ int main(int argc, char **argv)
 {
     init_libc();
 
-    logd("cat");
-    exit(1);
-
     if (argc <= 1)
     {
         printf("need more arguments\n");
@@ -51,8 +48,6 @@ int main(int argc, char **argv)
         {
             printf("invalid fd\n");
         }
-
-        logd("reading in cat");
 
         buf_len += read_size;
         buf_offset += read_size;

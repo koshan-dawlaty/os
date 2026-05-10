@@ -1,5 +1,6 @@
 #include "dcache.h"
 #include "lib/refcount.h"
+#include "sys/stat.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
 #include <err_ptr.h>
@@ -50,6 +51,7 @@ void init_vfs()
     vfs_mount(rootdir, strdup("tmpfs"), tmpfs_type, NULL);
     /* create directory for devices */
     vfs_mount(rootdir, strdup("dev"), tmpfs_type, NULL);
+    /* mkdir("/dev", 000); */
 }
 
 int vfs_mount(struct dentry *root, const char *new_name, struct fs_type fs,
@@ -85,9 +87,9 @@ struct dentry *new_dentry(char *name, dentry *parent, inode *inode,
 
     out->rc = REFCOUNT_INIT();
     out->inode = inode;
-    out->name = name; /* TODO: this should probably be allocated with strdup()
-                         but many of the callers of this function already pass a
-                         strdup() string to this function */
+    out->name = name; /* TODO: this should probably be allocated with
+                         strdup() but many of the callers of this function
+                         already pass a strdup() string to this function */
     out->parent = parent;
     out->type = type;
 
@@ -124,8 +126,8 @@ struct file *new_file(struct dentry *entry, int flags)
     out->offset = 0;
     out->flags = flags;
 
-    /* TODO: the entry attribute should be removed and replaced with something
-     * using file_private and file operations */
+    /* TODO: the entry attribute should be removed and replaced with
+     * something using file_private and file operations */
     if (entry != NULL)
     {
         switch (entry->type)
@@ -288,7 +290,8 @@ SYSCALL_DEFINE2(SYS_poll, int, int *, fds, size_t, num)
 
     struct file *file = fs_poll(files, num);
 
-    /* TODO: this loop could be replaced if a struct file knew its descriptor */
+    /* TODO: this loop could be replaced if a struct file knew its
+     * descriptor */
     for (size_t i = 0; i < num; i++)
     {
         if (files[i] == file)
