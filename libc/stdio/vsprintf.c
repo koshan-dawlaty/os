@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include "stdio.h"
 #include "sys/types.h"
 #include <limits.h>
@@ -14,6 +15,58 @@
 #endif
 
 char int_to_string_data[4096] = {0};
+
+char *float_to_string(double in, long base)
+{
+
+    size_t buf_offset = 0;
+    if (in < 0)
+    {
+        in *= -1;
+        buf_offset++;
+        int_to_string_data[0] = '-';
+    }
+
+    size_t num_digits = 0;
+    long temp = in;
+    while (temp > 0)
+    {
+        num_digits++;
+        temp /= base;
+    }
+
+    char *buf = int_to_string_data;
+
+    long x = in;
+    size_t i = num_digits;
+    while (x > 0)
+    {
+        long digit = x % base;
+        int_to_string_data[buf_offset + i - 1] = digit + '0';
+
+        /* process digit */
+        x /= base;
+        i--;
+    }
+
+    int_to_string_data[buf_offset + num_digits] = '.';
+    double y = in * base;
+    i = 0;
+    while ((long)y % base >=
+           0) /* TODO: this loop condition results in very
+                 long numbers being printed, could maybe also use pow to avoid
+                 losing precision by multiplying */
+    {
+        long digit = (long)y % base;
+        int_to_string_data[buf_offset + i + num_digits + 1] = digit + '0';
+        y *= base;
+        i++;
+    }
+
+    int_to_string_data[buf_offset + i + num_digits + 1] = 0;
+
+    return buf;
+}
 
 // TODO: kinda slow
 char *int_to_string_unsigned(uintmax_t in, long base)
@@ -249,6 +302,11 @@ that they will not work because the bootstrap has not initialized them
                     {
                         void *x = va_arg(list, void *);
                         str = int_to_string_unsigned((uintptr_t)x, 16);
+                    }
+                    else if (*format == 'f')
+                    {
+                        double d = va_arg(list, double);
+                        str = float_to_string(d, 10);
                     }
                     else
                     {

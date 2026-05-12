@@ -239,111 +239,13 @@ void kmain()
 {
     scheduler_init();
 
-    size_t name_len = 2;
-    char *name = malloc(name_len);
-    name[0] = 'a';
-    name[1] = 0;
-
-    const char *literal = "testfile123";
-
-    for (size_t i = 0; i < 1; i++)
-    {
-
-        char *pathname = malloc(strlen(name) + strlen(literal) + 1);
-        memcpy(pathname, literal, strlen(literal));
-        memcpy(pathname + strlen(literal), name, strlen(name));
-        pathname[strlen(literal) + strlen(name)] = 0;
-
-        name_len++;
-        name = realloc(name, name_len);
-        /* name[name_len - 2] = i + 0x60; */
-        /* name[name_len - 1] = 0; */
-
-        logd("pathname:%p", pathname);
-        creat(pathname, 000);
-        logd("done with creat");
-
-        int fd = open(pathname, 0);
-
-        if (fd == -1)
-        {
-            logd("bad fd");
-        }
-
-        free(pathname);
-
-        close(fd);
-    }
-
-    /* create_device("/dev/terminal", get_terminal()); */
-    /* create_device("/dev/keyboard", get_keyboard()); */
-
-    /*     ls("/bin"); */
-    /*     ls("/bin"); */
-    /*     return; */
-
-    size_t malloc_before = malloc_count, free_before = free_count;
-    struct dentry *ent = lookup_path("/one", PATHNAME_LOOKUP_FIND);
-
-    dentry_put(ent);
-    /* int fd = open("/one", O_RDONLY); */
-    /* int fd2 = open("/one", O_RDONLY); */
-    /* close(fd); */
-    /* close(fd2); */
-
-    size_t malloc_after = malloc_count, free_after = free_count;
-    size_t malloc_diff = malloc_after - malloc_before,
-           free_diff = free_after - free_before;
-    logd("m:%d f:%d", malloc_diff, free_diff);
-
-    /* struct array a = ARRAY_INIT(); */
-    /* const char *data = "abcdef"; */
-    /* char *data2 = "123"; */
-    /* array_add(&a, data, strlen(data) + 1); */
-    /* /1* char c = array_pop_middle(&a, 7); *1/ */
-    /* /1* logd("got:%c", c); *1/ */
-
-    /* array_insert(&a, 5, data2, strlen(data2)); */
-    /* logd("%s", a.data); */
-    /* logd("%d", a.len); */
-    /* return; */
-
-    /* void *x = malloc(10); */
-    /* logd("x:%p", x); */
-    /* free(x); */
-    /* void *y = malloc(10); */
-    /* logd("y:%p", y); */
-    /* return; */
-    /* PANIC("test"); */
-
     irq_disable();
-    /* malloc(1000000); */
-    /* malloc(1000000); */
-    /* malloc(1000000); */
 #ifdef CONFIG_ACPICA
     acpica_init();
 #endif
     /* smp_init(); */
 
-    /* for (size_t i = 0; i < 100; i++) */
-    /* { */
-    /*     malloc(10); */
-    /*     free(malloc(10)); */
-    /* } */
-
-    /* int fd = open("/elf_test", O_RDONLY); */
-    /* size_t len = 16; */
-    /* char *buf = malloc(len); */
-    /* off_t offset = 16384; */
-    /* pread(fd, buf, len, offset); */
-
-    /* printf("%p\n", kernel_syscall(SYS_exit, 1, (ptr) "abc", 3, 4, 5));
-     */
-    /* printf("%d\n", user_addr_is_valid(kmain)); */
-
-    /* return; */
-
-    /* open("/one", O_RDONLY); */
+    logd("%f", 123.456);
 
     struct task *kernel_task = create_kernel_task();
     printf("this is the initial kernel task:%p\n", kernel_task);
