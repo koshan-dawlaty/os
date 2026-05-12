@@ -194,7 +194,6 @@ int main()
 
     x = 1;
     y = 0;
-    printf("elf_test main loop\n");
     while (1)
     {
 

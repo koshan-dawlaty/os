@@ -65,7 +65,7 @@ START_OBJ=\
 		  $(BIN)/start.o
 
 BINARIES=\
-	elf_test \
+	term \
 	flashcards \
 	edit \
 	elf_test2 \
@@ -89,7 +89,7 @@ DEPENDENCIES=../libc/libc$(TEST_SUFFIX).a ../lib/bin/libutil$(TEST_SUFFIX).a
 all : $(BINARIES_BIN)
 	$(CC) -o $(BIN)/$
 
-$(BIN)/elf_test : $(OBJS_START_BIN) $(BIN)/elf_test.o $(BIN)/wm_lib.o  $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/term : $(OBJS_START_BIN) $(BIN)/term.o $(BIN)/wm_lib.o  $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x600000  -o $@ $^ $(CFLAGS)  -nostdlib -lgcc 
 	# $(CC) -o $@ $^ $(CFLAGS)  -nostdlib -lgcc 
