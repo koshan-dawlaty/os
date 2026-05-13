@@ -126,6 +126,36 @@ void draw_background(struct framebuffer *f)
     /* framebuffer_draw_rect(f, 700, 300, 100, 100, 0x0000ff); */
 }
 
+void sse_enable()
+{
+    ptr cr0 = 0;
+    /* read from cr0 */
+    asm volatile("mov %%cr0, %0" : "=r"(cr0) :);
+
+    cr0 &= ~(1 << 2); /* unset EM */
+    cr0 |= (1 << 5);  /* set NE */
+    cr0 |= (1 << 1);  /* set MP */
+
+    /* write to cr0 */
+    asm volatile("mov %%cr0, %0" : "=r"(cr0) :);
+
+    /* TODO: check for long mode / sse support for these */
+    ptr cr4 = 0;
+    asm volatile("mov %%cr4, %0" : "=r"(cr4) :);
+
+    cr4 |= (1 << 9); /* set OSFXSR */
+
+    /* might cause issues with exceptions */
+    cr4 |= (1 << 10); /* set OSXMMEXCPT */
+
+    /* TODO: needs a cpuid check */
+    /* cr4 |= (1 << 18); /1* set OSXSAVE *1/ */
+
+    asm volatile("mov %0, %%cr4" : : "r"(cr4));
+
+    asm("fninit");
+}
+
 extern __int_handler void syscall_handler_asm(struct interrupt_frame *frame);
 void kernel_init()
 {
@@ -193,6 +223,9 @@ void kernel_init()
                                    (int_handler_flags){.is_user = true});
     })
 
+    /* TODO: put in arch init */
+    sse_enable();
+
     logi("kernel init done");
 
 #ifdef TESTS
@@ -235,8 +268,16 @@ void ls(const char *path)
 struct task_queue abc = TASK_QUEUE_INIT(abc);
 extern void scheduler_init();
 
+extern char *float_to_string(double in, long base);
+
 void kmain()
 {
+
+    double x = 10.123;
+    char *str = float_to_string(x, 10);
+    logd("%s", str);
+    logd("%f", 123.456);
+
     scheduler_init();
 
     irq_disable();
@@ -244,8 +285,6 @@ void kmain()
     acpica_init();
 #endif
     /* smp_init(); */
-
-    logd("%f", 123.456);
 
     struct task *kernel_task = create_kernel_task();
     printf("this is the initial kernel task:%p\n", kernel_task);

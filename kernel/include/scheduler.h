@@ -10,6 +10,7 @@
 #include <lib/log.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <task_queue.h>
 #include <utils.h>
 #include <vfs.h>
@@ -35,9 +36,21 @@ struct registers
     u64 eflags;
     /*  68  70  78   80   88   90   98   A0 */
     u64 r8, r9, r10, r11, r12, r13, r14, r15;
+
+    /* TODO: maybe make this only on usermode tasks */
+    void *fsave_space; /* A8 */
 #endif
 
 } __packed;
+
+#define FPU_STATE_SIZE 108
+
+static inline struct registers registers_init_dynamic()
+{
+    struct registers out = {0};
+    out.fsave_space = malloc(FPU_STATE_SIZE);
+    return out;
+}
 
 struct task
 {

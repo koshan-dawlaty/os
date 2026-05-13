@@ -15,6 +15,7 @@
 #endif
 
 char int_to_string_data[4096] = {0};
+char float_to_string_data[4096] = {0};
 
 char *float_to_string(double in, long base)
 {
@@ -24,7 +25,7 @@ char *float_to_string(double in, long base)
     {
         in *= -1;
         buf_offset++;
-        int_to_string_data[0] = '-';
+        float_to_string_data[0] = '-';
     }
 
     size_t num_digits = 0;
@@ -35,21 +36,21 @@ char *float_to_string(double in, long base)
         temp /= base;
     }
 
-    char *buf = int_to_string_data;
+    char *buf = float_to_string_data;
 
     long x = in;
     size_t i = num_digits;
     while (x > 0)
     {
         long digit = x % base;
-        int_to_string_data[buf_offset + i - 1] = digit + '0';
+        float_to_string_data[buf_offset + i - 1] = digit + '0';
 
         /* process digit */
         x /= base;
         i--;
     }
 
-    int_to_string_data[buf_offset + num_digits] = '.';
+    float_to_string_data[buf_offset + num_digits] = '.';
     double y = in * base;
     i = 0;
     while ((long)y % base >=
@@ -58,12 +59,12 @@ char *float_to_string(double in, long base)
                  losing precision by multiplying */
     {
         long digit = (long)y % base;
-        int_to_string_data[buf_offset + i + num_digits + 1] = digit + '0';
+        float_to_string_data[buf_offset + i + num_digits + 1] = digit + '0';
         y *= base;
         i++;
     }
 
-    int_to_string_data[buf_offset + i + num_digits + 1] = 0;
+    float_to_string_data[buf_offset + i + num_digits + 1] = 0;
 
     return buf;
 }

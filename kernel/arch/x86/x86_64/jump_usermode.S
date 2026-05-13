@@ -48,8 +48,19 @@ jump_usermode_asm:
 .global save_registers
 .type save_registers @function
 save_registers:
+
+	# fsave 0xA8(%rsp)
+	# fwait
+
 	push %rax # 80
+
+	mov 0xA8(%rdi), %rax
+	fsave (%rax)
+	fwait
+
+
 	mov %rdi, %rax
+	
 
 	# add $4, %esp		
 	push %rsp # 78
@@ -143,8 +154,11 @@ load_registers:
 	cli
 
 	mov %rdi, %rcx
+	mov 0xA8(%rdi), %rax
+	frstor (%rax) # TODO: 32 bit version
 
 	mov 0x60(%rcx), %rax 
+
 
 	push %rax
 	# mov %rax, 0(%esp)

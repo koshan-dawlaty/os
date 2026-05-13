@@ -70,7 +70,7 @@ void new_task_usermode_start(int argc, char **argv, ptr addr)
 {
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
-    *temp_regs = (struct registers){0};
+    *temp_regs = registers_init_dynamic();
 
     temp_regs->esp = 0xBFFEF000;
     scheduler_set_regs_argv(argc, argv, temp_regs);
@@ -82,7 +82,7 @@ void user_thread_kernel_start(ptr addr)
 {
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
-    *temp_regs = (struct registers){0};
+    *temp_regs = registers_init_dynamic();
 
     temp_regs->esp = (ptr)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
 
@@ -148,11 +148,13 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     out->descriptors = new_fdlist();
 
     out->regs = (struct registers){
+
         .esp = (ptr)out->stack,
         .ebp = (ptr)out->stack,
         .eflags = 1 << 9,
 #ifdef CONFIG_x86_64
         .edi = (ip),
+        .fsave_space = malloc(FPU_STATE_SIZE)
 #endif
     };
 
@@ -236,11 +238,13 @@ struct task *user_thread_alloc(ptr ip)
     out->descriptors = new_fdlist();
 
     out->regs = (struct registers){
+
         .esp = (ptr)out->stack,
         .ebp = (ptr)out->stack,
         .eflags = 1 << 9,
 #ifdef CONFIG_x86_64
         .edi = (ip),
+        .fsave_space = malloc(FPU_STATE_SIZE)
 #endif
     };
 
@@ -373,6 +377,7 @@ struct task *new_task(ptr ip)
 struct task *create_kernel_task()
 {
     struct task *out = new_task(0);
+    out->regs = registers_init_dynamic();
 
     save_registers(&out->regs);
     out->addr_space = (struct addr_space){.dir = &init_pgdir, NULL};
