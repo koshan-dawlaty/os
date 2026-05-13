@@ -138,11 +138,14 @@ save_registers:
 	push %eax
 	mov 0x08(%esp), %eax
 
+	mov 0x34(%eax), %edx
+	fsave (%edx)
+	fwait
+
 	# add $4, %esp		
 	push %esp
 	add $4, 0(%esp)
 	# sub $4, %esp		
-
 
 	pushf
 	push %ecx
@@ -192,7 +195,12 @@ save_registers:
 .type load_registers @function
 load_registers:
 
+
 	mov 0x04(%esp), %ecx
+	
+	mov 0x34(%ecx), %edx
+	frstor (%edx)
+	fwait
 
 	mov 0x10(%ecx), %edi
 	mov 0x14(%ecx), %esi

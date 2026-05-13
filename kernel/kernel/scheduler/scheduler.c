@@ -154,8 +154,9 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
         .eflags = 1 << 9,
 #ifdef CONFIG_x86_64
         .edi = (ip),
-        .fsave_space = malloc(FPU_STATE_SIZE)
 #endif
+        .fsave_space = malloc(FPU_STATE_SIZE)
+
     };
 
     /* out->working_dir = get_root_dir(); */
@@ -244,8 +245,10 @@ struct task *user_thread_alloc(ptr ip)
         .eflags = 1 << 9,
 #ifdef CONFIG_x86_64
         .edi = (ip),
-        .fsave_space = malloc(FPU_STATE_SIZE)
 #endif
+
+        .fsave_space = malloc(FPU_STATE_SIZE)
+
     };
 
     /* out->working_dir = get_root_dir(); */

@@ -23,9 +23,12 @@ struct registers
 {
 
 #ifdef CONFIG_x86_32
+    /*       0   4   8   C */
     uint32_t gs, fs, es, ds;
+    /*       10   14   18   1c   20   24   28   2c */
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    uint32_t eflags;
+    uint32_t eflags;   /* 30 */
+    void *fsave_space; /* 34 */
 #elif defined(CONFIG_x86_64)
 
     /*  0   8   10  18 */
