@@ -15,12 +15,15 @@ export FS_ROOT := fs-root
 export DESTDIR := $(SYSROOT)
 export ARCH := $(shell ./build/default-host.sh)
 export CC := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
+export CXX := $(shell ./build/compiler-arch.sh $(ARCH))-g++ --sysroot=$(SYSROOT)
 
 # once printf supports the actual standard format specifiers, -Wno-format can be removed
 export CFLAGS :=  -DMYOS1234 -Werror \
 -Wno-format	\
 -Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fomit-frame-pointer -Wno-unused-parameter
 
+export CXXFLAGS := \
+-Wno-pointer-arith -fpermissive -std=gnu++17 -Wno-pointer-arith
 
 export QEMU_COMMAND := qemu-system-$(shell ./build/qemu-arch.sh $(ARCH))
 

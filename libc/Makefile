@@ -17,6 +17,7 @@ CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude -I$(DESTDIR)$(INCLUDEDIR)
 LIBK_CFLAGS:=$(CFLAGS)
 LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_libk
+LIBK_CXXFLAGS:=$(CXXFLAGS) 
 
 
 ARCHDIR_x86=$(notdir $(HOSTARCH))
@@ -70,6 +71,7 @@ dirent/dirent.o \
 init.o \
 errno.o \
 ctype.o \
+cpp_utils.o \
 
 
 HOSTEDOBJS=\
@@ -110,6 +112,10 @@ $(BIN)/%.o$(TEST_SUFFIX): %.c
 	mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
+$(BIN)/%.o$(TEST_SUFFIX): %.cpp
+	mkdir -p $(BIN)/$(dir $<)
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS)
+
 $(BIN)/%.o$(TEST_SUFFIX): %.S
 	mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
@@ -117,6 +123,10 @@ $(BIN)/%.o$(TEST_SUFFIX): %.S
 $(BIN)/%.libk.o$(TEST_SUFFIX): %.c
 	mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.libk.d -c $< -o $@ -std=gnu11 $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
+
+$(BIN)/%.libk.o$(TEST_SUFFIX): %.cpp
+	mkdir -p $(BIN)/$(dir $<)
+	$(CXX) -MD -MF$(BIN)/$*.libk.d -c $< -o $@ $(LIBK_CFLAGS) $(LIBK_CPPFLAGS) $(LIBK_CXXFLAGS)
 
 $(BIN)/%.libk.o$(TEST_SUFFIX): %.S
 	mkdir -p $(BIN)/$(dir $<)

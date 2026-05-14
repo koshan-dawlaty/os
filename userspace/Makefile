@@ -1,4 +1,5 @@
 CC?=i686-elf-gcc
+CXX?=i686-elf-gcc
 
 DEFAULT_HOST!=../build/default-host.sh
 HOST?=$(DEFAULT_HOST)
@@ -79,6 +80,7 @@ BINARIES=\
 	wm \
 	tron \
 	explore \
+	ui_lib \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -148,6 +150,10 @@ $(BIN)/edit : $(OBJS_START_BIN) $(BIN)/edit.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
 
+$(BIN)/ui_lib : $(OBJS_START_BIN) $(BIN)/ui_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CXX) -Ttext=0x300000 -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+
 
 $(BIN)/%.o: %.S
 	@mkdir -p $(BIN)/$(dir $<)
@@ -156,6 +162,10 @@ $(BIN)/%.o: %.S
 $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) 
+
+$(BIN)/%.o: %.cpp
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CXX) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS)
 
 
 ifdef CONFIG_x86_32
