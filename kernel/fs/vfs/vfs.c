@@ -152,7 +152,6 @@ void file_free(struct file *file)
 {
     /* TODO: drop dentry */
     /* TODO: files need a refrence count */
-    logd("freeing:%p", file);
     /* free(file); */
 }
 
@@ -287,7 +286,6 @@ SYSCALL_DEFINE2(SYS_poll, int, int *, fds, size_t, num)
     for (size_t i = 0; i < num; i++)
     {
         files[i] = lookup_descriptor(fds[i]);
-        logd("got:%p, %d", files[i], fds[i]);
     }
 
     struct file *file = fs_poll(files, num);

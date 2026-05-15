@@ -129,7 +129,6 @@ static void fdlist_copy_device(struct fdlist *dest, struct fdlist *src,
 
     if (index == 0)
     {
-        logd("copy device is zero file is:%p", file);
     }
     if (file == NULL)
     {
@@ -211,7 +210,6 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
         struct fdlist *current_fds = current_task->descriptors;
         struct fdlist *out_fds = out->descriptors;
 
-        logd("not inital task");
         fdlist_copy_device(out_fds, current_fds, 0, keyboard_path);
         fdlist_copy_device(out_fds, current_fds, 1, term_path);
         fdlist_copy_device(out_fds, current_fds, 2, term_path);
@@ -219,7 +217,6 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     }
     else
     {
-        logd("inital task");
         fdlist_set(out->descriptors, 0, open_device(keyboard_path));
         fdlist_set(out->descriptors, 1, open_device(term_path));
         fdlist_set(out->descriptors, 2, open_device(term_path));
@@ -297,7 +294,6 @@ struct task *user_thread_alloc(ptr ip)
 
     if (get_current_task()->start_addr != (void *)0xDEADBEEF)
     {
-        logd("not init task, copying fds");
         struct fdlist *current_fds = get_current_task()->descriptors;
         struct fdlist *out_fds = out->descriptors;
 

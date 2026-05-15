@@ -737,7 +737,6 @@ static void process_mouse(struct mouse_event *ev)
 
 static void process_keyboard(char c)
 {
-    logd("key");
     if (c == '\\')
     {
         if (focused != NULL)
@@ -793,7 +792,6 @@ void input_thread()
     int mouse_fd = open("/dev/mouse", O_RDONLY);
     int keyboard_fd = 0; /* TODO: make this use the keyboard device instead */
     int fds[] = {mouse_fd, keyboard_fd};
-    logd("%d, %d", keyboard_fd, mouse_fd);
     struct mouse_event *ev = malloc(sizeof(struct mouse_event));
     while (true)
     {

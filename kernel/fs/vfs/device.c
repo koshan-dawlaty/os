@@ -32,7 +32,6 @@ poll_flags dev_poll(struct file *f, struct wait_queue **queue)
 void dev_inode_write(struct inode *inode, const u8 *buf, size_t n, size_t off)
 {
     struct device *dev = inode->fs_private;
-    logd("device:%p", dev);
     /* TODO: see if we should use a file offset for block devices */
 
     if (dev->type == DEV_BLOCK)
@@ -52,7 +51,6 @@ void dev_inode_write(struct inode *inode, const u8 *buf, size_t n, size_t off)
 void dev_inode_read(struct inode *inode, u8 *buf, size_t n, size_t off)
 {
     struct device *dev = inode->fs_private;
-    logd("device:%p", dev);
     /* TODO: see if we should use a file offset for block devices */
 
     if (dev->type == DEV_BLOCK)
@@ -95,7 +93,6 @@ struct inode *inode_dev_alloc(struct device *dev)
     struct superblock *sb = new_superblock(0, NULL, NULL, &device_fs);
 
     struct inode *out = new_inode(0, 0, dev, sb);
-    logd("returning %p", out);
 
     return out;
 }

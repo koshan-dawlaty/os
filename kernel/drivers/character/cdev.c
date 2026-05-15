@@ -5,7 +5,6 @@
 
 int cdev_read(struct cdev *dev, u8 *buf, size_t len)
 {
-    logd("passed:%p", dev);
     return dev->functions.read(dev, buf, len);
 }
 

@@ -65,10 +65,6 @@ int fdlist_add(struct fdlist *list, file *f)
 
 void fdlist_set(struct fdlist *list, size_t pos, struct file *f)
 {
-    if (pos == 0)
-    {
-        logd("file:%p", f);
-    }
     spinlock_lock(&list->lock);
 
     if (pos >= list->len)
@@ -111,7 +107,6 @@ struct fdlist *get_current_fdlist()
 
 int fdlist_close(struct fdlist *list, int fd)
 {
-    logd("closing %d", fd);
     if (fd < 0)
     {
         return -EBADF;
@@ -221,7 +216,6 @@ struct file *open_file(const char *path, int flags, int *fd)
     }
 
     struct file *out = new_file(dentry, flags);
-    logd("operations:%p", dentry->inode->sb->type);
     out->operations = dentry->inode->sb->type->file_operations;
 
     /* out->operations */

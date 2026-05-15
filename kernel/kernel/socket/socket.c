@@ -194,11 +194,9 @@ struct file *unix_socket_create_fs(const char *path)
  */
 int unix_socket_connect(struct dentry *entry)
 {
-    logd("connect");
     struct unix_socket *socket = entry->inode->fs_private;
 
     struct file *new_sock = unix_socket_create();
-    logd("done connect");
 
     struct task *current = get_current_task();
     int fd = fdlist_add(current->descriptors, new_sock);
