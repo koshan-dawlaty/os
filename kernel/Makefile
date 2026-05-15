@@ -161,8 +161,8 @@ all: $(BIN)/os.kernel$(TEST_SUFFIX)
 
 
 # ../libc/libk.a is bad
-$(BIN)/os.kernel$(TEST_SUFFIX): $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk$(TEST_SUFFIX).a  ../lib/bin/libutil.a 
-	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -Wl,--whole-archive -lk$(TEST_SUFFIX) -lutilkernel -Wl,--no-whole-archive -lgcc
+$(BIN)/os.kernel$(TEST_SUFFIX): $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk$(TEST_SUFFIX).a  ../lib/bin/libutilkernel$(TEST_SUFFIX).a 
+	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -Wl,--whole-archive -lk$(TEST_SUFFIX) -lutilkernel$(TEST_SUFFIX) -Wl,--no-whole-archive -lgcc
 	grub-file --is-x86-multiboot $(BIN)/os.kernel$(TEST_SUFFIX)
 
 
