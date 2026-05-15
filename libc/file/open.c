@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include <err_ptr.h>
 #include <errno.h>
 #include <stdint.h>
@@ -17,7 +18,9 @@ int open(const char *path, int flags)
 {
 #ifdef __is_libk
     int fd;
+    logd("open start");
     struct file *f = open_file(path, flags, &fd);
+    logd("%p", f->entry->inode);
     if (IS_ERR(f))
     {
         /* TODO: we might want to set errno here */

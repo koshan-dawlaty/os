@@ -60,8 +60,10 @@ const struct fs_type ext2_fs_type = {
                          .remove_dentry = ext2_remove_dentry},
     .superblock_functions = {.parse_superblock = ext2_parse_superblock_vfs},
 
+    .is_permanent = true,
+
     .mount = ext2_mount,
-};
+    .file_operations = FS_FILE_OPERATIONS()};
 
 superblock *ext2_parse_superblock_vfs(struct bdev *dev)
 {

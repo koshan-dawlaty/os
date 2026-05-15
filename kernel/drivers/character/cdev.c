@@ -1,9 +1,11 @@
+#include "lib/log.h"
 #include <cdev.h>
 #include <vfs.h>
 #include <wait_queue.h>
 
 int cdev_read(struct cdev *dev, u8 *buf, size_t len)
 {
+    logd("passed:%p", dev);
     return dev->functions.read(dev, buf, len);
 }
 

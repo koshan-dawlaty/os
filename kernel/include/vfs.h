@@ -74,7 +74,7 @@ static inline void inode_put(struct inode *node)
     refcount_drop(&node->rc, inode_refcount_drop);
 }
 
-typedef struct
+typedef struct inode_functions
 {
     inode *(*get_inode)(ino_t number, superblock *sb);
     void (*read_inode)(inode *, uint8_t *buf, size_t n, size_t offset);
@@ -93,7 +93,6 @@ typedef enum dentry_type
     DENTRY_INVALID,
 
     DENTRY_MOUNT_POINT,
-    DENTRY_DEVICE,
 
     DENTRY_SOCKET
 } dentry_type;
@@ -123,9 +122,8 @@ typedef struct dentry
                        * if it is a mount point, the inode is the root of the
                        * mounted filesystem
                        */
-        struct device *dev; /* type == DENTRY_DEVICE  */
 
-        struct unix_socket *socket;
+        /* struct unix_socket *socket; */
     };
 
     dentry_type type;
@@ -204,12 +202,6 @@ struct file_operations
     poll_flags (*poll)(struct file *, struct wait_queue **);
 };
 
-static inline poll_flags file_default_poll(struct file *f,
-                                           struct wait_queue **q)
-{
-    return POLL_READ | POLL_WRITE;
-}
-
 #define FILE_OPERATIONS_EMPTY                                                  \
     (struct file_operations)                                                   \
     {                                                                          \
@@ -263,13 +255,32 @@ int read_file(file *file, char *buf, size_t n, size_t off);
 int write_file(file *file, const char *buf, size_t n, size_t off);
 struct file *lookup_descriptor(int fd);
 
-typedef struct
+/*
+ * the set of file operations for filesystems to operate on the inode of a file
+ */
+extern const struct file_operations fs_file_operations;
+
+static inline poll_flags file_default_poll(struct file *f,
+                                           struct wait_queue **q)
 {
-} file_functions;
+    return POLL_READ | POLL_WRITE;
+}
+
+int file_read_default(struct file *file, char *buf, size_t n, size_t off);
+int file_write_default(struct file *file, const char *buf, size_t n,
+                       size_t off);
+
+int read_file_fs(struct file *file, char *buf, size_t n, size_t off);
+int write_file_fs(struct file *file, const char *buf, size_t n, size_t off);
+#define FS_FILE_OPERATIONS()                                                   \
+    ((struct file_operations){.read = read_file_fs,                            \
+                              .write = write_file_fs,                          \
+                              .poll = file_default_poll})
 
 struct fs_type
 {
     const char *name;
+    bool is_permanent;
 
     dentry *(*mount)(struct bdev *dev);
 
@@ -277,6 +288,8 @@ struct fs_type
     dentry_functions dentry_functions;
     inode_functions inode_functions;
     superblock_functions superblock_functions;
+
+    struct file_operations file_operations;
 };
 
 dentry *dir_readdir(dentry *entry, struct dir_context *context);
@@ -292,7 +305,7 @@ struct pathname_lookup_flags
     dentry_type type;
     union
     {
-        struct device *dev;
+        struct inode *node;
     };
 };
 #define PATHNAME_LOOKUP_CREATE                                                 \
@@ -315,8 +328,6 @@ void file_free(file *f);
 dentry *get_root_dir();
 
 int delete_dentry(dentry *entry);
-
-dentry *new_dentry_dev(char *name, dentry *parent, struct device *dev);
 
 /*
  * creates a device in the file system

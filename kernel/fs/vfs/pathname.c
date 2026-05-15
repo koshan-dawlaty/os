@@ -90,24 +90,40 @@ static size_t parse_component(const char *path, dentry **current_dir,
             if (flags.create && final_component)
             {
 
-                if (DENTRY_TYPE_HAS_INODE(flags.type))
+                /* if (DENTRY_TYPE_HAS_INODE(flags.type)) */
+                /* { */
+                /*     entry = */
+                /*         (*current_dir) */
+                /*             ->inode->sb->type->dentry_functions.append_dentry(
+                 */
+                /*                 *current_dir, strdup(component), flags.type,
+                 */
+                /*                 (*current_dir)->inode->sb); */
+                /* } */
+
+                if (flags.node != NULL)
                 {
+                    char *name = strdup(component);
+                    entry =
+                        new_dentry(name, *current_dir, flags.node, flags.type);
+                }
+                else
+                {
+                    /* let the filesystem determine what type of inode it should
+                     * be */
                     entry =
                         (*current_dir)
                             ->inode->sb->type->dentry_functions.append_dentry(
                                 *current_dir, strdup(component), flags.type,
                                 (*current_dir)->inode->sb);
                 }
-                else if (flags.type == DENTRY_DEVICE)
-                {
-                    char *name = strdup(component);
-                    entry = new_dentry_dev(name, *current_dir, flags.dev);
-                }
-                else if (flags.type == DENTRY_SOCKET)
-                {
-                    entry = dentry_socket_alloc(strdup(component), *current_dir,
-                                                unix_socket_alloc());
-                }
+                /* if (flags.type == DENTRY_SOCKET) /1* FIXME: TODO: socket *1/
+                 */
+                /* { */
+                /*     entry = dentry_socket_alloc(strdup(component),
+                 * *current_dir, */
+                /*                                 unix_socket_alloc()); */
+                /* } */
             }
             else
             {
@@ -132,13 +148,6 @@ static size_t parse_component(const char *path, dentry **current_dir,
     {
     }
     else if (entry->type == DENTRY_FILE)
-    {
-        if (!final_component)
-        {
-            goto not_dir;
-        }
-    }
-    else if (entry->type == DENTRY_DEVICE)
     {
         if (!final_component)
         {

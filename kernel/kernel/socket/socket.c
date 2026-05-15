@@ -120,10 +120,29 @@ bool unix_socket_poll(struct file *f, struct task_queue **queue)
     return !WAIT_QUEUE_EMPTY(socket->recv_queue);
 }
 
-struct file_operations socket_operations = {.read = unix_socket_fs_read,
-                                            .write = unix_socket_fs_write,
-                                            .close = unix_socket_close,
-                                            .poll = file_default_poll};
+void socket_inode_write(struct inode *inode, const u8 *buf, size_t n,
+                        size_t off)
+{
+    struct unix_socket *socket = inode->fs_private;
+    unix_socket_send(socket, buf, n);
+}
+
+void socket_inode_read(struct inode *inode, u8 *buf, size_t n, size_t off)
+{
+    struct unix_socket *socket = inode->fs_private;
+    unix_socket_recv(socket, buf, n);
+}
+
+struct fs_type socket_fs = {
+
+    .is_permanent = true,
+    .inode_functions = {.read_inode = socket_inode_read,
+                        .write_inode = socket_inode_write},
+    .name = "socketfs",
+    .file_operations = {.read = unix_socket_fs_read,
+                        .write = unix_socket_fs_write,
+                        .close = unix_socket_close,
+                        .poll = file_default_poll}};
 
 struct file *unix_socket_create()
 {
@@ -131,8 +150,17 @@ struct file *unix_socket_create()
      * parameter */
     struct file *out = new_file(NULL, O_RDWR);
     out->file_private = unix_socket_alloc();
-    out->operations = socket_operations;
+    out->operations = socket_fs.file_operations;
 
+    return out;
+}
+
+struct inode *socket_inode_alloc(struct unix_socket *sock)
+{
+    /* TODO: dont alloc a superblock */
+    struct superblock *sb = new_superblock(0, NULL, NULL, &socket_fs);
+
+    struct inode *out = new_inode(0, 0, sock, sb);
     return out;
 }
 
@@ -141,23 +169,21 @@ struct file *unix_socket_create()
  */
 struct file *unix_socket_create_fs(const char *path)
 {
-    /* FIXME: this should not make a new dentry like this */
-    struct pathname_lookup_flags flags = {
-        .create = true,
-        .type = DENTRY_SOCKET, /* TODO: dentry type here is bad */
-    };
     struct unix_socket *socket = unix_socket_alloc();
+
+    struct pathname_lookup_flags flags = {.create = true,
+                                          .type = DENTRY_FILE,
+                                          {.node = socket_inode_alloc(socket)}};
+
     struct dentry *entry = lookup_path(path, flags);
 
-    entry->socket = socket;
+    /* entry->socket = socket; */
     socket->connection.task = get_current_task();
     wait_queue_init(&socket->connection.accept_queue);
     mutex_init(&socket->connection.lock);
     socket->connection.buffer = ARRAY_INIT();
 
     struct file *file = new_file(entry, O_RDWR);
-    file->operations = socket_operations;
-    file->file_private = socket;
 
     return file;
 }
@@ -168,9 +194,11 @@ struct file *unix_socket_create_fs(const char *path)
  */
 int unix_socket_connect(struct dentry *entry)
 {
-    struct unix_socket *socket = entry->socket;
+    logd("connect");
+    struct unix_socket *socket = entry->inode->fs_private;
 
     struct file *new_sock = unix_socket_create();
+    logd("done connect");
 
     struct task *current = get_current_task();
     int fd = fdlist_add(current->descriptors, new_sock);
@@ -190,7 +218,7 @@ int unix_socket_connect(struct dentry *entry)
 
 int unix_socket_accept(struct dentry *entry)
 {
-    struct unix_socket *socket = entry->socket;
+    struct unix_socket *socket = entry->inode->fs_private;
 
     if (ARRAY_LEN(socket->connection.buffer, sizeof(int)) == 0)
     {
@@ -201,29 +229,10 @@ int unix_socket_accept(struct dentry *entry)
     return *out_ptr;
 }
 
-struct dentry *dentry_socket_alloc(const char *name, struct dentry *parent,
-                                   struct unix_socket *socket)
-{
-    struct dentry *out = malloc(sizeof(struct dentry));
-    out->rc = REFCOUNT_INIT();
-    out->name = (char *)name;
-    out->parent = parent;
-    if (out->parent != NULL)
-    {
-        dentry_get(out->parent);
-    }
-    out->type = DENTRY_SOCKET;
-    out->socket = socket;
-
-    return out;
-}
-
 SYSCALL_DEFINE1(SYS_accept, int, int, fd)
 {
     struct file *f = lookup_descriptor(fd);
     struct dentry *entry = f->entry;
-    ASSERT(entry->type == DENTRY_SOCKET,
-           "accept needs to be called on a socket dentry");
 
     int out = unix_socket_accept(entry);
 
@@ -234,8 +243,6 @@ SYSCALL_DEFINE1(SYS_connect, int, int, fd)
 {
     struct file *f = lookup_descriptor(fd);
     struct dentry *entry = f->entry;
-    ASSERT(entry->type == DENTRY_SOCKET,
-           "accept needs to be called on a socket dentry");
 
     int out = unix_socket_connect(entry);
 
@@ -258,7 +265,6 @@ SYSCALL_DEFINE1(SYS_create_socket_fs, int, const char *, pathname)
         return GET_ERR(path);
     }
     struct file *f = unix_socket_create_fs(path);
-
     int fd = fdlist_add(get_current_task()->descriptors, f);
 
     return fd;

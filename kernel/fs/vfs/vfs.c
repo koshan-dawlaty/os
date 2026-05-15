@@ -82,7 +82,6 @@ struct superblock *new_superblock(size_t blocksize, void *fs_private,
 struct dentry *new_dentry(char *name, dentry *parent, inode *inode,
                           dentry_type type)
 {
-    /* logd("creating dentry with name:%s", name); */
     struct dentry *out = malloc(sizeof(dentry));
 
     out->rc = REFCOUNT_INIT();
@@ -130,10 +129,10 @@ struct file *new_file(struct dentry *entry, int flags)
      * something using file_private and file operations */
     if (entry != NULL)
     {
+        out->operations = entry->inode->sb->type->file_operations;
         switch (entry->type)
         {
         case DENTRY_SOCKET:
-        case DENTRY_DEVICE:
         case DENTRY_FILE:
             break;
         case DENTRY_MOUNT_POINT:
@@ -176,8 +175,10 @@ struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
 
 void inode_free(struct inode *node)
 {
-    NOT_NULL(node->sb->type->inode_functions.inode_free,
-             "filesystem did not implement function inode_free")
+    struct fs_type *type = node->sb->type;
+    NOT_NULL(type->name, "file system had null name, it is probably invalid")
+    NOT_NULL(type->inode_functions.inode_free,
+             "filesystem %s did not implement function inode_free", type->name)
     node->sb->type->inode_functions.inode_free(node);
     free(node);
 }
@@ -286,6 +287,7 @@ SYSCALL_DEFINE2(SYS_poll, int, int *, fds, size_t, num)
     for (size_t i = 0; i < num; i++)
     {
         files[i] = lookup_descriptor(fds[i]);
+        logd("got:%p, %d", files[i], fds[i]);
     }
 
     struct file *file = fs_poll(files, num);

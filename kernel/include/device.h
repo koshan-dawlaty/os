@@ -5,8 +5,8 @@
 
 enum dev_type
 {
-    DEV_BLOCK,
-    DEV_CHARACTER,
+    DEV_BLOCK = 1,
+    DEV_CHARACTER = 2,
 };
 
 struct device

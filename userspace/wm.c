@@ -365,6 +365,7 @@ struct window_queue_entry *focused = NULL;
 /* correctly applys window decorations to newly focused window */
 void change_focus(struct window_queue_entry *new_focus)
 {
+    logd("changing focus");
 
     /* TODO: the focusable windows should maybe be stored in a separate way so
      * this does not need to happen */ /* this check does not techincally need to happen right now, any callers of this will not foucs these windows */
@@ -736,6 +737,7 @@ static void process_mouse(struct mouse_event *ev)
 
 static void process_keyboard(char c)
 {
+    logd("key");
     if (c == '\\')
     {
         if (focused != NULL)
@@ -745,6 +747,7 @@ static void process_keyboard(char c)
     }
     else if (c == '\t')
     {
+
         struct list2c *next = focused->list.next;
         if (next == &window_queue)
         {
@@ -790,6 +793,7 @@ void input_thread()
     int mouse_fd = open("/dev/mouse", O_RDONLY);
     int keyboard_fd = 0; /* TODO: make this use the keyboard device instead */
     int fds[] = {mouse_fd, keyboard_fd};
+    logd("%d, %d", keyboard_fd, mouse_fd);
     struct mouse_event *ev = malloc(sizeof(struct mouse_event));
     while (true)
     {
@@ -842,6 +846,11 @@ void thread1()
 int main()
 {
     init_libc();
+
+    /* char c = getchar(); */
+    /* logd("%c", c); */
+
+    /* exit(1); */
 
     /* panic("abc:%d", 123); */
 
@@ -906,9 +915,11 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     execv("/bin/term", (char *[]){"term", NULL});
-    /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */
-    /* execv("/bin/edit", (char *[]){"edit", NULL}); */
-    /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    execv("/bin/flashcards", (char *[]){"flashcards", NULL});
+    execv("/bin/edit", (char *[]){"edit", NULL});
+
+    execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL});
+
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
