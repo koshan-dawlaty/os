@@ -17,8 +17,17 @@
 char int_to_string_data[4096] = {0};
 char float_to_string_data[4096] = {0};
 
+#define FLOAT_MIN_FORMAT 0.00001
+
 char *float_to_string(double in, long base)
 {
+
+    if (in < FLOAT_MIN_FORMAT)
+    {
+        float_to_string_data[0] = '0';
+        float_to_string_data[1] = 0;
+        return float_to_string_data;
+    }
 
     size_t buf_offset = 0;
     if (in < 0)
