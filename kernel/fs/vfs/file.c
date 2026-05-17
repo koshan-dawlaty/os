@@ -200,6 +200,7 @@ extern const struct file_operations device_operations;
 struct file *open_file(const char *path, int flags, int *fd)
 {
     struct dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
+    logd("got from lookup:%p", dentry);
 
     if (IS_ERR(dentry))
     {

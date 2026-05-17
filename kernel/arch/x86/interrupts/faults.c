@@ -1,8 +1,10 @@
 #include "faults.h"
 #include "idt_internal.h"
+#include <kernel/stacktrace.h>
 
 #include "interrupts/idt.h"
 #include "kernel/types.h"
+#include "lib/log.h"
 #include <kernel/faults.h>
 
 #include <stdint.h>
@@ -26,6 +28,14 @@ ISR(gpf_handler, {
     printf("ip:%p\n", (void *)frame->ip);
     printf("sp:%p\n", (void *)frame->sp);
     printf("ss:%p\n", frame->ss);
+
+    loge("gpf!!!\n");
+    loge("cs:%p\n", (void *)frame->cs);
+    loge("error code:%p\n", (void *)frame->flags);
+    loge("ip:%p\n", (void *)frame->ip);
+    loge("sp:%p\n", (void *)frame->sp);
+    loge("ss:%p\n", frame->ss);
+    stacktrace_log();
 
     fault_handler_wait();
 });
