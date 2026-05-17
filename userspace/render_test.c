@@ -43,11 +43,8 @@ double x87_cos(double x)
 struct point3d rotate_xz(struct point3d p, double angle)
 {
 
-    logd("rotating");
     double s = x87_sin(angle);
     double c = x87_cos(angle);
-
-    logd("s:%f, c:%f", s, c);
 
     return (struct point3d){
         .x = (p.x * c) - (p.z * s), .z = (p.x * s) + (p.z * c), .y = p.y};
@@ -112,8 +109,6 @@ void draw_line(struct point3d one, struct point3d two)
 {
     struct screen_point p1 = convert_real_point(one);
     struct screen_point p2 = convert_real_point(two);
-
-    logd("%d %d", p1.y, p2.y);
 
     framebuffer_draw_line(&client.fb, p1.x, p1.y, p2.x, p2.y, 0xFFFF00);
 }

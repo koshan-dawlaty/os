@@ -136,8 +136,10 @@ struct framebuffer *multiboot_init()
     map_page((void *)(ptr)multiboot_struct_addr, info,
              PAGING_PRESENT | PAGING_WRITEABLE);
 
+    logd("grub found %d", info->mods_count);
     if (info->flags & MULTIBOOT_INFO_MODS)
     {
+#ifdef CONFIG_SYMBOL_TABLE
         multiboot_module_t *modules_physical = (void *)(ptr)info->mods_addr;
         size_t num_pages =
             ((info->mods_count * sizeof(multiboot_module_t)) / PAGE_SIZE) + 1;
@@ -156,6 +158,7 @@ struct framebuffer *multiboot_init()
         }
 
         bootloader_symbol_table = multiboot_load_module(modules + diff, 0);
+#endif
     }
     if ((info->flags >> 6 & 0x1))
     {

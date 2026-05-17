@@ -157,9 +157,16 @@ BIN=bin
 
 .PHONY: all clean install install-headers install-kernel
 
-all: $(BIN)/os.kernel$(TEST_SUFFIX) $(BIN)/kernel_symbols$(TEST_SUFFIX) 
 
 
+SYMBOL_CONFIG_FLAG=-DCONFIG_SYMBOL_TABLE
+ifeq ($(findstring $(SYMBOL_CONFIG_FLAG), $(CFLAGS)), $(SYMBOL_CONFIG_FLAG))
+SYMBOL_TARGET_MAYBE=$(BIN)/kernel_symbols$(TEST_SUFFIX) 
+endif
+# SYMBOL_TARGET_MAYBE=
+
+
+all: $(BIN)/os.kernel$(TEST_SUFFIX) 
 
 # ../libc/libk.a is bad
 $(BIN)/os.kernel$(TEST_SUFFIX): $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk$(TEST_SUFFIX).a  ../lib/bin/libutilkernel$(TEST_SUFFIX).a 
@@ -197,7 +204,7 @@ install-headers:
 	@mkdir -p $(DESTDIR)$(INCLUDEDIR)
 	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
 
-install-kernel: $(BIN)/os.kernel$(TEST_SUFFIX) $(BIN)/kernel_symbols$(TEST_SUFFIX)
+install-kernel: $(BIN)/os.kernel$(TEST_SUFFIX) $(SYMBOL_TARGET_MAYBE)
 	@mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp $(BIN)/os.kernel$(TEST_SUFFIX) $(DESTDIR)$(BOOTDIR)
 

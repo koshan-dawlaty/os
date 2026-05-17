@@ -285,7 +285,12 @@ void test1()
 
 void kmain()
 {
+
+    logd("calling");
     symbol_table_parse();
+    logd("done calling");
+
+    stacktrace_log();
 
     /* return; */
     scheduler_init();

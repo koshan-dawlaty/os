@@ -17,6 +17,7 @@ struct bootloader_module bootloader_symbol_table;
 
 void symbol_table_parse()
 {
+#ifdef CONFIG_SYMBOL_TABLE
     struct array a = ARRAY_INIT();
     size_t offset = 0;
     char *ptr = (char *)bootloader_symbol_table.addr;
@@ -40,6 +41,7 @@ void symbol_table_parse()
 
     /* TODO: free bootloader_symbol_table */
     symbol_table = array_free_ptr(a);
+#endif
 }
 
 /*
@@ -48,6 +50,7 @@ void symbol_table_parse()
  */
 char *symbol_get_name(ptr addr)
 {
+#ifdef CONFIG_SYMBOL_TABLE
     for (size_t i = 0; i < symbol_table_len; i++)
     {
         if (symbol_table[i].addr < addr)
@@ -55,6 +58,7 @@ char *symbol_get_name(ptr addr)
             return symbol_table[i].name;
         }
     }
+#endif
 
     return NULL;
 }
@@ -67,6 +71,7 @@ struct stackframe
 };
 void stacktrace_log()
 {
+#ifdef CONFIG_STACK_TRACE
     struct stackframe *stk;
     asm("mov %%rbp,%0" : "=r"(stk)::);
     loge("stack trace:");
@@ -75,4 +80,5 @@ void stacktrace_log()
         loge("0x%p, %s", stk->ip, symbol_get_name(stk->ip));
         stk = stk->bp;
     }
+#endif
 }
