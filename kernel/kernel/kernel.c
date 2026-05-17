@@ -226,6 +226,7 @@ void kernel_init()
 
     /* TODO: put in arch init */
     sse_enable();
+    symbol_table_parse();
 
     logi("kernel init done");
 
@@ -269,26 +270,24 @@ void ls(const char *path)
 struct task_queue abc = TASK_QUEUE_INIT(abc);
 extern void scheduler_init();
 
-void test3()
-{
-    stacktrace_log();
-}
-
-void test2()
-{
-    test3();
-}
 void test1()
 {
-    test2();
+    int write_only = open("/one", O_WRONLY);
+    char *buf = malloc(100);
+    int err = read(write_only, buf, 100);
+    close(write_only);
+    logd("done close");
+    int read_only = open("/one", O_RDONLY);
+    logd("done open");
+    err = write(read_only, buf, 100);
+    logd("done write");
+    close(read_only);
 }
 
 void kmain()
 {
-
-    logd("calling");
-    symbol_table_parse();
-    logd("done calling");
+    test1();
+    return;
 
     stacktrace_log();
 

@@ -273,4 +273,5 @@ TEST(vfs_file_permissions, {
     int read_only = open("/one", O_RDONLY);
     err = write(read_only, buf, 100);
     ASSERT_EQ(-err, EACCES, "writing to a RDONLY file should not work")
+    close(read_only);
 })

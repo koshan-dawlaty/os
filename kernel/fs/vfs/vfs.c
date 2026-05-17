@@ -129,6 +129,7 @@ struct file *new_file(struct dentry *entry, int flags)
      * something using file_private and file operations */
     if (entry != NULL)
     {
+        dentry_get(entry);
         out->operations = entry->inode->sb->type->file_operations;
         switch (entry->type)
         {
@@ -150,7 +151,7 @@ struct file *new_file(struct dentry *entry, int flags)
 
 void file_free(struct file *file)
 {
-    /* TODO: drop dentry */
+    dentry_put(file->entry);
     /* TODO: files need a refrence count */
     /* free(file); */
 }
