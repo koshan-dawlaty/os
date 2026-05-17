@@ -46,6 +46,19 @@ static inline void array_free(struct array *array)
     free(array->data);
 }
 
+/*
+ * frees the array, then, returns a heap pointer to the array data
+ *
+ * as of right now this just returns the data, this would be useful if the array
+ * had data that needed to be cleaned up
+ *
+ * this effectively makes the array immutable
+ */
+static inline void *array_free_ptr(struct array array)
+{
+    return array.data;
+}
+
 static inline void array_set(struct array *array, size_t index, void *data,
                              size_t len)
 {

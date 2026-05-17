@@ -41,4 +41,10 @@ static inline struct memory_region memory_regions_get(size_t index)
 
 struct framebuffer *multiboot_init();
 
+struct bootloader_module
+{
+    void *addr;
+    size_t len;
+};
+
 #endif

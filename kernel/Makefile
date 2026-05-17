@@ -73,6 +73,7 @@ kernel/utils.o \
 kernel/panic.o \
 kernel/serial/ps2.o \
 kernel/syscall.o \
+kernel/stack_trace.o \
 kernel/elf/elf.o \
 kernel/elf/elf32.o \
 kernel/elf/elf64.o \
@@ -156,7 +157,7 @@ BIN=bin
 
 .PHONY: all clean install install-headers install-kernel
 
-all: $(BIN)/os.kernel$(TEST_SUFFIX)
+all: $(BIN)/os.kernel$(TEST_SUFFIX) $(BIN)/kernel_symbols$(TEST_SUFFIX) 
 
 
 
@@ -164,6 +165,10 @@ all: $(BIN)/os.kernel$(TEST_SUFFIX)
 $(BIN)/os.kernel$(TEST_SUFFIX): $(OBJS_BIN) $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld ../libc/libk$(TEST_SUFFIX).a  ../lib/bin/libutilkernel$(TEST_SUFFIX).a 
 	$(CC) -T $(ARCHDIR)/$(ARCHDIR_x86)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST_BIN) -nostdlib -L$(SYSROOT)/usr/lib -Wl,--whole-archive -lk$(TEST_SUFFIX) -lutilkernel$(TEST_SUFFIX) -Wl,--no-whole-archive -lgcc
 	grub-file --is-x86-multiboot $(BIN)/os.kernel$(TEST_SUFFIX)
+
+$(BIN)/kernel_symbols$(TEST_SUFFIX) : $(BIN)/os.kernel$(TEST_SUFFIX)
+	nm -v $^ | python3 ../build/create_symbol_table.py $@ # -v needs to be passed to nm to sort symbols by value, the backtrace code needs the symbols to be sorted by value
+	
 
 
 
@@ -192,7 +197,7 @@ install-headers:
 	@mkdir -p $(DESTDIR)$(INCLUDEDIR)
 	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
 
-install-kernel: $(BIN)/os.kernel$(TEST_SUFFIX)
+install-kernel: $(BIN)/os.kernel$(TEST_SUFFIX) $(BIN)/kernel_symbols$(TEST_SUFFIX)
 	@mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp $(BIN)/os.kernel$(TEST_SUFFIX) $(DESTDIR)$(BOOTDIR)
 

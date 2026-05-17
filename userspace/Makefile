@@ -27,7 +27,7 @@ CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
-CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings -fomit-frame-pointer
+CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings 
 # this gets rid of moddi3 and simliar functions
 CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib
 

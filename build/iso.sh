@@ -9,6 +9,13 @@ mkdir -p isodir/boot
 mkdir -p isodir/boot/grub
 
 cp sysroot/boot/os.kernel$TEST_SUFFIX isodir/boot/os.kernel$TEST_SUFFIX
+KERNEL_SYMBOLS=../kernel/bin/kernel_symbols$TEST_SUFFIX
+cp $KERNEL_SYMBOLS isodir/boot/kernel_symbols
+
+
+
+echo 
+
 cat > isodir/boot/grub/grub.cfg << EOF
 set timeout=0
 
@@ -29,6 +36,7 @@ menuentry "os" {
 
     # Boot the Multiboot1 kernel
     multiboot /boot/os.kernel$TEST_SUFFIX
+	module /boot/kernel_symbols
     boot
 }
 EOF

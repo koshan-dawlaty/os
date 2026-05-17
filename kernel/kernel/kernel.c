@@ -22,6 +22,7 @@
 #include <kernel/paging.h>
 #include <kernel/ps2.h>
 #include <kernel/semaphore.h>
+#include <kernel/stacktrace.h>
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
 #include <kernel/types.h>
@@ -268,16 +269,25 @@ void ls(const char *path)
 struct task_queue abc = TASK_QUEUE_INIT(abc);
 extern void scheduler_init();
 
-extern char *float_to_string(double in, long base);
+void test3()
+{
+    stacktrace_log();
+}
+
+void test2()
+{
+    test3();
+}
+void test1()
+{
+    test2();
+}
 
 void kmain()
 {
+    symbol_table_parse();
 
-    double x = 10.123;
-    char *str = float_to_string(x, 10);
-    logd("%s", str);
-    logd("%f", 123.456);
-
+    /* return; */
     scheduler_init();
 
     irq_disable();

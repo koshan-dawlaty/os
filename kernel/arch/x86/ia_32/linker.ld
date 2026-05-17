@@ -58,4 +58,7 @@ SECTIONS
 	/* Add a symbol that indicates the end address of the kernel. */
 	_kernel_end = .;
 	LINKER_KERNEL_END = .;
+
+	/* the symbol table is concatenated to the end of the kernel */
+	symbol_table = .;
 }
