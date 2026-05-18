@@ -53,6 +53,45 @@ void log_write_level(struct log_level level)
     log_writechar(' ');
 }
 
+size_t log_level_get_len(struct log_level level)
+{
+    return strlen(level.str) +
+           3; /* TODO: the constant offset here could cause problems, maybe
+   make the things printed with the log level constant */
+}
+
+void log_display_char(char c, struct log_level level)
+{
+    if (c == '\n')
+    {
+        log_writechar('\n');
+        for (size_t i = 0; i < log_level_get_len(level); i++)
+        {
+            log_writechar(' ');
+        }
+    }
+    else
+    {
+        log_writechar(c);
+    }
+}
+
+void log_multiline_start(struct log_level *level)
+{
+#ifdef SHOULD_LOG
+    log_write_level(*level);
+    level->is_multiline = true;
+#endif
+}
+
+void log_multiline_end(struct log_level *level)
+{
+#ifdef SHOULD_LOG
+    level->is_multiline = false;
+    log_writechar('\n');
+#endif
+}
+
 void vlog_level(struct log_level level, const char *str, va_list parameters)
 {
     if (level.priority > LOG_PRIORITY_THRESHOLD.priority)
@@ -62,33 +101,19 @@ void vlog_level(struct log_level level, const char *str, va_list parameters)
 
     char *s = vrprintf(str, parameters);
 
-    log_write_level(level);
+    if (!level.is_multiline)
+    {
+        log_write_level(level);
+    }
+
     char *s2 = s;
     while (*s2)
     {
-        char c = *s2;
-        if (c == '\n')
-        {
-            if (*(s2 + 1) == 0)
-            {
-                break;
-            }
-            log_writechar('\n');
-            size_t level_len =
-                strlen(level.str) +
-                3; /* TODO: the constant offset here could cause problems, maybe
-                      make the things printed with the log level constant */
-            for (size_t i = 0; i < level_len; i++)
-            {
-                log_writechar(' ');
-            }
-        }
-        else
-        {
-            log_writechar(c);
-        }
-
+        log_display_char(*s2, level);
         s2++;
     }
-    log_writechar('\n');
+    if (!level.is_multiline)
+    {
+        log_writechar('\n');
+    }
 }
