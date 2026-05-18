@@ -157,9 +157,9 @@ $(BIN)/edit : $(OBJS_START_BIN) $(BIN)/edit.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
-$(BIN)/ui_lib : $(OBJS_START_BIN) $(BIN)/ui_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/ui_lib : $(OBJS_START_BIN) $(BIN)/ui_lib.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CXX) -Ttext=0x300000 -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+	$(CXX) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 
 $(BIN)/%.o: %.S

@@ -43,6 +43,11 @@ static inline void framebuffer_put_pixel(struct framebuffer *f, int color,
     framebuffer_pixel_write(f, pixel, color);
 }
 
+static inline void *fb_offset(struct framebuffer fb, size_t x, size_t y)
+{
+    return fb.buffer + (y * fb.pitch + x * fb.pixel_width);
+}
+
 /*
  * gets a pixel from a framebuffer
  * note that this might be VERY slow if the framebuffer is video memory

@@ -29,12 +29,14 @@ ISR(gpf_handler, {
     printf("sp:%p\n", (void *)frame->sp);
     printf("ss:%p\n", frame->ss);
 
-    loge("gpf!!!\n");
-    loge("cs:%p\n", (void *)frame->cs);
-    loge("error code:%p\n", (void *)frame->flags);
-    loge("ip:%p\n", (void *)frame->ip);
-    loge("sp:%p\n", (void *)frame->sp);
-    loge("ss:%p\n", frame->ss);
+    log_multiline_start(&LOG_ERROR);
+    loge("gpf!!!");
+    loge("cs:%p", (void *)frame->cs);
+    loge("error code:%p", (void *)frame->flags);
+    loge("ip:%p", (void *)frame->ip);
+    loge("sp:%p", (void *)frame->sp);
+    loge("ss:%p", frame->ss);
+    log_multiline_end(&LOG_ERROR);
     stacktrace_log();
 
     fault_handler_wait();

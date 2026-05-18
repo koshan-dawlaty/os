@@ -1,7 +1,11 @@
 #include <cpp/cpp_c_include_start.hpp>
 
 #include "container_of.h"
+#include "lib/framebuffer.h"
+#include "lib/log.h"
 #include "wm_lib.h"
+#include <cstddef>
+#include <init.h>
 #include <lib/list.h>
 #include <lib/rect.h>
 #include <stdlib.h>
@@ -9,11 +13,40 @@
 
 #include <cpp/cpp_c_include_end.hpp>
 
+struct real_point
+{
+    size_t x;
+    size_t y;
+};
+
 class Screen
 {
-  public:
+
+  private:
     struct wm_client client;
     struct PSF_font *default_font;
+
+  public:
+    Screen(struct wm_client client, struct PSF_font *font)
+    {
+        default_font = font;
+        this->client = client;
+    }
+
+    struct PSF_font *get_font()
+    {
+        return default_font;
+    }
+
+    struct framebuffer get_fb()
+    {
+        return client.fb;
+    }
+
+    struct wm_client get_client()
+    {
+        return client;
+    }
 
     size_t get_width()
     {
@@ -30,12 +63,47 @@ class Element
 {
 
   public:
-    struct list2c list;
+    struct framebuffer fb;
+    double x, y; /* -1 to 1 */
+
+    struct list2c list = LIST2C_INIT();
+    struct list2c children;
+    Element *parent; /* use a null pointer to represent the top level element */
     Screen *screen;
 
-    Element(Screen *screen)
+    struct real_point get_real_pos()
     {
+        Element *current = parent;
+        Element *prev = NULL;
+
+        struct real_point pos = {0, 0};
+        while (current != NULL)
+        {
+            current = current->parent;
+            prev = current;
+        }
+
+        return pos;
+    }
+
+    Element(double x, double y, size_t width, size_t height, Screen *screen,
+            Element *parent)
+    {
+        this->x = x;
+        this->y = y;
+
         this->screen = screen;
+        this->parent = parent;
+        this->children = LIST2C_HEAD_INIT(&this->children);
+
+        size_t real_x = 0, real_y = 0;
+
+        struct framebuffer real_fb = screen->get_fb();
+
+        size_t pitch = real_fb.pitch - width;
+        fb = FRAMEBUFFER_INIT(width, height, real_fb.pitch, real_fb.depth,
+                              real_fb.pixel_width,
+                              fb_offset(real_fb, real_x, real_y));
     }
 
     virtual void draw() = 0;
@@ -46,70 +114,41 @@ class TextBox : public Element
 
   public:
     char *str;
-    TextBox(char *str, Screen *screen) : Element(screen)
+    TextBox(double x, double y, char *str, Screen *screen, Element *parent)
+        : Element(x, y, 100, 100, screen, parent)
     {
         this->str = strdup(str);
     }
 
     void draw() override
     {
-        // client_draw_string(this->screen->client, this->screen->default_font,
-        //                    this->str, );
+        framebuffer_draw_rect(&fb, 0, 0, 10, 10, 0xFF00FF);
     }
 };
 
-struct ui_element;
-struct ui_element_operations
+int main(int argc, char **argv)
 {
 
-    void (*draw)(struct ui_element *element, size_t x, size_t y);
-};
+    init_libc();
 
-struct ui_element
-{
-    struct rect area;
-    struct ui_element_operations operations;
-    void *p;
+    /* sleep(400); */
 
-    struct list2c children;
+    struct wm_client client = wm_client_connect(200, 200);
+    int font_fd = open("/font.psfu", O_RDONLY);
+    struct PSF_font *font = font_parse(font_fd);
 
-    struct list2c list;
-};
+    Screen s = Screen(client, font);
+    TextBox t = TextBox(0, 0, "abc", &s, NULL);
 
-struct ui_app
-{
-};
+    size_t pos = 0;
 
-struct PSF_font *font;
+    t.draw();
 
-void textbox_draw(struct ui_element *element, size_t x, size_t y)
-{
-}
+    while (1)
+    {
+        wm_render(client);
+        char c = wm_get_key(client);
+    }
 
-struct ui_element_operations textbox_operations = {.draw = textbox_draw};
-
-struct ui_element *ui_element_alloc(struct rect area,
-                                    struct ui_element_operations operations)
-{
-
-    View *view = new View();
-    struct list2c *ptr = &view->list;
-    containerof(ptr, View, list);
-    struct ui_element *out =
-        (struct ui_element *)malloc(sizeof(struct ui_element));
-    out->area = area;
-    out->operations = operations;
-    out->list = LIST2C_INIT();
-
-    return out;
-}
-
-void ui_element_add(struct ui_element *parent, struct ui_element *child)
-{
-    list2c_push(&child->list, &parent->children);
-}
-
-int main()
-{
     exit(1);
 }

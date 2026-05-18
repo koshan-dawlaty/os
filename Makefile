@@ -23,7 +23,7 @@ export CFLAGS :=  -DMYOS1234 -Werror \
 -Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fno-omit-frame-pointer -Wno-unused-parameter
 
 export CXXFLAGS := \
--Wno-pointer-arith -fpermissive -std=gnu++17 -Wno-pointer-arith
+-Wno-pointer-arith -fpermissive -std=gnu++17 -Wno-pointer-arith -fno-rtti
 
 export QEMU_COMMAND := qemu-system-$(shell ./build/qemu-arch.sh $(ARCH))
 

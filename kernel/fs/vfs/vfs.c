@@ -121,7 +121,7 @@ void free_dentry(dentry *entry)
 struct file *new_file(struct dentry *entry, int flags)
 {
     struct file *out = malloc(sizeof(struct file));
-    dentry_get(entry);
+
     out->entry = entry;
     out->offset = 0;
     out->flags = flags;
