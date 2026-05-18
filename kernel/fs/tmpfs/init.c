@@ -258,6 +258,7 @@ void tmpfs_inode_free(struct inode *node)
 
 const struct fs_type tmpfs_type = {
 
+    .is_permanent = false,
     .name = "tmpfs",
     .mount = tmpfs_mount,
 
@@ -278,4 +279,5 @@ const struct fs_type tmpfs_type = {
         {
             .parse_superblock = tmpfs_parse_superblock,
         },
-};
+
+    .file_operations = FS_FILE_OPERATIONS()};

@@ -137,7 +137,29 @@ int close_file(file *f)
     return 0;
 }
 
-static int read_file_fs(struct file *file, char *buf, size_t n, size_t off)
+/*
+ * default file read function implementation
+ * this does not use the file offset, and won't work for reading from a
+ * filesystem, therefore, read_file_fs should be used for filesystems
+ */
+int file_read_default(struct file *file, char *buf, size_t n, size_t off)
+{
+    struct inode *node = file->entry->inode;
+    mutex_lock(&node->lock);
+    inode_read(node, (u8 *)buf, n, off);
+    mutex_unlock(&node->lock);
+    return n;
+}
+int file_write_default(struct file *file, const char *buf, size_t n, size_t off)
+{
+    struct inode *node = file->entry->inode;
+    mutex_lock(&node->lock);
+    inode_write(node, (u8 *)buf, n, off);
+    mutex_unlock(&node->lock);
+    return n;
+}
+
+int read_file_fs(struct file *file, char *buf, size_t n, size_t off)
 {
     struct inode *node = file->entry->inode;
     mutex_lock(&node->lock);
@@ -156,8 +178,7 @@ static int read_file_fs(struct file *file, char *buf, size_t n, size_t off)
     return read_size;
 }
 
-static int write_file_fs(struct file *file, const char *buf, size_t n,
-                         size_t off)
+int write_file_fs(struct file *file, const char *buf, size_t n, size_t off)
 {
 
     struct inode *node = file->entry->inode;
@@ -179,6 +200,7 @@ extern const struct file_operations device_operations;
 struct file *open_file(const char *path, int flags, int *fd)
 {
     struct dentry *dentry = lookup_path(path, PATHNAME_LOOKUP_FIND);
+    logd("got from lookup:%p", dentry);
 
     if (IS_ERR(dentry))
     {
@@ -195,20 +217,20 @@ struct file *open_file(const char *path, int flags, int *fd)
     }
 
     struct file *out = new_file(dentry, flags);
+    out->operations = dentry->inode->sb->type->file_operations;
+
+    /* out->operations */
 
     switch (dentry->type)
     {
     case DENTRY_DIR:
     case DENTRY_MOUNT_POINT: /* TODO: maybe these have their own operations */
     case DENTRY_FILE:
-        out->operations = fs_file_operations;
-        break;
-    case DENTRY_DEVICE:
-        out->operations = device_operations;
+        /* out->operations = fs_file_operations; */
         break;
     case DENTRY_SOCKET:
-        out->operations = socket_operations;
-        out->file_private = dentry->socket;
+        /* out->operations = socket_operations; */
+        /* out->file_private = dentry->socket; */
 
         break;
 
@@ -285,6 +307,7 @@ int read_dir(struct file *dir, struct dirent *buf, size_t number)
 /* NOT IMPORTANT: maybe inline these */
 int read_file(struct file *file, char *buf, size_t n, size_t off)
 {
+    /* logd("%p", file->entry->inode); */
 
     if (!FLAGS_IS_READABLE(file->flags))
     {

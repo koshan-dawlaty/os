@@ -365,6 +365,7 @@ struct window_queue_entry *focused = NULL;
 /* correctly applys window decorations to newly focused window */
 void change_focus(struct window_queue_entry *new_focus)
 {
+    logd("changing focus");
 
     /* TODO: the focusable windows should maybe be stored in a separate way so
      * this does not need to happen */ /* this check does not techincally need to happen right now, any callers of this will not foucs these windows */
@@ -745,6 +746,7 @@ static void process_keyboard(char c)
     }
     else if (c == '\t')
     {
+
         struct list2c *next = focused->list.next;
         if (next == &window_queue)
         {
@@ -843,6 +845,11 @@ int main()
 {
     init_libc();
 
+    /* char c = getchar(); */
+    /* logd("%c", c); */
+
+    /* exit(1); */
+
     /* panic("abc:%d", 123); */
 
     /* printf("window manager\n"); */
@@ -905,10 +912,13 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
     execv("/bin/term", (char *[]){"term", NULL});
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
-    /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+
+    /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */

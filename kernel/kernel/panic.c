@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "vga.h"
 #include <extension.h>
+#include <kernel/stacktrace.h>
 #include <panic.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -40,6 +41,8 @@ void panic_no_malloc(const char *message)
 
     irq_disable();
     panic_asm();
+
+    stacktrace_log();
 
     terminal_writestring(KERNEL_PANIC_MESSAGE);
     terminal_writestring(message);

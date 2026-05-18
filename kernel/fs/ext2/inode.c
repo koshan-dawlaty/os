@@ -86,6 +86,7 @@ static u32 ext2_inode_get_block(struct ext2_inode *node, size_t block_num,
 void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
                      ext2_inode_index index, superblock *sb)
 {
+
     size_t block_index = index / EXT2_BLOCK_SIZE(sb);
     size_t current_offset = index % EXT2_BLOCK_SIZE(sb);
     size_t buf_offset = 0;

@@ -1,6 +1,7 @@
 #include "lib/log.h"
 #include "panic.h"
 #include <kernel/faults.h>
+#include <kernel/stacktrace.h>
 #include <scheduler.h>
 #include <stdio.h>
 #include <utils.h>
@@ -20,6 +21,8 @@ void page_fault(void *addr, void *ip, struct page_fault_flags flags)
     if (!flags.user)
     {
         printf("page fault\n");
+        logd("test");
+        stacktrace_log();
         loge("page fault\naddr:%p\nip:%p", addr, ip);
 
         printf("addr:%p\n", addr);

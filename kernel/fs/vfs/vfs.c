@@ -82,7 +82,6 @@ struct superblock *new_superblock(size_t blocksize, void *fs_private,
 struct dentry *new_dentry(char *name, dentry *parent, inode *inode,
                           dentry_type type)
 {
-    /* logd("creating dentry with name:%s", name); */
     struct dentry *out = malloc(sizeof(dentry));
 
     out->rc = REFCOUNT_INIT();
@@ -122,6 +121,7 @@ void free_dentry(dentry *entry)
 struct file *new_file(struct dentry *entry, int flags)
 {
     struct file *out = malloc(sizeof(struct file));
+    dentry_get(entry);
     out->entry = entry;
     out->offset = 0;
     out->flags = flags;
@@ -130,10 +130,10 @@ struct file *new_file(struct dentry *entry, int flags)
      * something using file_private and file operations */
     if (entry != NULL)
     {
+        out->operations = entry->inode->sb->type->file_operations;
         switch (entry->type)
         {
         case DENTRY_SOCKET:
-        case DENTRY_DEVICE:
         case DENTRY_FILE:
             break;
         case DENTRY_MOUNT_POINT:
@@ -151,9 +151,8 @@ struct file *new_file(struct dentry *entry, int flags)
 
 void file_free(struct file *file)
 {
-    /* TODO: drop dentry */
+    dentry_put(file->entry);
     /* TODO: files need a refrence count */
-    logd("freeing:%p", file);
     /* free(file); */
 }
 
@@ -176,8 +175,10 @@ struct inode *new_inode(ino_t number, inode_size size, void *fs_private,
 
 void inode_free(struct inode *node)
 {
-    NOT_NULL(node->sb->type->inode_functions.inode_free,
-             "filesystem did not implement function inode_free")
+    struct fs_type *type = node->sb->type;
+    NOT_NULL(type->name, "file system had null name, it is probably invalid")
+    NOT_NULL(type->inode_functions.inode_free,
+             "filesystem %s did not implement function inode_free", type->name)
     node->sb->type->inode_functions.inode_free(node);
     free(node);
 }

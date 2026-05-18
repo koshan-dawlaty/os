@@ -28,7 +28,7 @@ CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
-CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings -fomit-frame-pointer
+CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings 
 # this gets rid of moddi3 and simliar functions
 CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib
 
@@ -79,12 +79,15 @@ BINARIES=\
 	ls \
 	wm \
 	tron \
+	render_test \
 	explore \
 	ui_lib \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
 DEPENDENCIES=../libc/libc$(TEST_SUFFIX).a ../lib/bin/libutil$(TEST_SUFFIX).a
+
+UTIL_FLAG=-lutil$(TEST_SUFFIX)
 
 .PHONY : all clean install install-binaries install-headers
 
@@ -127,28 +130,32 @@ $(BIN)/touch : $(OBJS_START_BIN) $(BIN)/touch.o $(DEPENDENCIES) $(START_OBJ)  $(
 
 $(BIN)/wm : $(OBJS_START_BIN) $(BIN)/wm.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 $(BIN)/imgview : $(OBJS_START_BIN) $(BIN)/imgview.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 $(BIN)/tron : $(OBJS_START_BIN) $(BIN)/tron.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 $(BIN)/explore : $(OBJS_START_BIN) $(BIN)/explore.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 $(BIN)/flashcards : $(OBJS_START_BIN) $(BIN)/flashcards.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+
+$(BIN)/render_test : $(OBJS_START_BIN) $(BIN)/render_test.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 
 $(BIN)/edit : $(OBJS_START_BIN) $(BIN)/edit.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) -lutil -nostdlib -lgcc -Oz
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 $(BIN)/ui_lib : $(OBJS_START_BIN) $(BIN)/ui_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)

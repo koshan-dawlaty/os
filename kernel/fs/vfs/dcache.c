@@ -11,7 +11,9 @@
 #include <string.h>
 #include <vfs.h>
 
-#define DCACHE_LRU_MAX 2
+#define DCACHE_LRU_MAX                                                         \
+    2 /* TODO: dcache needs to not cache devices or things that are in         \
+           memory, use dcache permanent_values for this */
 
 struct dcache_dir
 {
@@ -223,9 +225,8 @@ void add_dcache_permanent(dentry *parent, dentry *new_entry)
 void add_dcache(dentry *parent, dentry *new_entry)
 {
 
-    if (new_entry->type == DENTRY_DEVICE ||
-        new_entry->type == DENTRY_MOUNT_POINT ||
-        new_entry->type == DENTRY_SOCKET)
+    if (new_entry->type == DENTRY_MOUNT_POINT ||
+        new_entry->inode->sb->type->is_permanent)
     {
         add_dcache_permanent(parent, new_entry);
         return;

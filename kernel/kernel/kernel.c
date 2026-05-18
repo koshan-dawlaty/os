@@ -22,6 +22,7 @@
 #include <kernel/paging.h>
 #include <kernel/ps2.h>
 #include <kernel/semaphore.h>
+#include <kernel/stacktrace.h>
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
 #include <kernel/types.h>
@@ -230,6 +231,8 @@ void kernel_init()
 
 #ifdef TESTS
     run_tests();
+#else
+    symbol_table_parse(); /* seems to break with tests */
 #endif
 }
 
@@ -268,16 +271,26 @@ void ls(const char *path)
 struct task_queue abc = TASK_QUEUE_INIT(abc);
 extern void scheduler_init();
 
-extern char *float_to_string(double in, long base);
+void test1()
+{
+    int write_only = open("/one", O_WRONLY);
+    char *buf = malloc(100);
+    int err = read(write_only, buf, 100);
+    close(write_only);
+    logd("done close");
+    int read_only = open("/one", O_RDONLY);
+    logd("done open");
+    err = write(read_only, buf, 100);
+    logd("done write");
+    close(read_only);
+}
 
 void kmain()
 {
 
-    double x = 10.123;
-    char *str = float_to_string(x, 10);
-    logd("%s", str);
-    logd("%f", 123.456);
+    stacktrace_log();
 
+    /* return; */
     scheduler_init();
 
     irq_disable();

@@ -49,4 +49,7 @@ static inline void framebuffer_put_pixel(struct framebuffer *f, int color,
  */
 u32 framebuffer_get_pixel(struct framebuffer *fb, size_t x, size_t y);
 
+void framebuffer_draw_line(struct framebuffer *f, int x1, int y1, int x2,
+                           int y2, int color);
+
 #endif

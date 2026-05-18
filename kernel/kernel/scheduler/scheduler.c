@@ -124,7 +124,12 @@ char **create_user_args(int argc, char **argv)
 static void fdlist_copy_device(struct fdlist *dest, struct fdlist *src,
                                size_t index, const char *dev_path)
 {
+
     struct file *file = fdlist_get(src, index);
+
+    if (index == 0)
+    {
+    }
     if (file == NULL)
     {
         fdlist_set(dest, index, open_device(dev_path));

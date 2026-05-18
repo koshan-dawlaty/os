@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include <cdev.h>
 #include <vfs.h>
 #include <wait_queue.h>

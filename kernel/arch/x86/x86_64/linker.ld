@@ -80,4 +80,8 @@ SECTIONS
         *(.comment)
    }
 	LINKER_KERNEL_END = .;
+
+	/* the symbol table is concatenated to the end of the kernel */
+	symbol_table = .;
+
 }

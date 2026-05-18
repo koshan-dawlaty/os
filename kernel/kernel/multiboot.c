@@ -1,4 +1,5 @@
 #include "multiboot.h"
+#include "lib/log.h"
 #include <kernel/graphics.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
@@ -6,6 +7,7 @@
 #include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>
 #include <panic.h>
+#include <stdalign.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -90,6 +92,30 @@ void multiboot_parse_memory_map(struct multiboot_info *info)
     }
 }
 
+struct bootloader_module multiboot_load_module(multiboot_module_t *modules,
+                                               size_t index)
+{
+
+    logd("%d", sizeof(multiboot_module_t));
+    multiboot_module_t *mod = &modules[index];
+    size_t mod_size = mod->mod_end - mod->mod_start;
+    size_t num_pages = (mod_size / PAGE_SIZE) + 1;
+    logd("start:%p end:%p num_pages:%p", mod->mod_start, mod->mod_end,
+         num_pages);
+
+    void *addr = get_free_pages_unmmaped(num_pages, &gfp_kernel_zone);
+    for (size_t i = 0; i < num_pages; i++)
+    {
+        map_page(((void *)(ptr)mod->mod_start) + i * PAGE_SIZE,
+                 addr + i * PAGE_SIZE, PAGING_PRESENT | PAGING_WRITEABLE);
+    }
+
+    return (struct bootloader_module){addr + mod->mod_start % PAGE_SIZE,
+                                      mod_size};
+}
+
+extern struct bootloader_module bootloader_symbol_table;
+
 struct framebuffer *multiboot_init()
 {
 
@@ -109,6 +135,31 @@ struct framebuffer *multiboot_init()
     struct multiboot_info *info = get_free_pages_unmmaped(1, &gfp_kernel_zone);
     map_page((void *)(ptr)multiboot_struct_addr, info,
              PAGING_PRESENT | PAGING_WRITEABLE);
+
+    logd("grub found %d", info->mods_count);
+    if (info->flags & MULTIBOOT_INFO_MODS)
+    {
+#ifdef CONFIG_SYMBOL_TABLE
+        multiboot_module_t *modules_physical = (void *)(ptr)info->mods_addr;
+        size_t num_pages =
+            ((info->mods_count * sizeof(multiboot_module_t)) / PAGE_SIZE) + 1;
+
+        logd("physaddr:%p", modules_physical);
+
+        size_t diff = info->mods_addr - align_long(info->mods_addr, PAGE_SIZE);
+        logd("%p", diff);
+        void *modules = get_free_pages_unmmaped(num_pages, &gfp_kernel_zone);
+
+        for (size_t i = 0; i < num_pages; i++)
+        {
+            map_page(modules_physical + (i * PAGE_SIZE),
+                     modules + (i * PAGE_SIZE),
+                     PAGING_PRESENT | PAGING_WRITEABLE);
+        }
+
+        bootloader_symbol_table = multiboot_load_module(modules + diff, 0);
+#endif
+    }
     if ((info->flags >> 6 & 0x1))
     {
         /* multiboot_parse_memory_map(info); */
