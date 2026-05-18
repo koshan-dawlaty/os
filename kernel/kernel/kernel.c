@@ -226,12 +226,13 @@ void kernel_init()
 
     /* TODO: put in arch init */
     sse_enable();
-    symbol_table_parse();
 
     logi("kernel init done");
 
 #ifdef TESTS
     run_tests();
+#else
+    symbol_table_parse(); /* seems to break with tests */
 #endif
 }
 
@@ -286,8 +287,6 @@ void test1()
 
 void kmain()
 {
-    test1();
-    return;
 
     stacktrace_log();
 
