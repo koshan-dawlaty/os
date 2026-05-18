@@ -130,6 +130,7 @@ struct file *new_file(struct dentry *entry, int flags)
      * something using file_private and file operations */
     if (entry != NULL)
     {
+        dentry_get(entry);
         out->operations = entry->inode->sb->type->file_operations;
         switch (entry->type)
         {
