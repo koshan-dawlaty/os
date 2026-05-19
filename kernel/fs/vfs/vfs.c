@@ -151,7 +151,10 @@ struct file *new_file(struct dentry *entry, int flags)
 
 void file_free(struct file *file)
 {
-    dentry_put(file->entry);
+    if (file->entry != NULL)
+    {
+        dentry_put(file->entry);
+    }
     /* TODO: files need a refrence count */
     /* free(file); */
 }

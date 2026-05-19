@@ -46,19 +46,28 @@ void key_thread()
     {
         /* logd("getting key"); */
         /* user_mutex_lock(mutex); */
-        char c = wm_get_key(client);
-        /* user_mutex_unlock(mutex); */
-        /* logd("done getting key"); */
-        if ((u8)c == 0xFF)
+        struct wm_message message;
+        wm_get_message(client, &message);
+        switch (message.header.type)
         {
-            break;
+        case WM_MESSAGE_KEY:
+        {
+            char c = *(char *)message.message_data;
+            /* user_mutex_unlock(mutex); */
+            /* logd("done getting key"); */
+            if ((u8)c == 0xFF)
+            {
+                break;
+            }
+            write(pipe_write, &c, 1);
+            printf("%c ", c);
+            terminal_addchar(c, &term);
+            user_mutex_lock(mutex);
+            wm_render(client);
+            user_mutex_unlock(mutex);
         }
-        write(pipe_write, &c, 1);
-        printf("%c ", c);
-        terminal_addchar(c, &term);
-        user_mutex_lock(mutex);
-        wm_render(client);
-        user_mutex_unlock(mutex);
+        break;
+        }
     }
     loge("bad key");
     exit(1);

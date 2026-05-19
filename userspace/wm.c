@@ -489,6 +489,14 @@ size_t x = 400;
 
 size_t num_connections = 0;
 
+void server_send_message(struct wm_connection *conn, struct wm_message *message)
+{
+    logd("sending:%s", message->message_data);
+    send(conn->client_key_socket, &message->header,
+         sizeof(struct wm_message_header));
+    send(conn->client_key_socket, message->message_data, message->header.len);
+}
+
 void process_connection()
 {
     int socket;
@@ -781,7 +789,12 @@ static void process_keyboard(char c)
                 struct wm_connection *conn = focused->conn;
                 current_keyboard_char = c;
 
-                send(conn->client_key_socket, &c, sizeof(char));
+                struct wm_message message = {
+                    .header = WM_MESSAGE_KEY_HEADER,
+                    .message_data = &c,
+                };
+                server_send_message(conn, &message);
+                /* send(conn->client_key_socket, &c, sizeof(char)); */
             }
         }
     }
