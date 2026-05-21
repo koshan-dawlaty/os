@@ -2,6 +2,7 @@
 #define WM_LIB_H
 
 #include "lib/log.h"
+#include "userspace/mouse.h"
 #include <fcntl.h>
 #include <lib/framebuffer.h>
 #include <lib/rect.h>
@@ -45,7 +46,9 @@ struct wm_client
     struct framebuffer fb;
 };
 
+#define WM_MESSAGE_INVALID -1
 #define WM_MESSAGE_KEY 1
+#define WM_MESSAGE_MOUSE 2
 typedef u8 wm_message_type_t;
 
 struct wm_message_header
@@ -56,6 +59,10 @@ struct wm_message_header
 
 #define WM_MESSAGE_KEY_HEADER                                                  \
     ((struct wm_message_header){.type = WM_MESSAGE_KEY, .len = 1})
+
+#define WM_MESSAGE_MOUSE_HEADER                                                \
+    ((struct wm_message_header){.type = WM_MESSAGE_MOUSE,                      \
+                                .len = sizeof(struct mouse_event)})
 
 struct wm_message
 {

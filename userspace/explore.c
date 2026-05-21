@@ -1,3 +1,4 @@
+#include "userspace/mouse.h"
 #include "wm_lib.h"
 #include <assert.h>
 #include <dirent.h>
@@ -8,6 +9,7 @@
 #include <lib/assert.h>
 #include <lib/log.h>
 #include <sched.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -96,11 +98,92 @@ struct array read_dir_path(int fd)
     while (e != NULL)
     {
         array_add(&ents, e, sizeof(struct dirent));
+        logd("%s", e->d_name);
         e = readdir(d);
     }
     closedir(d);
     return ents;
 }
+
+void line_clicked(size_t pos, struct array *ents, struct wm_client client)
+{
+
+    struct dirent *e = array_get(ents, pos, sizeof(struct dirent));
+    /* TODO: this should use stat() */
+    int fd = open(e->d_name, O_RDONLY);
+    if (fd < 0 && errno != EISDIR)
+    {
+        logd("%d", errno);
+        PANIC("open error:%s", strerror(errno));
+    }
+    else if (errno == EISDIR)
+    {
+        chdir(e->d_name);
+        close(fd);
+        fd = open(".", O_DIRECTORY);
+        struct array new_ents = read_dir_path(fd);
+        array_free(ents);
+        *ents = new_ents;
+    }
+    else
+    {
+        enum explorer_filetype type = get_filetype(fd);
+
+        switch (type)
+        {
+        case EXPLORER_TEXT:
+            /* TODO: display the text */
+
+            client_draw_rect(client, 0, 0, client.fb.width, client.fb.height,
+                             0);
+            lseek(fd, 0, SEEK_SET);
+            size_t x = 0;
+            size_t y = 0;
+            size_t read_size = 100;
+            char *buf = malloc(read_size);
+            int bytes_read = read(fd, buf, read_size);
+            do
+
+            {
+                for (size_t i = 0; i < bytes_read; i++)
+                {
+                    if (buf[i] == '\n')
+                    {
+                        y += font->header.height;
+                        x = 0;
+                    }
+                    else
+                    {
+                        client_draw_char(client, font, buf[i], x, y);
+                        x += font->header.width;
+                    }
+                }
+            } while ((bytes_read = read(fd, buf, read_size)) == read_size);
+            wm_render(client);
+
+            struct wm_message message = {.header = WM_MESSAGE_INVALID};
+            while (message.header.type != WM_MESSAGE_KEY)
+            {
+                wm_get_message(client, &message);
+            }
+
+            break;
+        case EXPLORER_IMAGE:
+            execv("/bin/imgview", (char *[]){"/bin/imgview", e->d_name, NULL});
+            break;
+        case EXPLORER_EXECUTABLE:
+            execv(e->d_name, (char *[]){e->d_name, NULL});
+            break;
+        case EXPLORER_INVALID:
+            PANIC("invalid filetype from fd:%d", fd);
+            break;
+        }
+
+        close(fd);
+    }
+}
+
+int mouse_y = 0;
 
 int main(int argc, char **argv)
 {
@@ -124,96 +207,58 @@ int main(int argc, char **argv)
 
     while (1)
     {
-        char c = wm_get_key(client);
-
-        switch (c)
+        struct wm_message message;
+        wm_get_message(client, &message);
+        switch (message.header.type)
         {
-        case 'j':
-            if (pos < ARRAY_LEN(ents, sizeof(struct dirent)) - 1)
+        case WM_MESSAGE_MOUSE:;
+            struct mouse_event *ev = message.message_data;
+            mouse_y += ev->y_change;
+
+            pos = mouse_y / font->header.height;
+            /* if (mouse_y / font->header.height != pos) */
+            /* { */
+            /*     pos = mouse_y / font->header.height; */
+            /* } */
+            /* if (ev->y_change < 0) */
+            /* { */
+            /*     pos--; */
+            /* } */
+            /* else if (ev->y_change > 0) */
+            /* { */
+            /*     pos++; */
+            /* } */
+
+            if (ev->buttons.left_click)
             {
-                pos++;
-            }
-            break;
-        case 'k':
-            if (pos != 0)
-            {
-                pos--;
-            }
-            break;
-        case '\n':;
-            struct dirent *e = array_get(&ents, pos, sizeof(struct dirent));
-            /* TODO: this should use stat() */
-            int fd = open(e->d_name, O_RDONLY);
-            if (fd < 0 && errno != EISDIR)
-            {
-                logd("%d", errno);
-                PANIC("open error:%s", strerror(errno));
-            }
-            else if (errno == EISDIR)
-            {
-                chdir(e->d_name);
-                close(fd);
-                fd = open(".", O_DIRECTORY);
-                struct array new_ents = read_dir_path(fd);
-                array_free(&ents);
-                ents = new_ents;
+                line_clicked(pos, &ents, client);
                 pos = 0;
             }
-            else
+
+            break;
+
+        case WM_MESSAGE_KEY:;
+            char c = *(char *)message.message_data;
+
+            switch (c)
             {
-                enum explorer_filetype type = get_filetype(fd);
-
-                switch (type)
+            case 'j':
+                if (pos < ARRAY_LEN(ents, sizeof(struct dirent)) - 1)
                 {
-                case EXPLORER_TEXT:
-                    /* TODO: display the text */
-
-                    client_draw_rect(client, 0, 0, client.fb.width,
-                                     client.fb.height, 0);
-                    lseek(fd, 0, SEEK_SET);
-                    size_t x = 0;
-                    size_t y = 0;
-                    size_t read_size = 100;
-                    char *buf = malloc(read_size);
-                    int bytes_read = read(fd, buf, read_size);
-                    do
-
-                    {
-                        for (size_t i = 0; i < bytes_read; i++)
-                        {
-                            if (buf[i] == '\n')
-                            {
-                                y += font->header.height;
-                                x = 0;
-                            }
-                            else
-                            {
-                                client_draw_char(client, font, buf[i], x, y);
-                                x += font->header.width;
-                            }
-                        }
-                    } while ((bytes_read = read(fd, buf, read_size)) ==
-                             read_size);
-                    wm_render(client);
-
-                    wm_get_key(client);
-                    break;
-                case EXPLORER_IMAGE:
-                    execv("/bin/imgview",
-                          (char *[]){"/bin/imgview", e->d_name, NULL});
-                    break;
-                case EXPLORER_EXECUTABLE:
-                    logd("execving:%s", e->d_name);
-                    execv(e->d_name, (char *[]){e->d_name, NULL});
-                    break;
-                case EXPLORER_INVALID:
-                    PANIC("invalid filetype from fd:%d", fd);
-                    break;
+                    pos++;
                 }
-
-                close(fd);
+                break;
+            case 'k':
+                if (pos != 0)
+                {
+                    pos--;
+                }
+                break;
+            case '\n':;
+                line_clicked(pos, &ents, client);
+                pos = 0;
+                break;
             }
-
             break;
         }
 

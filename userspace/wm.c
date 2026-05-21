@@ -491,7 +491,7 @@ size_t num_connections = 0;
 
 void server_send_message(struct wm_connection *conn, struct wm_message *message)
 {
-    logd("sending:%s", message->message_data);
+    /* logd("sending:%s", message->message_data); */
     send(conn->client_key_socket, &message->header,
          sizeof(struct wm_message_header));
     send(conn->client_key_socket, message->message_data, message->header.len);
@@ -664,6 +664,18 @@ int drag_count = 0;
 
 static void process_mouse(struct mouse_event *ev)
 {
+
+    if (focused != NULL)
+    {
+        struct wm_message message = {
+
+            .header = WM_MESSAGE_MOUSE_HEADER,
+            .message_data =
+                ev, /* this is fine as server_send_message should not do
+                       anything with this other than send it to the kernel */
+        };
+        server_send_message(focused->conn, &message);
+    }
 
     move_window(mouse_queue_ent, ev->x_change, ev->y_change, buffer);
 
