@@ -10,6 +10,4 @@
 #define KEYBOARD_ACKNOWLEDGED 0xFA
 #define KEYBOARD_RESEND 0xFE
 
-void __int_handler keyboard_interrupt_handler(struct interrupt_frame *frame);
-
 #endif

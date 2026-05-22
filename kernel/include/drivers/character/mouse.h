@@ -6,7 +6,6 @@
 #include <lib/list.h>
 #include <userspace/mouse.h>
 
-void __int_handler mouse_interrupt_handler(struct interrupt_frame *frame);
 struct device *mouse_get();
 
 #endif

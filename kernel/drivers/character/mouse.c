@@ -47,19 +47,21 @@ static bool ps2_mouse_has_changed()
                  ps2_mouse_event_prev.buttons.middle_click);
 }
 
-INT_HANDLER(mouse_interrupt_handler, {
+void mouse_ps2_interrupt()
+{
+
     u8 buttons = inb(0x60);
 
     if (!(buttons & (1 << 3)))
     {
-        goto end;
+        return;
     }
     int8_t x = inb(0x60);
     int8_t y = inb(0x60);
 
     if (!(buttons & PS2_MOUSE_ALWAYS_ONE))
     {
-        goto end;
+        return;
     }
 
     /* TODO: maybe use the overflow bit
@@ -67,10 +69,11 @@ INT_HANDLER(mouse_interrupt_handler, {
      */
     if ((buttons & PS2_MOUSE_X_OVERFLOW) || (buttons & PS2_MOUSE_Y_OVERFLOW))
     {
-        goto end;
+        return;
     }
 
     ps2_mouse_event.buttons.left_click = (buttons & PS2_MOUSE_LEFT_CLICK) != 0;
+    /* logd("left:%d", ps2_mouse_event.buttons.left_click); */
     ps2_mouse_event.buttons.right_click =
         (buttons & PS2_MOUSE_RIGHT_CLICK) != 0;
     ps2_mouse_event.buttons.middle_click =
@@ -86,18 +89,13 @@ INT_HANDLER(mouse_interrupt_handler, {
     {
         wait_queue_done(&mouse_waitqueue);
     }
-
-end:
-    PIC_sendEOI(12);
-});
+}
 
 int mouse_read(struct cdev *dev, u8 *buf, size_t len)
 {
 
     if (!(ps2_mouse_has_changed()))
     {
-
-        logd("not changed");
         wait_queue_wait(&mouse_waitqueue);
     }
 

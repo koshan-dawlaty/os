@@ -26,4 +26,6 @@ void keyboard_init();
 
 bool is_key_available();
 
+void keyboard_ps2_interrupt();
+
 #endif

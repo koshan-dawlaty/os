@@ -4,6 +4,7 @@
 #include <interrupts/idt_internal.h>
 #include <interrupts/pic.h>
 #include <kernel/interrupts.h>
+#include <kernel/ps2.h>
 #include <kernel/types.h>
 #include <keyboard/x86_keyboard.h>
 #include <pit/pit.h>
@@ -98,7 +99,7 @@ void init_idt()
                               .stack_table = 0},
                   0x20);
 
-    add_idt_entry((IDT_entry){.offset = (u64)keyboard_interrupt_handler,
+    add_idt_entry((IDT_entry){.offset = (u64)ps2_int_handler_1,
                               .segment_selector = 8,
                               .flags = 0x8E,
                               .stack_table = 0},
@@ -106,7 +107,7 @@ void init_idt()
     /* add_idt_entry((IDT_entry){(ptr)syscall_handler_asm, 0x8, 0xEE, 0}, 0x80);
      */
 
-    add_idt_entry((IDT_entry){.offset = (u64)mouse_interrupt_handler,
+    add_idt_entry((IDT_entry){.offset = (u64)ps2_int_handler_12,
                               .segment_selector = 8,
                               .flags = 0x8E,
                               .stack_table = 0},

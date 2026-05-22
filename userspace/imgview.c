@@ -97,7 +97,7 @@ int main(int argc, char **argv)
     {
         struct wm_message message;
         wm_get_message(client, &message);
-        wm_render(client);
+        /* wm_render(client); */
     }
 
     close(client.socket);

@@ -7,6 +7,7 @@
 #include "wait_queue.h"
 #include "x86_keyboard.h"
 #include <kernel/keyboard.h>
+#include <kernel/ps2.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -85,7 +86,9 @@ void keyboard_isr_disable()
 }
 bool is_shift_pressed = false;
 
-INT_HANDLER(keyboard_interrupt_handler, {
+void keyboard_ps2_interrupt()
+{
+
     u8 scancode = inb(0x60);
 
     /* caps lock to escape */
@@ -101,12 +104,12 @@ INT_HANDLER(keyboard_interrupt_handler, {
     if (scancode == 0x2A)
     {
         is_shift_pressed = true;
-        goto end;
+        return;
     }
     else if (scancode == 0xAA)
     {
         is_shift_pressed = false;
-        goto end;
+        return;
     }
 
     if (scancode < 0x81)
@@ -130,10 +133,7 @@ INT_HANDLER(keyboard_interrupt_handler, {
             wait_queue_done(&keyboard_queue);
         }
     }
-
-end:
-    PIC_sendEOI(1);
-})
+}
 
 // this will not work with 0xEE (echo) as it sends 0xEE instead of acknowledged
 void keyboard_send_command(uint8_t val)

@@ -372,6 +372,11 @@ void change_focus(struct window_queue_entry *new_focus)
         return;
     }
 
+    if (new_focus == focused)
+    {
+        return;
+    }
+
     draw_window_decoration(new_focus->win, true);
     if (focused != NULL)
     {
@@ -632,13 +637,13 @@ disconnect:;
 
     for (size_t i = 0; i < 3; i++)
     {
-        move_window_step(ent, dist, dist, num_ticks, sleep_ticks);
-        sleep(sleep_ticks);
-        move_window_step(ent, -dist, dist, num_ticks, sleep_ticks);
-        sleep(sleep_ticks);
-        move_window_step(ent, -dist, -dist, num_ticks, sleep_ticks);
-        sleep(sleep_ticks);
-        move_window_step(ent, dist, -dist, num_ticks, sleep_ticks);
+        /* move_window_step(ent, dist, dist, num_ticks, sleep_ticks); */
+        /* sleep(sleep_ticks); */
+        /* move_window_step(ent, -dist, dist, num_ticks, sleep_ticks); */
+        /* sleep(sleep_ticks); */
+        /* move_window_step(ent, -dist, -dist, num_ticks, sleep_ticks); */
+        /* sleep(sleep_ticks); */
+        /* move_window_step(ent, dist, -dist, num_ticks, sleep_ticks); */
 
         dist += 50;
     }
@@ -795,7 +800,11 @@ static void process_keyboard(char c)
             ent = containerof(window_queue.next->next,
                               struct window_queue_entry, list);
         }
-        change_focus(ent);
+
+        if (ent->win != mouse && ent != background_queue_ent) /* stupid */
+        {
+            change_focus(ent);
+        }
     }
     else
     {
@@ -952,8 +961,8 @@ int main()
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
 
-    execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL});
-    execv("/bin/imgview", (char *[]){"imgview", "dog2.tga", NULL});
+    /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    /* execv("/bin/imgview", (char *[]){"imgview", "dog2.tga", NULL}); */
 
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */

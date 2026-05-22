@@ -1,3 +1,7 @@
+#include "interrupts/pic.h"
+#include "kernel/interrupts.h"
+#include "kernel/keyboard.h"
+#include "userspace/mouse.h"
 #include <interrupts/idt.h>
 #include <kernel/types.h>
 #include <panic.h>
@@ -184,3 +188,30 @@ int ps2_init()
 
     return 0;
 }
+
+void ps2_interrupt()
+{
+    u8 status = inb(0x64);
+    if (status & 1)
+    {
+        if (status & (1 << 5))
+        {
+            /* mouse */
+            mouse_ps2_interrupt();
+        }
+        else
+        {
+            keyboard_ps2_interrupt();
+        }
+    }
+}
+
+INT_HANDLER(ps2_int_handler_1, {
+    ps2_interrupt();
+    PIC_sendEOI(1);
+})
+
+INT_HANDLER(ps2_int_handler_12, {
+    ps2_interrupt();
+    PIC_sendEOI(12);
+})

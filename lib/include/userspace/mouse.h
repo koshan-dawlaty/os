@@ -27,5 +27,6 @@ struct mouse_event
 
 #define MOUSE_EVENT_EMPTY(ev)                                                  \
     (ev.x_change == 0 && ev.y_change == 0 && MOUSE_BUTTONS_EMPTY(ev.buttons))
+void mouse_ps2_interrupt();
 
 #endif

@@ -1,9 +1,11 @@
-#include "interrupts/idt.h"
-#include "interrupts/faults.h"
-#include "interrupts/idt_internal.h"
-#include "interrupts/pic.h"
-#include "pit/pit.h"
 #include <drivers/character/mouse.h>
+#include <interrupts/faults.h>
+#include <interrupts/idt.h>
+#include <interrupts/idt_internal.h>
+#include <interrupts/pic.h>
+#include <kernel/interrupts.h>
+#include <kernel/ps2.h>
+#include <pit/pit.h>
 
 #include "ata/ata.h"
 
@@ -84,12 +86,11 @@ void init_idt()
 
     init_faults();
 
-    add_idt_entry((IDT_entry){(uint32_t)keyboard_interrupt_handler, 0x8, 0x8E},
-                  0x21);
+    add_idt_entry((IDT_entry){(uint32_t)ps2_int_handler_1, 0x8, 0x8E}, 0x21);
 
     add_idt_entry(
         (IDT_entry){
-            .offset = (ptr)mouse_interrupt_handler,
+            .offset = (ptr)ps2_int_handler_12,
             .segment_selector = 8,
             .flags = 0x8E,
         },
