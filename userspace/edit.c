@@ -121,50 +121,60 @@ int main()
 
     while (1)
     {
-        char c = wm_get_key(client);
-        if (insert_mode)
+        struct wm_message message;
+        wm_get_message(client, &message);
+
+        switch (message.header.type)
         {
-            if (c == 27)
+        case WM_MESSAGE_KEY:;
+
+            char c = *(char *)message.message_data;
+            if (insert_mode)
             {
-                insert_mode = false;
+                if (c == 27)
+                {
+                    insert_mode = false;
+                }
+                else
+                {
+                    terminal_addchar(c, &characters);
+                    wm_render(client);
+                }
             }
             else
             {
-                terminal_addchar(c, &characters);
+                switch (c)
+                {
+                case 'i':
+                    insert_mode = true;
+                    break;
+                case 'a':
+                    term_scroll_up(&characters);
+                    break;
+                case 's':
+                    term_scroll_down(&characters);
+                    break;
+                case 'k':
+                    terminal_move_cursor(&characters, 0, -1);
+                    break;
+                case 'j':
+                    terminal_move_cursor(&characters, 0, 1);
+                    break;
+                case 'h':
+                    terminal_move_cursor(&characters, -1, 0);
+                    break;
+                case 'l':
+                    terminal_move_cursor(&characters, 1, 0);
+                    break;
+                case 'w':
+                    write_to_file(&characters);
+                    break;
+                }
+
                 wm_render(client);
             }
-        }
-        else
-        {
-            switch (c)
-            {
-            case 'i':
-                insert_mode = true;
-                break;
-            case 'a':
-                term_scroll_up(&characters);
-                break;
-            case 's':
-                term_scroll_down(&characters);
-                break;
-            case 'k':
-                terminal_move_cursor(&characters, 0, -1);
-                break;
-            case 'j':
-                terminal_move_cursor(&characters, 0, 1);
-                break;
-            case 'h':
-                terminal_move_cursor(&characters, -1, 0);
-                break;
-            case 'l':
-                terminal_move_cursor(&characters, 1, 0);
-                break;
-            case 'w':
-                write_to_file(&characters);
-                break;
-            }
-
-            wm_render(client);
+            break;
+        default:;
         }
     }
 

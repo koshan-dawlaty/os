@@ -95,13 +95,9 @@ int main(int argc, char **argv)
 
     while (1)
     {
+        struct wm_message message;
+        wm_get_message(client, &message);
         wm_render(client);
-        char c = wm_get_key(client);
-
-        if (c == 'q' || (u8)c == 0xFF)
-        {
-            break;
-        }
     }
 
     close(client.socket);

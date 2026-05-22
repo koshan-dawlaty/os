@@ -1,6 +1,8 @@
 #ifndef WM_LIB_H
 #define WM_LIB_H
 
+#include "lib/log.h"
+#include "userspace/mouse.h"
 #include <fcntl.h>
 #include <lib/framebuffer.h>
 #include <lib/rect.h>
@@ -8,6 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 
@@ -42,6 +45,30 @@ struct wm_client
     int key_socket;
     struct framebuffer fb;
 };
+
+#define WM_MESSAGE_INVALID -1
+#define WM_MESSAGE_KEY 1
+#define WM_MESSAGE_MOUSE 2
+typedef u8 wm_message_type_t;
+
+struct wm_message_header
+{
+    wm_message_type_t type;
+    size_t len;
+} __packed;
+
+#define WM_MESSAGE_KEY_HEADER                                                  \
+    ((struct wm_message_header){.type = WM_MESSAGE_KEY, .len = 1})
+
+#define WM_MESSAGE_MOUSE_HEADER                                                \
+    ((struct wm_message_header){.type = WM_MESSAGE_MOUSE,                      \
+                                .len = sizeof(struct mouse_event)})
+
+struct wm_message
+{
+    struct wm_message_header header;
+    void *message_data;
+} __packed;
 
 #define WM_CLIENT_WIDTH(client) (client.fb.width)
 #define WM_CLIENT_HEIGHT(client) (client.fb.height)
@@ -164,5 +191,17 @@ char wm_get_key(struct wm_client client);
 char wm_get_key_nonblock(struct wm_client client);
 struct wm_client wm_client_connect(size_t height, size_t width);
 struct wm_client wm_client_connect_nonblock(size_t height, size_t width);
+
+static inline void wm_get_message(struct wm_client client,
+                                  struct wm_message *message)
+{
+    struct wm_message_header header;
+    recv(client.key_socket, &header, sizeof(struct wm_message_header));
+    message->message_data = malloc(header.len);
+    recv(client.key_socket, message->message_data, header.len);
+    /* logd("got data:%s, %d", message->message_data, header.len); */
+
+    message->header = header;
+}
 
 #endif

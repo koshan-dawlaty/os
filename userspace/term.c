@@ -1,4 +1,5 @@
 #include "lib/assert.h"
+#include "userspace/mouse.h"
 #include "wm_lib.h"
 #include <compiler.h>
 #include <container_of.h>
@@ -33,6 +34,8 @@ int execv_stdio(const char *path, char *const argv[], int in, int out)
                                0);
 }
 
+size_t mouse_x = 0;
+size_t mouse_y = 0;
 size_t x = 0, y = 0;
 struct PSF_font *font;
 struct wm_client client;
@@ -46,19 +49,42 @@ void key_thread()
     {
         /* logd("getting key"); */
         /* user_mutex_lock(mutex); */
-        char c = wm_get_key(client);
-        /* user_mutex_unlock(mutex); */
-        /* logd("done getting key"); */
-        if ((u8)c == 0xFF)
+        struct wm_message message;
+        wm_get_message(client, &message);
+        switch (message.header.type)
         {
+        case WM_MESSAGE_KEY:
+        {
+            char c = *(char *)message.message_data;
+            /* user_mutex_unlock(mutex); */
+            /* logd("done getting key"); */
+            if ((u8)c == 0xFF)
+            {
+                break;
+            }
+            write(pipe_write, &c, 1);
+            printf("%c ", c);
+            terminal_addchar(c, &term);
+            user_mutex_lock(mutex);
+            wm_render(client);
+            user_mutex_unlock(mutex);
             break;
         }
-        write(pipe_write, &c, 1);
-        printf("%c ", c);
-        terminal_addchar(c, &term);
-        user_mutex_lock(mutex);
-        wm_render(client);
-        user_mutex_unlock(mutex);
+        case WM_MESSAGE_MOUSE:
+        {
+            struct mouse_event *ev = message.message_data;
+            mouse_x += ev->x_change;
+            mouse_y += ev->y_change;
+            /* logd("mouse at %d %d", mouse_x, mouse_y); */
+            /* client_draw_string(client, font, "this is the mouse", mouse_x, */
+            /*                    mouse_y); */
+            /* client_draw_pixel(client, mouse_x, mouse_y, 0xFF00FF); */
+
+            /* user_mutex_lock(mutex); */
+            /* wm_render(client); */
+            /* user_mutex_unlock(mutex); */
+        }
+        }
     }
     loge("bad key");
     exit(1);
