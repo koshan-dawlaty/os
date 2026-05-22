@@ -215,7 +215,12 @@ int main(int argc, char **argv)
             struct mouse_event *ev = message.message_data;
             mouse_y += ev->y_change;
 
-            pos = mouse_y / font->header.height;
+            if (mouse_y >= 0 &&
+                mouse_y < font->header.height *
+                              ARRAY_LEN(ents, sizeof(struct dirent)))
+            {
+                pos = mouse_y / font->header.height;
+            }
             /* if (mouse_y / font->header.height != pos) */
             /* { */
             /*     pos = mouse_y / font->header.height; */

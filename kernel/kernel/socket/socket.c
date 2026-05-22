@@ -83,6 +83,7 @@ int unix_socket_send(struct unix_socket *sock, const void *buf, size_t len)
 
 int unix_socket_close(struct file *f)
 {
+    logd("closing socket");
 
     struct unix_socket *sock = f->file_private;
     sock->is_closing = true;

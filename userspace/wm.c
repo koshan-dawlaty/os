@@ -365,8 +365,6 @@ struct window_queue_entry *focused = NULL;
 /* correctly applys window decorations to newly focused window */
 void change_focus(struct window_queue_entry *new_focus)
 {
-    logd("changing focus");
-
     /* TODO: the focusable windows should maybe be stored in a separate way so
      * this does not need to happen */ /* this check does not techincally need to happen right now, any callers of this will not foucs these windows */
     if (new_focus == background_queue_ent || new_focus == mouse_queue_ent)
@@ -375,7 +373,10 @@ void change_focus(struct window_queue_entry *new_focus)
     }
 
     draw_window_decoration(new_focus->win, true);
-    draw_window_decoration(focused->win, false);
+    if (focused != NULL)
+    {
+        draw_window_decoration(focused->win, false);
+    }
 
     user_mutex_lock(window_queue_mutex);
     list2c_remove(&new_focus->list);
@@ -619,6 +620,11 @@ void process_connection()
 
 disconnect:;
 
+    if (focused == ent)
+    {
+        focused = NULL;
+    }
+
     size_t num_pixels = WIN_H(w) - 1;
     size_t sleep_ticks = 20;
     size_t dist = 100;
@@ -645,11 +651,11 @@ disconnect:;
     /*     disconnect_flip_image_h(ent, num_pixels, sleep_ticks, 1); */
     /* } */
 
-    struct rect old_area = WIN_RECT(ent->win);
-
     user_mutex_lock(window_queue_mutex);
     list2c_remove(&ent->list);
     user_mutex_unlock(window_queue_mutex);
+
+    struct rect old_area = WIN_RECT(ent->win);
 
     update_area_up(old_area, buffer);
 
@@ -762,12 +768,16 @@ static void process_keyboard(char c)
         if (focused != NULL)
         {
             close(focused->conn->client_socket);
+            /* close(focused->conn->client_key_socket); */
         }
     }
     else if (c == '\t')
     {
-
-        struct list2c *next = focused->list.next;
+        struct list2c *next = window_queue.next->next;
+        if (focused != NULL)
+        {
+            struct list2c *next = focused->list.next;
+        }
         if (next == &window_queue)
         {
             next = window_queue.next->next;
@@ -942,7 +952,8 @@ int main()
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
 
-    /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL});
+    execv("/bin/imgview", (char *[]){"imgview", "dog2.tga", NULL});
 
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
