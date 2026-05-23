@@ -17,12 +17,14 @@ void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
                            size_t width, size_t height, int color)
 {
 
-    if (unlikely(x + width > f->width || y + height > f->height || x < 0 ||
-                 y < 0))
+    if (unlikely(x > f->width || y > f->height))
     {
-        /* for right now just ignore invalid positions */
         return;
     }
+
+    width = MIN(x + width, f->width);
+    height = MIN(y + height, f->height);
+
     size_t location = y * f->pitch + x * f->pixel_width;
 
     for (size_t y_pos = y; y_pos < height + y + 1; y_pos++)
