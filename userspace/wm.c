@@ -30,6 +30,8 @@ struct wm_connection
     int client_key_socket;
     int input_socket;
 
+    bool updated_mouse;
+
     void *buffer;
 };
 
@@ -38,6 +40,7 @@ struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf)
     struct wm_connection *conn = malloc(sizeof(struct wm_connection));
 
     conn->client_socket = client_socket;
+    conn->updated_mouse = false;
     conn->input_socket = socket_create();
     conn->buffer = client_buf;
 
@@ -678,11 +681,25 @@ static void process_mouse(struct mouse_event *ev)
 
     if (focused != NULL)
     {
+
+        struct mouse_event ev2 = *ev;
+        if (!focused->conn->updated_mouse)
+        {
+
+            int change_x = WIN_X(mouse_queue_ent->win) - WIN_X(focused->win);
+            int change_y = WIN_Y(mouse_queue_ent->win) - WIN_Y(focused->win);
+            /* logd("change_x:%d, %d", change_x, change_y); */
+            ev2.x_change += change_x;
+            ev2.y_change += change_y;
+
+            focused->conn->updated_mouse = true;
+        }
+
         struct wm_message message = {
 
             .header = WM_MESSAGE_MOUSE_HEADER,
             .message_data =
-                ev, /* this is fine as server_send_message should not do
+                &ev2, /* this is fine as server_send_message should not do
                        anything with this other than send it to the kernel */
         };
         server_send_message(focused->conn, &message);
