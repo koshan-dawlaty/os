@@ -25,6 +25,7 @@ read_entry:;
 
     size_t size = ext2_get_inode_size(node);
     u8 *buf = malloc(size);
+    u8 *buf_ptr = buf;
     ext2_read_inode(node, buf, size, 0, sb);
     if (context->fs_offset > EXT2_BLOCK_SIZE(sb))
     {
@@ -67,6 +68,7 @@ read_entry:;
         ext2_get_dentry_type(current_node));
 
     context->fs_offset += total_size;
+    free(buf_ptr);
 
     return out;
 }

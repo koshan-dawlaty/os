@@ -23,6 +23,7 @@ static dentry *parse_dentries_component(dentry *dir, const char *component)
 
     while (ent != NULL && !IS_ERR(ent))
     {
+        size_t m_start = malloc_count, f_start = free_count;
 
         struct inode *inode = ent->inode;
         /* logd("rc:%d", ent->rc.count); */
@@ -30,6 +31,7 @@ static dentry *parse_dentries_component(dentry *dir, const char *component)
          * inode->sb, */
         /*      ent->name, ent->name, ent->rc); */
 
+        logd("entry name:%s", ent->name);
         /* logd("ent:%p", ent); */
         /*
 logd("ent:%p read:%s inode:%p inode sb:%p refcount:%d name ptr:%p", ent,
@@ -43,6 +45,9 @@ logd("ent:%p read:%s inode:%p inode sb:%p refcount:%d name ptr:%p", ent,
 
         dentry_put(ent);
         ent = dir_readdir(dir, &context);
+
+        size_t m_end = malloc_count, f_end = free_count;
+        logd("m:%d f:%d", m_end - m_start, f_end - f_start);
     }
 
     return NULL;

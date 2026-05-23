@@ -116,6 +116,7 @@ void free_dentry(dentry *entry)
 {
     free(entry->name);
     inode_put(entry->inode);
+    free(entry);
 }
 
 struct file *new_file(struct dentry *entry, int flags)
@@ -225,6 +226,7 @@ struct dentry *dir_readdir(struct dentry *entry, struct dir_context *context)
 
     struct dentry *out =
         sb->type->dentry_functions.read_dir(entry, context, sb);
+
     context->num_read++;
     if (out != NULL)
     {

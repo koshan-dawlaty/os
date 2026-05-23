@@ -194,6 +194,7 @@ void ext2_write_inode(inode *vfs_node, const uint8_t *buf, size_t buf_len,
     }
 
 end:;
+
     uint64_t size = ext2_get_inode_size(node);
     /* printf("%d, %d\n", node->direct_blocks[0], node->direct_blocks[1]); */
 

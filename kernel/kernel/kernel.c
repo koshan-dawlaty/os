@@ -288,7 +288,13 @@ void test1()
 void kmain()
 {
 
-    stacktrace_log();
+    size_t m_start = malloc_count, f_start = free_count;
+    int fd = open("/one", O_RDONLY);
+    close(fd);
+    size_t m_end = malloc_count, f_end = free_count;
+
+    logd("m:%d, f:%d", m_end - m_start, f_end - f_start);
+    return;
 
     /* return; */
     scheduler_init();
