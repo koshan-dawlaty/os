@@ -22,8 +22,15 @@ void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
         return;
     }
 
-    width = MIN(x + width, f->width);
-    height = MIN(y + height, f->height);
+    if (f->width < x + width)
+    {
+        width = f->width - x;
+    }
+
+    if (f->height < y + height)
+    {
+        height = f->height - y;
+    }
 
     size_t location = y * f->pitch + x * f->pixel_width;
 
