@@ -19,7 +19,12 @@ char *strcat(char *dest, const char *src);
 char *strtok(char *s, char *sep);
 char *strtok_r(char *s, char *sep, char **state);
 
-void strcpy(char *dest, const char *src);
+char *strcpy(char *dest, const char *src);
+char *strncpy(char *dest, const char *src, size_t n);
+
+char *stpcpy(char *dest, const char *src);
+char *stpncpy(char *dest, const char *src, size_t n);
+
 int memcmp(const void *s1, const void *s2, size_t n);
 
 /* errno.c */

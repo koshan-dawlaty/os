@@ -30,6 +30,16 @@ void framebuffer_draw_char(struct framebuffer *fb, struct PSF_font *font,
     }
 }
 
+void framebuffer_draw_bytes(struct framebuffer *fb, struct PSF_font *font,
+                            const char *str, size_t len, size_t x, size_t y)
+{
+    for (size_t i = 0; i < len; i++)
+    {
+        framebuffer_draw_char(fb, font, str[i], x + (i * font->header.width),
+                              y);
+    }
+}
+
 void framebuffer_draw_string(struct framebuffer *fb, struct PSF_font *font,
                              const char *str, size_t x, size_t y)
 {

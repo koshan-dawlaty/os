@@ -201,8 +201,8 @@ void text_render(struct element *text)
     framebuffer_draw_string(&text->fb, font, text->private, 0, 0);
 }
 
-const struct element_type text_operations = {.render = text_render,
-                                             .free = text_free};
+const struct element_type text_operations = {
+    .render = text_render, .on_click = NULL, .free = text_free};
 
 struct element *text_alloc(struct rect_d r, struct element *parent, char *str)
 {

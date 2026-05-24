@@ -34,6 +34,7 @@ TEST_SUFFIX?=
 FREEOBJS=\
 $(ARCH_FREEOBJS) \
 string/strlen.o \
+string/strcpy.o \
 string/strchr.o \
 string/strcat.o \
 string/strcmp.o \

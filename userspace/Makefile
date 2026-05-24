@@ -81,6 +81,7 @@ BINARIES=\
 	tron \
 	render_test \
 	explore \
+	run \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -152,6 +153,11 @@ $(BIN)/render_test : $(OBJS_START_BIN) $(BIN)/render_test.o $(BIN)/wm_lib.o $(DE
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 $(BIN)/term : $(OBJS_START_BIN) $(BIN)/term.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+
+
+$(BIN)/run : $(OBJS_START_BIN) $(BIN)/run.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
