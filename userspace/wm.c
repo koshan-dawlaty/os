@@ -13,6 +13,7 @@
 #include <lib/utils.h>
 #include <poll.h>
 #include <sched.h>
+#include <scheduler.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -501,6 +502,7 @@ size_t num_connections = 0;
 void server_send_message(struct wm_connection *conn, struct wm_message *message)
 {
     /* logd("sending:%s", message->message_data); */
+
     send(conn->client_key_socket, &message->header,
          sizeof(struct wm_message_header));
     send(conn->client_key_socket, message->message_data, message->header.len);
@@ -628,6 +630,8 @@ void process_connection()
 
 disconnect:;
 
+    logd("disconnect");
+
     if (focused == ent)
     {
         focused = NULL;
@@ -669,7 +673,9 @@ disconnect:;
 
     while (1)
     {
-        sched_yield();
+        sched_yield(); /* need something like task hierarchy for this to work,
+                          so that exiting does not destroy all of the parent
+                          process's fds */
     }
     exit(1);
 }
@@ -678,7 +684,6 @@ int drag_count = 0;
 
 static void process_mouse(struct mouse_event *ev)
 {
-
     if (focused != NULL)
     {
 
@@ -793,6 +798,11 @@ static void process_keyboard(char c)
             /* close(focused->conn->client_key_socket); */
         }
     }
+    else if (c == 'R')
+    {
+
+        execv("/bin/run", (char *const[]){"run", NULL});
+    }
     else if (c == '\t')
     {
         struct list2c *next = window_queue.next->next;
@@ -825,7 +835,6 @@ static void process_keyboard(char c)
     }
     else
     {
-
         if (focused != NULL)
         {
             if (focused->nonblock_info.is_nonblock)
@@ -979,6 +988,7 @@ int main()
     execv("/bin/run", (char *[]){"run", NULL});
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
+    /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
 
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog2.tga", NULL}); */

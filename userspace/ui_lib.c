@@ -166,12 +166,10 @@ void ui_onclick(
                  ones we knew were in the right position */
 {
 
-    logd("mouse:%d, %d, color(%p) %d, %d", x, y, (ptr)root->private, root->x,
-         root->y);
     if (x > root->abs_x && x < root->fb.width + root->abs_x &&
         y > root->abs_y && y < root->abs_y + root->fb.height)
     {
-        logd("click on:%p", (ptr)root->private);
+
         if (root->type.on_click !=
             NULL) /* many things don't have a click operation */
         {

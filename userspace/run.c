@@ -1,6 +1,7 @@
 #include "lib/framebuffer.h"
 #include "lib/log.h"
 #include "sys/types.h"
+#include "unistd.h"
 #include "wm_lib.h"
 #include <dirent.h>
 #include <errno.h>
@@ -87,9 +88,8 @@ int main()
                     }
                 }
                 array_free(&search);
-                search = ARRAY_INIT();
 
-                continue;
+                goto done;
             }
             size_t y = 0;
             framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
@@ -115,6 +115,12 @@ int main()
             break;
         }
     }
+done:
 
+    /* TODO: exit() does not call the close operation on sockets */
+    close(client.socket);
+    close(client.key_socket);
+
+    logd("exiting");
     exit(0);
 }

@@ -44,6 +44,7 @@ void fdlist_free(struct fdlist *list)
     {
         if (list->files[i] != NULL)
         {
+
             file_free(list->files[i]);
         }
     }

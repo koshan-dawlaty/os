@@ -152,6 +152,7 @@ struct file *new_file(struct dentry *entry, int flags)
 
 void file_free(struct file *file)
 {
+
     if (file->entry != NULL)
     {
         dentry_put(file->entry);

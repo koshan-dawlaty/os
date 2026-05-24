@@ -38,7 +38,7 @@ void push_keyboard_buffer(char c)
     }
     else
     {
-        panic("keyboard buffer overflow!\n");
+        PANIC("keyboard buffer overflow!\n");
     }
     mutex_unlock(&keyboard_mutex);
 }

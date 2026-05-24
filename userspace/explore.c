@@ -98,7 +98,6 @@ struct array read_dir_path(int fd)
     while (e != NULL)
     {
         array_add(&ents, e, sizeof(struct dirent));
-        logd("%s", e->d_name);
         e = readdir(d);
     }
     closedir(d);

@@ -1,3 +1,4 @@
+#include "container_of.h"
 #include "lib/log.h"
 #include "vfs.h"
 #include <cdev.h>
