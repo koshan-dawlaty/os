@@ -27,6 +27,13 @@ void framebuffer_pixel_write(struct framebuffer *f, u8 *pixel, int color);
 void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
                            size_t width, size_t height, int color);
 
+/*
+ * the offset of @x and @y in @f
+ *
+ * not a pointer
+ */
+#define FRAMEBUFFER_OFFSET(f, x, y) (y * f.pitch + x * f.pixel_width)
+
 static inline void framebuffer_put_pixel(struct framebuffer *f, int color,
                                          int x, int y)
 {

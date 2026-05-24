@@ -1,3 +1,5 @@
+#include "container_of.h"
+#include "lib/framebuffer.h"
 #include "userspace/mouse.h"
 #include "wm_lib.h"
 #include <init.h>
@@ -32,55 +34,101 @@ struct rect_d convert_screen_pos(struct rect_d parent, struct rect_d child)
 struct element;
 struct element_type
 {
-    void (*render)(struct element *e, struct rect_d parent);
-    void (*on_click)(struct element *e, struct rect_d parent, size_t real_x,
-                     size_t real_y);
+    void (*render)(struct element *e);
+    void (*on_click)(struct element *e, size_t real_x, size_t real_y);
     void (*free)(struct element *e);
 };
 struct element
 {
-    struct rect_d r;
+    size_t x, y;
+    size_t abs_x, abs_y; /* position of element in the screen framebuffer */
+    struct framebuffer fb;
     struct list2c list;
     struct list2c children;
 
     struct element_type type;
+    struct element *parent;
     void *private;
 };
 
-struct element *element_alloc(struct rect_d r, const struct element_type t,
-                              void *element_private)
+static inline struct element *element_alloc_partial(struct element_type t,
+                                                    void *private)
 {
     struct element *out = malloc(sizeof(struct element));
     out->children = LIST2C_HEAD_INIT(&out->children);
     out->list = LIST2C_INIT();
-    out->r = r;
+
     out->type = t;
-    out->private = element_private;
+    out->private = private;
+
     return out;
 }
 
-void render(struct element *e, struct rect_d parent)
+struct element *element_alloc_root(const struct element_type t,
+                                   void *element_private,
+                                   struct framebuffer screen)
+{
+    struct element *out = element_alloc_partial(t, element_private);
+    out->x = 0;
+    out->y = 0;
+    out->abs_x = 0;
+    out->abs_y = 0;
+
+    out->fb = screen;
+
+    return out;
+}
+
+struct element *element_alloc(struct rect_d r, const struct element_type t,
+                              void *element_private, struct element *parent)
+{
+
+    struct element *out = element_alloc_partial(t, element_private);
+
+    if (parent != NULL)
+    {
+
+        list2c_push(&out->list, &parent->children);
+
+        out->abs_x = (r.x * parent->fb.width) + parent->abs_x;
+        out->abs_y = (r.y * parent->fb.height) + parent->abs_y;
+        out->x = (r.x * parent->fb.width);
+        out->y = (r.y * parent->fb.height);
+
+        logd("%d, %d", out->x, out->y);
+
+        size_t w = r.w * parent->fb.width;
+        size_t h = r.h * parent->fb.height;
+        size_t pitch = (parent->fb.pitch / parent->fb.pixel_width) - w;
+        if (unlikely(parent->fb.pitch / parent->fb.pixel_width == w))
+        {
+            pitch = parent->fb.pitch / parent->fb.pixel_width;
+        }
+
+        void *buf =
+            parent->fb.buffer + FRAMEBUFFER_OFFSET(parent->fb, out->x, out->y);
+
+        out->fb = FRAMEBUFFER_INIT(w, h, parent->fb.pitch, parent->fb.depth,
+                                   parent->fb.pixel_width, buf);
+    }
+
+    return out;
+}
+
+void render(struct element *e)
 {
 
     /* struct rect_d screen = get_real_pos(parent, e->r); */
     NOT_NULL(e->type.render, "element did not implement render operation");
-    e->type.render(e, parent);
+    e->type.render(e);
     /* client_draw_rect(client, screen.x, screen.y, screen.w, screen.h,
      * e->color); */
-
-    struct rect_d r = e->r;
-    double x = parent.x + (r.x * parent.w);
-    double y = parent.y + (r.y * parent.h);
-    double height = parent.h * r.h;
-    double width = parent.w * r.w;
-
-    struct rect_d new_rect = RECT_D_INIT(x, y, width, height);
 
     struct list2c *pos;
     list2c_for_each(pos, &e->children)
     {
-        struct element *e = containerof(pos, struct element, list);
-        render(e, new_rect);
+        struct element *e2 = containerof(pos, struct element, list);
+        render(e2);
     }
 }
 
@@ -88,76 +136,83 @@ void rect_free(struct element *e)
 {
 }
 
-void rect_onclick(struct element *e, struct rect_d parent, size_t real_x,
-                  size_t real_y)
+void rect_onclick(struct element *e, size_t real_x, size_t real_y)
 {
-    client_draw_pixel(client, real_x, real_y, 0xFF00FF);
+    u32 color = (ptr)e->private;
+    logd("%p", color);
+    /* color <<= 8; */
+    client_draw_pixel(client, real_x, real_y, 0);
 }
 
-void rect_render(struct element *rect, struct rect_d parent)
+void rect_render(struct element *rect)
 {
-    struct rect_d r = convert_screen_pos(parent, rect->r);
-    client_draw_rect(client, r.x, r.y, r.w, r.h, (ptr)rect->private);
+    framebuffer_draw_rect(&rect->fb, 0, 0, rect->fb.width, rect->fb.height,
+                          (ptr)rect->private);
 }
 const struct element_type rect_operations = {
-    .render = rect_render, .free = rect_free, .on_click = rect_onclick};
 
-struct element *rectangle_alloc(struct rect_d r, u32 color)
+    .render = rect_render,
+
+    .free = rect_free,
+    .on_click = rect_onclick
+
+};
+
+struct element *rectangle_alloc(struct rect_d r, struct element *parent,
+                                u32 color)
 {
-    return element_alloc(r, rect_operations, (void *)(ptr)color);
-}
-
-void text_free(struct element *e)
-{
-    free(e->private);
-}
-
-void text_render(struct element *rect, struct rect_d parent)
-{
-    struct rect_d r = convert_screen_pos(parent, rect->r);
-    /* TODO: use width and height maybe */
-    client_draw_string(client, font, rect->private, r.x, r.y);
-}
-const struct element_type text_operations = {.render = text_render,
-                                             .free = text_free};
-
-struct element *text_alloc(struct rect_d r, char *str)
-{
-    return element_alloc(r, text_operations, strdup(str));
-}
-
-void ui_mouse_updated(struct element *e, size_t mouse_x, size_t mouse_y,
-                      struct rect_d parent)
-{
-
-    /* struct rect_d screen = get_real_pos(parent, e->r); */
-    if (e->type.on_click != NULL)
+    if (parent == NULL) /* TODO: stupid */
     {
-        struct rect_d screen = convert_screen_pos(parent, e->r);
-        if (mouse_x > screen.x && mouse_y > screen.y &&
-            mouse_x < screen.x + screen.w && mouse_y < screen.y + screen.h)
-        {
-            e->type.on_click(e, parent, mouse_x, mouse_y);
-        }
+        return element_alloc_root(rect_operations, (void *)(ptr)color,
+                                  client.fb);
     }
-    /* client_draw_rect(client, screen.x, screen.y, screen.w, screen.h,
-     * e->color); */
+    else
+    {
+        return element_alloc(r, rect_operations, (void *)(ptr)color, parent);
+    }
+}
 
-    struct rect_d r = e->r;
-    double x = parent.x + (r.x * parent.w);
-    double y = parent.y + (r.y * parent.h);
-    double height = parent.h * r.h;
-    double width = parent.w * r.w;
+void ui_onclick(
+    struct element *root, size_t x,
+    size_t y) /* TODO: SLOW: this would be faster if it only ran on_click on
+                 ones we knew were in the right position */
+{
 
-    struct rect_d new_rect = RECT_D_INIT(x, y, width, height);
+    logd("mouse:%d, %d, color(%p) %d, %d", x, y, (ptr)root->private, root->x,
+         root->y);
+    if (x > root->abs_x && x < root->fb.width + root->abs_x &&
+        y > root->abs_y && y < root->abs_y + root->fb.height)
+    {
+        logd("click on:%p", (ptr)root->private);
+        root->type.on_click(root, x, y);
+    }
 
     struct list2c *pos;
-    list2c_for_each(pos, &e->children)
+    list2c_for_each(pos, &root->children)
     {
         struct element *e = containerof(pos, struct element, list);
-        ui_mouse_updated(e, mouse_x, mouse_y, new_rect);
+        ui_onclick(e, x, y);
     }
 }
+
+/* void text_free(struct element *e) */
+/* { */
+/*     free(e->private); */
+/* } */
+
+/* void text_render(struct element *rect, struct rect_d parent) */
+/* { */
+/*     struct rect_d r = convert_screen_pos(parent, rect->r); */
+/*     /1* TODO: use width and height maybe *1/ */
+/*     client_draw_string(client, font, rect->private, r.x, r.y); */
+/* } */
+/* const struct element_type text_operations = {.render = text_render, */
+/*                                              .free = text_free}; */
+
+/* struct element *text_alloc(struct rect_d r, char *str) */
+/* { */
+/*     return element_alloc(r, text_operations, strdup(str)); */
+/* } */
 
 int main()
 {
@@ -165,24 +220,26 @@ int main()
     init_libc();
 
     client = wm_client_connect(600, 600);
+    logd("%d", client.fb.pitch);
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse(font_fd);
 
     struct element *root =
-        rectangle_alloc(RECT_D_INIT(0.0, 0.0, 1.0, 1.0), 0x000000);
+        rectangle_alloc(RECT_D_INIT(0.0, 0.0, 1.0, 1.0), NULL, 0xFF0000);
     struct element *one =
-        rectangle_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1.0), 0xFF0000);
+        rectangle_alloc(RECT_D_INIT(0.25, 0.5, 0.25, 0.25), root, 0x0000FF);
     struct element *two =
-        rectangle_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1.0), 0x0000FF);
-    struct element *three = text_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1), "abc");
+        rectangle_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1.0), one, 0xFF00FF);
+    struct element *three =
+        rectangle_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1.0), two, 0xFFFFFF);
+    /* struct element *three = text_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1), "abc");
+     */
 
-    list2c_push(&one->list, &root->children);
-    list2c_push(&two->list, &one->children);
-    list2c_push(&three->list, &two->children);
+    /* list2c_push(&three->list, &two->children); */
 
     int mouse_x = 0, mouse_y = 0;
 
-    render(root, RECT_D_INIT(0, 0, 1, 1));
+    render(root);
 
     while (true)
     {
@@ -200,8 +257,7 @@ int main()
             /* client_draw_pixel(client, mouse_x, mouse_y, 0xFFFFFF); */
             if (ev->buttons.left_click)
             {
-                ui_mouse_updated(root, mouse_x, mouse_y,
-                                 RECT_D_INIT(0, 0, 1, 1));
+                ui_onclick(root, mouse_x, mouse_y);
             }
             break;
         }
