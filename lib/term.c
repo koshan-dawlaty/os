@@ -170,11 +170,12 @@ void terminal_add_newline(struct terminal *term)
         term_scroll_down(term);
         /* term->top_line++; */
 
-        /* for (size_t i = 0; i < term->operations.get_width(); i++) */
-        /* { */
-        /*     /1* clear bottom line *1/ */
-        /*     term->operations.draw_char_at(' ', i, min_height, false); */
-        /* } */
+        for (size_t i = 0; i < term->operations.get_width(); i++)
+        {
+            /* clear bottom line */
+            /* term->operations.draw_char_at(' ', i, min_height, false); */
+            terminal_draw_charat(' ', i, term->y, term);
+        }
     }
     else
     {

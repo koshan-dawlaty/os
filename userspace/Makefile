@@ -171,6 +171,7 @@ $(BIN)/ui_lib : $(OBJS_START_BIN) $(BIN)/ui_lib.o $(BIN)/wm_lib.o $(DEPENDENCIES
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 
+
 $(BIN)/%.o: %.S
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)

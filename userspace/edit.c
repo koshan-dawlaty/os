@@ -106,7 +106,7 @@ int main()
 
     /* terminal_add("abcdef", 6, &characters); */
     /* terminal_draw_line(&characters, 0, 0); */
-    terminal_add("a\nb\nc\nd\ne", 7, &characters);
+    terminal_add("a\nb\nc123\nd\ne", 7, &characters);
 
     /* terminal_add("\b", 1, &characters); */
     /* terminal_add("123\b\n", 5, &characters); */

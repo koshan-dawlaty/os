@@ -95,7 +95,17 @@ int main()
             framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
                                   client.fb.height, 0);
 
-            array_add(&search, &c, 1);
+            if (c == '\b')
+            {
+                if (search.len >= 1)
+                {
+                    array_pop_end(&search, 1);
+                }
+            }
+            else
+            {
+                array_add(&search, &c, 1);
+            }
 
             framebuffer_draw_bytes(&client.fb, font, search.data, search.len, 0,
                                    y);
