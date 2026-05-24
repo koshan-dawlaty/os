@@ -87,7 +87,7 @@ int main()
     init_libc();
 
     int font_fd = open("/font.psfu", O_RDONLY);
-    font = font_parse(font_fd);
+    font = font_parse_fd(font_fd);
 
     if (IS_ERR(font))
     {

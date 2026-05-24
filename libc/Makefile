@@ -56,8 +56,8 @@ file/open.o \
 file/creat.o \
 file/lseek.o \
 file/unlink.o \
-file/read.o \
 file/write.o \
+file/read.o \
 file/pread.o \
 sys/mman/mmap.o \
 sys/stat/mkdir.o \

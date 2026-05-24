@@ -4,6 +4,7 @@
 #include "lib/log.h"
 #include "userspace/mouse.h"
 #include <fcntl.h>
+#include <lib/font.h>
 #include <lib/framebuffer.h>
 #include <lib/rect.h>
 #include <stdbool.h>
@@ -114,31 +115,11 @@ void framebuffer_pixel_write(struct framebuffer *f, uint8_t *pixel, int color);
 void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
                            size_t width, size_t height, int color);
 
-struct PSF_header
-{
-    uint32_t magic;
-    uint32_t version;
-    uint32_t header_size;
-    uint32_t flags;
-    uint32_t num_glyph;
-    uint32_t bytes_per_glyph;
-    uint32_t height;
-    uint32_t width;
-} __packed;
-
-struct PSF_font
-{
-    struct PSF_header header;
-    uint8_t *content;
-};
-
 void client_draw_char(struct wm_client client, struct PSF_font *font, char c,
                       size_t x, size_t y);
 
 void client_draw_string(struct wm_client client, struct PSF_font *font,
                         const char *str, size_t x, size_t y);
-
-struct PSF_font *font_parse(int fd);
 
 typedef uintptr_t ptr;
 extern int syscall_wrapper_asm(ptr ax, ptr bx, ptr cx, ptr dx, ptr si, ptr di);

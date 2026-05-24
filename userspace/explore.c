@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 
     struct wm_client client = wm_client_connect(600, 200);
     int font_fd = open("/font.psfu", O_RDONLY);
-    font = font_parse(font_fd);
+    font = font_parse_fd(font_fd);
 
     sched_yield();
     wm_render(client);

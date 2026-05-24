@@ -1,5 +1,7 @@
 #include "container_of.h"
+#include "lib/font.h"
 #include "lib/framebuffer.h"
+#include "lib/rect.h"
 #include "userspace/mouse.h"
 #include "wm_lib.h"
 #include <init.h>
@@ -16,20 +18,6 @@ struct rect_d
 
 struct wm_client client;
 struct PSF_font *font;
-
-struct rect_d convert_screen_pos(struct rect_d parent, struct rect_d child)
-{
-
-    double x = (child.x * parent.w) + parent.x;
-    double y = (child.y * parent.h) + parent.y;
-    double width = child.w * parent.w;
-    double height = child.h * parent.h;
-
-    return (struct rect_d){.x = x * client.fb.width,
-                           .y = y * client.fb.height,
-                           .w = width * client.fb.width,
-                           .h = height * client.fb.height};
-}
 
 struct element;
 struct element_type
@@ -184,7 +172,11 @@ void ui_onclick(
         y > root->abs_y && y < root->abs_y + root->fb.height)
     {
         logd("click on:%p", (ptr)root->private);
-        root->type.on_click(root, x, y);
+        if (root->type.on_click !=
+            NULL) /* many things don't have a click operation */
+        {
+            root->type.on_click(root, x, y);
+        }
     }
 
     struct list2c *pos;
@@ -195,24 +187,27 @@ void ui_onclick(
     }
 }
 
-/* void text_free(struct element *e) */
-/* { */
-/*     free(e->private); */
-/* } */
+void text_free(struct element *e)
+{
+    free(e->private);
+}
 
-/* void text_render(struct element *rect, struct rect_d parent) */
-/* { */
-/*     struct rect_d r = convert_screen_pos(parent, rect->r); */
-/*     /1* TODO: use width and height maybe *1/ */
-/*     client_draw_string(client, font, rect->private, r.x, r.y); */
-/* } */
-/* const struct element_type text_operations = {.render = text_render, */
-/*                                              .free = text_free}; */
+void text_click(struct element *rect)
+{
+}
 
-/* struct element *text_alloc(struct rect_d r, char *str) */
-/* { */
-/*     return element_alloc(r, text_operations, strdup(str)); */
-/* } */
+void text_render(struct element *text)
+{
+    framebuffer_draw_string(&text->fb, font, text->private, 0, 0);
+}
+
+const struct element_type text_operations = {.render = text_render,
+                                             .free = text_free};
+
+struct element *text_alloc(struct rect_d r, struct element *parent, char *str)
+{
+    return element_alloc(r, text_operations, strdup(str), parent);
+}
 
 int main()
 {
@@ -220,9 +215,9 @@ int main()
     init_libc();
 
     client = wm_client_connect(600, 600);
-    logd("%d", client.fb.pitch);
+
     int font_fd = open("/font.psfu", O_RDONLY);
-    font = font_parse(font_fd);
+    font = font_parse_fd(font_fd);
 
     struct element *root =
         rectangle_alloc(RECT_D_INIT(0.0, 0.0, 1.0, 1.0), NULL, 0xFF0000);
@@ -231,9 +226,7 @@ int main()
     struct element *two =
         rectangle_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1.0), one, 0xFF00FF);
     struct element *three =
-        rectangle_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1.0), two, 0xFFFFFF);
-    /* struct element *three = text_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1), "abc");
-     */
+        text_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1), two, "abc");
 
     /* list2c_push(&three->list, &two->children); */
 

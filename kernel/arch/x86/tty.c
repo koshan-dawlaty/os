@@ -1,6 +1,7 @@
 #include "kernel/tty.h"
 #include "ansi.h"
 #include "kernel/graphics.h"
+#include "lib/log.h"
 #include "panic.h"
 #include "vga.h"
 #include <stdbool.h>
@@ -69,7 +70,7 @@ void terminal_putcharat(char c, size_t x, size_t y)
 {
     if (tty_framebuffer != NULL)
     {
-        framebuffer_draw_char(tty_framebuffer, c, x * 8, y * 16);
+        framebuffer_draw_char(tty_framebuffer, &default_font, c, x * 8, y * 16);
         /* framebuffer_put_pixel(tty_framebuffer, 0xFFFFFF, x, y); */
     }
     else

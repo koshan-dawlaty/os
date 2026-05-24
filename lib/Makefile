@@ -19,13 +19,14 @@ LIBDIR?=$(PREFIX)/lib
 # 		$(CFLAGS) \
 		# -Iacpi/acpica/ # TODO: this is bad 
 # CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
+#
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
 TEST_SUFFIX?=
 
 
-CFLAGS:=$(CFLAGS) -Iinclude $(KERNEL_ARCH_CFLAGS)
+CFLAGS:=$(CFLAGS) -Iinclude $(KERNEL_ARCH_CFLAGS) 
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
@@ -33,6 +34,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 OBJS=\
 	list.o \
+	font.o \
 	array.o \
 	term.o \
 	framebuffer.o \

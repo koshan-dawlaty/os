@@ -33,7 +33,7 @@ CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib
 
 
 # very bad
-LINK_LIST=-l../libc/k.a
+# LINK_LIST=-l../libc/k.a
 
 # ARCHDIR_x86=x86_64
 
@@ -65,8 +65,8 @@ START_OBJ=\
 		  $(BIN)/start.o
 
 BINARIES=\
-	term \
 	flashcards \
+	term \
 	edit \
 	elf_test2 \
 	overwrite \
@@ -86,16 +86,16 @@ BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
 DEPENDENCIES=../libc/libc$(TEST_SUFFIX).a ../lib/bin/libutil$(TEST_SUFFIX).a
 
-UTIL_FLAG=-lutil$(TEST_SUFFIX)
+# UTIL_FLAG=-lutil$(TEST_SUFFIX)
 
 .PHONY : all clean install install-binaries install-headers
 
 all : $(BINARIES_BIN)
 	$(CC) -o $(BIN)/$
 
-$(BIN)/term : $(OBJS_START_BIN) $(BIN)/term.o $(BIN)/wm_lib.o  $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
-	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x600000  -o $@ $^ $(CFLAGS)  -nostdlib -lgcc 
+# $(BIN)/term : $(OBJS_START_BIN) $(BIN)/term.o $(BIN)/wm_lib.o  $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+# 	@mkdir -p $(BIN)/$(dir $<)
+# 	$(CC) -Ttext=0x600000  -o $@ $^ $(CFLAGS) $(UTIL_FLAG)  -nostdlib -lgcc 
 	# $(CC) -o $@ $^ $(CFLAGS)  -nostdlib -lgcc 
 	# $(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
@@ -148,6 +148,10 @@ $(BIN)/flashcards : $(OBJS_START_BIN) $(BIN)/flashcards.o $(BIN)/wm_lib.o $(DEPE
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 $(BIN)/render_test : $(OBJS_START_BIN) $(BIN)/render_test.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+
+$(BIN)/term : $(OBJS_START_BIN) $(BIN)/term.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 

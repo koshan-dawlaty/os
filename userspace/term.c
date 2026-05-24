@@ -158,7 +158,8 @@ int main()
     /* struct wm_client client = wm_client_connect(175, 220); */
 
     int font_fd = open("/font.psfu", O_RDONLY);
-    font = font_parse(font_fd);
+    font = font_parse_fd(font_fd);
+    /* pread(0, NULL, 0, 0); */
     /* printf("%d\n", font->header.bytes_per_glyph); */
 
     if (IS_ERR(font))
@@ -194,14 +195,14 @@ int main()
 
     /* execv("/ls", (char *[]){"ls", NULL}); */
     /* execv("/ksh", (char *[]){"ksh", NULL}); */
-    printf("execv\n");
     execv_stdio("/bin/ksh", (char *[]){"ksh", NULL}, stdin_pipe[0],
                 stdout_pipe[1]);
     /* execv("/bin/ksh", (char *[]){"ksh", NULL}); */
-    printf("execv end\n");
 
     pipe_write = stdin_pipe[1];
     clone((ptr)key_thread);
+    /* client_draw_char(client, font, 'a', 0, 0); */
+    /* wm_render(client); */
 
     /* execv_stdio("/ls", (char *[]){"ls", NULL}, 0, 1); */
 

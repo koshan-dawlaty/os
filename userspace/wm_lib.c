@@ -41,35 +41,6 @@ void client_draw_string(struct wm_client client, struct PSF_font *font,
     }
 }
 
-#define PSF_FONT_MAGIC 0x864ab572
-struct PSF_font *font_parse(int fd)
-{
-    struct PSF_font *out = malloc(sizeof(struct PSF_font));
-
-    if (fd < 0)
-    {
-        return ERR_PTR(-EBADF);
-    }
-
-    size_t read_size = pread(fd, &out->header, sizeof(struct PSF_header), 0);
-
-    if (read_size != sizeof(struct PSF_header))
-    {
-        return ERR_PTR(-EWRONGSIZE);
-    }
-
-    if (out->header.magic != PSF_FONT_MAGIC)
-    {
-        return ERR_PTR(-EINVAL);
-    }
-
-    size_t content_len = out->header.bytes_per_glyph * out->header.num_glyph;
-    out->content = malloc(content_len);
-    pread(fd, out->content, content_len, out->header.header_size);
-
-    return out;
-}
-
 void wm_render(struct wm_client client)
 {
     int render_code = WM_RES_RENDER;

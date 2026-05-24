@@ -1,6 +1,7 @@
 #ifndef LIB_FRAMEBUFFER_H
 #define LIB_FRAMEBUFFER_H
 
+#include "lib/log.h"
 #include <compiler.h>
 #include <stddef.h>
 #include <types.h>
@@ -37,7 +38,7 @@ void framebuffer_draw_rect(struct framebuffer *f, size_t x, size_t y,
 static inline void framebuffer_put_pixel(struct framebuffer *f, int color,
                                          int x, int y)
 {
-    if (unlikely(x > f->width || y > f->height || x < 0 || y < 0))
+    if (unlikely(x > (int)f->width || y > (int)f->height || x < 0 || y < 0))
     {
         /* for right now just ignore invalid positions */
         return;

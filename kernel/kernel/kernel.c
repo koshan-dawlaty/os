@@ -288,7 +288,6 @@ void test1()
 void kmain()
 {
 
-    /* return; */
     scheduler_init();
 
     irq_disable();
