@@ -109,7 +109,8 @@ char wm_get_key_nonblock(struct wm_client client)
 }
 
 static struct wm_client wm_client_connect_impl(size_t height, size_t width,
-                                               bool is_nonblock)
+                                               bool is_nonblock,
+                                               bool auto_focus)
 {
     int server = open("/wm_socket", O_RDONLY);
     int server_sock = connect(server);
@@ -117,8 +118,10 @@ static struct wm_client wm_client_connect_impl(size_t height, size_t width,
     int key_server = open("/input_socket", O_RDONLY);
     int key_socket = connect(key_server);
 
-    struct wm_inital win = {
-        .height = height, .width = width, .is_nonblock = is_nonblock};
+    struct wm_inital win = {.height = height,
+                            .width = width,
+                            .is_nonblock = is_nonblock,
+                            .auto_foucs = auto_focus};
     send(server_sock, &win, sizeof(struct wm_inital));
 
     /* TODO: make this a recv() acknowledge like for rendering */
@@ -143,10 +146,15 @@ static struct wm_client wm_client_connect_impl(size_t height, size_t width,
 
 struct wm_client wm_client_connect_nonblock(size_t height, size_t width)
 {
-    return wm_client_connect_impl(height, width, true);
+    return wm_client_connect_impl(height, width, true, false);
 }
 
 struct wm_client wm_client_connect(size_t height, size_t width)
 {
-    return wm_client_connect_impl(height, width, false);
+    return wm_client_connect_impl(height, width, false, false);
+}
+
+struct wm_client wm_client_connect_focus(size_t height, size_t width)
+{
+    return wm_client_connect_impl(height, width, false, true);
 }

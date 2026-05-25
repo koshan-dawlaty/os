@@ -92,6 +92,7 @@ struct wm_inital
     size_t width;
     /* TODO: stupid, use good nonblocking socket implementation */
     bool is_nonblock;
+    bool auto_foucs;
 } __packed;
 
 struct wm_second
@@ -171,6 +172,8 @@ void wm_render(struct wm_client client);
 char wm_get_key(struct wm_client client);
 char wm_get_key_nonblock(struct wm_client client);
 struct wm_client wm_client_connect(size_t height, size_t width);
+/* makes this window in focus after connecting */
+struct wm_client wm_client_connect_focus(size_t height, size_t width);
 struct wm_client wm_client_connect_nonblock(size_t height, size_t width);
 
 static inline void wm_get_message(struct wm_client client,

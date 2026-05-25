@@ -54,9 +54,9 @@ int main()
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse_fd(font_fd);
 
-    client = wm_client_connect(font->header.height *
-                                   ARRAY_LEN(ents, sizeof(struct dirent)),
-                               font->header.width * max);
+    client = wm_client_connect_focus(font->header.height *
+                                         ARRAY_LEN(ents, sizeof(struct dirent)),
+                                     font->header.width * max);
 
     struct array search = ARRAY_INIT();
 

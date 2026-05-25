@@ -13,8 +13,6 @@ int main(int argc, char **argv)
 
     init_libc();
 
-    exit(0);
-
     /* printf("%p\n", malloc(4095)); */
     /* printf("%p\n", malloc(4095)); */
 

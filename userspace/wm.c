@@ -543,10 +543,12 @@ void process_connection()
     ent->nonblock_info.current_key = 0;
 
     user_mutex_lock(window_queue_mutex);
-
     list2c_add_after(&ent->list, window_queue.next);
-
     user_mutex_unlock(window_queue_mutex);
+    if (win_info.auto_foucs)
+    {
+        change_focus(ent);
+    }
 
     if (num_connections < 1)
     {
@@ -795,12 +797,12 @@ static void process_keyboard(char c)
         if (focused != NULL)
         {
             close(focused->conn->client_socket);
-            /* close(focused->conn->client_key_socket); */
+            /* close(focused->conn->client_key_socket); */ /* TODO: causes
+                                                              issues */
         }
     }
     else if (c == 'R')
     {
-
         execv("/bin/run", (char *const[]){"run", NULL});
     }
     else if (c == '\t')
@@ -976,11 +978,6 @@ int main()
 
     clone((ptr)input_thread);
 
-    for (size_t i = 0; i < 3; i++)
-    {
-        execv("/bin/ls", (char *[]){"/bin/ls", NULL});
-    }
-
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
@@ -988,7 +985,7 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
-    /* execv("/bin/term", (char *[]){"term", NULL}); */
+    execv("/bin/term", (char *[]){"term", NULL});
     /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
     /* execv("/bin/run", (char *[]){"run", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
