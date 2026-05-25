@@ -131,3 +131,6 @@ test : CFLAGS += -DTESTS
 test : export TEST_SUFFIX=.test
 test : $(ISO) 
 	./build/test.sh
+
+nvim-debug: $(ISO)
+	./nvim-debug.sh
