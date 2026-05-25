@@ -44,7 +44,11 @@ void fdlist_free(struct fdlist *list)
     {
         if (list->files[i] != NULL)
         {
-
+            struct dentry *ent = list->files[i]->entry;
+            if (ent != NULL)
+            {
+                logd("freeing file:%s", ent->name);
+            }
             file_free(list->files[i]);
         }
     }

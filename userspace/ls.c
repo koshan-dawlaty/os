@@ -18,16 +18,17 @@ int main(int argc, char **argv)
 
     /* exit(0); */
 
-    printf("\n");
-
     const char *path = ".";
     if (argc >= 2)
     {
         path = argv[1];
     }
 
+    exit(0);
     DIR *d = opendir(path);
-    struct dirent *e = readdir(d);
+    /* DIR *d = opendir(path); */
+    /* struct dirent *e = readdir(d); */
+    struct dirent *e = NULL;
     if (errno != 0)
     {
         printf("ls error:%s\n", strerror(errno));
@@ -47,7 +48,7 @@ int main(int argc, char **argv)
 
         /* printf("%p\n", malloc(10)); */
     }
-    printf("\n\n");
+    printf("\n");
 
     exit(0);
 }

@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
+#include <kernel/stacktrace.h>
 #include <kernel/utils.h>
 #include <lib/list.h>
 #include <lib/log.h>
@@ -18,6 +19,7 @@ struct addr_space *current_addr_space =
 struct addr_space addr_space_alloc()
 {
     struct pagedir *dir = new_pagedir();
+    logd("addr space allocated at:%p", dir);
     write_kernel_page_tables(dir);
     return (struct addr_space){.dir = dir, .list_head = NULL};
 }
@@ -50,11 +52,13 @@ void addr_space_free(struct addr_space a)
         for (size_t i = 0; i < pg->num_pages; i++)
         {
             /* does not account for gfp zones */
+            /* logd("%p", pg->addr); */
             unmap_page(pg->addr + (i * PAGE_SIZE));
         }
 
         if (prev != NULL)
         {
+            logd("%p is freeing %p", a.dir, pg);
             free(prev);
         }
         prev = pg;
@@ -91,12 +95,16 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
         a->list_head = &page->list;
     }
 
+    /* TODO: it seems like some of the members of the list can become
+     * unintalized  */
+
     struct list *pos;
     list_for_each(pos, a->list_head)
     {
         struct addr_space_page *pg =
             containerof(pos, struct addr_space_page, list);
-        /* logd("%p, %d, %p", pg->addr, pg->num_pages, a->dir); */
+        /* logd("%p", pg); */
+        logd("%p, %p, %d, %p", pg, pg->addr, pg->num_pages, a->dir);
     }
 
     load_pgdir(prev_dir);
@@ -158,12 +166,15 @@ int addr_space_map_current(void *addr, size_t num, int flags)
     /*     a = current->addr_space; */
     /* } */
 
+    logd("current:%p", current_addr_space);
     return addr_space_map(current_addr_space, addr, num, flags);
 }
 
 void addr_space_load(struct addr_space *a)
 {
     current_addr_space = a;
+    logd("loading addr space %p", a->dir);
+    stacktrace_log();
     /* struct task *current = get_current_task(); */
     /* if (current != NULL) */
     /* { */

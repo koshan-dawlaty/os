@@ -110,7 +110,7 @@ $(BIN)/ksh : $(OBJS_START_BIN) $(BIN)/ksh.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS
 
 $(BIN)/ls : $(OBJS_START_BIN) $(BIN)/ls.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x800000  -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/overwrite : $(OBJS_START_BIN) $(BIN)/overwrite.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
@@ -130,7 +130,7 @@ $(BIN)/touch : $(OBJS_START_BIN) $(BIN)/touch.o $(DEPENDENCIES) $(START_OBJ)  $(
 
 $(BIN)/wm : $(OBJS_START_BIN) $(BIN)/wm.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc
 
 $(BIN)/imgview : $(OBJS_START_BIN) $(BIN)/imgview.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)

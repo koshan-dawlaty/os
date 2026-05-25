@@ -163,7 +163,7 @@ struct file *create_device(char *name, struct device *dev)
 }
 
 /* TODO: bad name, does not actually add the device to the fdlist */
-file *open_device(const char *devname)
+struct file *open_device(const char *devname)
 {
     struct dentry *ent = lookup_path(devname, PATHNAME_LOOKUP_FIND);
 

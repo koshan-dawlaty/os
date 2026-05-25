@@ -43,6 +43,7 @@ int execv(const char *path, char *const argv[])
         {
             argc++;
         }
+        logd("loading elf with argc as:%d", argc);
 
         struct task *t = load_elf(elf, argc, (char **)argv);
         add_task(t);

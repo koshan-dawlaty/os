@@ -38,6 +38,7 @@ struct dcache_value
 
 void dcache_free_value(struct dcache_value *value)
 {
+    logd("dcache is done with:%s", value->entry->name);
     dentry_put(value->entry);
     /* free_dentry(value->entry); */
 }

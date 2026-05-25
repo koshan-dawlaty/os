@@ -138,7 +138,7 @@ static inline void dentry_get(struct dentry *entry)
 static inline void dentry_refcount_drop(struct refcount *rc)
 {
     struct dentry *entry = containerof(rc, struct dentry, rc);
-
+    logd("freeing dentry:%s", entry->name);
     free_dentry(entry);
 }
 

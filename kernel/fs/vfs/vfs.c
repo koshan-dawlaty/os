@@ -216,10 +216,9 @@ struct dentry *dir_readdir(struct dentry *entry, struct dir_context *context)
     struct superblock *sb = entry->inode->sb;
     struct dentry *dcache = dcache_readdir(entry, context);
 
-    /* printf("%p\n", dcache); */
-
     if (!IS_ERR(dcache) && dcache != NULL)
     {
+        logd("got this from dcache:%s", dcache->name);
         /* printf("got %s from dcache\n", dcache->name); */
         context->num_read++;
         return dcache;

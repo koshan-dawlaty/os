@@ -84,7 +84,8 @@ void user_thread_kernel_start(ptr addr)
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = registers_init_dynamic();
 
-    temp_regs->esp = (ptr)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
+    ptr stack = (ptr)get_free_pages_user(1) - 0xC;
+    temp_regs->esp = stack;
 
     jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
 }
@@ -96,9 +97,10 @@ char **create_user_args(int argc, char **argv)
     char **args = get_free_pages_user(1);
 
     size_t string_offset = argc * sizeof(char *);
+    logd("string offset:%d", string_offset);
     if (string_offset >= PAGE_SIZE)
     {
-        panic("ran out of space in user args");
+        PANIC("ran out of space in user args");
     }
 
     for (int i = 0; i < argc; i++)
@@ -230,6 +232,8 @@ struct task *user_thread_alloc(ptr ip)
 {
 
     struct addr_space current_addr_space = get_current_task()->addr_space;
+    logd("user thread alloc got:%p as the current address space",
+         current_addr_space.dir);
     ASSERT(current_addr_space.dir != NULL,
            "null pagedir for current task, this might be because a kernel "
            "thread called this");
@@ -457,6 +461,7 @@ static void remove_task_sched_queue(struct task *task)
 static void remove_task_load(struct task *task)
 {
     struct task *current = SCHED_QUEUE_CURRENT_TASK(scheduler_queue);
+    logd("loading:%p", current);
     if (current->addr_space.dir != NULL)
     {
         addr_space_load(&current->addr_space);
@@ -494,6 +499,7 @@ void task_remove_free(struct task *task)
     preempt_disable();
     remove_task_sched_queue(task);
     free_task(task);
+    logd("freed %p", task);
     remove_task_load(task);
     preempt_enable();
 }
@@ -593,11 +599,12 @@ struct task *get_current_task()
 
 void free_task(struct task *t)
 {
+    logd("freeing:%p", t->addr_space.dir);
     addr_space_free(t->addr_space);
-    /* TODO: free the pagedir */
     fdlist_free(t->descriptors);
 
     free(t);
+    logd("done freeing the task");
 }
 
 void print_tasks()

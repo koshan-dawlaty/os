@@ -896,17 +896,11 @@ void input_thread()
 
 void thread1()
 {
-    printf("thread\n");
+
     while (1)
     {
         sched_yield();
-        logd("test");
     }
-
-    /* while (1) */
-    /* { */
-    /*     sched_yield(); */
-    /* } */
 
     exit(0);
 }
@@ -914,6 +908,27 @@ void thread1()
 int main()
 {
     init_libc();
+
+    /* DIR *d = opendir("/"); */
+
+    /* struct dirent *e = readdir(d); */
+    /* while (e != NULL) */
+    /* { */
+    /*     logd("%s", e->d_name); */
+    /*     e = readdir(d); */
+    /* } */
+    /* closedir(d); */
+
+    /* close(open("/bin/cat", O_RDONLY)); */
+    /* close(open("/bin/cat", O_RDONLY)); */
+    /* close(open("/bin/cat", O_RDONLY)); */
+
+    clone((ptr)thread1);
+    clone((ptr)thread1);
+    /* clone((ptr)thread1); */
+    /* clone((ptr)thread1); */
+
+    /* exit(0); */
 
     /* char c = getchar(); */
     /* logd("%c", c); */
@@ -983,10 +998,30 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
-    /* execv("/bin/term", (char *[]){"term", NULL}); */
+
+    logd("execving ls");
+    /* execv("/bin/ls", (char *[]){"ls", "/", NULL}); */
+    /* execv("/bin/ls", (char *[]){"ls", "/", NULL}); */
+    /* execv("/bin/ls", (char *[]){"ls", "/", NULL}); */
+
+    /* execv("/bin/abc123", (char *[]){"asjkldaskjd", "/", NULL}); */
+    /* execv("/bin/abc123", (char *[]){"asjkldaskjd", "/", NULL}); */
+    /* execv("/bin/abc123", (char *[]){"asjkldaskjd", "/", NULL}); */
+    logd("done execving ls");
+
+    execv(
+        "/bin/cat",
+        (char *[]){"cat", NULL}); /* TODO: it seems like changing the amount of
+                                     arguments can cause gpfs when executing
+                                     term, issue might be in fdlist_free */
+    execv("/bin/cat", (char *[]){"cat", NULL});
+    execv("/bin/cat", (char *[]){"cat", NULL});
+
+    /* execv("/bin/ls", (char *[]){"ls", NULL}); */
+    execv("/bin/term", (char *[]){"term", NULL});
     /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
     /* execv("/bin/run", (char *[]){"run", NULL}); */
-    execv("/bin/edit", (char *[]){"edit", NULL});
+    /* execv("/bin/edit", (char *[]){"edit", NULL}); */
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */

@@ -86,7 +86,7 @@ void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
 
     if (i >= zone->size)
     {
-        panic("out of memory in get_free_pages_bitmap() for requested size:%d, "
+        PANIC("out of memory in get_free_pages_bitmap() for requested size:%d, "
               "and offset:%d, max size:%d",
               amount, i, zone->size);
     }

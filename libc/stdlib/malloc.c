@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include <extension.h>
 #include <malloc_internal.h>
 #include <sched.h>
@@ -353,11 +354,14 @@ void *malloc(size_t size)
 
     unlock_heap();
 
+    /* logd("%p is now a valid heap pointer", retval); */
+
     return retval;
 }
 
 void free(void *ptr)
 {
+    /* logd("%p is no longer a valid heap pointer", ptr); */
 
     lock_heap();
 
