@@ -2,6 +2,7 @@
 #define VFS_H
 #include <device.h>
 #include <dirent.h>
+#include <kernel/stacktrace.h>
 #include <kernel/types.h>
 #include <lib/assert.h>
 #include <lib/log.h>
@@ -12,6 +13,7 @@
 #include <spinlock.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <task_queue.h>
 #include <wait_queue.h>
@@ -138,6 +140,14 @@ static inline void dentry_get(struct dentry *entry)
 static inline void dentry_refcount_drop(struct refcount *rc)
 {
     struct dentry *entry = containerof(rc, struct dentry, rc);
+    if (!strcmp(entry->name,
+                "terminal")) /* it seems like the terminal device dentry has the
+                                wrong refcount. this could be because it is both
+                                the stdout/err for process by default */
+    {
+        stacktrace_log();
+    }
+    logd("dentry %s is beeing freed", entry->name);
 
     free_dentry(entry);
 }

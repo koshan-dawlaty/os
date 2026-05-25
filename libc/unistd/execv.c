@@ -22,14 +22,12 @@ int execv(const char *path, char *const argv[])
 
 #else
 
-    logd("execv start");
-
     /* TODO: wrong oflags */
     int f = open(path, O_RDONLY);
 
     if (f < 0)
     {
-        logd("%s, %s", path, strerror(f));
+
         return -ENOENT;
     }
 
@@ -47,7 +45,6 @@ int execv(const char *path, char *const argv[])
         struct task *t = load_elf(elf, argc, (char **)argv);
         add_task(t);
         free_elf(elf);
-        logd("execv done");
         /* this the old task from running soon after this is called, it also
          * makes this function more responsive as the new task should be
          * immediately switched to

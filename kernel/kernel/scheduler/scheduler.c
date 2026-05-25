@@ -1,6 +1,7 @@
 #include "kernel/syscall.h"
 #include "kmalloc.h"
 #include "lib/log.h"
+#include "lib/refcount.h"
 #include "malloc_internal.h"
 #include "sleep.h"
 #include "sys/syscall.h"
@@ -136,6 +137,11 @@ static void fdlist_copy_device(struct fdlist *dest, struct fdlist *src,
     }
     else
     {
+        if (file->entry != NULL)
+        {
+            dentry_get(file->entry); /* we are going to be using this file, so
+                                        increment it's dentry */
+        }
         fdlist_set(dest, index, file);
     }
 }
@@ -198,13 +204,15 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     const char *term_path = "/dev/terminal";
     const char *serial_path = "/dev/serial0";
     const char *keyboard_path = "/dev/keyboard";
-    /* TODO: maybe have a function to index into the fdlist, like dup2() */
-    /* TODO: maybe make stdin/out not readable/writeable in the kernel */
+    /* TODO: maybe have a function to index into the fdlist, like dup2()
+     */
+    /* TODO: maybe make stdin/out not readable/writeable in the kernel
+     */
 
     struct task *current_task = get_current_task();
 
-    /* check if the current task is not the inital kernel task, as if it is the
-     * fdlist is invalid */
+    /* check if the current task is not the inital kernel task, as if it
+     * is the fdlist is invalid */
     if (current_task->start_addr != (void *)0xDEADBEEF)
     {
         struct fdlist *current_fds = current_task->descriptors;
@@ -279,14 +287,16 @@ struct task *user_thread_alloc(ptr ip)
     const char *term_path = "/dev/terminal";
     const char *keyboard_path = "/dev/keyboard";
     const char *serial_path = "/dev/serial0";
-    /* TODO: maybe have a function to index into the fdlist, like dup2() */
-    /* TODO: maybe make stdin/out not readable/writeable in the kernel */
-    /* fdlist_add(out->descriptors, open_device(keyboard_path)); /1* 0, stdin
-     * *1/ */
-    /* fdlist_add(out->descriptors, open_device(term_path));     /1* 1, stdout
-     * *1/ */
-    /* fdlist_add(out->descriptors, open_device(term_path));     /1* 2, stderr
-     * *1/ */
+    /* TODO: maybe have a function to index into the fdlist, like dup2()
+     */
+    /* TODO: maybe make stdin/out not readable/writeable in the kernel
+     */
+    /* fdlist_add(out->descriptors, open_device(keyboard_path)); /1* 0,
+     * stdin *1/ */
+    /* fdlist_add(out->descriptors, open_device(term_path));     /1* 1,
+     * stdout *1/ */
+    /* fdlist_add(out->descriptors, open_device(term_path));     /1* 2,
+     * stderr *1/ */
 
     /* fdlist_set(out->descriptors, 0, open_device(keyboard_path)); */
     /* fdlist_set(out->descriptors, 1, open_device(term_path)); */
@@ -428,7 +438,8 @@ static void remove_task_sched_queue(struct task *task)
     }
     task_queue_remove(&scheduler_queue.queue, task);
 
-    /* printf("this is the  sched queue head:%p\n", scheduler_queue.head);
+    /* printf("this is the  sched queue head:%p\n",
+     * scheduler_queue.head);
      */
 
     if (task == get_current_task())
@@ -437,7 +448,8 @@ static void remove_task_sched_queue(struct task *task)
         scheduler_queue.current_task =
             containerof(list, struct task_queue_entry, list);
 
-        /* scheduler_queue.queue.head = TASK_QUEUE_GET_TASK(list)->list; */
+        /* scheduler_queue.queue.head = TASK_QUEUE_GET_TASK(list)->list;
+         */
         if (list == &scheduler_queue.queue.head)
         {
             PANIC("task queue might be empty!");

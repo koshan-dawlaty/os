@@ -976,6 +976,11 @@ int main()
 
     clone((ptr)input_thread);
 
+    for (size_t i = 0; i < 3; i++)
+    {
+        execv("/bin/ls", (char *[]){"/bin/ls", NULL});
+    }
+
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
@@ -986,7 +991,7 @@ int main()
     /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
     /* execv("/bin/run", (char *[]){"run", NULL}); */
-    execv("/bin/edit", (char *[]){"edit", NULL});
+    /* execv("/bin/edit", (char *[]){"edit", NULL}); */
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
