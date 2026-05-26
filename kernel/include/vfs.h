@@ -147,7 +147,6 @@ static inline void dentry_refcount_drop(struct refcount *rc)
     {
         stacktrace_log();
     }
-    logd("dentry %s is beeing freed", entry->name);
 
     free_dentry(entry);
 }

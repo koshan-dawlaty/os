@@ -35,6 +35,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 OBJS=\
 	list.o \
 	font.o \
+	img.o \
 	array.o \
 	term.o \
 	framebuffer.o \

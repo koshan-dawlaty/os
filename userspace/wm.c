@@ -7,6 +7,7 @@
 #include <lib/array.h>
 #include <lib/assert.h>
 #include <lib/framebuffer.h>
+#include <lib/img.h>
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/rect.h>
@@ -933,6 +934,10 @@ int main()
     /* } */
     /* exit(1); */
 
+    struct tga_header background_img_header;
+    void *background_img_data =
+        tga_image_parse("/dog.tga", &background_img_header);
+
     int server_sock = syscall_wrapper_asm(SYS_create_socket_fs,
                                           (ptr) "wm_socket", 0, 0, 0, 0);
 
@@ -951,8 +956,11 @@ int main()
     buffer = framebuffer_alloc();
 
     background = new_window(0, 0, buffer->width, buffer->height);
+
     framebuffer_draw_rect(&background->fb, 0, 0, WIN_W(background),
                           WIN_H(background), 0x233826);
+    framebuffer_draw_img(&background->fb, background_img_data,
+                         background_img_header);
 
     /* this might be bad because these are stack allocations */
     mouse_queue_ent = malloc(sizeof(struct window_queue_entry));
@@ -985,13 +993,13 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
-    execv("/bin/term", (char *[]){"term", NULL});
+    /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
     /* execv("/bin/run", (char *[]){"run", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
-    /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL});
 
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog2.tga", NULL}); */

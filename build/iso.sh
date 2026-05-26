@@ -11,12 +11,13 @@ mkdir -p isodir/boot/grub
 SYMBOL_MODULE_LINE=""
 if [[ "$CFLAGS" == *"-DCONFIG_SYMBOL_TABLE"* ]]; then
 
-cp sysroot/boot/os.kernel$TEST_SUFFIX isodir/boot/os.kernel$TEST_SUFFIX
 KERNEL_SYMBOLS=../kernel/bin/kernel_symbols$TEST_SUFFIX
 cp $KERNEL_SYMBOLS isodir/boot/kernel_symbols
 
 SYMBOL_MODULE_LINE="module /boot/kernel_symbols"
 fi
+
+cp sysroot/boot/os.kernel$TEST_SUFFIX isodir/boot/os.kernel$TEST_SUFFIX
 
 
 

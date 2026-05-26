@@ -306,7 +306,7 @@ void free_pages_tree(void *addr, size_t amount, struct memory_zone *z)
     if (node == NULL)
     {
         /* invalid */
-        printf("possible double free_pages_tree\n");
+        loge("possible double free_pages_tree for addr:%p\n", addr);
         return;
     }
 

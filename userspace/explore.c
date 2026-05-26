@@ -188,7 +188,6 @@ int main(int argc, char **argv)
 {
 
     init_libc();
-
     /* sleep(400); */
 
     struct wm_client client = wm_client_connect(600, 200);
