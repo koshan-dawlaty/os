@@ -288,7 +288,11 @@ struct file *fs_poll(struct file **files, size_t num)
 
 SYSCALL_DEFINE2(SYS_poll, int, int *, fds, size_t, num)
 {
-    /* FIXME: bounds check on @fds */
+
+    /* printf("poll\n"); */
+    schedule(); /* TODO: FIXME: poll bug on real hardware fixed by this
+                   schedule() */
+                /* FIXME: bounds check on @fds */
     struct file **files = malloc(num * sizeof(struct file));
     for (size_t i = 0; i < num; i++)
     {

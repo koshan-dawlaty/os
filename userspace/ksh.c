@@ -18,7 +18,8 @@ int main()
 
     init_libc();
 
-    printf("shell!!\n");
+    printf(
+        " \n"); /* TODO: remove, this needs to be here so the terminal works */
 
     /* int term_fd = open("/terminal", 0); */
     /* char *buf = malloc(10); */

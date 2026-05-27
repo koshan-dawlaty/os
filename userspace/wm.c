@@ -1,3 +1,4 @@
+#include "lib/font.h"
 #include "wm_lib.h"
 #include <container_of.h>
 #include <errno.h>
@@ -36,6 +37,8 @@ struct wm_connection
 
     void *buffer;
 };
+
+struct PSF_font *font;
 
 struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf)
 {
@@ -166,12 +169,9 @@ struct array compute_visible(struct window_queue_entry *win_ent,
         return visible;
     }
     array_add(&visible, &intersection, sizeof(struct rect));
-    /* array_add(&visible, &WIN_RECT(win), sizeof(struct rect)); */
 
     struct list2c *pos;
     for (pos = win_ent->list.next; pos != &window_queue; pos = pos->next)
-    /* list2_for_each(pos, &win_ent->list) */
-    /* list2_for_each(pos, window_queue) */
     {
         struct window_queue_entry *ent =
             containerof(pos, struct window_queue_entry, list);
@@ -190,25 +190,16 @@ struct array compute_visible(struct window_queue_entry *win_ent,
             }
             else
             {
-                /* struct rect *results = malloc(sizeof(struct rect) * 4);
-                 */
                 struct rect results[4] = {0};
                 u8 num = rect_split_intersect(*r, current, results);
-                /* logd("num:%d", num); */
+
                 for (size_t j = 0; j < num; j++)
                 {
                     struct rect result = results[j];
-                    /* logd("this"); */
-                    /* logd("adding:%d, %d w:%d, h:%d", result.x, result.y, */
-                    /*      result.w, result.h); */
                     array_add(&new_regions, &results[j], sizeof(struct rect));
-                    /* framebuffer_draw_rect(buffer, result.x, result.y,
-                     * result.w, */
-                    /*                       result.h, color_num(j)); */
                 }
             }
         }
-        /* logd("loop"); */
         array_free(&visible);
         visible = new_regions;
     }
@@ -330,36 +321,40 @@ void move_window_step(struct window_queue_entry *ent, int x, int y,
     }
 }
 
-#define WINDOW_DECORATION_ROWS 15
-#define WINDOW_CLOSE_WIDTH 15
+#define WINDOW_DECORATION_ROWS 14
+/* #define WINDOW_CLOSE_WIDTH 15 */
+#define WINDOW_CLOSE_WIDTH 20
+#define WINDOW_CLOSE_OFFSET 1
 
 static void draw_window_decoration(struct window *win, bool focused)
 {
     if (focused)
     {
         framebuffer_draw_rect(&win->fb, 0, 0, win->fb.width,
-                              WINDOW_DECORATION_ROWS, 0xFF00FF);
+                              WINDOW_DECORATION_ROWS, 0x3933e8);
     }
     else
     {
         framebuffer_draw_rect(&win->fb, 0, 0, win->fb.width,
-                              WINDOW_DECORATION_ROWS, 0x0000FF);
+                              WINDOW_DECORATION_ROWS, 0x28249e);
     }
+
+    framebuffer_draw_char(&win->fb, font, 'X', WINDOW_CLOSE_OFFSET, 0);
 
     /* draw 'x' pattern for closing a window */
-    for (size_t y = 0, x = 0;
-         y < WINDOW_DECORATION_ROWS && x < WINDOW_CLOSE_WIDTH; y++)
-    {
-        framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y);
-        x++;
-    }
+    /* for (size_t y = 0, x = 0; */
+    /*      y < WINDOW_DECORATION_ROWS && x < WINDOW_CLOSE_WIDTH; y++) */
+    /* { */
+    /*     framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y); */
+    /*     x++; */
+    /* } */
 
-    for (size_t y = WINDOW_DECORATION_ROWS, x = 0;
-         y >= 0 && x < WINDOW_CLOSE_WIDTH + 1; y--)
-    {
-        framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y);
-        x++;
-    }
+    /* for (size_t y = WINDOW_DECORATION_ROWS, x = 0; */
+    /*      y >= 0 && x < WINDOW_CLOSE_WIDTH + 1; y--) */
+    /* { */
+    /*     framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y); */
+    /*     x++; */
+    /* } */
     update_area_up(
         RECT_INIT(WIN_X(win), WIN_Y(win), WIN_W(win), WINDOW_DECORATION_ROWS),
         buffer);
@@ -934,9 +929,8 @@ int main()
     /* } */
     /* exit(1); */
 
-    struct tga_header background_img_header;
-    void *background_img_data =
-        tga_image_parse("/dog.tga", &background_img_header);
+    int font_fd = open("/font.psfu", O_RDONLY);
+    font = font_parse_fd(font_fd);
 
     int server_sock = syscall_wrapper_asm(SYS_create_socket_fs,
                                           (ptr) "wm_socket", 0, 0, 0, 0);
@@ -957,10 +951,14 @@ int main()
 
     background = new_window(0, 0, buffer->width, buffer->height);
 
+    /* struct tga_header background_img_header; */
+    /* void *background_img_data = */
+    /*     tga_image_parse("/dog.tga", &background_img_header); */
+    /* framebuffer_draw_img(&background->fb, background_img_data, */
+    /*                      background_img_header); */
+
     framebuffer_draw_rect(&background->fb, 0, 0, WIN_W(background),
                           WIN_H(background), 0x233826);
-    framebuffer_draw_img(&background->fb, background_img_data,
-                         background_img_header);
 
     /* this might be bad because these are stack allocations */
     mouse_queue_ent = malloc(sizeof(struct window_queue_entry));

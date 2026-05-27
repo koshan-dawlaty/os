@@ -50,6 +50,7 @@ static bool ps2_mouse_has_changed()
 
 void mouse_ps2_interrupt()
 {
+    /* printf("mouse\n"); */
 
     u8 buttons = inb(0x60);
 

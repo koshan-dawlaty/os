@@ -63,7 +63,7 @@ void key_thread()
                 break;
             }
             write(pipe_write, &c, 1);
-            printf("%c ", c);
+            /* printf("%c ", c); */
             terminal_addchar(c, &term);
             user_mutex_lock(mutex);
             wm_render(client);
@@ -91,7 +91,7 @@ void key_thread()
 }
 
 u32 bg_color = 0x4b3973;
-u32 cursor_color = 0xbd8f13;
+u32 cursor_color = 0x9f1ec9;
 
 void wm_terminal_draw_char_at(char character, size_t x, size_t y,
                               bool is_cursor)
