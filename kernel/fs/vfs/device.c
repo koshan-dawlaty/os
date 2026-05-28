@@ -86,11 +86,11 @@ struct fs_type device_fs = {
                         .poll = dev_poll},
 };
 
+struct superblock devfs_superblock = SUPERBLOCK_INIT(0, NULL, NULL, &device_fs);
+
 struct inode *inode_dev_alloc(struct device *dev)
 {
-
-    /* TODO: dont alloc a superblock */
-    struct superblock *sb = new_superblock(0, NULL, NULL, &device_fs);
+    struct superblock *sb = &devfs_superblock;
 
     struct inode *out = new_inode(0, 0, dev, sb);
 

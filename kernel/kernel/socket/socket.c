@@ -147,6 +147,9 @@ struct fs_type socket_fs = {
                         .close = unix_socket_close,
                         .poll = file_default_poll}};
 
+struct superblock socketfs_superblock =
+    SUPERBLOCK_INIT(0, NULL, NULL, &socket_fs);
+
 struct file *unix_socket_create()
 {
     /* TODO: dont use new_file for this, as it takes a struct dentry as a
@@ -160,8 +163,7 @@ struct file *unix_socket_create()
 
 struct inode *socket_inode_alloc(struct unix_socket *sock)
 {
-    /* TODO: dont alloc a superblock */
-    struct superblock *sb = new_superblock(0, NULL, NULL, &socket_fs);
+    struct superblock *sb = &socketfs_superblock;
 
     struct inode *out = new_inode(0, 0, sock, sb);
     return out;

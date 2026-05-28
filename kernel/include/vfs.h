@@ -38,6 +38,12 @@ typedef struct
 struct superblock *new_superblock(size_t blocksize, void *fs_private,
                                   struct bdev *dev, const struct fs_type *type);
 
+#define SUPERBLOCK_INIT(_blocksize, _fs_private, _dev, _type)                  \
+    ((struct superblock){.blocksize = _blocksize,                              \
+                         .fs_private = _fs_private,                            \
+                         .type = _type,                                        \
+                         .dev = _dev})
+
 typedef size_t inode_size;
 
 typedef struct inode
