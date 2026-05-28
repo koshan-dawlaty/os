@@ -176,34 +176,43 @@ draw_point(to_screen_point((struct point2d){.x = 0.5, .y = -0.5}));
         }
 
         wm_render(client);
-        char c = wm_get_key(client);
-        /* char c = 'a'; */
-        if (c == 'a')
+        struct wm_message message;
+        wm_get_message(client, &message);
+        if (message.header.type == WM_MESSAGE_KEY)
         {
-            angle = 0.1;
-        }
-        else if (c == 's')
-        {
-            angle = -0.1;
+            char c = *(char *)message.message_data;
+            /* char c = 'a'; */
+            if (c == 'a')
+            {
+                angle = 0.1;
+            }
+            else if (c == 's')
+            {
+                angle = -0.1;
+            }
+            else
+            {
+                angle = 0;
+            }
+
+            if (c == 'd')
+            {
+                z = 0.1;
+            }
+            else if (c == 'f')
+            {
+                z = -0.1;
+            }
+            else
+            {
+                z = 0;
+            }
         }
         else
         {
             angle = 0;
-        }
-
-        if (c == 'd')
-        {
-            z = 0.1;
-        }
-        else if (c == 'f')
-        {
-            z = -0.1;
-        }
-        else
-        {
             z = 0;
         }
-
         clear();
     }
 
