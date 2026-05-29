@@ -32,6 +32,7 @@ void map_page(void *physaddr, void *virtualaddr, unsigned int flags);
 void unmap_page(void *virtualaddr);
 
 void *get_free_phys_page();
+void free_phys_pages(void *addr, size_t num);
 
 /*
  * does not set the present bit in the page

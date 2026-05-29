@@ -3,6 +3,7 @@
 #include "kernel/addr_space.h"
 #include "kernel/paging.h"
 #include "kernel/utils.h"
+#include "lib/log.h"
 #include "memory/paging_flags.h"
 #include "panic.h"
 #include "scheduler.h"

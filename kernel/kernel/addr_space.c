@@ -1,3 +1,4 @@
+#include "lib/assert.h"
 #include <errno.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
@@ -49,8 +50,23 @@ void addr_space_free(struct addr_space a)
 
         for (size_t i = 0; i < pg->num_pages; i++)
         {
-            /* does not account for gfp zones */
-            unmap_page(pg->addr + (i * PAGE_SIZE));
+            void *virtual = pg->addr + (i * PAGE_SIZE);
+
+            void *physaddr = get_physaddr(virtual);
+            /* TODO: for whatever reason pages mapped by the elf loader will
+             * sometimes be null when getting the address from the pagetable */
+            if (physaddr != NULL)
+            {
+                free_phys_pages(physaddr, 1);
+                unmap_page(virtual);
+            }
+
+            /*
+NOT_NULL(physaddr,
+         "get_physaddr() returned an invalid address %p, page %p "
+         "might not have been mapped",
+         physaddr, virtual);
+                             */
         }
 
         if (prev != NULL)
@@ -74,6 +90,7 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
     for (size_t i = 0; i < num_pages; i++)
     {
         void *phys = get_free_phys_page();
+
         /* printf("physaddr:%p\n", phys); */
         write_pagedir(a->dir, phys, addr + (i * PAGE_SIZE),
                       PAGING_PRESENT | PAGING_WRITEABLE | flags);
@@ -136,6 +153,7 @@ int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages)
 
     for (size_t i = 0; i < num_pages; i++)
     {
+        free_phys_pages(get_physaddr(addr + (i * PAGE_SIZE)), 1);
         unmap_page(addr + (i * PAGE_SIZE));
     }
 

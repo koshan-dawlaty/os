@@ -1,6 +1,7 @@
 #include "kernel/paging.h"
 #include "kernel/types.h"
 #include "kernel/utils.h"
+#include "lib/log.h"
 #include "spinlock.h"
 #include <string.h>
 
@@ -205,6 +206,13 @@ void *get_physaddr(void *virtualaddr)
     u64 *pt = get_virtual_addr(pt_physical);
 
     u64 pt_entry = pt[pt_index];
+
+    if (pt_entry == 0)
+    {
+        /* if they passed a virtual address that was like 0xFFFFF123 we would
+         * return 0, instead of 123 */
+        return NULL;
+    }
 
     flush_tlb_full();
     return (void *)((pt_entry & ~0xfff) + ((u64)virtualaddr & 0xfff));

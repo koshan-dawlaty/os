@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include "memory/paging_flags.h"
 #include "memory/paging_internal.h"
 #include <gdt.h>
@@ -18,6 +19,7 @@
 #include "vga.h"
 
 #include <kernel/paging.h>
+#include <stdalign.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -52,6 +54,22 @@ u8 phys_free_page_bitmap[free_page_bitmap_size] = {FREE};
 void *phys_page_start = (void *)0x200000;
 
 struct spinlock phys_page_lock = SPINLOCK_INIT();
+
+void free_phys_pages(void *addr, size_t num)
+{
+
+    spinlock_lock(&phys_page_lock);
+
+    size_t index = (((size_t)addr - (ptr)phys_page_start)) / 4096;
+
+    /* logd("unmapping:%p at index:%d", addr, index); */
+    for (size_t i = 0; i < num; i++)
+    {
+        phys_free_page_bitmap[(index + i) / 8] |= GFP_FREE >> ((index + i) % 8);
+    }
+
+    spinlock_unlock(&phys_page_lock);
+}
 
 struct pagedir init_pgdir;
 struct pagedir *current_pagedir = &init_pgdir;

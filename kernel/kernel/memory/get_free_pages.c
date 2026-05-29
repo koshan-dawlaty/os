@@ -142,7 +142,10 @@ void free_pages_bitmap(void *addr, size_t amount, struct memory_zone *z)
     for (size_t i = 0; i < amount; i++)
     {
         zone->bitmap[(index + i) / 8] |= GFP_FREE >> ((index + i) % 8);
-        unmap_page((void *)(addr + (i * PAGE_SIZE)));
+        void *ptr = (void *)(addr + (i * PAGE_SIZE));
+        void *physaddr = get_physaddr(ptr);
+        free_phys_pages(physaddr, 1);
+        unmap_page(ptr);
     }
     spinlock_unlock(&z->lock);
 }

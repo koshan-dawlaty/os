@@ -49,8 +49,6 @@ void *get_physaddr(void *virtualaddr)
 
     if ((table_entry & (0x1)) == 0)
     {
-        printf("page fault (table)\n");
-
         return (void *)0;
     }
 
