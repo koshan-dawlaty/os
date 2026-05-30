@@ -177,6 +177,17 @@ void list2c_push(struct list2c *new, struct list2c *head)
     head->next = new;
 }
 
+void list2c_push_end(struct list2c *new, struct list2c *head)
+{
+    /* printf("PUSH\n"); */
+    struct list2c *temp = head->prev;
+    new->next = head;
+    new->prev = temp;
+
+    temp->next = new;
+    head->prev = new;
+}
+
 struct list2c *list2c_pop(struct list2c *head)
 {
     struct list2c *out = head->next;

@@ -998,6 +998,7 @@ int main()
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
     execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL});
+    /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
 
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog2.tga", NULL}); */

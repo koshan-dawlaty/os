@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *strdup(char *in)
+char *strdup(const char *in)
 {
     size_t in_len = strlen(in);
     char *out = malloc(in_len + 1);
@@ -19,9 +19,11 @@ char *strndup(const char *in, size_t num)
 {
     size_t len = strlen(in);
     char *out = malloc(len + 1);
-    for (size_t i = 0; i < len + 1 && i < num; i++)
+    size_t i;
+    for (i = 0; i < len + 1 && i < num; i++)
     {
         out[i] = in[i];
     }
+    out[i] = 0;
     return out;
 }

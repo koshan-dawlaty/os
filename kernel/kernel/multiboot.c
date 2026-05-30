@@ -136,7 +136,6 @@ struct framebuffer *multiboot_init()
     map_page((void *)(ptr)multiboot_struct_addr, info,
              PAGING_PRESENT | PAGING_WRITEABLE);
 
-    logd("grub found %d", info->mods_count);
     if (info->flags & MULTIBOOT_INFO_MODS)
     {
 #ifdef CONFIG_SYMBOL_TABLE
@@ -144,10 +143,7 @@ struct framebuffer *multiboot_init()
         size_t num_pages =
             ((info->mods_count * sizeof(multiboot_module_t)) / PAGE_SIZE) + 1;
 
-        logd("physaddr:%p", modules_physical);
-
         size_t diff = info->mods_addr - align_long(info->mods_addr, PAGE_SIZE);
-        logd("%p", diff);
         void *modules = get_free_pages_unmmaped(num_pages, &gfp_kernel_zone);
 
         for (size_t i = 0; i < num_pages; i++)

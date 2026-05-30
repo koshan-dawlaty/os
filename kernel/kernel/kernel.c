@@ -227,8 +227,6 @@ void kernel_init()
     /* TODO: put in arch init */
     sse_enable();
 
-    logi("kernel init done");
-
 #ifdef TESTS
     run_tests();
 #else
@@ -319,8 +317,8 @@ void kmain()
 
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
 
-    int err = execv("/bin/wm", (char *[]){"wm", NULL});
-    /* int err = execv("/ksh", (char *[]){"ksh", NULL}); */
+    /* int err = execv("/bin/wm", (char *[]){"wm", NULL}); */
+    int err = execv("/bin/compiler", (char *[]){"compiler", NULL});
     /* int err = execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
     /* int err = execv("/bin/ls", (char *[]){"/bin/ls", "/dev", NULL}); */
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
