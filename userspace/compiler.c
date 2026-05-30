@@ -1,4 +1,5 @@
 #include "container_of.h"
+#include "lib/assert.h"
 #include "lib/font.h"
 #include <init.h>
 #include <lib/list.h>
@@ -19,8 +20,43 @@ enum token_type
     TOKEN_EQUALS,
     TOKEN_INT,
     TOKEN_SEMICOLON,
+    TOKEN_O_PAREN,
+    TOKEN_C_PAREN,
+    TOKEN_O_BRACE,
+    TOKEN_C_BRACE,
 
 };
+
+const char *token_type_str(enum token_type type)
+{
+    switch (type)
+    {
+    case TOKEN_IDENTIFIER:
+        return "IDENTIFIER";
+    case TOKEN_EOF:
+        return "EOF";
+    case TOKEN_LITERAL:
+        return "LITERAL";
+    case TOKEN_UNKNOWN:
+        return "UNKNOWN";
+    case TOKEN_ASSIGN:
+        return "ASSIGN";
+    case TOKEN_EQUALS:
+        return "EQUALS";
+    case TOKEN_INT:
+        return "INT";
+    case TOKEN_SEMICOLON:
+        return "SEMICOLON";
+    case TOKEN_O_PAREN:
+        return "OPEN PARENTHESES";
+    case TOKEN_C_PAREN:
+        return "CLOSE PARENTHESES";
+    case TOKEN_O_BRACE:
+        return "OPEN BRACE";
+    case TOKEN_C_BRACE:
+        return "CLOSE BRACE";
+    }
+}
 
 struct token
 {
@@ -59,7 +95,7 @@ struct token *token_alloc_literal(enum token_type type, const char *literal,
 
 bool is_space(char c)
 {
-    return (c == ' ');
+    return c == ' ' || c == '\n' || c == '\t';
 }
 
 bool is_digit(char c)
@@ -84,6 +120,45 @@ char *get_next_word(const char *s)
     return (char *)s;
 }
 
+struct token_simple_map_entry
+{
+    const char *s;
+    enum token_type type;
+};
+
+struct token_simple_map_entry token_simple_map[] = {
+    // clang-format off
+
+    {"(", TOKEN_O_PAREN},
+    {")", TOKEN_C_PAREN},
+    {"{", TOKEN_O_BRACE},
+    {"}", TOKEN_C_BRACE},
+    {";", TOKEN_SEMICOLON},
+
+    // clang-format on
+
+};
+
+/*
+ * gets a one character token
+ */
+struct token *get_token_simple(const char *s, size_t *len)
+{
+
+    for (size_t i = 0;
+         i < (sizeof token_simple_map / sizeof token_simple_map[0]); i++)
+    {
+        if (!strncmp(s, token_simple_map[i].s, strlen(token_simple_map[i].s)))
+        {
+
+            return token_alloc_literal(token_simple_map[i].type,
+                                       token_simple_map[i].s, len);
+        }
+    }
+
+    return NULL;
+}
+
 struct token *get_token(const char *input, size_t *len)
 {
 
@@ -93,7 +168,7 @@ struct token *get_token(const char *input, size_t *len)
     }
 
     const char *s = input + *len;
-    logd("|%s|", s);
+    /* logd("|%s|", s); */
 
     if (*s == 0)
     {
@@ -135,19 +210,26 @@ struct token *get_token(const char *input, size_t *len)
         }
     }
 
-    if (s[0] == ';')
+    struct token *simple = get_token_simple(s, len);
+    if (simple != NULL)
     {
-        return token_alloc_literal(TOKEN_SEMICOLON, ";", len);
+        return simple;
     }
 
     return token_alloc(TOKEN_UNKNOWN, "", 0);
 }
 
-int main()
+struct tokenizer_test_input
 {
-    init_libc();
+    const char *str;
+    enum token_type type;
+};
 
-    const char *program = "int x  =10;";
+void tokenizer_test_impl(const char *program,
+                         struct tokenizer_test_input expected[],
+                         size_t expected_len)
+{
+
     size_t offset = 0;
 
     LIST2C_DEFINE_HEAD(token_list);
@@ -157,27 +239,110 @@ int main()
     offset += len;
     while (t->type != TOKEN_EOF && t->type != TOKEN_UNKNOWN)
     {
-        list2c_push_end(&t->list, &token_list); /* NEW FUNCTION CHECK THIS */
+        list2c_push_end(&t->list, &token_list);
 
         size_t len = 0;
         t = get_token(program + offset, &len);
         offset += len;
     }
 
+    size_t i = 0;
     struct list2c *pos;
     list2c_for_each(pos, &token_list)
     {
+        if (i >= expected_len)
+        {
+            PANIC("more tokens than expected in output");
+        }
         struct token *tok = containerof(pos, struct token, list);
         if (tok->type == TOKEN_UNKNOWN)
         {
-            logd("i got this unknown token:%s", tok->token);
+            PANIC("unknown token:%s", tok->token);
         }
-        else
+
+        if (expected[i].type != tok->type)
         {
-            logd("i got this token:%s", tok->token);
+            PANIC("expected token of type:%s, got %s",
+                  token_type_str(expected->type), token_type_str(tok->type));
         }
+
+        if (strcmp(expected[i].str, tok->token))
+        {
+            PANIC("expected token of value:|%s|, got |%s|", expected[i].str,
+                  tok->token);
+        }
+
+        i++;
     }
 
+    if (i != expected_len)
+    {
+        PANIC("less tokens than expected in output");
+    }
+}
+
+#define tokenizer_test(program, ...)                                           \
+    tokenizer_test_impl(                                                       \
+        program, ((struct tokenizer_test_input[]){__VA_ARGS__}),               \
+        sizeof(((struct tokenizer_test_input[]){__VA_ARGS__})) /               \
+            sizeof(struct tokenizer_test_input))
+
+void tokenizer_tests()
+{
+    // clang-format off
+    tokenizer_test("int   x   =   10   ;    ",
+                   {"int", TOKEN_IDENTIFIER},
+				   {"x", TOKEN_IDENTIFIER},
+                   {"=", TOKEN_ASSIGN},
+				   {"10", TOKEN_INT},
+                   {";", TOKEN_SEMICOLON}
+				   );
+
+
+    tokenizer_test("int test123=10; int x = 123;",
+                   {"int", TOKEN_IDENTIFIER},
+				   {"test123", TOKEN_IDENTIFIER},
+                   {"=", TOKEN_ASSIGN},
+				   {"10", TOKEN_INT},
+                   {";", TOKEN_SEMICOLON},
+
+                   {"int", TOKEN_IDENTIFIER},
+				   {"x", TOKEN_IDENTIFIER},
+                   {"=", TOKEN_ASSIGN},
+				   {"123", TOKEN_INT},
+                   {";", TOKEN_SEMICOLON}
+				   );
+
+    tokenizer_test(
+			"void main(int argc) {"
+			"	print(123);"
+			"}"
+			,
+                   {"void", TOKEN_IDENTIFIER},
+				   {"main", TOKEN_IDENTIFIER},
+                   {"(", TOKEN_O_PAREN},
+                   {"int", TOKEN_IDENTIFIER},
+				   {"argc", TOKEN_IDENTIFIER},
+                   {")", TOKEN_C_PAREN},
+                   {"{", TOKEN_O_BRACE},
+				   {"print", TOKEN_IDENTIFIER},
+                   {"(", TOKEN_O_PAREN},
+				   {"123", TOKEN_INT},
+                   {")", TOKEN_C_PAREN},
+                   {";", TOKEN_SEMICOLON},
+                   {"}", TOKEN_C_BRACE}
+
+				   );
+    // clang-format on
+}
+
+int main()
+{
+    init_libc();
+
+    tokenizer_tests();
+
     exit(0);
+
     return 0;
 }
