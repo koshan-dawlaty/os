@@ -4,7 +4,7 @@
 #include <kernel/utils.h>
 #include <lib/utils.h>
 
-void __panic_func(const char *format, ...);
+__noreturn void __panic_func(const char *format, ...);
 
 #define __panic_impl(format, ...)                                              \
     __panic_func(__FILE__ ":" MACRO_STR(__LINE__) " " format __VA_OPT__(, )    \

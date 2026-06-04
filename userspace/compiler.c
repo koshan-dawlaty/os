@@ -1,9 +1,12 @@
 #include "container_of.h"
 #include "lib/assert.h"
 #include "lib/font.h"
+#include "sys/types.h"
 #include <init.h>
 #include <lib/list.h>
 #include <lib/log.h>
+#include <math.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -13,10 +16,9 @@
 enum token_type
 {
     TOKEN_IDENTIFIER,
-    TOKEN_EOF,
-    TOKEN_LITERAL,
     TOKEN_UNKNOWN,
     TOKEN_ASSIGN,
+    TOKEN_PLUS,
     TOKEN_EQUALS,
     TOKEN_INT,
     TOKEN_SEMICOLON,
@@ -24,6 +26,7 @@ enum token_type
     TOKEN_C_PAREN,
     TOKEN_O_BRACE,
     TOKEN_C_BRACE,
+    TOKEN_EOF,
 
 };
 
@@ -35,12 +38,12 @@ const char *token_type_str(enum token_type type)
         return "IDENTIFIER";
     case TOKEN_EOF:
         return "EOF";
-    case TOKEN_LITERAL:
-        return "LITERAL";
     case TOKEN_UNKNOWN:
         return "UNKNOWN";
     case TOKEN_ASSIGN:
         return "ASSIGN";
+    case TOKEN_PLUS:
+        return "PLUS";
     case TOKEN_EQUALS:
         return "EQUALS";
     case TOKEN_INT:
@@ -134,6 +137,7 @@ struct token_simple_map_entry token_simple_map[] = {
     {"{", TOKEN_O_BRACE},
     {"}", TOKEN_C_BRACE},
     {";", TOKEN_SEMICOLON},
+    {"+", TOKEN_PLUS},
 
     // clang-format on
 
@@ -225,36 +229,49 @@ struct tokenizer_test_input
     enum token_type type;
 };
 
-void tokenizer_test_impl(const char *program,
-                         struct tokenizer_test_input expected[],
-                         size_t expected_len)
+void tokenizer_parse_tokens(const char *program, struct list2c *token_list)
 {
 
     size_t offset = 0;
 
-    LIST2C_DEFINE_HEAD(token_list);
-
     size_t len = 0;
     struct token *t = get_token(program, &len);
     offset += len;
-    while (t->type != TOKEN_EOF && t->type != TOKEN_UNKNOWN)
+    while (t->type != TOKEN_UNKNOWN)
     {
-        list2c_push_end(&t->list, &token_list);
+
+        list2c_push_end(&t->list, token_list);
+        if (t->type == TOKEN_EOF)
+        {
+            return; /* done */
+        }
 
         size_t len = 0;
         t = get_token(program + offset, &len);
         offset += len;
     }
+}
+
+void tokenizer_test_impl(const char *program,
+                         struct tokenizer_test_input expected[],
+                         size_t expected_len)
+{
+    LIST2C_DEFINE_HEAD(token_list);
+    tokenizer_parse_tokens(program, &token_list);
 
     size_t i = 0;
     struct list2c *pos;
     list2c_for_each(pos, &token_list)
     {
+        struct token *tok = containerof(pos, struct token, list);
+
         if (i >= expected_len)
         {
-            PANIC("more tokens than expected in output");
+            logd("%s", token_type_str(tok->type));
+            PANIC("%d more tokens than expected %d in output", i,
+                  expected_len - 1);
         }
-        struct token *tok = containerof(pos, struct token, list);
+
         if (tok->type == TOKEN_UNKNOWN)
         {
             PANIC("unknown token:%s", tok->token);
@@ -263,7 +280,7 @@ void tokenizer_test_impl(const char *program,
         if (expected[i].type != tok->type)
         {
             PANIC("expected token of type:%s, got %s",
-                  token_type_str(expected->type), token_type_str(tok->type));
+                  token_type_str(expected[i].type), token_type_str(tok->type));
         }
 
         if (strcmp(expected[i].str, tok->token))
@@ -295,7 +312,8 @@ void tokenizer_tests()
 				   {"x", TOKEN_IDENTIFIER},
                    {"=", TOKEN_ASSIGN},
 				   {"10", TOKEN_INT},
-                   {";", TOKEN_SEMICOLON}
+				   {";", TOKEN_SEMICOLON},
+				   {"", TOKEN_EOF},
 				   );
 
 
@@ -310,14 +328,15 @@ void tokenizer_tests()
 				   {"x", TOKEN_IDENTIFIER},
                    {"=", TOKEN_ASSIGN},
 				   {"123", TOKEN_INT},
-                   {";", TOKEN_SEMICOLON}
+                   {";", TOKEN_SEMICOLON},
+				   {"", TOKEN_EOF},
 				   );
 
     tokenizer_test(
 			"void main(int argc) {"
 			"	print(123);"
-			"}"
-			,
+			"}",
+
                    {"void", TOKEN_IDENTIFIER},
 				   {"main", TOKEN_IDENTIFIER},
                    {"(", TOKEN_O_PAREN},
@@ -330,17 +349,355 @@ void tokenizer_tests()
 				   {"123", TOKEN_INT},
                    {")", TOKEN_C_PAREN},
                    {";", TOKEN_SEMICOLON},
-                   {"}", TOKEN_C_BRACE}
+                   {"}", TOKEN_C_BRACE},
+				   {"", TOKEN_EOF},
 
 				   );
     // clang-format on
 }
 
+enum ast_node_type
+{
+    AST_BLOCK,
+    AST_STATEMENT,
+    AST_DEF, /* definition */
+    AST_INVALID,
+};
+
+struct ast_node
+{
+    enum ast_node_type type;
+    void *data;
+};
+
+struct ast_node *ast_node_alloc(enum ast_node_type type, void *data)
+{
+    struct ast_node *out = malloc(sizeof(struct ast_node));
+    out->type = type;
+    out->data = data;
+    return out;
+}
+
+struct ast_node *ast_node_error(const char *str)
+{
+    return ast_node_alloc(AST_INVALID, strdup(str));
+}
+
+struct ast_type
+{
+    char *name;
+};
+
+struct ast_type *ast_type_alloc(const char *name)
+{
+    struct ast_type *out = malloc(sizeof(struct ast_type));
+
+    out->name = strdup(name);
+
+    return out;
+}
+
+enum ast_parser_state
+{
+    PARSING_DECLARATION,
+    PARSING_STATEMENTS,
+};
+
+struct ast_parser
+{
+    enum ast_parser_state state;
+    struct list2c *tokens; /* head all tokens being parsed */
+    struct token *current; /* current token */
+};
+
+struct ast_value
+{
+    union
+    {
+        char *varname;
+        u64 literal; /* this is a u64 as it should be the largest type available
+                      */
+    };
+    bool is_var;
+};
+
+struct ast_operator
+{
+    char *operator;
+    struct ast_expr *left, *right;
+    struct list2c list;
+};
+
+struct ast_operator *ast_operator_alloc(struct ast_expr *left,
+                                        const char *operator,
+                                        struct ast_expr *right)
+{
+    struct ast_operator *out = malloc(sizeof(struct ast_operator));
+    out->left = left;
+    out->right = right;
+    out->operator = strdup(operator);
+    out->list = LIST2C_INIT();
+    return out;
+}
+
+#define AST_VALUE_VAR(_var)                                                    \
+    ((struct ast_value){.is_var = true, .varname = _var})
+#define AST_VALUE_LITERAL(_literal)                                            \
+    ((struct ast_value){.is_var = false, .literal = _literal})
+
+static inline struct ast_value ast_token_to_value(struct token *tok)
+{
+    if (tok->type == TOKEN_INT)
+    {
+        return AST_VALUE_LITERAL(atoi(tok->token));
+    }
+    else if (tok->type == TOKEN_IDENTIFIER)
+    {
+        return AST_VALUE_VAR(strdup(tok->token));
+    }
+    else
+    {
+        PANIC("error");
+    }
+}
+
+struct ast_expr
+{
+    union
+    {
+        struct ast_value value;
+        struct list2c operators_head;
+    };
+
+    enum ast_expr_type
+    {
+        AST_EXPRESSION_VALUE,
+        AST_EXPRESSION_OPERATORS,
+    } type;
+
+    struct list2c list;
+};
+
+struct ast_expr *ast_expr_alloc_operators()
+{
+    struct ast_expr *expr = malloc(sizeof(struct ast_expr *));
+
+    list2c_init_head(&expr->operators_head);
+    expr->type = AST_EXPRESSION_OPERATORS;
+    expr->list = LIST2C_INIT();
+
+    return expr;
+}
+
+struct ast_expr *ast_expr_alloc_value(struct ast_value value)
+{
+    struct ast_expr *expr = malloc(sizeof(struct ast_expr *));
+    expr->value = value;
+    expr->type = AST_EXPRESSION_VALUE;
+    expr->list = LIST2C_INIT();
+
+    return expr;
+}
+
+struct ast_assignment
+{
+    char *variable;
+    struct ast_expr *rhs;
+};
+
+struct ast_statement
+{
+    enum ast_statement_type
+    {
+        AST_STATEMENT_ASSIGNMENT,
+    } type;
+
+    union
+    {
+        struct ast_assignment *assignment;
+    } data;
+
+    struct list2c list;
+};
+
+struct ast_statement *ast_statement_alloc(enum ast_statement_type type,
+                                          void *data)
+{
+    struct ast_statement *out = malloc(sizeof(struct ast_statement));
+    out->type = type;
+    *(void **)(&out->data) = data;
+
+    return out;
+}
+
+#define TOKEN_LIST_GET(l) containerof(l, struct token, list)
+
+struct token *parser_advance(struct ast_parser *parser)
+{
+    struct token *out = parser->current;
+    parser->current = TOKEN_LIST_GET(parser->current->list.next);
+    return out;
+}
+
+struct token *parser_get_next(struct ast_parser *parser)
+{
+    return TOKEN_LIST_GET(parser->current->list.next);
+}
+
+struct token *parser_get_current(struct ast_parser *parser)
+{
+    return TOKEN_LIST_GET(&parser->current->list);
+}
+
+struct ast_assignment *ast_assignment_alloc(const char *lhs,
+                                            struct ast_expr *rhs)
+{
+    struct ast_assignment *out = malloc(sizeof(struct ast_assignment));
+    out->variable = strdup(lhs);
+    out->rhs = rhs;
+    return out;
+}
+
+struct ast_expr *ast_parse_expression_impl(struct ast_parser *parser,
+                                           struct ast_expr *current_operator);
+
+/* ignores operators, utiltiy */
+static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
+{
+
+    struct token *tok = parser_advance(parser);
+
+    switch (tok->type)
+    {
+    case TOKEN_INT:
+    case TOKEN_IDENTIFIER:
+        logd("int");
+        return ast_expr_alloc_value(ast_token_to_value(tok));
+
+    case TOKEN_O_PAREN:;
+        struct ast_expr *out = ast_parse_expression_impl(parser, NULL);
+        struct token *close_paren = parser_advance(parser);
+        if (close_paren->type != TOKEN_C_PAREN)
+        {
+            PANIC("expected ')' got %s", token_type_str(close_paren->type));
+        }
+        return out;
+
+    default:
+        /* TODO: if it is a keyword, error */
+        PANIC("invalid token type:%s for token:%s", token_type_str(tok->type),
+              tok->token);
+    }
+}
+
+struct ast_expr *ast_parse_expression_impl(struct ast_parser *parser,
+                                           struct ast_expr *current_operator)
+{
+    /* TODO: need token type is_operator */
+
+    struct ast_expr *lhs = ast_parse_expression_simple(parser);
+
+    struct token *operator_token = parser_advance(parser);
+
+    struct ast_expr *expr = lhs;
+    if (operator_token->type == TOKEN_PLUS)
+    {
+        struct ast_expr *rhs = ast_parse_expression_simple(parser);
+
+        struct ast_operator *operator =
+            ast_operator_alloc(lhs, operator_token->token, rhs);
+        if (current_operator == NULL)
+        {
+            current_operator = ast_expr_alloc_operators();
+        }
+        logd("pushing operator:%p", current_operator->operators_head.next);
+        list2c_push(&operator->list, &current_operator->operators_head);
+        logd("after pushing operator:%p",
+             current_operator->operators_head.next);
+    }
+
+    struct token *current = parser_get_current(parser);
+
+    if (current->type == TOKEN_PLUS)
+    {
+
+        parser_advance(parser);
+        logd("before parsing expr:%p", current_operator->operators_head.next);
+        struct ast_expr *rhs =
+            ast_parse_expression_impl(parser, current_operator);
+
+        logd("after parsing expr:%p", current_operator->operators_head.next);
+        struct ast_operator *operator =
+            ast_operator_alloc(expr, current->token, rhs);
+
+        /* check might be redundant */
+        if (current_operator == NULL)
+        {
+            current_operator = ast_expr_alloc_operators();
+        }
+
+        logd("pushing 2 operator %p", current_operator->operators_head.next);
+        list2c_push(&operator->list, &current_operator->operators_head);
+        logd("after 2 pushing operator %p",
+             current_operator->operators_head.next);
+    }
+}
+
+static inline struct ast_expr *ast_parse_expression(struct ast_parser *parser)
+{
+    return ast_parse_expression_impl(parser, NULL);
+}
+
+struct ast_statement *parse_statement(struct ast_parser *parser)
+{
+    struct token *tok = parser_advance(parser);
+    struct token *next = parser_get_current(parser);
+
+    struct ast_statement *out = NULL;
+    if (tok->type == TOKEN_IDENTIFIER && next->type == TOKEN_ASSIGN)
+    {
+        parser_advance(parser);
+
+        out = ast_statement_alloc(
+            AST_STATEMENT_ASSIGNMENT,
+            ast_assignment_alloc(tok->token, ast_parse_expression(parser)));
+
+        goto end;
+    }
+
+end:;
+    struct token *semicolon = parser_advance(parser);
+    if (semicolon->type != TOKEN_SEMICOLON)
+    {
+        PANIC("expected semicolon got:%s", token_type_str(semicolon->type));
+    }
+
+    return out;
+}
+
+struct ast_node *ast_parse_tokens(struct list2c *tokens)
+{
+    struct ast_parser parser = {.state = PARSING_STATEMENTS,
+                                tokens,
+                                .current = TOKEN_LIST_GET(tokens->next)};
+
+    while (parser.current->type != TOKEN_EOF)
+    {
+        parse_statement(&parser);
+    }
+
+    return NULL;
+}
+
 int main()
 {
     init_libc();
-
     tokenizer_tests();
+
+    LIST2C_DEFINE_HEAD(tokens);
+    tokenizer_parse_tokens("x = ( 10 + 10 + (10 + 1) ) ;", &tokens);
+
+    struct ast_node *node = ast_parse_tokens(&tokens);
 
     exit(0);
 

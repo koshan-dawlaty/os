@@ -75,6 +75,11 @@ struct list2c
     struct list2c name;                                                        \
     name = LIST2C_HEAD_INIT(&name);
 
+static inline void list2c_init_head(struct list2c *head)
+{
+    *head = LIST2C_HEAD_INIT(head);
+}
+
 #define LIST2C_DEFINE_HEAD(name) struct list2c name = LIST2C_HEAD_INIT(&name);
 #define LIST2C_INIT() ((struct list2c){.prev = NULL, .next = NULL})
 
