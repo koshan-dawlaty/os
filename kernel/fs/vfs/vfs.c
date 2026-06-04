@@ -122,6 +122,7 @@ void free_dentry(dentry *entry)
 struct file *new_file(struct dentry *entry, int flags)
 {
     struct file *out = malloc(sizeof(struct file));
+    out->rc = REFCOUNT_INIT();
     out->entry = entry;
     out->offset = 0;
     out->flags = flags;
@@ -157,8 +158,7 @@ void file_free(struct file *file)
     {
         dentry_put(file->entry);
     }
-    /* TODO: files need a refrence count */
-    /* free(file); */
+    free(file);
 }
 
 struct inode *new_inode(ino_t number, inode_size size, void *fs_private,

@@ -45,7 +45,7 @@ void fdlist_free(struct fdlist *list)
         if (list->files[i] != NULL)
         {
 
-            file_free(list->files[i]);
+            file_put(list->files[i]);
         }
     }
     free(list->files);
@@ -118,7 +118,7 @@ int fdlist_close(struct fdlist *list, int fd)
         return -EBADF;
     }
 
-    file_free(list->files[fd]);
+    file_put(list->files[fd]);
     list->files[fd] = NULL;
     return 0;
 }

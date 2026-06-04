@@ -41,7 +41,6 @@ int main(int argc, char **argv)
         }
 
         printf("%s ", e->d_name);
-        logd("ls read:%s", e->d_name);
         /* printf("%d\n", d->fd); */
         e = readdir(d);
 

@@ -1,6 +1,7 @@
 #include "interrupts/pic.h"
 #include "kernel/interrupts.h"
 #include "kernel/keyboard.h"
+#include "lib/log.h"
 #include "userspace/mouse.h"
 #include <interrupts/idt.h>
 #include <kernel/types.h>

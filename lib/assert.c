@@ -26,4 +26,10 @@ void __panic_func(const char *format, ...)
     exit(1);
 #endif
     va_end(args);
+
+    while (1)
+    {
+        asm("hlt"); /* will probably cause a gpf if run in userspace, which is
+                       kind of what we want if exit() does not work */
+    }
 }

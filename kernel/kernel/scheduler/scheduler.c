@@ -128,20 +128,13 @@ static void fdlist_copy_device(struct fdlist *dest, struct fdlist *src,
 
     struct file *file = fdlist_get(src, index);
 
-    if (index == 0)
-    {
-    }
     if (file == NULL)
     {
         fdlist_set(dest, index, open_device(dev_path));
     }
     else
     {
-        if (file->entry != NULL)
-        {
-            dentry_get(file->entry); /* we are going to be using this file, so
-                                        increment it's dentry */
-        }
+        file_get(file);
         fdlist_set(dest, index, file);
     }
 }

@@ -75,7 +75,6 @@ int main()
 
                 strcat(full_path, bin_dir);
                 strcat(full_path, program);
-                logd("path:%s", full_path);
 
                 int err = execv(full_path, args);
                 if (err < 0)

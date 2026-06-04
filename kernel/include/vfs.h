@@ -1,5 +1,6 @@
 #ifndef VFS_H
 #define VFS_H
+#include "container_of.h"
 #include <device.h>
 #include <dirent.h>
 #include <kernel/stacktrace.h>
@@ -228,6 +229,8 @@ typedef struct file
 
     int flags;
     size_t offset;
+    /* threads can share files, so they need to be refcounted */
+    struct refcount rc;
 
     union
     {
@@ -338,7 +341,26 @@ struct pathname_lookup_flags
 dentry *lookup_path(const char *path, struct pathname_lookup_flags flags);
 
 file *create_file(char *path);
-void file_free(file *f);
+
+void file_free(struct file *f);
+
+static inline void file_refcount_drop(struct refcount *c)
+{
+    file_free(containerof(c, struct file, rc));
+}
+static inline void file_get(struct file *f)
+{
+    refcount_get(&f->rc);
+    if (f->entry != NULL)
+    {
+        dentry_get(f->entry); /* we are going to be using this file, so
+                                    increment it's dentry */
+    }
+}
+static inline void file_put(struct file *f)
+{
+    refcount_drop(&f->rc, file_refcount_drop);
+}
 
 dentry *get_root_dir();
 
