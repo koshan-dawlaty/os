@@ -96,12 +96,9 @@ struct bootloader_module multiboot_load_module(multiboot_module_t *modules,
                                                size_t index)
 {
 
-    logd("%d", sizeof(multiboot_module_t));
     multiboot_module_t *mod = &modules[index];
     size_t mod_size = mod->mod_end - mod->mod_start;
     size_t num_pages = (mod_size / PAGE_SIZE) + 1;
-    logd("start:%p end:%p num_pages:%p", mod->mod_start, mod->mod_end,
-         num_pages);
 
     void *addr = get_free_pages_unmmaped(num_pages, &gfp_kernel_zone);
     for (size_t i = 0; i < num_pages; i++)

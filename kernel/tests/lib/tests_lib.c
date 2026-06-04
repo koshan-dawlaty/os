@@ -1,4 +1,6 @@
 #include "kernel/tty.h"
+#include "lib/assert.h"
+#include "lib/log.h"
 #include "serial.h"
 #include "tap.h"
 #include "tests/tests.h"

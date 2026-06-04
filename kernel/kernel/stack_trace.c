@@ -76,10 +76,11 @@ void stacktrace_log()
     log_multiline_start(&LOG_ERROR);
     struct stackframe *stk;
     asm("mov %%rbp,%0" : "=r"(stk)::);
-    loge("stack trace:\n");
+    loge("stack trace:");
     for (unsigned int frame = 0; stk && frame < max_frames; ++frame)
     {
-        loge("0x%p, %s\n", stk->ip, symbol_get_name(stk->ip));
+        loge("\n");
+        loge("0x%p, %s", stk->ip, symbol_get_name(stk->ip));
         stk = stk->bp;
     }
     log_multiline_end(&LOG_ERROR);

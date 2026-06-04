@@ -20,7 +20,6 @@ void serial_writestring(const char *str, size_t len, u16 port)
 WAIT_QUEUE_DEFINE(com1_queue);
 
 ISR(com1_interrupt_handler, {
-    printf("com1\n");
     wait_queue_done(&com1_queue);
     PIC_sendEOI(4);
 });

@@ -326,12 +326,13 @@ SYSCALL_DEFINE1(SYS_clone, int, ptr, ip)
 
 void ktask_run(void (*task)(void *), void *args)
 {
-    add_task(new_task_args((ptr)task, args));
+    struct task *t = new_task_args((ptr)task, args);
+    add_task(t);
 }
 
 void ktask_return()
 {
-    printf("ktask_return\n");
+
     irq_state_t irq_state = irq_save_disable();
     {
         struct task *current = get_current_task();
@@ -370,6 +371,7 @@ struct task *new_task(ptr ip)
     out->stack = get_free_pages(1) + (PAGE_SIZE - sizeof(ptr) * 5);
     out->working_dir = NULL;
 
+    out->regs = registers_init_dynamic();
     out->regs.esp = (ptr)out->stack;
     out->regs.eflags = 1 << 9;
 

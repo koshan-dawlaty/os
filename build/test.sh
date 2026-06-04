@@ -67,6 +67,7 @@ mkfifo "${SERIAL_PIPE}.out"
 
 
 
+
 # gdb \
 # 	-ex "source pretty-print.py" \
 # 	-ex "set print pretty" \
@@ -80,10 +81,11 @@ mkfifo "${SERIAL_PIPE}.out"
 $QEMU_COMMAND -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE  2>/dev/null &  
 QEMU_PID=$!
 
+
 # tmux split-window -v -b -d -t "$TMUX_PANE" "cat $SERIAL_PIPE.out"
 
 
-echo $SERIAL_PIPE.out
+# echo $SERIAL_PIPE.out
 
 FILE_NAME="$SERIAL_PIPE.out"
 while [[ ! -p "$FILE_NAME" ]]; do

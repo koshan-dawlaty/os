@@ -254,34 +254,7 @@ void t1(void *a)
 {
 }
 
-void ls(const char *path)
-{
-    DIR *d = opendir(path);
-
-    struct dirent *e = readdir(d);
-    while (e != NULL)
-    {
-        logd("%s", e->d_name);
-        e = readdir(d);
-    }
-}
-
-struct task_queue abc = TASK_QUEUE_INIT(abc);
 extern void scheduler_init();
-
-void test1()
-{
-    int write_only = open("/one", O_WRONLY);
-    char *buf = malloc(100);
-    int err = read(write_only, buf, 100);
-    close(write_only);
-    logd("done close");
-    int read_only = open("/one", O_RDONLY);
-    logd("done open");
-    err = write(read_only, buf, 100);
-    logd("done write");
-    close(read_only);
-}
 
 void kmain()
 {
@@ -304,11 +277,6 @@ void kmain()
 #ifndef CONFIG_PLEASE_DONT_USE_THE_SERIAL_PORT
     create_device("/dev/serial0", serial_cdev_create(0x3F8));
 #endif
-
-    /* ktask_run(t1, NULL); */
-    /* irq_enable(); */
-    /* enable_scheduler(); */
-    /* return; */
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */
