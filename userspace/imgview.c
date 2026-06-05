@@ -1,3 +1,4 @@
+#include "lib/assert.h"
 #include "wm_lib.h"
 #include <fcntl.h>
 #include <init.h>
@@ -27,6 +28,10 @@ int main(int argc, char **argv)
     struct tga_header header;
 
     u8 *img_data = tga_image_parse(argv[1], &header);
+    if (img_data == NULL)
+    {
+        PANIC("invalid image %s\n", argv[1]);
+    }
 
     struct wm_client client = wm_client_connect(header.h, header.w);
 

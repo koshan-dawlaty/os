@@ -26,7 +26,11 @@ void *tga_image_parse(const char *path, struct tga_header *header)
 {
 
     int fd = open(path, O_RDONLY);
-    logd("fd:%d", fd);
+    if (fd < 0)
+    {
+        return NULL;
+    }
+
     read(fd, header, sizeof(struct tga_header));
 
     /* printf("w:%d h:%d, bpp:%d, %d\n", header->w, header->h, header->bpp, */

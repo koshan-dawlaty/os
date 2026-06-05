@@ -70,13 +70,8 @@ void add_sleep_queue(struct task *task, size_t time)
         list2_insert_after(&new->l, prev);
     }
 
-    IRQ_OFF({
-        /* TODO: remove_task() should really be the one to call this */
-
-        /* print_sleep_queue(); */
-
-        remove_task(task);
-    })
+    /* TODO: remove_task() should really be the one to call this */
+    IRQ_OFF({ remove_task(task); })
 
     irq_restore(irq_state);
     schedule();

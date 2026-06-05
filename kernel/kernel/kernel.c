@@ -230,7 +230,7 @@ void kernel_init()
 #ifdef TESTS
     run_tests();
 #else
-    /* symbol_table_parse(); /1* seems to break with tests *1/ */
+    symbol_table_parse(); /* seems to break with tests */
 #endif
 }
 

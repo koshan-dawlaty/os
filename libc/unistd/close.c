@@ -16,9 +16,16 @@ int close(int fd)
         return -EBADF;
     }
     struct file *f = lookup_descriptor(fd);
-    int retval = close_file(f);
-    fdlist_close(get_current_fdlist(), fd);
-    return retval;
+    if (f != NULL)
+    {
+        int retval = close_file(f);
+        fdlist_close(get_current_fdlist(), fd);
+        return retval;
+    }
+    else
+    {
+        return -EBADF;
+    }
 
 #else
 
