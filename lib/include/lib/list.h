@@ -86,6 +86,7 @@ static inline void list2c_init_head(struct list2c *head)
 void list2c_push(struct list2c *new, struct list2c *head);
 void list2c_push_end(struct list2c *new, struct list2c *head);
 struct list2c *list2c_pop(struct list2c *head);
+struct list2c *list2c_pop_end(struct list2c *head);
 // bool list2c_remove(struct list2c *value, struct list2c *head);
 void list2c_remove(struct list2c *value);
 

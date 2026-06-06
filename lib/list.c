@@ -206,6 +206,24 @@ struct list2c *list2c_pop(struct list2c *head)
     return out;
 }
 
+struct list2c *list2c_pop_end(struct list2c *head)
+{
+    struct list2c *out = head->prev;
+
+    if (out == head)
+    {
+        return NULL;
+    }
+
+    head->prev = out->prev;
+    head->prev->next = head;
+
+    out->next = NULL;
+    out->prev = NULL;
+
+    return out;
+}
+
 void list2c_remove(struct list2c *value)
 {
     /* printf("REMOVE\n"); */

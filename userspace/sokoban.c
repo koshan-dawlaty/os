@@ -1,6 +1,7 @@
 #include "compiler.h"
 #include "lib/framebuffer.h"
 #include "lib/img.h"
+#include "lib/list.h"
 #include "lib/log.h"
 #include "wm_lib.h"
 #include <init.h>
@@ -8,7 +9,7 @@
 #include <stdbool.h>
 
 struct wm_client client;
-size_t scale = 30;
+size_t scale = 60;
 
 enum tile_state
 {
@@ -19,10 +20,37 @@ enum tile_state
     TILE_EMPTY = 0,
 };
 
-enum tile_state game[][20] = {
+struct undo_entry
+{
+    int player_x, player_y;
+
+    /* only used if undoing a box movement */
+    enum tile_state prev_state;
+    int box_x, box_y;
+    int new_box_x, new_box_y;
+
+    struct list2c list;
+};
+
+LIST2C_DEFINE_HEAD(undo_queue);
+
+struct undo_entry *undo_entry_alloc(int player_x, int player_y)
+{
+    struct undo_entry *out = malloc(sizeof(struct undo_entry));
+    out->player_x = player_x;
+    out->player_y = player_y;
+
+    out->prev_state = -1;
+
+    out->list = LIST2C_INIT();
+
+    return out;
+}
+
+enum tile_state game[][11] = {
     // clang-format off
-        {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 0, 0, 0, 0, 0, 2, 0, 3, 3, 1},
+        {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
+        {0, 0, 2, 0, 0, 0, 2, 0, 3, 3, 1},
         {1, 0, 0, 0, 1, 1, 1, 1, 3, 3, 1},
         {1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
         {1, 0, 0, 0, 0, 0, 0, 1, 2, 0, 1},
@@ -99,6 +127,7 @@ static inline void clamp_coordinate(int *x, int *y)
 
 void move_player(int x, int y)
 {
+
     int old_x = player_x, old_y = player_y;
 
     int new_x = player_x + x;
@@ -115,6 +144,8 @@ void move_player(int x, int y)
 
         draw_tile(old_x, old_y);
         draw_player(player_x, player_y);
+        struct undo_entry *ent = undo_entry_alloc(old_x, old_y);
+        list2c_push_end(&ent->list, &undo_queue);
     }
 
     if (state == TILE_BOX || state == TILE_BOX_GOAL)
@@ -128,14 +159,25 @@ void move_player(int x, int y)
         if (new_box_location == TILE_EMPTY || new_box_location == TILE_GOAL)
         {
 
+            struct undo_entry *ent = undo_entry_alloc(old_x, old_y);
+            ent->new_box_x = box_x;
+            ent->new_box_y = box_y;
+
+            ent->box_x = new_x;
+            ent->box_y = new_y;
+
             if (new_box_location == TILE_EMPTY)
             {
                 game[box_y][box_x] = TILE_BOX;
+                ent->prev_state = TILE_BOX;
             }
             else if (new_box_location == TILE_GOAL)
             {
                 game[box_y][box_x] = TILE_BOX_GOAL;
+                ent->prev_state = TILE_BOX_GOAL;
             }
+
+            list2c_push_end(&ent->list, &undo_queue);
 
             if (state == TILE_BOX)
             {
@@ -153,6 +195,35 @@ void move_player(int x, int y)
             draw_tile(old_x, old_y);
             draw_player(player_x, player_y);
         }
+    }
+}
+
+void undo()
+{
+    struct list2c *list = list2c_pop_end(&undo_queue);
+    if (list == NULL)
+    {
+        return;
+    }
+
+    struct undo_entry *ent = containerof(list, struct undo_entry, list);
+    draw_tile(player_x, player_y);
+    player_x = ent->player_x;
+    player_y = ent->player_y;
+    draw_player(player_x, player_y);
+    if (ent->prev_state != -1)
+    {
+        game[ent->box_y][ent->box_x] = ent->prev_state;
+        if (ent->prev_state == TILE_BOX_GOAL)
+        {
+            game[ent->new_box_y][ent->new_box_x] = TILE_GOAL;
+        }
+        else if (ent->prev_state == TILE_BOX)
+        {
+            game[ent->new_box_y][ent->new_box_x] = TILE_EMPTY;
+        }
+        draw_tile(ent->box_x, ent->box_y);
+        draw_tile(ent->new_box_x, ent->new_box_y);
     }
 }
 
@@ -200,6 +271,9 @@ int main()
                 break;
             case 'k':
                 move_player(0, -1);
+                break;
+            case 'u':
+                undo();
                 break;
             }
             break;
