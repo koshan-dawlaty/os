@@ -992,7 +992,8 @@ int main()
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
-    execv("/bin/ui_lib", (char *[]){"ui_lib", NULL});
+    /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
+    execv("/bin/sokoban", (char *[]){"/bin/sokoban", NULL});
     /* execv("/bin/run", (char *[]){"run", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */

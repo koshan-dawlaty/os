@@ -19,8 +19,18 @@ struct tga_header
     u8 pixeltype;          // must be 40
 } __packed;
 
+struct image
+{
+    struct tga_header header;
+    void *data;
+};
+
 void *tga_image_parse(const char *path, struct tga_header *header);
-void framebuffer_draw_img(struct framebuffer *fb, void *data,
-                          struct tga_header header);
+void image_parse(const char *path, struct image *img);
+void framebuffer_draw_img(struct framebuffer *fb, size_t x, size_t y,
+                          struct image img);
+
+void framebuffer_draw_img_tga(struct framebuffer *fb, void *data,
+                              struct tga_header header);
 
 #endif

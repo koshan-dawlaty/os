@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
     struct wm_client client = wm_client_connect(header.h, header.w);
 
-    framebuffer_draw_img(&client.fb, img_data, header);
+    framebuffer_draw_img_tga(&client.fb, img_data, header);
 
     wm_render(client);
 

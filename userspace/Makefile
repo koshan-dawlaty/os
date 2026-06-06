@@ -83,6 +83,7 @@ BINARIES=\
 	render_test \
 	explore \
 	run \
+	sokoban \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -170,10 +171,15 @@ $(BIN)/edit : $(OBJS_START_BIN) $(BIN)/edit.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(
 $(BIN)/ui_lib : $(OBJS_START_BIN) $(BIN)/ui_lib.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	
+$(BIN)/sokoban : $(OBJS_START_BIN) $(BIN)/sokoban.o $(BIN)/wm_lib.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
 $(BIN)/compiler : $(OBJS_START_BIN) $(BIN)/compiler.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+
 
 
 

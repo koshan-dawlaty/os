@@ -1,26 +1,12 @@
 #include <fcntl.h>
 #include <lib/framebuffer.h>
+#include <lib/img.h>
 #include <lib/log.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <types.h>
 #include <unistd.h>
-
-struct tga_header
-{
-    u8 magic1;             // must be zero
-    u8 colormap;           // must be zero
-    u8 encoding;           // must be 2
-    u16 cmaporig, cmaplen; // must be zero
-    u8 cmapent;            // must be zero
-    u16 x;                 // must be zero
-    u16 y;                 // image's height
-    u16 w;                 // image's height
-    u16 h;                 // image's width
-    u8 bpp;                // must be 32
-    u8 pixeltype;          // must be 40
-} __packed;
 
 void *tga_image_parse(const char *path, struct tga_header *header)
 {
@@ -51,8 +37,37 @@ void *tga_image_parse(const char *path, struct tga_header *header)
     return data;
 }
 
-void framebuffer_draw_img(struct framebuffer *fb, void *data,
-                          struct tga_header header)
+void image_parse(const char *path, struct image *img)
+{
+
+    img->data = tga_image_parse(path, &img->header);
+}
+
+void framebuffer_draw_img(struct framebuffer *fb, size_t x_pos, size_t y_pos,
+                          struct image img)
+{
+
+    for (size_t y = 0; y < img.header.h; y++)
+    {
+        for (size_t x = 0; x < img.header.w; x++)
+        {
+            size_t index = (x + (y * img.header.w)) * (img.header.bpp / 8);
+
+            u8 *pixel = img.data + index;
+
+            u8 b = pixel[0];
+            u8 g = pixel[1];
+            u8 r = pixel[2];
+            u8 a = pixel[3];
+
+            u32 color = (a << 24) | (r << 16) | (g << 8) | b;
+            framebuffer_put_pixel(fb, color, x + x_pos, y + y_pos);
+        }
+    }
+}
+
+void framebuffer_draw_img_tga(struct framebuffer *fb, void *data,
+                              struct tga_header header)
 {
 
     for (size_t y = 0; y < header.h; y++)
