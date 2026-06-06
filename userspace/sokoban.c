@@ -1,10 +1,11 @@
-#include "compiler.h"
-#include "lib/framebuffer.h"
-#include "lib/img.h"
-#include "lib/list.h"
-#include "lib/log.h"
 #include "wm_lib.h"
+#include <compiler.h>
 #include <init.h>
+#include <lib/assert.h>
+#include <lib/framebuffer.h>
+#include <lib/img.h>
+#include <lib/list.h>
+#include <lib/log.h>
 #include <math.h>
 #include <stdbool.h>
 
@@ -26,6 +27,7 @@ struct undo_entry
 
     /* only used if undoing a box movement */
     enum tile_state prev_state;
+    enum tile_state new_tile;
     int box_x, box_y;
     int new_box_x, new_box_y;
 
@@ -50,16 +52,32 @@ struct undo_entry *undo_entry_alloc(int player_x, int player_y)
 enum tile_state game[][11] = {
     // clang-format off
         {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
-        {0, 0, 2, 0, 0, 0, 2, 0, 3, 3, 1},
-        {1, 0, 0, 0, 1, 1, 1, 1, 3, 3, 1},
-        {1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 1, 2, 0, 1},
+        {0, 0, 2, 0, 0, 0, 2, 0, 2, 0, 1},
+        {1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1},
+        {1, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1},
+        {1, 0, 3, 3, 0, 0, 2, 1, 2, 0, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 3, 3, 0, 0, 0, 0, 0, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     // clang-format on
 };
+
+size_t num_goal_spaces = 0;
+int num_goal_boxes = 0;
+
+void update_goal_boxes(int new_val)
+{
+    num_goal_boxes = new_val;
+    if (num_goal_boxes == num_goal_spaces)
+    {
+        logi("you win!");
+    }
+    if (num_goal_spaces < 0)
+    {
+        PANIC("number of correct goal spaces was less than 0");
+    }
+}
 
 struct image player_img;
 struct image check_img;
@@ -163,21 +181,28 @@ void move_player(int x, int y)
             ent->new_box_x = box_x;
             ent->new_box_y = box_y;
 
+            ent->prev_state = state;
             ent->box_x = new_x;
             ent->box_y = new_y;
+            ent->new_tile = new_box_location;
+            list2c_push_end(&ent->list, &undo_queue);
 
             if (new_box_location == TILE_EMPTY)
             {
+                if (state == TILE_BOX_GOAL)
+                {
+                    update_goal_boxes(num_goal_boxes - 1);
+                }
                 game[box_y][box_x] = TILE_BOX;
-                ent->prev_state = TILE_BOX;
             }
             else if (new_box_location == TILE_GOAL)
             {
+                if (state == TILE_BOX)
+                {
+                    update_goal_boxes(num_goal_boxes + 1);
+                }
                 game[box_y][box_x] = TILE_BOX_GOAL;
-                ent->prev_state = TILE_BOX_GOAL;
             }
-
-            list2c_push_end(&ent->list, &undo_queue);
 
             if (state == TILE_BOX)
             {
@@ -214,17 +239,25 @@ void undo()
     if (ent->prev_state != -1)
     {
         game[ent->box_y][ent->box_x] = ent->prev_state;
-        if (ent->prev_state == TILE_BOX_GOAL)
+        game[ent->new_box_y][ent->new_box_x] = ent->new_tile;
+
+        if (ent->prev_state == TILE_BOX_GOAL &&
+            ent->new_tile == TILE_EMPTY) /* moving from empty to goal */
         {
-            game[ent->new_box_y][ent->new_box_x] = TILE_GOAL;
+            update_goal_boxes(num_goal_boxes + 1);
         }
-        else if (ent->prev_state == TILE_BOX)
+
+        if (ent->prev_state == TILE_BOX &&
+            ent->new_tile == TILE_GOAL) /* moving from goal to empty */
         {
-            game[ent->new_box_y][ent->new_box_x] = TILE_EMPTY;
+            update_goal_boxes(num_goal_boxes - 1);
         }
+
         draw_tile(ent->box_x, ent->box_y);
         draw_tile(ent->new_box_x, ent->new_box_y);
     }
+
+    free(ent);
 }
 
 int main()
@@ -243,6 +276,10 @@ int main()
     {
         for (size_t x = 0; x < game_w; x++)
         {
+            if (game[y][x] == TILE_GOAL)
+            {
+                num_goal_spaces++;
+            }
             draw_tile(x, y);
         }
     }
