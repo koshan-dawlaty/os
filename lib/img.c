@@ -66,6 +66,31 @@ void framebuffer_draw_img(struct framebuffer *fb, size_t x_pos, size_t y_pos,
     }
 }
 
+void framebuffer_draw_img_scale(struct framebuffer *fb, size_t x_pos,
+                                size_t y_pos, double scale, struct image img)
+{
+
+    for (size_t y = 0; y < img.header.h * scale; y++)
+    {
+        for (size_t x = 0; x < img.header.w * scale; x++)
+        {
+            size_t index = ((size_t)(x * (1 / scale)) +
+                            ((size_t)(y * (1 / scale)) * img.header.w)) *
+                           (img.header.bpp / 8);
+
+            u8 *pixel = img.data + index;
+
+            u8 b = pixel[0];
+            u8 g = pixel[1];
+            u8 r = pixel[2];
+            u8 a = pixel[3];
+
+            u32 color = (a << 24) | (r << 16) | (g << 8) | b;
+            framebuffer_put_pixel(fb, color, x + x_pos, y + y_pos);
+        }
+    }
+}
+
 void framebuffer_draw_img_tga(struct framebuffer *fb, void *data,
                               struct tga_header header)
 {

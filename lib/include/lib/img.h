@@ -29,6 +29,8 @@ void *tga_image_parse(const char *path, struct tga_header *header);
 void image_parse(const char *path, struct image *img);
 void framebuffer_draw_img(struct framebuffer *fb, size_t x, size_t y,
                           struct image img);
+void framebuffer_draw_img_scale(struct framebuffer *fb, size_t x_pos,
+                                size_t y_pos, double scale, struct image img);
 
 void framebuffer_draw_img_tga(struct framebuffer *fb, void *data,
                               struct tga_header header);

@@ -1,3 +1,5 @@
+#include "fcntl.h"
+#include "lib/array.h"
 #include "wm_lib.h"
 #include <compiler.h>
 #include <init.h>
@@ -9,8 +11,9 @@
 #include <math.h>
 #include <stdbool.h>
 
+#define SOKOBAN_ROOT "/sokoban/"
+
 struct wm_client client;
-size_t scale = 60;
 
 enum tile_state
 {
@@ -49,7 +52,92 @@ struct undo_entry *undo_entry_alloc(int player_x, int player_y)
     return out;
 }
 
-enum tile_state game[][11] = {
+enum tile_state **parse_level(const char *level, size_t *w, size_t *h,
+                              int *player_x, int *player_y)
+{
+    struct array rows = ARRAY_INIT();
+    struct array current_row = ARRAY_INIT();
+    size_t max_len = 0;
+
+    size_t i = 0;
+    size_t x = 0, y = 0;
+    while (level[i] != 0)
+    {
+
+        enum tile_state state;
+        switch (level[i])
+        {
+        case '#':
+            state = TILE_WALL;
+            break;
+        case '$':
+            state = TILE_BOX;
+            break;
+        case '@':
+            *player_x = x;
+            *player_y = y;
+            state = TILE_EMPTY;
+            break;
+        case '.':
+            state = TILE_GOAL;
+            break;
+        case ' ':
+            state = TILE_EMPTY;
+            break;
+        }
+
+        if (level[i] == '\n')
+        {
+            size_t len = ARRAY_LEN(current_row, sizeof(enum tile_state));
+            if (len > max_len)
+            {
+                max_len = len;
+            }
+
+            y++;
+            x = 0;
+
+            array_add(&rows, &current_row, sizeof(struct array));
+
+            current_row = ARRAY_INIT();
+        }
+        else
+        {
+            array_add(&current_row, &state, sizeof(enum tile_state));
+            x++;
+        }
+
+        i++;
+    }
+
+    *w = max_len;
+    *h = ARRAY_LEN(rows, sizeof(struct array));
+
+    struct array out = ARRAY_INIT(); /* stupid to allocate two arrays */
+    for (size_t j = 0; j < ARRAY_LEN(rows, sizeof(struct array)); j++)
+    {
+        struct array row_array =
+            *((struct array *)array_get(&rows, j, sizeof(struct array)));
+
+        size_t len = ARRAY_LEN(row_array, sizeof(enum tile_state));
+
+        if (len < max_len)
+        {
+            for (size_t i = 0; i < max_len - len; i++)
+            {
+                enum tile_state padding = TILE_EMPTY;
+                array_add(&row_array, &padding, sizeof(enum tile_state));
+            }
+        }
+
+        enum tile_state *ptr = array_free_ptr(row_array);
+        array_add(&out, &ptr, sizeof(enum tile_state *));
+    }
+
+    return array_free_ptr(out);
+}
+
+enum tile_state static_game[][11] = {
     // clang-format off
         {0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
         {0, 0, 2, 0, 0, 0, 2, 0, 2, 0, 1},
@@ -62,6 +150,8 @@ enum tile_state game[][11] = {
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     // clang-format on
 };
+
+enum tile_state **game = NULL;
 
 size_t num_goal_spaces = 0;
 int num_goal_boxes = 0;
@@ -88,12 +178,14 @@ struct image floor_img;
 
 int player_x = 0, player_y = 0;
 
-size_t game_w = sizeof(game[0]) / sizeof(game[0][0]);
-size_t game_h = sizeof(game) / sizeof(game[0]);
+size_t game_w = 0, game_h = 0;
 
+size_t scale = 60;
+double img_scale = 1;
 void draw_player(size_t x, size_t y)
 {
-    framebuffer_draw_img(&client.fb, x * scale, y * scale, player_img);
+    framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
+                               player_img);
     /* framebuffer_draw_rect(&client.fb, x * scale, y * scale, scale, scale, */
     /*                       0x00FF00); */
 }
@@ -104,19 +196,24 @@ void draw_tile(size_t x, size_t y)
     switch (state)
     {
     case TILE_WALL:
-        framebuffer_draw_img(&client.fb, x * scale, y * scale, wall_img);
+        framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
+                                   wall_img);
         break;
     case TILE_GOAL:
-        framebuffer_draw_img(&client.fb, x * scale, y * scale, goal_img);
+        framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
+                                   goal_img);
         break;
     case TILE_BOX:
-        framebuffer_draw_img(&client.fb, x * scale, y * scale, crate_img);
+        framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
+                                   crate_img);
         break;
     case TILE_BOX_GOAL:
-        framebuffer_draw_img(&client.fb, x * scale, y * scale, check_img);
+        framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
+                                   check_img);
         break;
     case TILE_EMPTY:
-        framebuffer_draw_img(&client.fb, x * scale, y * scale, floor_img);
+        framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
+                                   floor_img);
 
         break;
     }
@@ -260,15 +357,43 @@ void undo()
     free(ent);
 }
 
+void load_level(const char *path)
+{
+    int fd = open(path, O_RDONLY);
+    size_t read_size = 10;
+    size_t buf_len = read_size;
+
+    char *buf = malloc(buf_len);
+    size_t buf_offset = 0;
+    size_t bytes_read;
+    while ((bytes_read = read(fd, buf + buf_offset, read_size)) >= read_size)
+    {
+        if (bytes_read < 0)
+        {
+            printf("invalid fd\n");
+        }
+
+        buf_len += read_size;
+        buf_offset += read_size;
+        buf = realloc(buf, buf_len);
+    }
+    game = parse_level(buf, &game_w, &game_h, &player_x, &player_y);
+
+    free(buf);
+    close(fd);
+}
+
 int main()
 {
     init_libc();
-    image_parse("/images/dog123.tga", &player_img);
-    image_parse("/images/check.tga", &check_img);
-    image_parse("/images/goal.tga", &goal_img);
-    image_parse("/images/crate.tga", &crate_img);
-    image_parse("/images/wall.tga", &wall_img);
-    image_parse("/images/grass.tga", &floor_img);
+    image_parse(SOKOBAN_ROOT "images/player.tga", &player_img);
+    image_parse(SOKOBAN_ROOT "images/box_goal.tga", &check_img);
+    image_parse(SOKOBAN_ROOT "images/goal.tga", &goal_img);
+    image_parse(SOKOBAN_ROOT "images/box.tga", &crate_img);
+    image_parse(SOKOBAN_ROOT "images/wall.tga", &wall_img);
+    image_parse(SOKOBAN_ROOT "images/floor.tga", &floor_img);
+
+    load_level(SOKOBAN_ROOT "level2");
 
     client = wm_client_connect(game_h * scale, game_w * scale);
 
@@ -276,6 +401,7 @@ int main()
     {
         for (size_t x = 0; x < game_w; x++)
         {
+
             if (game[y][x] == TILE_GOAL)
             {
                 num_goal_spaces++;
@@ -283,6 +409,7 @@ int main()
             draw_tile(x, y);
         }
     }
+    draw_player(player_x, player_y);
 
     wm_render(client);
 
