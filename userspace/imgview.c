@@ -24,18 +24,19 @@ int main(int argc, char **argv)
         loge("no image file\n");
         exit(1);
     }
+    const char *path = argv[1];
 
-    struct tga_header header;
+    struct image img;
+    image_parse(path, &img);
 
-    u8 *img_data = tga_image_parse(argv[1], &header);
-    if (img_data == NULL)
+    if (img.data == NULL)
     {
-        PANIC("invalid image %s\n", argv[1]);
+        PANIC("invalid image %s\n", path);
     }
 
-    struct wm_client client = wm_client_connect(header.h, header.w);
+    struct wm_client client = wm_client_connect(img.header.h, img.header.w);
 
-    framebuffer_draw_img_tga(&client.fb, img_data, header);
+    framebuffer_draw_img(&client.fb, 0, 0, img);
 
     wm_render(client);
 
