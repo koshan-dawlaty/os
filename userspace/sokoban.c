@@ -10,6 +10,7 @@
 #include <lib/log.h>
 #include <math.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define SOKOBAN_ROOT "/sokoban/"
 
@@ -153,6 +154,10 @@ enum tile_state static_game[][11] = {
 
 enum tile_state **game = NULL;
 
+#define WINDOW_W 600
+#define WINDOW_H 600
+#define TILE_IMG_SIZE 60
+
 size_t num_goal_spaces = 0;
 int num_goal_boxes = 0;
 
@@ -180,8 +185,8 @@ int player_x = 0, player_y = 0;
 
 size_t game_w = 0, game_h = 0;
 
-size_t scale = 60;
-double img_scale = 1;
+size_t scale = 45;
+double img_scale = 0.75;
 void draw_player(size_t x, size_t y)
 {
     framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
@@ -359,7 +364,15 @@ void undo()
 
 void load_level(const char *path)
 {
-    int fd = open(path, O_RDONLY);
+    char *str = malloc(strlen(path) + strlen(SOKOBAN_ROOT));
+    stpcpy(stpcpy(str, SOKOBAN_ROOT), path);
+
+    int fd = open(str, O_RDONLY);
+
+    if (fd == -1)
+    {
+        return;
+    }
     size_t read_size = 10;
     size_t buf_len = read_size;
 
@@ -368,34 +381,17 @@ void load_level(const char *path)
     size_t bytes_read;
     while ((bytes_read = read(fd, buf + buf_offset, read_size)) >= read_size)
     {
-        if (bytes_read < 0)
-        {
-            printf("invalid fd\n");
-        }
-
         buf_len += read_size;
         buf_offset += read_size;
         buf = realloc(buf, buf_len);
     }
     game = parse_level(buf, &game_w, &game_h, &player_x, &player_y);
 
-    free(buf);
-    close(fd);
-}
+    double scale_factor = (double)WINDOW_W / game_w;
+    img_scale = (double)scale_factor / TILE_IMG_SIZE;
+    scale = scale_factor;
 
-int main()
-{
-    init_libc();
-    image_parse(SOKOBAN_ROOT "images/player.tga", &player_img);
-    image_parse(SOKOBAN_ROOT "images/box_goal.tga", &check_img);
-    image_parse(SOKOBAN_ROOT "images/goal.tga", &goal_img);
-    image_parse(SOKOBAN_ROOT "images/box.tga", &crate_img);
-    image_parse(SOKOBAN_ROOT "images/wall.tga", &wall_img);
-    image_parse(SOKOBAN_ROOT "images/floor.tga", &floor_img);
-
-    load_level(SOKOBAN_ROOT "level2");
-
-    client = wm_client_connect(game_h * scale, game_w * scale);
+    logd("%f %f %d", img_scale, scale_factor, scale);
 
     for (size_t y = 0; y < game_h; y++)
     {
@@ -411,7 +407,27 @@ int main()
     }
     draw_player(player_x, player_y);
 
+    free(buf);
+    close(fd);
+}
+
+int main()
+{
+    init_libc();
+    image_parse(SOKOBAN_ROOT "images/player.tga", &player_img);
+    image_parse(SOKOBAN_ROOT "images/box_goal.tga", &check_img);
+    image_parse(SOKOBAN_ROOT "images/goal.tga", &goal_img);
+    image_parse(SOKOBAN_ROOT "images/box.tga", &crate_img);
+    image_parse(SOKOBAN_ROOT "images/wall.tga", &wall_img);
+    image_parse(SOKOBAN_ROOT "images/floor.tga", &floor_img);
+
+    client = wm_client_connect(WINDOW_H, WINDOW_W);
+    load_level("level2");
+
     wm_render(client);
+    bool reading_level = false;
+
+    struct array levelname = ARRAY_INIT();
 
     while (true)
     {
@@ -422,23 +438,61 @@ int main()
         {
         case WM_MESSAGE_KEY:;
             char c = *(char *)message.message_data;
-            switch (c)
+            if (reading_level)
             {
-            case 'h':
-                move_player(-1, 0);
-                break;
-            case 'l':
-                move_player(1, 0);
-                break;
-            case 'j':
-                move_player(0, 1);
-                break;
-            case 'k':
-                move_player(0, -1);
-                break;
-            case 'u':
-                undo();
-                break;
+                if (c == '\n')
+                {
+                    char terminator = 0;
+                    array_add(&levelname, &terminator, 1);
+                    load_level(levelname.data);
+                    array_free(&levelname);
+                    reading_level = false;
+                    levelname = ARRAY_INIT();
+                }
+                else if (c == '\b')
+                {
+                    array_pop_end(&levelname, 1);
+                    log_multiline_start(&LOG_DEBUG);
+                    for (size_t i = 0; i < levelname.len; i++)
+                    {
+                        logd("%c", ((char *)levelname.data)[i]);
+                    }
+                    log_multiline_end(&LOG_DEBUG);
+                }
+                else
+                {
+                    array_add(&levelname, &c, 1);
+                    log_multiline_start(&LOG_DEBUG);
+                    for (size_t i = 0; i < levelname.len; i++)
+                    {
+                        logd("%c", ((char *)levelname.data)[i]);
+                    }
+                    log_multiline_end(&LOG_DEBUG);
+                }
+            }
+            else
+            {
+                switch (c)
+                {
+                case 'h':
+                    move_player(-1, 0);
+                    break;
+                case 'l':
+                    move_player(1, 0);
+                    break;
+                case 'j':
+                    move_player(0, 1);
+                    break;
+                case 'k':
+                    move_player(0, -1);
+                    break;
+                case 'u':
+                    undo();
+                    break;
+                case 0x1B: /* escape */
+                    reading_level = true;
+                    break;
+                }
             }
             break;
         }
