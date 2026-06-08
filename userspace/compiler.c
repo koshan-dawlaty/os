@@ -29,6 +29,10 @@ enum token_type
     TOKEN_EOF,
 
 };
+bool token_is_operator(enum token_type type)
+{
+    return type == TOKEN_ASSIGN || type == TOKEN_PLUS;
+}
 
 const char *token_type_str(enum token_type type)
 {
@@ -489,22 +493,16 @@ struct ast_expr *ast_expr_alloc_value(struct ast_value value)
     return expr;
 }
 
-struct ast_assignment
-{
-    char *variable;
-    struct ast_expr *rhs;
-};
-
 struct ast_statement
 {
     enum ast_statement_type
     {
-        AST_STATEMENT_ASSIGNMENT,
+        AST_STATEMENT_EXPR,
     } type;
 
     union
     {
-        struct ast_assignment *assignment;
+        struct ast_expr *expr;
     } data;
 
     struct list2c list;
@@ -537,15 +535,6 @@ struct token *parser_get_next(struct ast_parser *parser)
 struct token *parser_get_current(struct ast_parser *parser)
 {
     return TOKEN_LIST_GET(&parser->current->list);
-}
-
-struct ast_assignment *ast_assignment_alloc(const char *lhs,
-                                            struct ast_expr *rhs)
-{
-    struct ast_assignment *out = malloc(sizeof(struct ast_assignment));
-    out->variable = strdup(lhs);
-    out->rhs = rhs;
-    return out;
 }
 
 struct ast_expr *ast_parse_expression(struct ast_parser *parser);
@@ -581,15 +570,15 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
 
 struct ast_expr *ast_parse_expression(struct ast_parser *parser)
 {
-    /* TODO: need token type is_operator */
-    /* TODO: order of operations */
+    /* TODO:!!! order of operations */
 
     struct ast_expr *lhs = ast_parse_expression_simple(
         parser); /* the left hand side should always be an expression that does
                     not require recursion */
 
     struct token *operator_token = parser_get_current(parser);
-    if (operator_token->type == TOKEN_PLUS)
+    logd("parsing an operator of token:%s", operator_token->token);
+    if (token_is_operator(operator_token->type))
     {
         parser_advance(parser);
         struct ast_expr *rhs = ast_parse_expression(parser);
@@ -607,17 +596,15 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser)
 
 struct ast_statement *parse_statement(struct ast_parser *parser)
 {
-    struct token *tok = parser_advance(parser);
-    struct token *next = parser_get_current(parser);
+    struct token *tok = parser_get_current(parser);
 
     struct ast_statement *out = NULL;
-    if (tok->type == TOKEN_IDENTIFIER && next->type == TOKEN_ASSIGN)
+    if (tok->type == TOKEN_IDENTIFIER) /* TODO: this might not work with other
+                                          kinds of statements */
     {
-        parser_advance(parser);
 
-        out = ast_statement_alloc(
-            AST_STATEMENT_ASSIGNMENT,
-            ast_assignment_alloc(tok->token, ast_parse_expression(parser)));
+        out = ast_statement_alloc(AST_STATEMENT_EXPR,
+                                  ast_parse_expression(parser));
 
         goto end;
     }
@@ -657,7 +644,7 @@ int main()
     /* tokenizer_parse_tokens("x = 1 + ((2 + 3) + 4) ;", &tokens); */
     /* tokenizer_parse_tokens("x = 1 + 2 + (3 + 4);", &tokens); */
     /* tokenizer_parse_tokens("x = (1+2) + 3 ;", &tokens); */
-    tokenizer_parse_tokens("x = (1+2) + 3 ;", &tokens);
+    tokenizer_parse_tokens("x = (((1+2)+2)+2) + 3 ;", &tokens);
 
     struct ast_node *node = ast_parse_tokens(&tokens);
 
