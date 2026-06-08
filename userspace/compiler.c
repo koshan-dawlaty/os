@@ -421,25 +421,6 @@ struct ast_value
     bool is_var;
 };
 
-struct ast_operator
-{
-    char *operator;
-    struct ast_expr *left, *right;
-    struct list2c list;
-};
-
-struct ast_operator *ast_operator_alloc(struct ast_expr *left,
-                                        const char *operator,
-                                        struct ast_expr *right)
-{
-    struct ast_operator *out = malloc(sizeof(struct ast_operator));
-    out->left = left;
-    out->right = right;
-    out->operator = strdup(operator);
-    out->list = LIST2C_INIT();
-    return out;
-}
-
 #define AST_VALUE_VAR(_var)                                                    \
     ((struct ast_value){.is_var = true, .varname = _var})
 #define AST_VALUE_LITERAL(_literal)                                            \
@@ -466,24 +447,33 @@ struct ast_expr
     union
     {
         struct ast_value value;
-        struct list2c operators_head;
+        struct
+        {
+            struct ast_expr *lhs;
+            struct ast_expr *rhs;
+            char *operator;
+        };
     };
 
     enum ast_expr_type
     {
         AST_EXPRESSION_VALUE,
-        AST_EXPRESSION_OPERATORS,
+        AST_EXPRESSION_OPERATOR,
     } type;
 
     struct list2c list;
 };
 
-struct ast_expr *ast_expr_alloc_operators()
+struct ast_expr *ast_expr_alloc_operator(struct ast_expr *lhs,
+                                         struct ast_expr *rhs,
+                                         const char *operator)
 {
     struct ast_expr *expr = malloc(sizeof(struct ast_expr *));
 
-    list2c_init_head(&expr->operators_head);
-    expr->type = AST_EXPRESSION_OPERATORS;
+    expr->type = AST_EXPRESSION_OPERATOR;
+    expr->operator = strdup(operator);
+    expr->lhs = lhs;
+    expr->rhs = rhs;
     expr->list = LIST2C_INIT();
 
     return expr;
@@ -558,8 +548,7 @@ struct ast_assignment *ast_assignment_alloc(const char *lhs,
     return out;
 }
 
-struct ast_expr *ast_parse_expression_impl(struct ast_parser *parser,
-                                           struct ast_expr *current_operator);
+struct ast_expr *ast_parse_expression(struct ast_parser *parser);
 
 /* ignores operators, utiltiy */
 static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
@@ -575,7 +564,7 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
         return ast_expr_alloc_value(ast_token_to_value(tok));
 
     case TOKEN_O_PAREN:;
-        struct ast_expr *out = ast_parse_expression_impl(parser, NULL);
+        struct ast_expr *out = ast_parse_expression(parser);
         struct token *close_paren = parser_advance(parser);
         if (close_paren->type != TOKEN_C_PAREN)
         {
@@ -590,62 +579,30 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
     }
 }
 
-struct ast_expr *ast_parse_expression_impl(struct ast_parser *parser,
-                                           struct ast_expr *current_operator)
+struct ast_expr *ast_parse_expression(struct ast_parser *parser)
 {
     /* TODO: need token type is_operator */
+    /* TODO: order of operations */
 
-    struct ast_expr *lhs = ast_parse_expression_simple(parser);
+    struct ast_expr *lhs = ast_parse_expression_simple(
+        parser); /* the left hand side should always be an expression that does
+                    not require recursion */
 
-    struct token *operator_token = parser_advance(parser);
-
-    struct ast_expr *expr = lhs;
+    struct token *operator_token = parser_get_current(parser);
     if (operator_token->type == TOKEN_PLUS)
     {
-        struct ast_expr *rhs = ast_parse_expression_simple(parser);
-
-        struct ast_operator *operator =
-            ast_operator_alloc(lhs, operator_token->token, rhs);
-        if (current_operator == NULL)
-        {
-            current_operator = ast_expr_alloc_operators();
-        }
-        logd("pushing operator:%p", current_operator->operators_head.next);
-        list2c_push(&operator->list, &current_operator->operators_head);
-        logd("after pushing operator:%p",
-             current_operator->operators_head.next);
-    }
-
-    struct token *current = parser_get_current(parser);
-
-    if (current->type == TOKEN_PLUS)
-    {
-
         parser_advance(parser);
-        logd("before parsing expr:%p", current_operator->operators_head.next);
-        struct ast_expr *rhs =
-            ast_parse_expression_impl(parser, current_operator);
+        struct ast_expr *rhs = ast_parse_expression(parser);
 
-        logd("after parsing expr:%p", current_operator->operators_head.next);
-        struct ast_operator *operator =
-            ast_operator_alloc(expr, current->token, rhs);
-
-        /* check might be redundant */
-        if (current_operator == NULL)
-        {
-            current_operator = ast_expr_alloc_operators();
-        }
-
-        logd("pushing 2 operator %p", current_operator->operators_head.next);
-        list2c_push(&operator->list, &current_operator->operators_head);
-        logd("after 2 pushing operator %p",
-             current_operator->operators_head.next);
+        struct ast_expr *operator =
+            ast_expr_alloc_operator(lhs, rhs, operator_token->token);
+        return operator;
     }
-}
-
-static inline struct ast_expr *ast_parse_expression(struct ast_parser *parser)
-{
-    return ast_parse_expression_impl(parser, NULL);
+    else
+    {
+        return lhs; /* there was no right hand side, so we need to return this
+                       to the caller */
+    }
 }
 
 struct ast_statement *parse_statement(struct ast_parser *parser)
@@ -695,7 +652,12 @@ int main()
     tokenizer_tests();
 
     LIST2C_DEFINE_HEAD(tokens);
-    tokenizer_parse_tokens("x = ( 10 + 10 + (10 + 1) ) ;", &tokens);
+    /* tokenizer_parse_tokens("x =  10 + 10 + 10 + 1  ;", &tokens); */
+    /* tokenizer_parse_tokens("x = 1 + 2 + 3 ;", &tokens); */
+    /* tokenizer_parse_tokens("x = 1 + ((2 + 3) + 4) ;", &tokens); */
+    /* tokenizer_parse_tokens("x = 1 + 2 + (3 + 4);", &tokens); */
+    /* tokenizer_parse_tokens("x = (1+2) + 3 ;", &tokens); */
+    tokenizer_parse_tokens("x = (1+2) + 3 ;", &tokens);
 
     struct ast_node *node = ast_parse_tokens(&tokens);
 
