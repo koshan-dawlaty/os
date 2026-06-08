@@ -1,6 +1,16 @@
 #include "lib/log.h"
 #include <stdlib.h>
 
+int powi(int x, int y)
+{
+    int out = 1;
+    for (int i = 0; i < y; i++)
+    {
+        out *= x;
+    }
+    return out;
+}
+
 int char_to_int(char in)
 {
     return in - '0';
@@ -16,11 +26,14 @@ int atoi(char *in)
     }
 
     i--;
+    size_t j = 0;
     while (i >= 0)
     {
 
-        output += char_to_int(in[i]) * (10 * (i + 1));
+        int num = char_to_int(in[i]);
+        output += num * powi(10, j);
 
+        j++;
         i--;
     }
 

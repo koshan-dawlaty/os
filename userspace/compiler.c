@@ -434,7 +434,8 @@ static inline struct ast_value ast_token_to_value(struct token *tok)
 {
     if (tok->type == TOKEN_INT)
     {
-        return AST_VALUE_LITERAL(atoi(tok->token));
+        int num = atoi(tok->token);
+        return AST_VALUE_LITERAL(num);
     }
     else if (tok->type == TOKEN_IDENTIFIER)
     {
@@ -464,31 +465,27 @@ struct ast_expr
         AST_EXPRESSION_VALUE,
         AST_EXPRESSION_OPERATOR,
     } type;
-
-    struct list2c list;
 };
 
 struct ast_expr *ast_expr_alloc_operator(struct ast_expr *lhs,
                                          struct ast_expr *rhs,
                                          const char *operator)
 {
-    struct ast_expr *expr = malloc(sizeof(struct ast_expr *));
+    struct ast_expr *expr = malloc(sizeof(struct ast_expr));
 
     expr->type = AST_EXPRESSION_OPERATOR;
     expr->operator = strdup(operator);
     expr->lhs = lhs;
     expr->rhs = rhs;
-    expr->list = LIST2C_INIT();
 
     return expr;
 }
 
 struct ast_expr *ast_expr_alloc_value(struct ast_value value)
 {
-    struct ast_expr *expr = malloc(sizeof(struct ast_expr *));
+    struct ast_expr *expr = malloc(sizeof(struct ast_expr));
     expr->value = value;
     expr->type = AST_EXPRESSION_VALUE;
-    expr->list = LIST2C_INIT();
 
     return expr;
 }
@@ -549,7 +546,6 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
     {
     case TOKEN_INT:
     case TOKEN_IDENTIFIER:
-        logd("int");
         return ast_expr_alloc_value(ast_token_to_value(tok));
 
     case TOKEN_O_PAREN:;
@@ -577,7 +573,6 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser)
                     not require recursion */
 
     struct token *operator_token = parser_get_current(parser);
-    logd("parsing an operator of token:%s", operator_token->token);
     if (token_is_operator(operator_token->type))
     {
         parser_advance(parser);
@@ -633,20 +628,69 @@ struct ast_node *ast_parse_tokens(struct list2c *tokens)
     return NULL;
 }
 
+/* very simple test function for evaluating a simple expression */
+int expr_eval_simple(struct ast_expr *expr)
+{
+    if (expr->type == AST_EXPRESSION_OPERATOR)
+    {
+        int lhs = expr_eval_simple(expr->lhs);
+        int rhs = expr_eval_simple(expr->rhs);
+        return lhs + rhs; /* assume add for right now */
+    }
+    else if (expr->type == AST_EXPRESSION_VALUE)
+    {
+        if (!expr->value.is_var)
+        {
+            return expr->value.literal;
+        }
+        else
+        {
+            PANIC("expr_eval_simple can only use literal ints");
+        }
+    }
+    UNREACHABLE("unknown enum type:%d", expr->type);
+}
+
+void test_ast_expressions(char *expr_str, int expected)
+{
+    LIST2C_DEFINE_HEAD(tokens);
+    tokenizer_parse_tokens(expr_str, &tokens);
+    struct ast_parser parser = {.state = PARSING_STATEMENTS,
+                                &tokens,
+                                .current = TOKEN_LIST_GET(tokens.next)};
+    struct ast_expr *expr = ast_parse_expression(&parser);
+    int val = expr_eval_simple(expr);
+    if (val != expected)
+    {
+        PANIC("%d != %d for expr:%s", val, expected, expr_str);
+    }
+    else
+    {
+        logi("%d == %d for test:%s", val, expected, expr_str);
+    }
+}
+
 int main()
 {
     init_libc();
     tokenizer_tests();
 
-    LIST2C_DEFINE_HEAD(tokens);
-    /* tokenizer_parse_tokens("x =  10 + 10 + 10 + 1  ;", &tokens); */
-    /* tokenizer_parse_tokens("x = 1 + 2 + 3 ;", &tokens); */
-    /* tokenizer_parse_tokens("x = 1 + ((2 + 3) + 4) ;", &tokens); */
-    /* tokenizer_parse_tokens("x = 1 + 2 + (3 + 4);", &tokens); */
-    /* tokenizer_parse_tokens("x = (1+2) + 3 ;", &tokens); */
-    tokenizer_parse_tokens("x = (((1+2)+2)+2) + 3 ;", &tokens);
+    /* LIST2C_DEFINE_HEAD(tokens); */
+    /* /1* tokenizer_parse_tokens("x =  10 + 10 + 10 + 1  ;", &tokens); *1/ */
+    /* /1* tokenizer_parse_tokens("x = 1 + 2 + 3 ;", &tokens); *1/ */
+    /* /1* tokenizer_parse_tokens("x = 1 + ((2 + 3) + 4) ;", &tokens); *1/ */
+    /* /1* tokenizer_parse_tokens("x = 1 + 2 + (3 + 4);", &tokens); *1/ */
+    /* /1* tokenizer_parse_tokens("x = (1+2) + 3 ;", &tokens); *1/ */
+    /* /1* tokenizer_parse_tokens("x = (((1+2)+2)+2) + 3 ;", &tokens); *1/ */
+    /* tokenizer_parse_tokens("x = 1;", &tokens); */
 
-    struct ast_node *node = ast_parse_tokens(&tokens);
+    /* struct ast_node *node = ast_parse_tokens(&tokens); */
+
+    test_ast_expressions("1+1", 2);
+    test_ast_expressions("1+1+1+1+1+1", 6);
+    test_ast_expressions("(((1+2)+2)+2) + 3", 10);
+    test_ast_expressions("(1+2) + 3", 6);
+    test_ast_expressions("1 + ((2 + 3) + 4) ", 10);
 
     exit(0);
 
