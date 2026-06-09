@@ -5,11 +5,13 @@
 #include "tap.h"
 #include "tests/tests.h"
 #include <extension.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define TEST_OUTPUT_SERIAL_PORT 0x3F8
 
@@ -24,6 +26,36 @@ test **tests = NULL;
 size_t tests_size = 0;
 
 static int failed = 0;
+
+int serialfd = 3;
+
+void test_output(char c)
+{
+#ifdef __is_libk
+    serial_write(TEST_OUTPUT_SERIAL_PORT, c);
+#else
+    write(serialfd, &c, 1);
+
+#endif
+}
+
+void test_output_str(const char *str, size_t len)
+{
+#ifdef __is_libk
+    serial_writestring(str, len, TEST_OUTPUT_SERIAL_PORT);
+#else
+    write(serialfd, str, len);
+
+#endif
+}
+
+void test_init_output()
+{
+#ifdef __is_libk
+    serial_init(TEST_OUTPUT_SERIAL_PORT);
+
+#endif
+}
 
 test_result *new_test_result(bool failed, char *message)
 {
@@ -105,7 +137,7 @@ void run_all_tests()
     size_t failed_indexes_len = 0;
 
     char *tap_header = tap_get_header(tests_size);
-    serial_writestring(tap_header, strlen(tap_header), TEST_OUTPUT_SERIAL_PORT);
+    test_output_str(tap_header, strlen(tap_header));
     free(tap_header);
 
     for (size_t i = 0; i < tests_size; i++)
@@ -121,7 +153,7 @@ void run_all_tests()
         }
 
         char *tap = tap_format_test_result(tests[i], result, i);
-        serial_writestring(tap, strlen(tap), TEST_OUTPUT_SERIAL_PORT);
+        test_output_str(tap, strlen(tap));
 
         free(tap);
 
@@ -136,8 +168,8 @@ void run_all_tests()
     }
 
     /* end of input */
-    serial_write(TEST_OUTPUT_SERIAL_PORT, '\n');
-    serial_write(TEST_OUTPUT_SERIAL_PORT, 4);
+    test_output('\n');
+    test_output(4);
 }
 
 /* runs all of the tests matching names in extra_tests */
@@ -146,7 +178,7 @@ void run_all_tests_only()
     const size_t num_extra = sizeof(extra_tests) / sizeof(const char *);
 
     char *tap_header = tap_get_header(num_extra);
-    serial_writestring(tap_header, strlen(tap_header), TEST_OUTPUT_SERIAL_PORT);
+    test_output_str(tap_header, strlen(tap_header));
     free(tap_header);
 
     for (size_t i = 0; i < num_extra; i++)
@@ -161,20 +193,20 @@ void run_all_tests_only()
                 printf("running:%s\n", t->name);
                 test_result *r = run_test(t);
                 char *tap = tap_format_test_result(tests[j], r, i);
-                serial_writestring(tap, strlen(tap), TEST_OUTPUT_SERIAL_PORT);
+                test_output_str(tap, strlen(tap));
 
                 free(tap);
             }
         }
     }
 
-    serial_write(TEST_OUTPUT_SERIAL_PORT, '\n');
-    serial_write(TEST_OUTPUT_SERIAL_PORT, 4);
+    test_output('\n');
+    test_output(4);
 }
 
 void run_tests()
 {
-    serial_init(TEST_OUTPUT_SERIAL_PORT);
+    test_init_output();
 #ifdef TESTS_ONLY
     run_all_tests_only();
 #else

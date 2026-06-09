@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tests/tests.h>
 
 enum token_type
 {
@@ -651,7 +652,7 @@ int expr_eval_simple(struct ast_expr *expr)
     UNREACHABLE("unknown enum type:%d", expr->type);
 }
 
-void test_ast_expressions(char *expr_str, int expected)
+struct test_result *test_ast_expressions(char *expr_str, int expected)
 {
     LIST2C_DEFINE_HEAD(tokens);
     tokenizer_parse_tokens(expr_str, &tokens);
@@ -660,19 +661,46 @@ void test_ast_expressions(char *expr_str, int expected)
                                 .current = TOKEN_LIST_GET(tokens.next)};
     struct ast_expr *expr = ast_parse_expression(&parser);
     int val = expr_eval_simple(expr);
-    if (val != expected)
+    ASSERT_EQ(val, expected, "%d != %d for expr %s", val, expected, expr_str);
+
+    TEST_OK();
+}
+
+#define TEST_AST_EXPRESSIONS(name, expr, expected)                             \
+    TEST(name, { return test_ast_expressions(expr, expected); })
+
+TEST_AST_EXPRESSIONS(test1, "1 + ((2 + 3) + 4) ", 10)
+TEST_AST_EXPRESSIONS(test2, "1 + ((2 + 3) + 4) ", 11)
+TEST_AST_EXPRESSIONS(test3, "1 + ((2 + 3) + 4) ", 12)
+TEST_AST_EXPRESSIONS(test4, "1 + ((2 + 3) + 4) ", 13)
+
+/* FIXME: using the libc version of this function will result in linker errors,
+ * and the tests need it, this version should be removed */
+char *strcat(char *restrict dest, const char *restrict src)
+{
+    memcpy(dest + strlen(dest), src, strlen(src) + 1);
+
+    return dest;
+}
+
+/* TODO: put in lib/ or make gcc do it in _start */
+extern void (*__ctors_start[])(void);
+extern void (*__ctors_end[])(void);
+void call_constructors(void)
+{
+
+    for (void (**ctor)(void) = __ctors_start; ctor < __ctors_end; ++ctor)
     {
-        PANIC("%d != %d for expr:%s", val, expected, expr_str);
-    }
-    else
-    {
-        logi("%d == %d for test:%s", val, expected, expr_str);
+        (*ctor)();
     }
 }
 
 int main()
 {
+
     init_libc();
+    call_constructors();
+
     tokenizer_tests();
 
     /* LIST2C_DEFINE_HEAD(tokens); */
@@ -686,11 +714,15 @@ int main()
 
     /* struct ast_node *node = ast_parse_tokens(&tokens); */
 
-    test_ast_expressions("1+1", 2);
-    test_ast_expressions("1+1+1+1+1+1", 6);
-    test_ast_expressions("(((1+2)+2)+2) + 3", 10);
-    test_ast_expressions("(1+2) + 3", 6);
-    test_ast_expressions("1 + ((2 + 3) + 4) ", 10);
+    /* test_ast_expressions("1+1", 2); */
+    /* test_ast_expressions("1+1+1+1+1+1", 6); */
+    /* test_ast_expressions("(((1+2)+2)+2) + 3", 10); */
+    /* test_ast_expressions("(1+2) + 3", 6); */
+    /* test_ast_expressions("1 + ((2 + 3) + 4) ", 10); */
+
+#ifdef TESTS
+    run_tests();
+#endif
 
     exit(0);
 

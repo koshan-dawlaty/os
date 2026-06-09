@@ -8,12 +8,14 @@
 
 void run_tests();
 
-typedef struct
+typedef struct test_result
 {
     bool failed;
     char *message;
 
 } test_result;
+
+void test_output_str(const char *str, size_t len);
 
 /*
  * the unused parameter has to be there so that varargs work, it has to be a
@@ -92,6 +94,12 @@ void add_test(test *);
 
 #define SUCCEED_TEST(reason) return new_test_result(false, reason)
 
+/*
+ * useful for functions that return a struct test_result * to have a default
+ * value
+ */
+#define TEST_OK() return new_test_result(false, "");
+
 #ifdef TESTS
 #define TEST_CONSTRUCTOR(name)                                                 \
                                                                                \
@@ -99,16 +107,15 @@ void add_test(test *);
     {                                                                          \
         add_test(new_test(#name, name##_test));                                \
     }
-
 #else
 #define TEST_CONSTRUCTOR(name)
 #endif
 
 #define TEST(name, body, ...)                                                  \
-    test_result *name##_test()                                                 \
-    {                                                                          \
-        body return new_test_result(false, "");                                \
-    }                                                                          \
-    TEST_CONSTRUCTOR(name)
+    test_result *name##_test(){                                                \
+                                                                               \
+        body TEST_OK()                                                         \
+                                                                               \
+    } TEST_CONSTRUCTOR(name)
 
 #endif

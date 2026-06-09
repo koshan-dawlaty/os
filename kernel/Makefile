@@ -38,8 +38,8 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 
 TEST_OBJS=\
-		  tests/lib/tests_lib.o \
-		  tests/lib/tap.o 
+		  # tests/lib/tests_lib.o \
+		  # tests/lib/tap.o 
 
 include tests/Makefile
 

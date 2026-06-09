@@ -42,6 +42,8 @@ OBJS=\
 	log.o \
 	rect.o \
 	assert.o \
+	tests/tap.o \
+	tests/tests_lib.o \
 
 
 OBJS_BIN_NO_SUFFIX = $(foreach obj,$(OBJS),bin/$(obj))

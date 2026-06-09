@@ -29,7 +29,7 @@ LIBS:=$(LIBS)
 
 CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings 
 # this gets rid of moddi3 and simliar functions
-CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib
+CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib -Tlinker.ld
 
 
 # very bad
@@ -178,7 +178,8 @@ $(BIN)/sokoban : $(OBJS_START_BIN) $(BIN)/sokoban.o $(BIN)/wm_lib.o $(DEPENDENCI
 
 $(BIN)/compiler : $(OBJS_START_BIN) $(BIN)/compiler.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	@cat linker.ld
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -DTESTS
 
 
 
@@ -189,7 +190,7 @@ $(BIN)/%.o: %.S
 
 $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) 
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)  -DTESTS # stupid
 
 
 ifdef CONFIG_x86_32
