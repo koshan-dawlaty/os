@@ -1,4 +1,5 @@
 #include "container_of.h"
+#include "lib/array.h"
 #include "lib/assert.h"
 #include "lib/font.h"
 #include "sys/types.h"
@@ -21,6 +22,8 @@ enum token_type
     TOKEN_ASSIGN,
     TOKEN_PLUS,
     TOKEN_EQUALS,
+    TOKEN_GREATER,
+    TOKEN_LESS,
     TOKEN_INT,
     TOKEN_SEMICOLON,
     TOKEN_O_PAREN,
@@ -28,17 +31,24 @@ enum token_type
     TOKEN_O_BRACE,
     TOKEN_C_BRACE,
     TOKEN_EOF,
+    TOKEN_IF,
+    TOKEN_WHILE,
 
 };
 bool token_is_operator(enum token_type type)
 {
-    return type == TOKEN_ASSIGN || type == TOKEN_PLUS;
+    return type == TOKEN_ASSIGN || type == TOKEN_PLUS ||
+           type == TOKEN_GREATER || type == TOKEN_LESS;
 }
 
 const char *token_type_str(enum token_type type)
 {
     switch (type)
     {
+    case TOKEN_WHILE:
+        return "WHILE STATEMENT";
+    case TOKEN_IF:
+        return "IF STATEMENT";
     case TOKEN_IDENTIFIER:
         return "IDENTIFIER";
     case TOKEN_EOF:
@@ -63,6 +73,10 @@ const char *token_type_str(enum token_type type)
         return "OPEN BRACE";
     case TOKEN_C_BRACE:
         return "CLOSE BRACE";
+    case TOKEN_GREATER:
+        return "GREATER";
+    case TOKEN_LESS:
+        return "LESS";
     }
 }
 
@@ -143,6 +157,10 @@ struct token_simple_map_entry token_simple_map[] = {
     {"}", TOKEN_C_BRACE},
     {";", TOKEN_SEMICOLON},
     {"+", TOKEN_PLUS},
+    {">", TOKEN_GREATER},
+    {"<", TOKEN_LESS},
+    {"if", TOKEN_IF},
+    {"while", TOKEN_WHILE},
 
     // clang-format on
 
@@ -184,6 +202,12 @@ struct token *get_token(const char *input, size_t *len)
         return token_alloc(TOKEN_EOF, "", 0);
     }
 
+    struct token *simple = get_token_simple(s, len);
+    if (simple != NULL)
+    {
+        return simple;
+    }
+
     if (is_alpha(*s) || *s == '_')
     {
         size_t i = 0;
@@ -217,12 +241,6 @@ struct token *get_token(const char *input, size_t *len)
         {
             return token_alloc_literal(TOKEN_ASSIGN, "=", len);
         }
-    }
-
-    struct token *simple = get_token_simple(s, len);
-    if (simple != NULL)
-    {
-        return simple;
     }
 
     return token_alloc(TOKEN_UNKNOWN, "", 0);
@@ -497,22 +515,65 @@ struct ast_statement
     enum ast_statement_type
     {
         AST_STATEMENT_EXPR,
+        AST_STATEMENT_IF,
+        AST_STATEMENT_WHILE,
+        AST_STATEMENT_DECLARE,
     } type;
 
     union
     {
-        struct ast_expr *expr;
-    } data;
+        struct ast_expr *expr; /* type is expr */
+        struct
+        {
+            struct list2c block; /* type is if, while, or for */
+            struct ast_expr
+                *block_expr; /* used for the expression with the if or while
+                                loop, will need to change for for loop */
+        };
+        struct
+        { /* type is declare */
+
+            struct ast_expr *init_value; /* can be null */
+            struct ast_type *declared_type;
+            char *varname;
+        };
+    };
 
     struct list2c list;
 };
 
-struct ast_statement *ast_statement_alloc(enum ast_statement_type type,
-                                          void *data)
+struct ast_statement *ast_statement_alloc_expr(struct ast_expr *expr)
 {
     struct ast_statement *out = malloc(sizeof(struct ast_statement));
+    out->expr = expr;
+    out->type = AST_STATEMENT_EXPR;
+    out->list = LIST2C_INIT();
+
+    return out;
+}
+
+struct ast_statement *
+ast_statement_alloc_declaration(struct ast_type *type, const char *varname,
+                                struct ast_expr *init_value)
+{
+    struct ast_statement *out = malloc(sizeof(struct ast_statement));
+    out->declared_type = type;
+    out->type = AST_STATEMENT_DECLARE;
+    out->init_value = init_value;
+    out->varname = strdup(varname);
+    out->list = LIST2C_INIT();
+
+    return out;
+}
+
+struct ast_statement *ast_statement_alloc_block(enum ast_statement_type type,
+                                                struct ast_expr *block_expr)
+{
+    struct ast_statement *out = malloc(sizeof(struct ast_statement));
+    list2c_init_head(&out->block);
     out->type = type;
-    *(void **)(&out->data) = data;
+    out->block_expr = block_expr;
+    out->list = LIST2C_INIT();
 
     return out;
 }
@@ -591,29 +652,86 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser)
     }
 }
 
-struct ast_statement *parse_statement(struct ast_parser *parser)
+void ast_parse_statements(struct ast_parser *parser,
+                          struct list2c *statements_head);
+
+struct ast_statement *ast_parse_statement(struct ast_parser *parser)
 {
     struct token *tok = parser_get_current(parser);
 
     struct ast_statement *out = NULL;
-    if (tok->type == TOKEN_IDENTIFIER) /* TODO: this might not work with other
-                                          kinds of statements */
+    /* logd("%s, %s", tok->token, token_type_str(tok->type)); */
+
+    if (tok->type == TOKEN_IDENTIFIER ||
+        tok->type == TOKEN_INT) /* TODO: this might not work with
+         other kinds of statements */
     {
+        struct token *next = parser_get_next(parser);
+        if (tok->type == TOKEN_IDENTIFIER &&
+            next->type == TOKEN_IDENTIFIER) /* 2 identifiers in a row means it
+         must be a declaration */
+        {
+            parser_advance(parser);
+            parser_advance(parser);
+            out = ast_statement_alloc_declaration(ast_type_alloc(tok->token),
+                                                  next->token, NULL);
+        }
+        else if (next->type != TOKEN_IDENTIFIER)
+        {
+            out = ast_statement_alloc_expr(ast_parse_expression(parser));
+        }
+        else
+        {
+            PANIC("error");
+        }
 
-        out = ast_statement_alloc(AST_STATEMENT_EXPR,
-                                  ast_parse_expression(parser));
-
-        goto end;
+        struct token *semicolon = parser_advance(parser);
+        if (semicolon->type != TOKEN_SEMICOLON)
+        {
+            PANIC("expected semicolon got:%s for token %s",
+                  token_type_str(semicolon->type), semicolon->token);
+        }
     }
-
-end:;
-    struct token *semicolon = parser_advance(parser);
-    if (semicolon->type != TOKEN_SEMICOLON)
+    else if (tok->type == TOKEN_IF)
     {
-        PANIC("expected semicolon got:%s", token_type_str(semicolon->type));
+        parser_advance(parser);
+        out = ast_statement_alloc_block(
+            AST_STATEMENT_IF,
+            ast_parse_expression(
+                parser) /* TODO: this will allow things like if x == y {} */);
+
+        ast_parse_statements(parser, &out->block);
+    }
+    else if (tok->type == TOKEN_WHILE)
+    {
+        parser_advance(parser);
+        out = ast_statement_alloc_block(
+            AST_STATEMENT_WHILE,
+            ast_parse_expression(
+                parser) /* TODO: this will allow things like if x == y {} */);
+
+        ast_parse_statements(parser, &out->block);
     }
 
     return out;
+}
+
+void ast_parse_statements(struct ast_parser *parser,
+                          struct list2c *statements_head)
+{
+
+    struct token *open_brace = parser_advance(parser);
+    if (open_brace->type != TOKEN_O_BRACE)
+    {
+        PANIC("expected '{' at the start of a block");
+    }
+
+    while (parser_get_current(parser)->type != TOKEN_C_BRACE)
+    {
+        struct ast_statement *statement = ast_parse_statement(parser);
+        list2c_push_end(&statement->list, statements_head);
+    }
+    parser_advance(parser);
 }
 
 struct ast_node *ast_parse_tokens(struct list2c *tokens)
@@ -621,23 +739,67 @@ struct ast_node *ast_parse_tokens(struct list2c *tokens)
     struct ast_parser parser = {.state = PARSING_STATEMENTS,
                                 tokens,
                                 .current = TOKEN_LIST_GET(tokens->next)};
-
-    while (parser.current->type != TOKEN_EOF)
-    {
-        parse_statement(&parser);
-    }
+    LIST2C_DEFINE_HEAD(statements);
+    ast_parse_statements(&parser, &statements);
 
     return NULL;
 }
 
+struct variable
+{
+    char *varname;
+    int value;
+};
+
 /* very simple test function for evaluating a simple expression */
-int expr_eval_simple(struct ast_expr *expr)
+int expr_eval(struct ast_expr *expr, struct array variables)
 {
     if (expr->type == AST_EXPRESSION_OPERATOR)
     {
-        int lhs = expr_eval_simple(expr->lhs);
-        int rhs = expr_eval_simple(expr->rhs);
-        return lhs + rhs; /* assume add for right now */
+        if (!strcmp(expr->operator,
+                    "+")) /* TODO: maybe want to have enum for operator */
+        {
+            int lhs = expr_eval(expr->lhs, variables);
+            int rhs = expr_eval(expr->rhs, variables);
+            return lhs + rhs;
+        }
+        else if (!strcmp(expr->operator, "="))
+        {
+            if (!expr->lhs->value.is_var)
+            {
+                PANIC("attempt to assign to not variable");
+            }
+
+            for (size_t i = 0;
+                 i < ARRAY_LEN(variables, sizeof(struct variable)); i++)
+            {
+                struct variable *var =
+                    array_get(&variables, i, sizeof(struct variable));
+
+                if (!strcmp(expr->lhs->value.varname, var->varname))
+                {
+                    var->value = expr_eval(expr->rhs, variables);
+                    return var->value;
+                }
+            }
+            PANIC("variable not found:%s", expr->lhs->value.varname);
+        }
+        else if (!strcmp(expr->operator, "<"))
+        {
+            int lhs = expr_eval(expr->lhs, variables);
+            int rhs = expr_eval(expr->rhs, variables);
+            return lhs < rhs;
+        }
+        else if (!strcmp(expr->operator, ">"))
+        {
+            int lhs = expr_eval(expr->lhs, variables);
+            int rhs = expr_eval(expr->rhs, variables);
+            return lhs > rhs;
+        }
+        else
+        {
+            PANIC("unknown operator type for expr_eval() %s", expr->operator);
+        }
     }
     else if (expr->type == AST_EXPRESSION_VALUE)
     {
@@ -647,10 +809,76 @@ int expr_eval_simple(struct ast_expr *expr)
         }
         else
         {
-            PANIC("expr_eval_simple can only use literal ints");
+            for (size_t i = 0;
+                 i < ARRAY_LEN(variables, sizeof(struct variable)); i++)
+            {
+                struct variable *var =
+                    array_get(&variables, i, sizeof(struct variable));
+
+                if (!strcmp(expr->value.varname, var->varname))
+                {
+                    return var->value;
+                }
+            }
+            PANIC("variable not found:%s", expr->value.varname);
         }
     }
     UNREACHABLE("unknown enum type:%d", expr->type);
+}
+
+int expr_eval_simple(struct ast_expr *expr)
+{
+    return expr_eval(expr, ARRAY_INIT());
+}
+
+void statements_eval(struct list2c *statements_head, struct array *variables)
+{
+    struct list2c *pos;
+    list2c_for_each(pos, statements_head)
+    {
+        struct ast_statement *statement =
+            containerof(pos, struct ast_statement, list);
+
+        int value;
+        switch (statement->type)
+        {
+        case AST_STATEMENT_DECLARE:
+            logd("declaration of %s", statement->varname);
+            struct variable var = {statement->varname, 0};
+            array_push(variables, &var, sizeof(struct variable));
+            break;
+        case AST_STATEMENT_EXPR:
+            expr_eval(statement->expr, *variables);
+            break;
+        case AST_STATEMENT_IF:;
+            value = expr_eval(statement->block_expr, *variables);
+            if (value != 0)
+            {
+                statements_eval(&statement->block, variables);
+            }
+            break;
+        case AST_STATEMENT_WHILE:;
+            value = expr_eval(statement->block_expr, *variables);
+            while (value != 0)
+            {
+                statements_eval(&statement->block, variables);
+                value = expr_eval(statement->block_expr, *variables);
+            }
+            break;
+        }
+    }
+}
+
+void statements_eval_simple(struct list2c *statements_head)
+{
+    struct array vars = ARRAY_INIT();
+    statements_eval(statements_head, &vars);
+
+    for (size_t i = 0; i < ARRAY_LEN(vars, sizeof(struct variable)); i++)
+    {
+        struct variable *var = array_get(&vars, i, sizeof(struct variable));
+        logd("variable of name:%s with value:%d", var->varname, var->value);
+    }
 }
 
 struct test_result *test_ast_expressions(char *expr_str, int expected)
@@ -674,6 +902,7 @@ TEST_AST_EXPRESSIONS(expr_test1, "1 + ((2 + 3) + 4) ", 10)
 TEST_AST_EXPRESSIONS(expr_test2, "1+1+1+1+1+1", 6)
 TEST_AST_EXPRESSIONS(expr_test3, "(((1+2)+2)+2) + 3", 10)
 TEST_AST_EXPRESSIONS(expr_test4, "(1+2) + 3", 6)
+TEST_AST_EXPRESSIONS(expr_test5, "123", 123)
 
 /* FIXME: using the libc version of this function will result in linker errors,
  * and the tests need it, this version should be removed */
@@ -689,7 +918,6 @@ extern void (*__ctors_start[])(void);
 extern void (*__ctors_end[])(void);
 void call_constructors(void)
 {
-
     for (void (**ctor)(void) = __ctors_start; ctor < __ctors_end; ++ctor)
     {
         (*ctor)();
@@ -701,6 +929,34 @@ int main()
 
     init_libc();
     call_constructors();
+
+    LIST2C_DEFINE_HEAD(tokens);
+    // clang-format off
+    tokenizer_parse_tokens(
+    "{"
+	"int x;"
+	"int y;"
+	"int z;"
+	"z = 1;"
+    "123;"
+    "x = 0;"
+    "y = 10;"
+    "while (x < 11) {"
+    "y = x + 3;"
+	"x = x + 1;"
+    "}"
+    "}"
+    , &tokens);
+
+    // clang-format on
+    ast_parse_tokens(&tokens);
+
+    struct ast_parser parser = {.state = PARSING_STATEMENTS,
+                                &tokens,
+                                .current = TOKEN_LIST_GET(tokens.next)};
+    LIST2C_DEFINE_HEAD(statements_head);
+    ast_parse_statements(&parser, &statements_head);
+    statements_eval_simple(&statements_head);
 
 #ifdef TESTS
     run_tests();
