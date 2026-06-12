@@ -4,6 +4,7 @@
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/types.h>
+#include <kernel/utils.h>
 #include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>
 #include <panic.h>

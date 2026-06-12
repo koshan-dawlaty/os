@@ -1,6 +1,7 @@
 #ifndef LIB_FONT_H
 #define LIB_FONT_H
 
+#include <compiler.h>
 #include <lib/framebuffer.h>
 
 struct PSF_header

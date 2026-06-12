@@ -1,13 +1,14 @@
-#include "container_of.h"
-#include "lib/font.h"
-#include "lib/framebuffer.h"
-#include "lib/rect.h"
-#include "userspace/mouse.h"
 #include "wm_lib.h"
+#include <container_of.h>
 #include <init.h>
 #include <lib/assert.h>
+#include <lib/font.h>
+#include <lib/framebuffer.h>
 #include <lib/list.h>
 #include <lib/log.h>
+#include <lib/rect.h>
+#include <string.h>
+#include <userspace/mouse.h>
 
 struct rect_d
 {

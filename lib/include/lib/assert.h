@@ -1,7 +1,7 @@
 #ifndef ASSERT_H
 #define ASSERT_H
 
-#include <kernel/utils.h>
+#include <compiler.h>
 #include <lib/utils.h>
 
 __noreturn void __panic_func(const char *format, ...);

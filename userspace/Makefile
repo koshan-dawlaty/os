@@ -176,7 +176,7 @@ $(BIN)/sokoban : $(OBJS_START_BIN) $(BIN)/sokoban.o $(BIN)/wm_lib.o $(DEPENDENCI
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
-$(BIN)/compiler : $(OBJS_START_BIN) $(BIN)/compiler.o $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/compiler : $(OBJS_START_BIN) $(BIN)/c_compiler/c_compiler.o $(BIN)/c_compiler/tests.o  $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	@cat linker.ld
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
@@ -190,7 +190,7 @@ $(BIN)/%.o: %.S
 
 $(BIN)/%.o: %.c
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)  # -DTESTS # stupid
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)   -DTESTS # stupid
 
 
 ifdef CONFIG_x86_32
