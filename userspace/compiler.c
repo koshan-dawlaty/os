@@ -25,6 +25,7 @@ enum token_type
     TOKEN_GREATER,
     TOKEN_LESS,
     TOKEN_INT,
+    TOKEN_COMMA,
     TOKEN_SEMICOLON,
     TOKEN_O_PAREN,
     TOKEN_C_PAREN,
@@ -45,6 +46,8 @@ const char *token_type_str(enum token_type type)
 {
     switch (type)
     {
+    case TOKEN_COMMA:
+        return "COMMA";
     case TOKEN_WHILE:
         return "WHILE STATEMENT";
     case TOKEN_IF:
@@ -161,6 +164,7 @@ struct token_simple_map_entry token_simple_map[] = {
     {"<", TOKEN_LESS},
     {"if", TOKEN_IF},
     {"while", TOKEN_WHILE},
+    {",", TOKEN_COMMA},
 
     // clang-format on
 
@@ -467,11 +471,34 @@ static inline struct ast_value ast_token_to_value(struct token *tok)
     }
 }
 
+struct ast_expr;
+struct ast_function_arg
+{
+    struct ast_expr *expr;
+    struct list2c list;
+};
+
+struct ast_function_arg *ast_function_arg_alloc(struct ast_expr *expr)
+{
+    struct ast_function_arg *arg = malloc(sizeof(struct ast_function_arg));
+    arg->expr = expr;
+    arg->list = LIST2C_INIT();
+
+    return arg;
+}
+
+struct ast_function_call
+{
+    struct list2c arguments_head;
+    char *function_name;
+};
+
 struct ast_expr
 {
     union
     {
         struct ast_value value;
+        struct ast_function_call call;
         struct
         {
             struct ast_expr *lhs;
@@ -483,9 +510,21 @@ struct ast_expr
     enum ast_expr_type
     {
         AST_EXPRESSION_VALUE,
+        AST_EXPRESSION_CALL,
         AST_EXPRESSION_OPERATOR,
     } type;
 };
+
+struct ast_expr *ast_expr_alloc_call(const char *function_name)
+{
+    struct ast_expr *expr = malloc(sizeof(struct ast_expr));
+    expr->type = AST_EXPRESSION_CALL;
+    expr->call =
+        (struct ast_function_call){.function_name = strdup(function_name)};
+    list2c_init_head(&expr->call.arguments_head);
+
+    return expr;
+}
 
 struct ast_expr *ast_expr_alloc_operator(struct ast_expr *lhs,
                                          struct ast_expr *rhs,
@@ -597,6 +636,20 @@ struct token *parser_get_current(struct ast_parser *parser)
     return TOKEN_LIST_GET(&parser->current->list);
 }
 
+bool parser_next_is_type(struct ast_parser *parser)
+{
+    return (parser_get_current(parser)->type ==
+            TOKEN_IDENTIFIER); /* TODO: wont work with unsigned or restrict or
+                                   pointers */
+}
+
+struct ast_type *parser_parse_type(struct ast_parser *parser)
+{
+    ASSERT(parser_next_is_type(parser), "next token is not a type");
+
+    return ast_type_alloc(parser_advance(parser)->token);
+}
+
 struct ast_expr *ast_parse_expression(struct ast_parser *parser);
 
 /* ignores operators, utiltiy */
@@ -607,8 +660,44 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
 
     switch (tok->type)
     {
-    case TOKEN_INT:
     case TOKEN_IDENTIFIER:
+        if (parser_get_current(parser)->type ==
+            TOKEN_O_PAREN) /* function call */
+        {
+
+            parser_advance(parser);
+            struct ast_expr *out = ast_expr_alloc_call(tok->token);
+            struct ast_function_call *call = &out->call;
+
+            if (parser_get_current(parser)->type == TOKEN_C_PAREN)
+            {
+                parser_advance(parser);
+                return out;
+            }
+
+            while (true)
+            {
+                struct ast_expr *expr = ast_parse_expression(parser);
+                struct ast_function_arg *arg = ast_function_arg_alloc(expr);
+                list2c_push_end(&arg->list, &call->arguments_head);
+
+                struct token *tok = parser_advance(parser);
+                /* logd(", or ) %s", tok->token); */
+
+                if (tok->type == TOKEN_C_PAREN)
+                {
+                    break;
+                }
+                else if (tok->type != TOKEN_COMMA)
+                {
+                    PANIC("expected ',' or ')' got %s of type %s", tok->token,
+                          token_type_str(tok->type));
+                }
+            }
+            /* parser_advance(parser); */
+            return out;
+        }
+    case TOKEN_INT:
         return ast_expr_alloc_value(ast_token_to_value(tok));
 
     case TOKEN_O_PAREN:;
@@ -622,8 +711,8 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
 
     default:
         /* TODO: if it is a keyword, error */
-        PANIC("invalid token type:%s for token:%s", token_type_str(tok->type),
-              tok->token);
+        PANIC("invalid token type:%s for token:%s when parsing expression",
+              token_type_str(tok->type), tok->token);
     }
 }
 
@@ -667,14 +756,15 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser)
          other kinds of statements */
     {
         struct token *next = parser_get_next(parser);
-        if (tok->type == TOKEN_IDENTIFIER &&
+        /* TODO: wont work with unsigned types, as it checks that next->type is
+         * a variable */
+        if (parser_next_is_type(parser) &&
             next->type == TOKEN_IDENTIFIER) /* 2 identifiers in a row means it
          must be a declaration */
         {
-            parser_advance(parser);
-            parser_advance(parser);
-            out = ast_statement_alloc_declaration(ast_type_alloc(tok->token),
+            out = ast_statement_alloc_declaration(parser_parse_type(parser),
                                                   next->token, NULL);
+            parser_advance(parser);
         }
         else if (next->type != TOKEN_IDENTIFIER)
         {
@@ -823,6 +913,28 @@ int expr_eval(struct ast_expr *expr, struct array variables)
             PANIC("variable not found:%s", expr->value.varname);
         }
     }
+    else if (expr->type == AST_EXPRESSION_CALL)
+    {
+        if (!strcmp(expr->call.function_name, "print"))
+        {
+            struct list2c *pos;
+            list2c_for_each(pos, &expr->call.arguments_head)
+            {
+                struct ast_function_arg *arg =
+                    containerof(pos, struct ast_function_arg, list);
+                NOT_NULL(arg->expr, "arg->expr was null");
+
+                int val = expr_eval(arg->expr, variables);
+                logi("print:%d", val);
+            }
+            return 0; /* TODO: change this when there is a better type
+                         system for the interpreter */
+        }
+        else
+        {
+            PANIC("unknown function name:%s", expr->call.function_name);
+        }
+    }
     UNREACHABLE("unknown enum type:%d", expr->type);
 }
 
@@ -933,6 +1045,9 @@ int main()
     LIST2C_DEFINE_HEAD(tokens);
     // clang-format off
     tokenizer_parse_tokens(
+	/* "int z;" */
+	/* "z = 10;" */
+
     "{"
 	"int x;"
 	"int y;"
@@ -944,12 +1059,15 @@ int main()
     "while (x < 11) {"
     "y = x + 3;"
 	"x = x + 1;"
+	"print(x);"
     "}"
+	"z = x < 100;"
     "}"
+
     , &tokens);
 
     // clang-format on
-    ast_parse_tokens(&tokens);
+    /* ast_parse_tokens(&tokens); */
 
     struct ast_parser parser = {.state = PARSING_STATEMENTS,
                                 &tokens,
