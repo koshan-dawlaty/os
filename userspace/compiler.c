@@ -762,9 +762,17 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser)
             next->type == TOKEN_IDENTIFIER) /* 2 identifiers in a row means it
          must be a declaration */
         {
-            out = ast_statement_alloc_declaration(parser_parse_type(parser),
-                                                  next->token, NULL);
+            struct ast_type *type = parser_parse_type(parser);
+            const char *name = next->token;
+            struct ast_expr *init_val = NULL;
             parser_advance(parser);
+            if (parser_get_current(parser)->type == TOKEN_ASSIGN)
+            {
+                logd("hi");
+                parser_advance(parser);
+                init_val = ast_parse_expression(parser);
+            }
+            out = ast_statement_alloc_declaration(type, name, init_val);
         }
         else if (next->type != TOKEN_IDENTIFIER)
         {
@@ -956,7 +964,12 @@ void statements_eval(struct list2c *statements_head, struct array *variables)
         {
         case AST_STATEMENT_DECLARE:
             logd("declaration of %s", statement->varname);
-            struct variable var = {statement->varname, 0};
+            int init_val = 0;
+            if (statement->init_value != NULL)
+            {
+                init_val = expr_eval(statement->init_value, *variables);
+            }
+            struct variable var = {statement->varname, init_val};
             array_push(variables, &var, sizeof(struct variable));
             break;
         case AST_STATEMENT_EXPR:
@@ -1049,19 +1062,18 @@ int main()
 	/* "z = 10;" */
 
     "{"
-	"int x;"
-	"int y;"
-	"int z;"
-	"z = 1;"
-    "123;"
-    "x = 0;"
-    "y = 10;"
-    "while (x < 11) {"
-    "y = x + 3;"
-	"x = x + 1;"
-	"print(x);"
+	"int x = 0;"
+	"int y = 1;"
+	"int z = 2;"
+	"int n = 20;"
+	"int temp;"	
+    "while (z < (n + 1)) {"
+	"temp = x + y;"
+    "x = y;"
+	"y = temp;"
+	"z = z + 1;"
     "}"
-	"z = x < 100;"
+	"print(y);"
     "}"
 
     , &tokens);
