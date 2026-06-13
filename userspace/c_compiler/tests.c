@@ -130,7 +130,7 @@ struct test_result *test_ast_expressions(char *expr_str, int expected)
     struct ast_parser parser = {&tokens,
                                 .current = TOKEN_LIST_GET(tokens.next)};
     struct ast_expr *expr = ast_parse_expression(&parser);
-    int val = expr_eval(expr, ARRAY_INIT());
+    int val = expr_eval(expr, &INTERPRETER_INIT());
     ASSERT_EQ(val, expected, "%d != %d for expr %s", val, expected, expr_str);
 
     TEST_OK();

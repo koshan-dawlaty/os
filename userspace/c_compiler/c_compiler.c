@@ -566,14 +566,6 @@ void ast_parse_statements(struct ast_parser *parser,
     parser_advance(parser);
 }
 
-/* function argument definition */
-struct ast_function_arg_def
-{
-    struct ast_type *type;
-    char *name;
-    struct list2c list;
-};
-
 struct ast_function_arg_def *ast_function_arg_def_alloc(struct ast_type *type,
                                                         const char *name)
 {
@@ -587,15 +579,6 @@ struct ast_function_arg_def *ast_function_arg_def_alloc(struct ast_type *type,
     return out;
 }
 
-struct ast_function_declare
-{
-    struct ast_type *return_type;
-    char *name;
-    struct list2c args_head;
-
-    struct list2c block;
-};
-
 struct ast_function_declare *
 ast_function_declare_alloc(struct ast_type *return_type, const char *name)
 {
@@ -608,25 +591,6 @@ ast_function_declare_alloc(struct ast_type *return_type, const char *name)
 
     return out;
 }
-
-/* top level statements, like type / global variable definitions, and
- * functions */
-struct ast_top_statement
-{
-    enum ast_top_statement_type
-    {
-        AST_TOP_STATEMENT_FUNC,
-        AST_TOP_STATEMENT_VAR,
-        AST_TOP_STATEMENT_TYPE,
-    } type;
-
-    union
-    {
-        struct ast_function_declare *function;
-    };
-
-    struct list2c list;
-};
 
 struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
 {
@@ -652,7 +616,7 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
         struct ast_function_declare *func =
             ast_function_declare_alloc(type, name->token);
 
-        if (parser_get_current(parser)->type == TOKEN_O_PAREN)
+        if (parser_get_current(parser)->type == TOKEN_C_PAREN)
         {
             goto args_done;
         }
@@ -690,6 +654,12 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
         parser_advance(parser); /* ')' */
 
         ast_parse_statements(parser, &func->block);
+        struct list2c *pos;
+        list2c_for_each(pos, &func->block)
+        {
+            struct ast_statement *statement =
+                containerof(pos, struct ast_statement, list);
+        }
 
         out->function = func;
         out->type = AST_TOP_STATEMENT_FUNC;
@@ -718,164 +688,6 @@ void ast_parse(struct list2c *tokens, struct list2c *top_statements_head)
     }
 }
 
-struct variable
-{
-    char *varname;
-    int value;
-};
-
-/* very simple test function for evaluating a simple expression */
-int expr_eval(struct ast_expr *expr, struct array variables)
-{
-    if (expr->type == AST_EXPRESSION_OPERATOR)
-    {
-        if (!strcmp(expr->operator,
-                    "+")) /* TODO: maybe want to have enum for operator */
-        {
-            int lhs = expr_eval(expr->lhs, variables);
-            int rhs = expr_eval(expr->rhs, variables);
-            return lhs + rhs;
-        }
-        else if (!strcmp(expr->operator, "="))
-        {
-            if (!expr->lhs->value.is_var)
-            {
-                PANIC("attempt to assign to not variable");
-            }
-
-            for (size_t i = 0;
-                 i < ARRAY_LEN(variables, sizeof(struct variable)); i++)
-            {
-                struct variable *var =
-                    array_get(&variables, i, sizeof(struct variable));
-
-                if (!strcmp(expr->lhs->value.varname, var->varname))
-                {
-                    var->value = expr_eval(expr->rhs, variables);
-                    return var->value;
-                }
-            }
-            PANIC("variable not found:%s", expr->lhs->value.varname);
-        }
-        else if (!strcmp(expr->operator, "<"))
-        {
-            int lhs = expr_eval(expr->lhs, variables);
-            int rhs = expr_eval(expr->rhs, variables);
-            return lhs < rhs;
-        }
-        else if (!strcmp(expr->operator, ">"))
-        {
-            int lhs = expr_eval(expr->lhs, variables);
-            int rhs = expr_eval(expr->rhs, variables);
-            return lhs > rhs;
-        }
-        else
-        {
-            PANIC("unknown operator type for expr_eval() %s", expr->operator);
-        }
-    }
-    else if (expr->type == AST_EXPRESSION_VALUE)
-    {
-        if (!expr->value.is_var)
-        {
-            return expr->value.literal;
-        }
-        else
-        {
-            for (size_t i = 0;
-                 i < ARRAY_LEN(variables, sizeof(struct variable)); i++)
-            {
-                struct variable *var =
-                    array_get(&variables, i, sizeof(struct variable));
-
-                if (!strcmp(expr->value.varname, var->varname))
-                {
-                    return var->value;
-                }
-            }
-            PANIC("variable not found:%s", expr->value.varname);
-        }
-    }
-    else if (expr->type == AST_EXPRESSION_CALL)
-    {
-        if (!strcmp(expr->call.function_name, "print"))
-        {
-            struct list2c *pos;
-            list2c_for_each(pos, &expr->call.arguments_head)
-            {
-                struct ast_function_arg *arg =
-                    containerof(pos, struct ast_function_arg, list);
-                NOT_NULL(arg->expr, "arg->expr was null");
-
-                int val = expr_eval(arg->expr, variables);
-                logi("print:%d", val);
-            }
-            return 0; /* TODO: change this when there is a better type
-                         system for the interpreter */
-        }
-        else
-        {
-            PANIC("unknown function name:%s", expr->call.function_name);
-        }
-    }
-    UNREACHABLE("unknown enum type:%d", expr->type);
-}
-
-void statements_eval(struct list2c *statements_head, struct array *variables)
-{
-    struct list2c *pos;
-    list2c_for_each(pos, statements_head)
-    {
-        struct ast_statement *statement =
-            containerof(pos, struct ast_statement, list);
-
-        int value;
-        switch (statement->type)
-        {
-        case AST_STATEMENT_DECLARE:
-            logd("declaration of %s", statement->varname);
-            int init_val = 0;
-            if (statement->init_value != NULL)
-            {
-                init_val = expr_eval(statement->init_value, *variables);
-            }
-            struct variable var = {statement->varname, init_val};
-            array_push(variables, &var, sizeof(struct variable));
-            break;
-        case AST_STATEMENT_EXPR:
-            expr_eval(statement->expr, *variables);
-            break;
-        case AST_STATEMENT_IF:;
-            value = expr_eval(statement->block_expr, *variables);
-            if (value != 0)
-            {
-                statements_eval(&statement->block, variables);
-            }
-            break;
-        case AST_STATEMENT_WHILE:;
-            value = expr_eval(statement->block_expr, *variables);
-            while (value != 0)
-            {
-                statements_eval(&statement->block, variables);
-                value = expr_eval(statement->block_expr, *variables);
-            }
-            break;
-        }
-    }
-}
-
-void statements_eval_simple(struct list2c *statements_head)
-{
-    struct array vars = ARRAY_INIT();
-    statements_eval(statements_head, &vars);
-
-    for (size_t i = 0; i < ARRAY_LEN(vars, sizeof(struct variable)); i++)
-    {
-        struct variable *var = array_get(&vars, i, sizeof(struct variable));
-        logd("variable of name:%s with value:%d", var->varname, var->value);
-    }
-}
-
 /* FIXME: using the libc version of this function will result in linker
  * errors, and the tests need it, this version should be removed */
 char *strcat(char *restrict dest, const char *restrict src)
@@ -883,61 +695,4 @@ char *strcat(char *restrict dest, const char *restrict src)
     memcpy(dest + strlen(dest), src, strlen(src) + 1);
 
     return dest;
-}
-
-/* TODO: put in lib/ or make gcc do it in _start */
-extern void (*__ctors_start[])(void);
-extern void (*__ctors_end[])(void);
-void call_constructors(void)
-{
-    for (void (**ctor)(void) = __ctors_start; ctor < __ctors_end; ++ctor)
-    {
-        (*ctor)();
-    }
-}
-
-int main()
-{
-
-    init_libc();
-    call_constructors();
-
-    LIST2C_DEFINE_HEAD(tokens);
-    // clang-format off
-    tokenizer_parse_tokens(
-	/* "int z;" */
-	/* "z = 10;" */
-
-    "void main(int x, int y) {"
-	"int x = 0;"
-	"int y = 1;"
-	"int z = 2;"
-	"int n = 20;"
-	"int temp;"	
-    "while (z < (n + 1)) {"
-	"temp = x + y;"
-    "x = y;"
-	"y = temp;"
-	"z = z + 1;"
-    "}"
-	"print(y);"
-    "}"
-
-    , &tokens);
-
-    // clang-format on
-    /* ast_parse_tokens(&tokens); */
-
-    LIST2C_DEFINE_HEAD(top_statements_head);
-
-    ast_parse(&tokens, &top_statements_head);
-    /* statements_eval_simple(&statements_head); */
-
-#ifdef TESTS
-    run_tests();
-#endif
-
-    exit(0);
-
-    return 0;
 }

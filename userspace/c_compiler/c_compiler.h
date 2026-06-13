@@ -130,8 +130,59 @@ struct ast_statement
     struct list2c list;
 };
 
+/* function argument definition */
+struct ast_function_arg_def
+{
+    struct ast_type *type;
+    char *name;
+    struct list2c list;
+};
+
+struct ast_function_declare
+{
+    struct ast_type *return_type;
+    char *name;
+    struct list2c args_head;
+
+    struct list2c block;
+};
+
+/* top level statements, like type / global variable definitions, and
+ * functions */
+struct ast_top_statement
+{
+    enum ast_top_statement_type
+    {
+        AST_TOP_STATEMENT_FUNC,
+        AST_TOP_STATEMENT_VAR,
+        AST_TOP_STATEMENT_TYPE,
+    } type;
+
+    union
+    {
+        struct ast_function_declare *function;
+    };
+
+    struct list2c list;
+};
+
+void ast_parse(struct list2c *tokens, struct list2c *top_statements_head);
+
 /* interpreter part, maybe move this later */
-void statements_eval(struct list2c *statements_head, struct array *variables);
-int expr_eval(struct ast_expr *expr, struct array variables);
+
+struct interpreter
+{
+    struct array vars;
+    struct array funcs;
+};
+
+#define INTERPRETER_INIT()                                                     \
+    (struct interpreter)                                                       \
+    {                                                                          \
+        .vars = ARRAY_INIT(), .funcs = ARRAY_INIT()                            \
+    }
+
+void statements_eval(struct list2c *statements_head, struct interpreter *);
+int expr_eval(struct ast_expr *expr, struct interpreter *);
 
 #endif
