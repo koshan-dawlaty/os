@@ -170,17 +170,31 @@ void ast_parse(struct list2c *tokens, struct list2c *top_statements_head);
 
 /* interpreter part, maybe move this later */
 
-struct interpreter
+struct scope
 {
+    struct list2c list;
     struct array vars;
-    struct array funcs;
 };
 
-#define INTERPRETER_INIT()                                                     \
-    (struct interpreter)                                                       \
-    {                                                                          \
-        .vars = ARRAY_INIT(), .funcs = ARRAY_INIT()                            \
-    }
+struct interpreter
+{
+    /* the current scopes the interpreter is in for one function, when a
+     * function is called, the scope of that function will be stored on the
+     * stack, to not interfere with the scope of the called function  */
+    struct list2c all_scopes;
+    struct list2c *current_scope;
+    struct array funcs; /* this should probably used a linked list, as it is
+                           currently storing pointers */
+};
+
+static inline struct interpreter *interpreter_init()
+{
+    struct interpreter *out = malloc(sizeof(struct interpreter));
+    out->funcs = ARRAY_INIT();
+    list2c_init_head(&out->all_scopes);
+    out->current_scope = &out->all_scopes;
+    return out;
+}
 
 void statements_eval(struct list2c *statements_head, struct interpreter *);
 int expr_eval(struct ast_expr *expr, struct interpreter *);

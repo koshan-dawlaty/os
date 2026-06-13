@@ -1,11 +1,23 @@
 #include "c_compiler.h"
-#include "container_of.h"
-#include "lib/list.h"
+#include <container_of.h>
 #include <init.h>
 #include <lib/array.h>
 #include <lib/assert.h>
+#include <lib/list.h>
 #include <lib/log.h>
+#include <math.h>
+#include <string.h>
 #include <tests/tests.h>
+
+struct scope *scope_alloc()
+{
+    struct scope *out = malloc(sizeof(struct scope));
+
+    out->list = LIST2C_INIT();
+    out->vars = ARRAY_INIT();
+
+    return out;
+}
 
 struct variable
 {
@@ -13,7 +25,41 @@ struct variable
     int value;
 };
 
-/* very simple test function for evaluating a simple expression */
+/* TODO: this won't work correctly if something is declared in an inner scope
+ * with the same name as something in an outer scope, it might work to just
+ * traverse the list backwards to fix that though */
+/*
+ * returns the variable with name matching @search from all of the scopes in
+ * @scope_head
+ *
+ * returns null if nothing was found
+ *
+ * you dont own the returned pointer, it is from the array in the
+ * scope
+ */
+struct variable *variable_lookup(struct list2c *scope_head, const char *search)
+{
+    struct list2c *pos;
+    list2c_for_each(pos, scope_head)
+    {
+        struct scope *s = containerof(pos, struct scope, list);
+        for (size_t i = 0; i < ARRAY_LEN(s->vars, sizeof(struct variable)); i++)
+        {
+            struct variable *var =
+                array_get(&s->vars, i, sizeof(struct variable));
+            NOT_NULL(var, "variable from array was null");
+            NOT_NULL(var->varname, "variable had null name");
+
+            if (!strcmp(var->varname, search))
+            {
+                return var;
+            }
+        }
+    }
+
+    return NULL;
+}
+
 int expr_eval(struct ast_expr *expr, struct interpreter *interp)
 {
     if (expr->type == AST_EXPRESSION_OPERATOR)
@@ -32,19 +78,11 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
                 PANIC("attempt to assign to not variable");
             }
 
-            for (size_t i = 0;
-                 i < ARRAY_LEN(interp->vars, sizeof(struct variable)); i++)
-            {
-                struct variable *var =
-                    array_get(&interp->vars, i, sizeof(struct variable));
-
-                if (!strcmp(expr->lhs->value.varname, var->varname))
-                {
-                    var->value = expr_eval(expr->rhs, interp);
-                    return var->value;
-                }
-            }
-            PANIC("variable not found:%s", expr->lhs->value.varname);
+            struct variable *var =
+                variable_lookup(&interp->all_scopes, expr->lhs->value.varname);
+            NOT_NULL(var, "variable not found:%s", expr->lhs->value.varname);
+            var->value = expr_eval(expr->rhs, interp);
+            return var->value;
         }
         else if (!strcmp(expr->operator, "<"))
         {
@@ -71,18 +109,10 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
         }
         else
         {
-            for (size_t i = 0;
-                 i < ARRAY_LEN(interp->vars, sizeof(struct variable)); i++)
-            {
-                struct variable *var =
-                    array_get(&interp->vars, i, sizeof(struct variable));
-
-                if (!strcmp(expr->value.varname, var->varname))
-                {
-                    return var->value;
-                }
-            }
-            PANIC("variable not found:%s", expr->value.varname);
+            struct variable *var =
+                variable_lookup(&interp->all_scopes, expr->value.varname);
+            NOT_NULL(var, "variable not found:%s", expr->value.varname);
+            return var->value;
         }
     }
     else if (expr->type == AST_EXPRESSION_CALL)
@@ -114,9 +144,13 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
             if (!strcmp(func->name, expr->call.function_name))
             {
 
-                /* FIXME: clear all of the non-global variables here */
+                struct list2c prev_scope = interp->all_scopes;
+
+                list2c_init_head(&interp->all_scopes); /* clear scope */
+                interp->current_scope = &interp->all_scopes;
 
                 statements_eval(&func->block, interp);
+                interp->all_scopes = prev_scope;
 
                 return 0; /* TODO: change this when there is a better type
                          system for the interpreter */
@@ -130,6 +164,10 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
 
 void statements_eval(struct list2c *statements_head, struct interpreter *interp)
 {
+    struct scope *new_scope = scope_alloc();
+    list2c_add_after(&new_scope->list, interp->current_scope);
+    interp->current_scope = &new_scope->list;
+
     struct list2c *pos;
     list2c_for_each(pos, statements_head)
     {
@@ -148,7 +186,10 @@ void statements_eval(struct list2c *statements_head, struct interpreter *interp)
                 init_val = expr_eval(statement->init_value, interp);
             }
             struct variable var = {statement->varname, init_val};
-            array_push(&interp->vars, &var, sizeof(struct variable));
+            NOT_NULL(interp->current_scope, "");
+            struct scope *current =
+                containerof(interp->current_scope, struct scope, list);
+            array_push(&current->vars, &var, sizeof(struct variable));
             break;
         case AST_STATEMENT_EXPR:
             expr_eval(statement->expr, interp);
@@ -173,11 +214,14 @@ void statements_eval(struct list2c *statements_head, struct interpreter *interp)
             UNREACHABLE("unhandled switch case:%d", statement->type);
         }
     }
+
+    interp->current_scope = new_scope->list.prev;
+    list2c_remove(&new_scope->list);
 }
 
 void eval_program(struct list2c *top_statements_head)
 {
-    struct interpreter i = INTERPRETER_INIT();
+    struct interpreter *i = interpreter_init();
 
     struct list2c *main_body = NULL;
 
@@ -196,13 +240,13 @@ void eval_program(struct list2c *top_statements_head)
             main_body = &statement->function->block;
         }
 
-        array_add(&i.funcs, &statement->function,
+        array_add(&i->funcs, &statement->function,
                   sizeof(struct ast_function_declare *));
     }
 
     NOT_NULL(main_body, "main() not found!");
 
-    statements_eval(main_body, &i);
+    statements_eval(main_body, i);
 }
 
 /* TODO: put in lib/ or make gcc do it in _start */
@@ -218,7 +262,6 @@ void call_constructors(void)
 
 int main()
 {
-
     init_libc();
     call_constructors();
 
@@ -229,17 +272,25 @@ int main()
 	/* "z = 10;" */
 
 	"void f() {"
-	"print(123);"
-	"print(456);"
-	"int z = 0;"
-	"while (z < 9) {"
-	" print(z);"
-	" z = z + 1;"
-	"}"
+	"int x = 10;"
+	"print(x);"
+	/* "int z = 0;" */
+	/* "while (z < 9) {" */
+	/* " print(z);" */
+	/* " z = z + 1;" */
+	/* "}" */
 	"}"
 	
     "void main() {"
+	/* "int x = 10;" */
 	"f();"
+	/* "int i = 0;" */
+	/* "while (i < 10) {" */
+	/* "int j = 123;" */
+	/* "i = i + 1;" */
+	/* "print(i);" */
+	/* "}" */
+	/* "print(j);" */
     "}"
 
     , &tokens);
