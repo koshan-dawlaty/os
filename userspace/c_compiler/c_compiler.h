@@ -47,20 +47,6 @@ struct ast_parser
 
 void tokenizer_parse_tokens(const char *program, struct list2c *token_list);
 
-enum ast_node_type
-{
-    AST_BLOCK,
-    AST_STATEMENT,
-    AST_DEF, /* definition */
-    AST_INVALID,
-};
-
-struct ast_node
-{
-    enum ast_node_type type;
-    void *data;
-};
-
 struct ast_type
 {
     char *name;

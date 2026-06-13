@@ -242,19 +242,6 @@ void tokenizer_parse_tokens(const char *program, struct list2c *token_list)
     }
 }
 
-struct ast_node *ast_node_alloc(enum ast_node_type type, void *data)
-{
-    struct ast_node *out = malloc(sizeof(struct ast_node));
-    out->type = type;
-    out->data = data;
-    return out;
-}
-
-struct ast_node *ast_node_error(const char *str)
-{
-    return ast_node_alloc(AST_INVALID, strdup(str));
-}
-
 struct ast_type *ast_type_alloc(const char *name)
 {
     struct ast_type *out = malloc(sizeof(struct ast_type));
@@ -391,7 +378,9 @@ bool parser_next_is_type(struct ast_parser *parser)
 
 struct ast_type *parser_parse_type(struct ast_parser *parser)
 {
-    ASSERT(parser_next_is_type(parser), "next token is not a type");
+    ASSERT(parser_next_is_type(parser), "next token %s (%s) is not a type",
+           parser_get_current(parser)->token,
+           token_type_str(parser_get_current(parser)->type));
 
     return ast_type_alloc(parser_advance(parser)->token);
 }
@@ -577,14 +566,156 @@ void ast_parse_statements(struct ast_parser *parser,
     parser_advance(parser);
 }
 
-struct ast_node *ast_parse_tokens(struct list2c *tokens)
+/* function argument definition */
+struct ast_function_arg_def
+{
+    struct ast_type *type;
+    char *name;
+    struct list2c list;
+};
+
+struct ast_function_arg_def *ast_function_arg_def_alloc(struct ast_type *type,
+                                                        const char *name)
+{
+    struct ast_function_arg_def *out =
+        malloc(sizeof(struct ast_function_arg_def));
+
+    out->type = type;
+    out->name = strdup(name);
+    out->list = LIST2C_INIT();
+
+    return out;
+}
+
+struct ast_function_declare
+{
+    struct ast_type *return_type;
+    char *name;
+    struct list2c args_head;
+
+    struct list2c block;
+};
+
+struct ast_function_declare *
+ast_function_declare_alloc(struct ast_type *return_type, const char *name)
+{
+    struct ast_function_declare *out =
+        malloc(sizeof(struct ast_function_declare));
+    out->name = strdup(name);
+    list2c_init_head(&out->args_head);
+    list2c_init_head(&out->block);
+    out->return_type = return_type;
+
+    return out;
+}
+
+/* top level statements, like type / global variable definitions, and
+ * functions */
+struct ast_top_statement
+{
+    enum ast_top_statement_type
+    {
+        AST_TOP_STATEMENT_FUNC,
+        AST_TOP_STATEMENT_VAR,
+        AST_TOP_STATEMENT_TYPE,
+    } type;
+
+    union
+    {
+        struct ast_function_declare *function;
+    };
+
+    struct list2c list;
+};
+
+struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
+{
+    struct ast_top_statement *out = malloc(sizeof(struct ast_top_statement));
+    out->list = LIST2C_INIT();
+    struct ast_type *type = parser_parse_type(
+        parser); /* will not work for parsing type definitions */
+
+    struct token *name = parser_advance(parser);
+    if (name->type != TOKEN_IDENTIFIER)
+    {
+        PANIC("expected identifier, got %s (%s)", name->token,
+              token_type_str(name->type));
+    }
+
+    struct token *tok = parser_get_current(parser);
+
+    switch (tok->type)
+    {
+
+    case TOKEN_O_PAREN:;
+        parser_advance(parser);
+        struct ast_function_declare *func =
+            ast_function_declare_alloc(type, name->token);
+
+        if (parser_get_current(parser)->type == TOKEN_O_PAREN)
+        {
+            goto args_done;
+        }
+
+        while (true)
+        {
+            struct ast_type *type = parser_parse_type(parser);
+            struct token *name = parser_advance(parser);
+            if (name->type != TOKEN_IDENTIFIER)
+            {
+                PANIC("exepcted identifier, got %s (%s)", name->token,
+                      token_type_str(name->type));
+            }
+
+            struct token *current = parser_get_current(parser);
+            if (current->type == TOKEN_C_PAREN)
+            {
+                break;
+            }
+            else if (current->type == TOKEN_COMMA)
+            {
+                parser_advance(parser);
+            }
+            else
+            {
+                PANIC("expected ',' or ')', got %s (%s)", current->token,
+                      token_type_str(current->type));
+            }
+
+            struct ast_function_arg_def *arg =
+                ast_function_arg_def_alloc(type, name->token);
+            list2c_push_end(&arg->list, &func->args_head);
+        }
+    args_done:
+        parser_advance(parser); /* ')' */
+
+        ast_parse_statements(parser, &func->block);
+
+        out->function = func;
+        out->type = AST_TOP_STATEMENT_FUNC;
+
+        break;
+    case TOKEN_SEMICOLON:
+    case TOKEN_ASSIGN:
+        PANIC("top level variable definitions are not implemented yet");
+
+    default:
+        PANIC("invalid token %s (%s)", tok->token, token_type_str(tok->type));
+    }
+
+    return out;
+}
+
+void ast_parse(struct list2c *tokens, struct list2c *top_statements_head)
 {
     struct ast_parser parser = {tokens,
                                 .current = TOKEN_LIST_GET(tokens->next)};
-    LIST2C_DEFINE_HEAD(statements);
-    ast_parse_statements(&parser, &statements);
+    while (parser_get_current(&parser)->type != TOKEN_EOF)
+    {
 
-    return NULL;
+        struct ast_top_statement *statement = ast_parse_top_statement(&parser);
+        list2c_push(&statement->list, top_statements_head);
+    }
 }
 
 struct variable
@@ -745,8 +876,8 @@ void statements_eval_simple(struct list2c *statements_head)
     }
 }
 
-/* FIXME: using the libc version of this function will result in linker errors,
- * and the tests need it, this version should be removed */
+/* FIXME: using the libc version of this function will result in linker
+ * errors, and the tests need it, this version should be removed */
 char *strcat(char *restrict dest, const char *restrict src)
 {
     memcpy(dest + strlen(dest), src, strlen(src) + 1);
@@ -777,7 +908,7 @@ int main()
 	/* "int z;" */
 	/* "z = 10;" */
 
-    "{"
+    "void main(int x, int y) {"
 	"int x = 0;"
 	"int y = 1;"
 	"int z = 2;"
@@ -797,11 +928,10 @@ int main()
     // clang-format on
     /* ast_parse_tokens(&tokens); */
 
-    struct ast_parser parser = {&tokens,
-                                .current = TOKEN_LIST_GET(tokens.next)};
-    LIST2C_DEFINE_HEAD(statements_head);
-    ast_parse_statements(&parser, &statements_head);
-    statements_eval_simple(&statements_head);
+    LIST2C_DEFINE_HEAD(top_statements_head);
+
+    ast_parse(&tokens, &top_statements_head);
+    /* statements_eval_simple(&statements_head); */
 
 #ifdef TESTS
     run_tests();
