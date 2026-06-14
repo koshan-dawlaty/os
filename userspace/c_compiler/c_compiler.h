@@ -9,6 +9,7 @@
 enum token_type
 {
     TOKEN_IDENTIFIER,
+    TOKEN_RETURN,
     TOKEN_UNKNOWN,
     TOKEN_ASSIGN,
     TOKEN_PLUS,
@@ -106,11 +107,18 @@ struct ast_statement
         AST_STATEMENT_IF,
         AST_STATEMENT_WHILE,
         AST_STATEMENT_DECLARE,
+        AST_STATEMENT_RETURN,
     } type;
 
     union
     {
-        struct ast_expr *expr; /* type is expr */
+        /* FIXME: for return maybe could make this its own type */
+        /* type is expr or return */
+        /* if it is return it can be null,
+         * to indicate return from a void function
+         */
+        struct ast_expr *expr;
+
         struct
         {
             struct list2c block; /* type is if, while, or for */
@@ -196,7 +204,7 @@ static inline struct interpreter *interpreter_init()
     return out;
 }
 
-void statements_eval(struct list2c *statements_head, struct interpreter *);
+int statements_eval(struct list2c *statements_head, struct interpreter *);
 int expr_eval(struct ast_expr *expr, struct interpreter *);
 
 #endif

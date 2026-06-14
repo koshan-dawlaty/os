@@ -104,10 +104,9 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
     }
     else if (expr->type == AST_EXPRESSION_VALUE)
     {
-        logd("value");
         if (!expr->value.is_var)
         {
-            logd("literal:%d for %p", expr->value.literal, expr);
+
             return expr->value.literal;
         }
         else
@@ -159,15 +158,18 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
                 struct list2c *def_pos;
                 list2c_for_each(def_pos, &func->args_head)
                 {
+                    if (passed_pos == &expr->call.arguments_head)
+                    {
+                        PANIC("passed less arguments than required");
+                    }
                     struct ast_function_arg_def *def_arg =
                         containerof(def_pos, struct ast_function_arg_def, list);
                     struct ast_function_arg *passed_arg =
                         containerof(passed_pos, struct ast_function_arg, list);
 
-                    logd("%p", passed_arg->expr);
+                    logi("adding:%s to scope", def_arg->name);
+
                     int value = expr_eval(passed_arg->expr, interp);
-                    logd("%d", value);
-                    logd("name of:%s", def_arg->name);
                     struct variable var = {.value = value,
                                            .varname = def_arg->name};
                     array_add(&new_scope->vars, &var, sizeof(struct variable));
@@ -175,11 +177,16 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
                     passed_pos = passed_pos->next;
                 }
 
-                statements_eval(&func->block, interp);
+                if (passed_pos != &expr->call.arguments_head)
+                {
+                    PANIC("passed more arguments than required");
+                }
+
+                int return_value = statements_eval(&func->block, interp);
                 interp->all_scopes = prev_scope;
 
-                return 0; /* TODO: change this when there is a better type
-                         system for the interpreter */
+                return return_value; /* TODO: change this when there is a better
+                         type system for the interpreter */
             }
         }
 
@@ -188,11 +195,13 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
     UNREACHABLE("unknown enum type:%d", expr->type);
 }
 
-void statements_eval(struct list2c *statements_head, struct interpreter *interp)
+int statements_eval(struct list2c *statements_head, struct interpreter *interp)
 {
     struct scope *new_scope = scope_alloc();
     list2c_add_after(&new_scope->list, interp->current_scope);
     interp->current_scope = &new_scope->list;
+
+    int retval = -1;
 
     struct list2c *pos;
     list2c_for_each(pos, statements_head)
@@ -224,25 +233,45 @@ void statements_eval(struct list2c *statements_head, struct interpreter *interp)
             value = expr_eval(statement->block_expr, interp);
             if (value != 0)
             {
-                statements_eval(&statement->block, interp);
+                int output = statements_eval(&statement->block, interp);
+                if (output != -1)
+                {
+                    retval = output;
+                    goto end;
+                }
             }
             break;
         case AST_STATEMENT_WHILE:;
             value = expr_eval(statement->block_expr, interp);
             while (value != 0)
             {
-                statements_eval(&statement->block, interp);
+                int output = statements_eval(&statement->block, interp);
+                if (output == -1)
+                {
+                    retval = output;
+                    goto end;
+                }
                 value = expr_eval(statement->block_expr, interp);
             }
             break;
+        case AST_STATEMENT_RETURN:
+            if (statement->expr != NULL)
+            {
+                retval = expr_eval(statement->expr, interp);
+                logd("returning %d", retval);
+            }
+            goto end;
 
         default:
             UNREACHABLE("unhandled switch case:%d", statement->type);
         }
     }
+end:
 
     interp->current_scope = new_scope->list.prev;
     list2c_remove(&new_scope->list);
+
+    return retval;
 }
 
 void eval_program(struct list2c *top_statements_head)
@@ -297,20 +326,17 @@ int main()
 	/* "int z;" */
 	/* "z = 10;" */
 
-	"void f(int num) {"
-	"int x = 10;"
-	"print(x);"
-	"print(num);"
-	/* "int z = 0;" */
-	/* "while (z < 9) {" */
-	/* " print(z);" */
-	/* " z = z + 1;" */
-	/* "}" */
+
+	"void fib(int num) {"
+		"if (num > 0) {"
+			"return num;"
+		"}"
+		"return 1;"
 	"}"
 	
     "void main() {"
 	/* "int x = 10;" */
-	"f(123);"
+	"print(fib(10));"
 	/* "int i = 0;" */
 	/* "while (i < 10) {" */
 	/* "int j = 123;" */

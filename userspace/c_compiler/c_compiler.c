@@ -23,6 +23,8 @@ const char *token_type_str(enum token_type type)
 {
     switch (type)
     {
+    case TOKEN_RETURN:
+        return "RETURN";
     case TOKEN_COMMA:
         return "COMMA";
     case TOKEN_WHILE:
@@ -134,6 +136,7 @@ struct token_simple_map_entry token_simple_map[] = {
     {"if", TOKEN_IF},
     {"while", TOKEN_WHILE},
     {",", TOKEN_COMMA},
+    {"return", TOKEN_RETURN},
 
     // clang-format on
 
@@ -261,7 +264,6 @@ static inline struct ast_value ast_token_to_value(struct token *tok)
     if (tok->type == TOKEN_INT)
     {
         int num = atoi(tok->token);
-        logd("ast_token_to_value:%d", num);
         return AST_VALUE_LITERAL(num);
     }
     else if (tok->type == TOKEN_IDENTIFIER)
@@ -322,6 +324,16 @@ struct ast_statement *ast_statement_alloc_expr(struct ast_expr *expr)
     struct ast_statement *out = malloc(sizeof(struct ast_statement));
     out->expr = expr;
     out->type = AST_STATEMENT_EXPR;
+    out->list = LIST2C_INIT();
+
+    return out;
+}
+
+struct ast_statement *ast_statement_alloc_return(struct ast_expr *expr)
+{
+    struct ast_statement *out = malloc(sizeof(struct ast_statement));
+    out->expr = expr;
+    out->type = AST_STATEMENT_RETURN;
     out->list = LIST2C_INIT();
 
     return out;
@@ -415,7 +427,6 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
             {
                 struct ast_expr *expr = ast_parse_expression(parser);
                 struct ast_function_arg *arg = ast_function_arg_alloc(expr);
-                logd("expr:%p", arg->expr);
                 list2c_push_end(&arg->list, &call->arguments_head);
 
                 struct token *tok = parser_advance(parser);
@@ -545,6 +556,27 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser)
                 parser) /* TODO: this will allow things like if x == y {} */);
 
         ast_parse_statements(parser, &out->block);
+    }
+    else if (tok->type == TOKEN_RETURN)
+    {
+        parser_advance(parser);
+
+        if (parser_get_current(parser)->type == TOKEN_SEMICOLON)
+        {
+            out = ast_statement_alloc_return(NULL);
+        }
+        else
+        {
+            struct ast_expr *expr = ast_parse_expression(parser);
+            out = ast_statement_alloc_return(expr);
+
+            struct token *semicolon = parser_advance(parser);
+            if (semicolon->type != TOKEN_SEMICOLON)
+            {
+                PANIC("expected semicolon got:%s for token %s",
+                      token_type_str(semicolon->type), semicolon->token);
+            }
+        }
     }
 
     return out;
