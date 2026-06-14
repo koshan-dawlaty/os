@@ -261,6 +261,7 @@ static inline struct ast_value ast_token_to_value(struct token *tok)
     if (tok->type == TOKEN_INT)
     {
         int num = atoi(tok->token);
+        logd("ast_token_to_value:%d", num);
         return AST_VALUE_LITERAL(num);
     }
     else if (tok->type == TOKEN_IDENTIFIER)
@@ -414,6 +415,7 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
             {
                 struct ast_expr *expr = ast_parse_expression(parser);
                 struct ast_function_arg *arg = ast_function_arg_alloc(expr);
+                logd("expr:%p", arg->expr);
                 list2c_push_end(&arg->list, &call->arguments_head);
 
                 struct token *tok = parser_advance(parser);
@@ -631,6 +633,9 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
                       token_type_str(name->type));
             }
 
+            struct ast_function_arg_def *arg =
+                ast_function_arg_def_alloc(type, name->token);
+            list2c_push_end(&arg->list, &func->args_head);
             struct token *current = parser_get_current(parser);
             if (current->type == TOKEN_C_PAREN)
             {
@@ -645,10 +650,6 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
                 PANIC("expected ',' or ')', got %s (%s)", current->token,
                       token_type_str(current->type));
             }
-
-            struct ast_function_arg_def *arg =
-                ast_function_arg_def_alloc(type, name->token);
-            list2c_push_end(&arg->list, &func->args_head);
         }
     args_done:
         parser_advance(parser); /* ')' */

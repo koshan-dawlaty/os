@@ -178,10 +178,7 @@ $(BIN)/sokoban : $(OBJS_START_BIN) $(BIN)/sokoban.o $(BIN)/wm_lib.o $(DEPENDENCI
 
 $(BIN)/compiler : $(OBJS_START_BIN) $(BIN)/c_compiler/c_compiler.o $(BIN)/c_compiler/interpreter.o $(BIN)/c_compiler/tests.o  $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	@cat linker.ld
-	$(CC) -Ttext=0x300000  -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
-
-
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000  
 
 
 $(BIN)/%.o: %.S

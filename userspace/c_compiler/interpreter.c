@@ -62,6 +62,7 @@ struct variable *variable_lookup(struct list2c *scope_head, const char *search)
 
 int expr_eval(struct ast_expr *expr, struct interpreter *interp)
 {
+    NOT_NULL(expr, "expression was null");
     if (expr->type == AST_EXPRESSION_OPERATOR)
     {
         if (!strcmp(expr->operator,
@@ -103,8 +104,10 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
     }
     else if (expr->type == AST_EXPRESSION_VALUE)
     {
+        logd("value");
         if (!expr->value.is_var)
         {
+            logd("literal:%d for %p", expr->value.literal, expr);
             return expr->value.literal;
         }
         else
@@ -147,7 +150,30 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
                 struct list2c prev_scope = interp->all_scopes;
 
                 list2c_init_head(&interp->all_scopes); /* clear scope */
-                interp->current_scope = &interp->all_scopes;
+
+                struct scope *new_scope = scope_alloc();
+                list2c_push(&new_scope->list, &interp->all_scopes);
+                interp->current_scope = &new_scope->list;
+
+                struct list2c *passed_pos = expr->call.arguments_head.next;
+                struct list2c *def_pos;
+                list2c_for_each(def_pos, &func->args_head)
+                {
+                    struct ast_function_arg_def *def_arg =
+                        containerof(def_pos, struct ast_function_arg_def, list);
+                    struct ast_function_arg *passed_arg =
+                        containerof(passed_pos, struct ast_function_arg, list);
+
+                    logd("%p", passed_arg->expr);
+                    int value = expr_eval(passed_arg->expr, interp);
+                    logd("%d", value);
+                    logd("name of:%s", def_arg->name);
+                    struct variable var = {.value = value,
+                                           .varname = def_arg->name};
+                    array_add(&new_scope->vars, &var, sizeof(struct variable));
+
+                    passed_pos = passed_pos->next;
+                }
 
                 statements_eval(&func->block, interp);
                 interp->all_scopes = prev_scope;
@@ -271,9 +297,10 @@ int main()
 	/* "int z;" */
 	/* "z = 10;" */
 
-	"void f() {"
+	"void f(int num) {"
 	"int x = 10;"
 	"print(x);"
+	"print(num);"
 	/* "int z = 0;" */
 	/* "while (z < 9) {" */
 	/* " print(z);" */
@@ -283,7 +310,7 @@ int main()
 	
     "void main() {"
 	/* "int x = 10;" */
-	"f();"
+	"f(123);"
 	/* "int i = 0;" */
 	/* "while (i < 10) {" */
 	/* "int j = 123;" */
