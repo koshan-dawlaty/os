@@ -252,7 +252,7 @@ int statements_eval(struct list2c *statements_head, struct interpreter *interp)
             while (value != 0)
             {
                 int output = statements_eval(&statement->block, interp);
-                if (output == -1)
+                if (output != -1)
                 {
                     retval = output;
                     goto end;
@@ -329,17 +329,14 @@ int main()
     LIST2C_DEFINE_HEAD(tokens);
     // clang-format off
 	const char * program = MACRO_STR(
-			void fib(int num) {
-				if (num > 2) {
-					print(num);
-					return fib(num - 1) + fib(num - 2);
-				}
-				return 1;
-			}
 
-			void main() {
-				print(fib(10));
-			}
+int main() {
+	int i = 0;
+	while (i < 10) {
+		i = i + 1;
+	}
+	return i;
+}
 		);
     // clang-format on
     tokenizer_parse_tokens(program, &tokens);

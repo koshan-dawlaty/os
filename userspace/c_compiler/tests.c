@@ -162,21 +162,125 @@ struct test_result *test_interpreter(const char *program, int expected)
 }
 
 #define TEST_INTERPRETER(name, program_expr, expected)                         \
-    TEST(name, { return test_interpreter(program_expr, expected); })
+    TEST(name, { return test_interpreter(MACRO_STR(program_expr), expected); })
 
 // clang-format off
-TEST_INTERPRETER(interpreter_test1,
-" 			void fib(int num) {"
-" 				if (num > 2) {"
-" 					print(num);"
-" 					return fib(num - 1) + fib(num - 2);"
-" 				}"
-" 				return 1;"
-" 			}"
-" "
-" 			void main() {"
-" 				return fib(10);"
-" 			}"
+TEST_INTERPRETER(interpreter_test_fibonacci,
+int fib(int num) {
+	if (num > 2) {
+		print(num);
+		return fib(num - 1) + fib(num - 2);
+	}
+	return 1;
+}
 
-		, 55);
+int main() {
+	return fib(10);
+}
+
+, 55);
+
+TEST_INTERPRETER(interpreter_test_add_vars,
+int main() {
+	int x = 10;
+	int y = x +  5;
+	return  y;
+}
+, 15);
+
+TEST_INTERPRETER(interpreter_test_basic_return,
+int main() {
+	return  123;
+}
+, 123);
+
+TEST_INTERPRETER(interpreter_test_call_arg,
+
+int func(int num) {
+	return num + 5;
+}
+
+int main() {
+	return func(20);
+}
+, 25);
+
+TEST_INTERPRETER(interpreter_test_call_passing_arg_to_other_arg,
+int f2(int num2) {
+	return num2 + 10;
+}
+int f1(int num) {
+	return f2(num + 5);
+}
+int main() {
+	return f1(15);
+}
+, 30);
+
+TEST_INTERPRETER(interpreter_test_if_assign,
+int main() {
+	int x = 10;
+	if (x > 5) {
+		x = x + 5;
+	}
+	return x;
+}
+, 15);
+
+TEST_INTERPRETER(interpreter_test_if_return,
+int main() {
+	int x = 10;
+	if (x > 5) {
+		return 123;
+	}
+	return 456;
+}
+, 123);
+
+TEST_INTERPRETER(interpreter_test_loop_while,
+int main() {
+	int i = 0;
+	while (i < 10) {
+		i = i + 1;
+	}
+	return i;
+}
+, 10);
+
+TEST_INTERPRETER(interpreter_test_loop_while_early_return,
+int main() {
+	int i = 0;
+	while (i < 10) {
+		if (i > 5) {
+			return 123;
+		}
+		i = i + 1;
+	}
+	return i;
+}
+, 123);
+
+TEST_INTERPRETER(interpreter_test_nested_if,
+int main() {
+	int i = 10;
+	if (i > 1) {
+		if (i > 2) {
+			if (i > 3) {
+				if (i > 4) {
+					if (i > 5) {
+						if (i > 6) {
+							if (i > 7) {
+								return 123;
+							}
+						}
+					} 
+				} 
+			} 
+		}
+	}
+	return 456;
+ 
+}
+, 123);
+
 // clang-format on
