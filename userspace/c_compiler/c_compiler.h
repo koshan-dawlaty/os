@@ -13,6 +13,7 @@ enum token_type
     TOKEN_UNKNOWN,
     TOKEN_ASSIGN,
     TOKEN_PLUS,
+    TOKEN_MINUS,
     TOKEN_EQUALS,
     TOKEN_GREATER,
     TOKEN_LESS,

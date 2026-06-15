@@ -5,6 +5,7 @@
 #include <lib/assert.h>
 #include <lib/list.h>
 #include <lib/log.h>
+#include <lib/utils.h>
 #include <math.h>
 #include <string.h>
 #include <tests/tests.h>
@@ -71,6 +72,12 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
             int lhs = expr_eval(expr->lhs, interp);
             int rhs = expr_eval(expr->rhs, interp);
             return lhs + rhs;
+        }
+        else if (!strcmp(expr->operator, "-"))
+        {
+            int lhs = expr_eval(expr->lhs, interp);
+            int rhs = expr_eval(expr->rhs, interp);
+            return lhs - rhs;
         }
         else if (!strcmp(expr->operator, "="))
         {
@@ -146,13 +153,7 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
             if (!strcmp(func->name, expr->call.function_name))
             {
 
-                struct list2c prev_scope = interp->all_scopes;
-
-                list2c_init_head(&interp->all_scopes); /* clear scope */
-
                 struct scope *new_scope = scope_alloc();
-                list2c_push(&new_scope->list, &interp->all_scopes);
-                interp->current_scope = &new_scope->list;
 
                 struct list2c *passed_pos = expr->call.arguments_head.next;
                 struct list2c *def_pos;
@@ -176,6 +177,11 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
 
                     passed_pos = passed_pos->next;
                 }
+
+                struct list2c prev_scope = interp->all_scopes;
+                list2c_init_head(&interp->all_scopes); /* clear scope */
+                list2c_push(&new_scope->list, &interp->all_scopes);
+                interp->current_scope = &new_scope->list;
 
                 if (passed_pos != &expr->call.arguments_head)
                 {
@@ -322,33 +328,22 @@ int main()
 
     LIST2C_DEFINE_HEAD(tokens);
     // clang-format off
-    tokenizer_parse_tokens(
-	/* "int z;" */
-	/* "z = 10;" */
+	const char * program = MACRO_STR(
+			void fib(int num) {
+				if (num > 2) {
+					print(num);
+					return fib(num - 1) + fib(num - 2);
+				}
+				return 1;
+			}
 
-
-	"void fib(int num) {"
-		"if (num > 0) {"
-			"return num;"
-		"}"
-		"return 1;"
-	"}"
-	
-    "void main() {"
-	/* "int x = 10;" */
-	"print(fib(10));"
-	/* "int i = 0;" */
-	/* "while (i < 10) {" */
-	/* "int j = 123;" */
-	/* "i = i + 1;" */
-	/* "print(i);" */
-	/* "}" */
-	/* "print(j);" */
-    "}"
-
-    , &tokens);
-
+			void main() {
+				print(fib(10));
+			}
+		);
     // clang-format on
+    tokenizer_parse_tokens(program, &tokens);
+
     /* ast_parse_tokens(&tokens); */
 
     LIST2C_DEFINE_HEAD(top_statements_head);

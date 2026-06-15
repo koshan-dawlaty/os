@@ -15,7 +15,7 @@
 
 bool token_is_operator(enum token_type type)
 {
-    return type == TOKEN_ASSIGN || type == TOKEN_PLUS ||
+    return type == TOKEN_ASSIGN || type == TOKEN_PLUS || type == TOKEN_MINUS ||
            type == TOKEN_GREATER || type == TOKEN_LESS;
 }
 
@@ -41,6 +41,8 @@ const char *token_type_str(enum token_type type)
         return "ASSIGN";
     case TOKEN_PLUS:
         return "PLUS";
+    case TOKEN_MINUS:
+        return "MINUS";
     case TOKEN_EQUALS:
         return "EQUALS";
     case TOKEN_INT:
@@ -131,6 +133,7 @@ struct token_simple_map_entry token_simple_map[] = {
     {"}", TOKEN_C_BRACE},
     {";", TOKEN_SEMICOLON},
     {"+", TOKEN_PLUS},
+    {"-", TOKEN_MINUS},
     {">", TOKEN_GREATER},
     {"<", TOKEN_LESS},
     {"if", TOKEN_IF},
