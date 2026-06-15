@@ -280,7 +280,7 @@ end:
     return retval;
 }
 
-void eval_program(struct list2c *top_statements_head)
+int eval_program(struct list2c *top_statements_head)
 {
     struct interpreter *i = interpreter_init();
 
@@ -307,7 +307,7 @@ void eval_program(struct list2c *top_statements_head)
 
     NOT_NULL(main_body, "main() not found!");
 
-    statements_eval(main_body, i);
+    return statements_eval(main_body, i);
 }
 
 /* TODO: put in lib/ or make gcc do it in _start */

@@ -1,4 +1,5 @@
 #include "c_compiler.h"
+#include "lib/utils.h"
 #include <container_of.h>
 #include <init.h>
 #include <lib/array.h>
@@ -145,3 +146,37 @@ TEST_AST_EXPRESSIONS(expr_test2, "1+1+1+1+1+1", 6)
 TEST_AST_EXPRESSIONS(expr_test3, "(((1+2)+2)+2) + 3", 10)
 TEST_AST_EXPRESSIONS(expr_test4, "(1+2) + 3", 6)
 TEST_AST_EXPRESSIONS(expr_test5, "123", 123)
+
+struct test_result *test_interpreter(const char *program, int expected)
+{
+    LIST2C_DEFINE_HEAD(tokens);
+    tokenizer_parse_tokens(program, &tokens);
+
+    LIST2C_DEFINE_HEAD(top_statements);
+    ast_parse(&tokens, &top_statements);
+
+    int got = eval_program(&top_statements);
+    ASSERT_EQ(got, expected, "%d != %d for program %s", got, expected, program);
+
+    TEST_OK();
+}
+
+#define TEST_INTERPRETER(name, program_expr, expected)                         \
+    TEST(name, { return test_interpreter(program_expr, expected); })
+
+// clang-format off
+TEST_INTERPRETER(interpreter_test1,
+" 			void fib(int num) {"
+" 				if (num > 2) {"
+" 					print(num);"
+" 					return fib(num - 1) + fib(num - 2);"
+" 				}"
+" 				return 1;"
+" 			}"
+" "
+" 			void main() {"
+" 				return fib(10);"
+" 			}"
+
+		, 55);
+// clang-format on

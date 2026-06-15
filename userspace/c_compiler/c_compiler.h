@@ -207,5 +207,6 @@ static inline struct interpreter *interpreter_init()
 
 int statements_eval(struct list2c *statements_head, struct interpreter *);
 int expr_eval(struct ast_expr *expr, struct interpreter *);
+int eval_program(struct list2c *top_statements_head);
 
 #endif
