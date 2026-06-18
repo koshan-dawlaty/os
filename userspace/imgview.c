@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     while (1)
     {
         struct wm_message message;
-        wm_get_message(client, &message);
+        wm_get_message(&client, &message);
         /* wm_render(client); */
     }
 

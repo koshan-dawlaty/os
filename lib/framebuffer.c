@@ -1,9 +1,11 @@
-#include "lib/utils.h"
+#include "unistd.h"
 #include <compiler.h>
 #include <lib/framebuffer.h>
 #include <lib/log.h>
+#include <lib/utils.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <types.h>
 
 void framebuffer_pixel_write(struct framebuffer *f, u8 *pixel, int color)
@@ -90,5 +92,28 @@ void framebuffer_draw_line(struct framebuffer *f, int x1, int y1, int x2,
         /* framebuffer_put_pixel(f, color, x, y_increment * (x - x_min) +
          * y_min); */
         framebuffer_put_pixel(f, color, x, y_increment * (x - x1) + y1);
+    }
+}
+
+void framebuffer_resize(struct framebuffer *fb, size_t new_width,
+                        size_t new_height, void *new_buffer)
+{
+
+    size_t new_pitch = new_width * 4, old_pitch = fb->width * 4;
+    logd("new_width:%d", new_width);
+    size_t copy_size = MIN(new_width, fb->width) * 4;
+    logd("copy_size:%d", copy_size);
+
+    for (size_t y = 0; y < new_height; y++)
+    {
+
+        size_t new_offset = y * new_pitch;
+        size_t old_offset = y * fb->pitch;
+
+        u8 *dest = new_buffer + new_offset;
+        u8 *src = fb->buffer + old_offset;
+
+        /* memset(new_buffer + new_offset, 0, copy_size * 4); */
+        memcpy(new_buffer + new_offset, fb->buffer + old_offset, copy_size);
     }
 }

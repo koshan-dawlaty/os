@@ -1,5 +1,6 @@
 #include "wm_lib.h"
 #include "fcntl.h"
+#include "lib/framebuffer.h"
 #include <err_ptr.h>
 #include <errno.h>
 #include <lib/log.h>
@@ -139,6 +140,7 @@ static struct wm_client wm_client_connect_impl(size_t height, size_t width,
                                framebuffer),
         .socket = server_sock,
         .key_socket = key_socket,
+        .mem_id = second_message.mem_id,
     };
 
     return out;
@@ -157,4 +159,33 @@ struct wm_client wm_client_connect(size_t height, size_t width)
 struct wm_client wm_client_connect_focus(size_t height, size_t width)
 {
     return wm_client_connect_impl(height, width, false, true);
+}
+
+void wm_get_message(struct wm_client *client, struct wm_message *message)
+{
+    struct wm_message_header header;
+    recv(client->key_socket, &header, sizeof(struct wm_message_header));
+    message->message_data = malloc(header.len);
+    recv(client->key_socket, message->message_data, header.len);
+
+    message->header = header;
+    if (message->header.type == WM_MESSAGE_RESIZE)
+    {
+
+        struct wm_message_resize *resize = message->message_data;
+        void *new_buf;
+
+        shared_mem_get(client->mem_id, &new_buf);
+        framebuffer_resize(&client->fb, resize->new_w, resize->new_h, new_buf);
+        client->fb.buffer = new_buf;
+        client->fb.width = resize->new_w;
+        client->fb.height = resize->new_h;
+        client->fb.pitch = resize->new_w * 4;
+
+        int ack_code = 123;
+        send(client->key_socket, &ack_code, sizeof(int));
+
+        /* wm_render(*client); */
+    }
+    /* logd("got data:%s, %d", message->message_data, header.len); */
 }

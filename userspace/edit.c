@@ -122,7 +122,7 @@ int main()
     while (1)
     {
         struct wm_message message;
-        wm_get_message(client, &message);
+        wm_get_message(&client, &message);
 
         switch (message.header.type)
         {

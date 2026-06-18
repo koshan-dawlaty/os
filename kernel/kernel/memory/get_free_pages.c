@@ -5,6 +5,7 @@
 #include <container_of.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
+#include <kernel/stacktrace.h>
 #include <kernel/types.h>
 #include <kmalloc.h>
 #include <lib/binary_tree.h>
@@ -309,7 +310,8 @@ void free_pages_tree(void *addr, size_t amount, struct memory_zone *z)
     if (node == NULL)
     {
         /* invalid */
-        loge("possible double free_pages_tree for addr:%p\n", addr);
+        loge("possible double free_pages_tree for addr:%p", addr);
+        stacktrace_log();
         return;
     }
 

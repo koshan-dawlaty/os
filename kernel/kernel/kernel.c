@@ -230,7 +230,7 @@ void kernel_init()
 #ifdef TESTS
     run_tests();
 #else
-    /* symbol_table_parse(); /1* seems to break with tests *1/ */
+    symbol_table_parse(); /* seems to break with tests */
 #endif
 }
 
@@ -285,8 +285,8 @@ void kmain()
 
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
 
-    /* int err = execv("/bin/wm", (char *[]){"wm", NULL}); */
-    int err = execv("/bin/compiler", (char *[]){"compiler", NULL});
+    int err = execv("/bin/wm", (char *[]){"wm", NULL});
+    /* int err = execv("/bin/compiler", (char *[]){"compiler", NULL}); */
     /* int err = execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
     /* int err = execv("/bin/ls", (char *[]){"/bin/ls", "/dev", NULL}); */
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */

@@ -1,4 +1,3 @@
-#include "lib/font.h"
 #include "wm_lib.h"
 #include <container_of.h>
 #include <errno.h>
@@ -7,6 +6,7 @@
 #include <init.h>
 #include <lib/array.h>
 #include <lib/assert.h>
+#include <lib/font.h>
 #include <lib/framebuffer.h>
 #include <lib/img.h>
 #include <lib/list.h>
@@ -33,6 +33,8 @@ struct wm_connection
     int client_key_socket;
     int input_socket;
 
+    int shared_mem_id;
+
     bool updated_mouse;
 
     void *buffer;
@@ -40,7 +42,8 @@ struct wm_connection
 
 struct PSF_font *font;
 
-struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf)
+struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf,
+                                          int mem_id)
 {
     struct wm_connection *conn = malloc(sizeof(struct wm_connection));
 
@@ -48,6 +51,7 @@ struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf)
     conn->updated_mouse = false;
     conn->input_socket = socket_create();
     conn->buffer = client_buf;
+    conn->shared_mem_id = mem_id;
 
     return conn;
 }
@@ -524,7 +528,8 @@ void process_connection()
 
     send(socket, second_message, sizeof(struct wm_second));
 
-    struct wm_connection *conn = wm_connection_alloc(socket, client_buf);
+    struct wm_connection *conn =
+        wm_connection_alloc(socket, client_buf, mem_id);
     conn->client_key_socket = key_socket;
 
     struct window *w = new_client_window(x, y, win_info.width, win_info.height);
@@ -678,6 +683,74 @@ disconnect:;
     exit(1);
 }
 
+static int resize_window(struct window_queue_entry *ent, int width_diff,
+                         int height_diff)
+{
+    logd("%d", width_diff);
+    size_t old_height = WIN_H(ent->win) - WINDOW_DECORATION_ROWS;
+    size_t old_width = WIN_W(ent->win);
+
+    size_t new_height = old_height + height_diff;
+    size_t new_width = old_width + width_diff;
+
+    size_t old_size = old_width * old_height * 4;
+    size_t new_size = new_width * new_height * 4;
+
+    logd("old w:%d h:%d new w:%d h:%d", old_width, old_height, new_width,
+         new_height);
+
+    logd("%d, %d", new_width, new_height);
+    struct wm_message_resize resize = {new_width, new_height};
+    struct wm_message message = {
+        WM_MESSAGE_RESIZE_HEADER,
+        .message_data = &resize,
+    };
+    shared_mem_resize(ent->conn->shared_mem_id, new_size);
+    server_send_message(ent->conn, &message);
+
+    int ack_code;
+    recv(ent->conn->client_key_socket, &ack_code, sizeof(int));
+
+    if (ack_code != 123)
+    {
+        /* FIXME: shouldn't panic, but instead disconnect from client */
+        PANIC("client sent invalid ack code %d", ack_code);
+
+        return -EINVAL;
+    }
+
+    /* for (size_t i = 0; i < 100; i++) */
+    /* { */
+    /*     sched_yield(); */
+    /* } */
+
+    logd("wm window buffer:%p", ent->win->fb.buffer);
+    framebuffer_resize(&ent->win->fb, new_width, new_height,
+                       ent->win->fb.buffer);
+    ent->win->fb.height = new_height + WINDOW_DECORATION_ROWS;
+    ent->win->fb.width = new_width;
+    ent->win->fb.pitch = new_width * 4;
+
+    /* framebuffer_draw_rect(&ent->win->fb, 0, 0, ent->win->fb.width, */
+    /*                       ent->win->fb.height, 0xFF); */
+    draw_window_decoration(ent->win, true);
+    update_area_up(
+        (struct rect){
+
+            .x = WIN_X(ent->win),
+            .y = WIN_Y(ent->win),
+
+            .w = old_width,
+            .h = old_height + WINDOW_DECORATION_ROWS,
+
+        },
+        buffer);
+
+    logd("not in resize_window");
+
+    return 0;
+}
+
 int drag_count = 0;
 
 static void process_mouse(struct mouse_event *ev)
@@ -771,7 +844,6 @@ static void process_mouse(struct mouse_event *ev)
                 WIN_Y(mouse) > WIN_Y(win) &&
                 WIN_Y(mouse) < WIN_Y(win) + WINDOW_DECORATION_ROWS)
             {
-
                 close(new_focus->conn->client_socket);
             }
             else
@@ -796,6 +868,10 @@ static void process_keyboard(char c)
             /* close(focused->conn->client_key_socket); */ /* TODO: causes
                                                               issues */
         }
+    }
+    else if (c == 'a' && focused != NULL)
+    {
+        resize_window(focused, -10, 0);
     }
     else if (c == 'R')
     {
@@ -991,9 +1067,9 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
-    /* execv("/bin/term", (char *[]){"term", NULL}); */
+    execv("/bin/term", (char *[]){"term", NULL});
     /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
-    execv("/bin/sokoban", (char *[]){"/bin/sokoban", NULL});
+    /* execv("/bin/sokoban", (char *[]){"/bin/sokoban", NULL}); */
     /* execv("/bin/run", (char *[]){"run", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */

@@ -177,7 +177,7 @@ draw_point(to_screen_point((struct point2d){.x = 0.5, .y = -0.5}));
 
         wm_render(client);
         struct wm_message message;
-        wm_get_message(client, &message);
+        wm_get_message(&client, &message);
         if (message.header.type == WM_MESSAGE_KEY)
         {
             char c = *(char *)message.message_data;

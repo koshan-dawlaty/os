@@ -50,7 +50,7 @@ void key_thread()
         /* logd("getting key"); */
         /* user_mutex_lock(mutex); */
         struct wm_message message;
-        wm_get_message(client, &message);
+        wm_get_message(&client, &message);
         switch (message.header.type)
         {
         case WM_MESSAGE_KEY:

@@ -1,9 +1,10 @@
-#include "kernel/utils.h"
-#include "memory/get_free_pages.h"
-#include "memory/paging_flags.h"
-#include "spinlock.h"
 #include <kernel/paging.h>
 #include <kernel/syscall.h>
+#include <kernel/utils.h>
+#include <lib/log.h>
+#include <memory/get_free_pages.h>
+#include <memory/paging_flags.h>
+#include <spinlock.h>
 #include <stdio.h>
 #include <syscall.h>
 
@@ -73,6 +74,31 @@ int shared_mem_get(int id, void **p)
     spinlock_unlock(&shared_mem_lock);
 
     return 0;
+}
+
+int shared_mem_resize(int id, size_t new_size)
+{
+    spinlock_lock(&shared_mem_lock);
+
+    struct shared_memory_entry ent = shared_memory_list[id];
+
+    size_t old_size = ent.len;
+
+    logd("new:%p old:%p", new_size, old_size);
+    if (new_size > old_size)
+    {
+        PANIC("not implemented");
+    }
+
+    ent.len = new_size;
+
+    spinlock_unlock(&shared_mem_lock);
+    return 0;
+}
+
+SYSCALL_DEFINE2(SYS_shared_mem_resize, int, int, id, size_t, new_size)
+{
+    return shared_mem_resize(id, new_size);
 }
 
 /* TODO: */

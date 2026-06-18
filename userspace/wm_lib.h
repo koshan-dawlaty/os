@@ -44,12 +44,14 @@ struct wm_client
 {
     int socket;
     int key_socket;
+    int mem_id;
     struct framebuffer fb;
 };
 
 #define WM_MESSAGE_INVALID -1
 #define WM_MESSAGE_KEY 1
 #define WM_MESSAGE_MOUSE 2
+#define WM_MESSAGE_RESIZE 3
 typedef u8 wm_message_type_t;
 
 struct wm_message_header
@@ -64,6 +66,14 @@ struct wm_message_header
 #define WM_MESSAGE_MOUSE_HEADER                                                \
     ((struct wm_message_header){.type = WM_MESSAGE_MOUSE,                      \
                                 .len = sizeof(struct mouse_event)})
+
+struct wm_message_resize
+{
+    size_t new_w, new_h;
+};
+#define WM_MESSAGE_RESIZE_HEADER                                               \
+    ((struct wm_message_header){.type = WM_MESSAGE_RESIZE,                     \
+                                .len = sizeof(struct wm_message_resize)})
 
 struct wm_message
 {
@@ -163,6 +173,11 @@ static inline int shared_mem_get(int id, void **p)
     return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr)p, 0, 0, 0);
 }
 
+static inline int shared_mem_resize(int id, size_t len)
+{
+    return syscall_wrapper_asm(SYS_shared_mem_resize, id, len, 0, 0, 0);
+}
+
 static inline int connect(int socket)
 {
     return syscall_wrapper_asm(SYS_connect, socket, 0, 0, 0, 0);
@@ -176,16 +191,6 @@ struct wm_client wm_client_connect(size_t height, size_t width);
 struct wm_client wm_client_connect_focus(size_t height, size_t width);
 struct wm_client wm_client_connect_nonblock(size_t height, size_t width);
 
-static inline void wm_get_message(struct wm_client client,
-                                  struct wm_message *message)
-{
-    struct wm_message_header header;
-    recv(client.key_socket, &header, sizeof(struct wm_message_header));
-    message->message_data = malloc(header.len);
-    recv(client.key_socket, message->message_data, header.len);
-    /* logd("got data:%s, %d", message->message_data, header.len); */
-
-    message->header = header;
-}
+void wm_get_message(struct wm_client *client, struct wm_message *message);
 
 #endif

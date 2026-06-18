@@ -41,4 +41,6 @@
 
 #define SYS_poll 36
 
+#define SYS_shared_mem_resize 37
+
 #endif
