@@ -23,6 +23,8 @@ const char *token_type_str(enum token_type type)
 {
     switch (type)
     {
+    case TOKEN_STAR:
+        return "STAR";
     case TOKEN_RETURN:
         return "RETURN";
     case TOKEN_COMMA:
@@ -136,6 +138,7 @@ struct token_simple_map_entry token_simple_map[] = {
     {"-", TOKEN_MINUS},
     {">", TOKEN_GREATER},
     {"<", TOKEN_LESS},
+    {"*", TOKEN_STAR},
     {"if", TOKEN_IF},
     {"while", TOKEN_WHILE},
     {",", TOKEN_COMMA},
@@ -248,11 +251,12 @@ void tokenizer_parse_tokens(const char *program, struct list2c *token_list)
     }
 }
 
-struct ast_type *ast_type_alloc(const char *name)
+struct ast_type *ast_type_alloc(const char *name, size_t num_pointers)
 {
     struct ast_type *out = malloc(sizeof(struct ast_type));
 
     out->name = strdup(name);
+    out->num_pointers = num_pointers;
 
     return out;
 }
@@ -385,20 +389,51 @@ struct token *parser_get_current(struct ast_parser *parser)
     return TOKEN_LIST_GET(&parser->current->list);
 }
 
-bool parser_next_is_type(struct ast_parser *parser)
+bool parser_next_is_type(struct ast_parser *parser, struct token **token)
 {
-    return (parser_get_current(parser)->type ==
-            TOKEN_IDENTIFIER); /* TODO: wont work with unsigned or restrict or
-                                   pointers */
+    struct token *type = parser_get_current(parser);
+
+    struct list2c *pos = parser_get_current(parser)->list.next;
+    struct token *tok = containerof(pos, struct token, list);
+
+    while (tok->type == TOKEN_STAR)
+
+    {
+        pos = pos->next;
+        tok = containerof(pos, struct token, list);
+    }
+    /* pos = pos->next; */
+    /* tok = containerof(pos, struct token, list); */
+
+    *token = tok;
+
+    return type->type == TOKEN_IDENTIFIER;
 }
 
 struct ast_type *parser_parse_type(struct ast_parser *parser)
 {
-    ASSERT(parser_next_is_type(parser), "next token %s (%s) is not a type",
+    struct token *next_end;
+    ASSERT(parser_next_is_type(parser, &next_end),
+           "next token %s (%s) is not a type",
            parser_get_current(parser)->token,
            token_type_str(parser_get_current(parser)->type));
 
-    return ast_type_alloc(parser_advance(parser)->token);
+    struct token *typename = parser_advance(parser);
+    logd("typename:%s", typename->token);
+
+    logd("current:%s", parser_get_current(parser)->token);
+
+    size_t num_pointers = 0;
+    while (parser_get_current(parser)->type == TOKEN_STAR)
+    {
+        logd("star");
+        num_pointers++;
+        parser_advance(parser);
+    }
+
+    logd("type of name:%s, num_pointers:%d", typename->token, num_pointers);
+
+    return ast_type_alloc(typename->token, num_pointers);
 }
 
 struct ast_expr *ast_parse_expression(struct ast_parser *parser);
@@ -506,15 +541,20 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser)
         tok->type == TOKEN_INT) /* TODO: this might not work with
          other kinds of statements */
     {
+        logd("here");
+        struct token *type_end = NULL;
         struct token *next = parser_get_next(parser);
-        /* TODO: wont work with unsigned types, as it checks that next->type is
-         * a variable */
-        if (parser_next_is_type(parser) &&
-            next->type == TOKEN_IDENTIFIER) /* 2 identifiers in a row means it
-         must be a declaration */
+        logd("%s", next->token);
+        bool next_is_type = parser_next_is_type(parser, &type_end);
+        logd("%d, %s", next_is_type, type_end->token);
+        /* TODO: wont work with unsigned types, as it checks that next->type
+         * is a variable */
+        if (next_is_type && type_end->type == TOKEN_IDENTIFIER) /* 2 identifiers
+            in a row means it must be a declaration */
         {
+            logd("declaration");
             struct ast_type *type = parser_parse_type(parser);
-            const char *name = next->token;
+            const char *name = type_end->token;
             struct ast_expr *init_val = NULL;
             parser_advance(parser);
             if (parser_get_current(parser)->type == TOKEN_ASSIGN)
@@ -526,6 +566,7 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser)
         }
         else if (next->type != TOKEN_IDENTIFIER)
         {
+            logd("expr");
             out = ast_statement_alloc_expr(ast_parse_expression(parser));
         }
         else

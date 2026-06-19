@@ -40,6 +40,7 @@ struct variable
  */
 struct variable *variable_lookup(struct list2c *scope_head, const char *search)
 {
+
     struct list2c *pos;
     list2c_for_each(pos, scope_head)
     {
@@ -331,11 +332,11 @@ int main()
 	const char * program = MACRO_STR(
 
 int main() {
-	int i = 0;
-	while (i < 10) {
-		i = i + 1;
-	}
-	return i;
+	char *ptr;
+
+	print(ptr);
+
+	return 0;
 }
 		);
     // clang-format on
@@ -347,7 +348,6 @@ int main() {
 
     ast_parse(&tokens, &top_statements_head);
     eval_program(&top_statements_head);
-    logi("done");
     /* statements_eval_simple(&statements_head); */
 
 #ifdef TESTS

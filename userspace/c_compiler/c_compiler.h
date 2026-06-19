@@ -27,6 +27,7 @@ enum token_type
     TOKEN_EOF,
     TOKEN_IF,
     TOKEN_WHILE,
+    TOKEN_STAR,
 
 };
 const char *token_type_str(enum token_type type);
@@ -51,6 +52,7 @@ void tokenizer_parse_tokens(const char *program, struct list2c *token_list);
 
 struct ast_type
 {
+    size_t num_pointers;
     char *name;
 };
 
