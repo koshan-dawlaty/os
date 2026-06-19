@@ -9,6 +9,7 @@
 enum token_type
 {
     TOKEN_IDENTIFIER,
+    TOKEN_STRING,
     TOKEN_RETURN,
     TOKEN_UNKNOWN,
     TOKEN_ASSIGN,
@@ -56,13 +57,27 @@ struct ast_type
     char *name;
 };
 
+struct ast_literal
+{
+    enum ast_literal_type
+    {
+        AST_LITERAL_TYPE_STRING,
+        AST_LITERAL_TYPE_INT,
+    } type;
+
+    union
+    {
+        u64 integer;
+        char *str;
+    };
+};
+
 struct ast_value
 {
     union
     {
         char *varname;
-        u64 literal; /* this is a u64 as it should be the largest type available
-                      */
+        struct ast_literal literal;
     };
     bool is_var;
 };

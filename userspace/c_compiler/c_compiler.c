@@ -23,6 +23,8 @@ const char *token_type_str(enum token_type type)
 {
     switch (type)
     {
+    case TOKEN_STRING:
+        return "STRING";
     case TOKEN_STAR:
         return "STAR";
     case TOKEN_RETURN:
@@ -184,6 +186,18 @@ struct token *get_token(const char *input, size_t *len)
         return token_alloc(TOKEN_EOF, "", 0);
     }
 
+    if (*s == '"')
+    {
+        size_t i = 1;
+        while (s[i] != '"' && s[i] != 0)
+        {
+            logd("%c", s[i]);
+            i++;
+        }
+        *len += i + 1;
+        return token_alloc(TOKEN_STRING, s + 1, i - 1);
+    }
+
     struct token *simple = get_token_simple(s, len);
     if (simple != NULL)
     {
@@ -261,6 +275,12 @@ struct ast_type *ast_type_alloc(const char *name, size_t num_pointers)
     return out;
 }
 
+#define AST_LITERAL_STRING(string)                                             \
+    ((struct ast_literal){.type = AST_LITERAL_TYPE_STRING,                     \
+                          .str = strdup(string)})
+#define AST_LITERAL_INT(num)                                                   \
+    ((struct ast_literal){.type = AST_LITERAL_TYPE_INT, .integer = num})
+
 #define AST_VALUE_VAR(_var)                                                    \
     ((struct ast_value){.is_var = true, .varname = _var})
 #define AST_VALUE_LITERAL(_literal)                                            \
@@ -271,7 +291,11 @@ static inline struct ast_value ast_token_to_value(struct token *tok)
     if (tok->type == TOKEN_INT)
     {
         int num = atoi(tok->token);
-        return AST_VALUE_LITERAL(num);
+        return AST_VALUE_LITERAL(AST_LITERAL_INT(num));
+    }
+    else if (tok->type == TOKEN_STRING)
+    {
+        return AST_VALUE_LITERAL(AST_LITERAL_STRING(tok->token));
     }
     else if (tok->type == TOKEN_IDENTIFIER)
     {
@@ -484,6 +508,7 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
             return out;
         }
     case TOKEN_INT:
+    case TOKEN_STRING:
         return ast_expr_alloc_value(ast_token_to_value(tok));
 
     case TOKEN_O_PAREN:;

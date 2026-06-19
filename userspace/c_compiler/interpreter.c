@@ -115,7 +115,11 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
         if (!expr->value.is_var)
         {
 
-            return expr->value.literal;
+            if (expr->value.literal.type == AST_LITERAL_TYPE_STRING)
+            {
+                logd("string in interpreter:%s", expr->value.literal.str);
+            }
+            return expr->value.literal.integer;
         }
         else
         {
@@ -332,13 +336,14 @@ int main()
 	const char * program = MACRO_STR(
 
 int main() {
-	char *ptr;
+	char *ptr = "abc";
 
 	print(ptr);
 
 	return 0;
 }
 		);
+
     // clang-format on
     tokenizer_parse_tokens(program, &tokens);
 
