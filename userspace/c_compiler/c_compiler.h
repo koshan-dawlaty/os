@@ -59,6 +59,7 @@ enum ast_error_type
     AST_ERROR_CLOSE_PAREN_EXPECTED,
     AST_ERROR_SEMICOLON_EXPECTED,
     AST_ERROR_DECLARATION_OR_EXPRESSION_EXPECTED,
+    AST_ERROR_INVALID_EXPRESSION_TOKEN,
 };
 struct ast_error
 {
@@ -86,6 +87,10 @@ struct ast_error
         {
             struct token *token;
         } close_paren_expected;
+        struct
+        {
+            struct token *token;
+        } invalid_expression_token;
     };
 };
 

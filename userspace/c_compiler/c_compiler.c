@@ -517,8 +517,9 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
 
     default:
         /* TODO: if it is a keyword, error */
-        PANIC("invalid token type:%s for token:%s when parsing expression",
-              token_type_str(tok->type), tok->token);
+        *err = ast_error_alloc(AST_ERROR_INVALID_EXPRESSION_TOKEN);
+        (*err)->invalid_expression_token.token = tok;
+        return NULL;
     }
 }
 
@@ -531,11 +532,20 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
         parser, err); /* the left hand side should always be an expression that
                     does not require recursion */
 
+    if (lhs == NULL)
+    {
+        return NULL;
+    }
+
     struct token *operator_token = parser_get_current(parser);
     if (token_is_operator(operator_token->type))
     {
         parser_advance(parser);
         struct ast_expr *rhs = ast_parse_expression(parser, err);
+        if (rhs == NULL)
+        {
+            return NULL;
+        }
 
         struct ast_expr *operator =
             ast_expr_alloc_operator(lhs, rhs, operator_token->token);
@@ -860,12 +870,17 @@ char *ast_error_to_string(struct ast_error *err)
         loge("expected ')' got %s (%s)", err->close_paren_expected.token->token,
              token_type_str(err->close_paren_expected.token->type));
         break;
+    case AST_ERROR_INVALID_EXPRESSION_TOKEN:
+        loge("invalid token %s (%s) when parsing expression",
+             err->invalid_expression_token.token->token,
+             token_type_str(err->invalid_expression_token.token->type));
+        break;
     case AST_ERROR_DECLARATION_OR_EXPRESSION_EXPECTED:
         loge("expected declaration or expression");
         break;
     }
 
-    return NULL;
+    return "";
 }
 
 /* FIXME: using the libc version of this function will result in linker

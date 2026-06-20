@@ -130,7 +130,13 @@ struct test_result *test_ast_expressions(char *expr_str, int expected)
     tokenizer_parse_tokens(expr_str, &tokens);
     struct ast_parser parser = {&tokens,
                                 .current = TOKEN_LIST_GET(tokens.next)};
-    struct ast_expr *expr = ast_parse_expression(&parser);
+    struct ast_error *err;
+    struct ast_expr *expr = ast_parse_expression(&parser, &err);
+    if (expr == NULL)
+    {
+        FAIL_TEST("ast expression parsing failed with error %s",
+                  ast_error_to_string(err));
+    }
     struct interpreter *interpreter = interpreter_init();
     struct interp_value *interp_val = expr_eval(expr, interpreter);
     int val = interp_val->value.literal.integer;
@@ -155,7 +161,11 @@ struct test_result *test_interpreter(const char *program, int expected)
     tokenizer_parse_tokens(program, &tokens);
 
     LIST2C_DEFINE_HEAD(top_statements);
-    ast_parse(&tokens, &top_statements);
+    struct ast_error *err = ast_parse(&tokens, &top_statements);
+    if (err != NULL)
+    {
+        FAIL_TEST("ast parsing failed with error %s", ast_error_to_string(err));
+    }
 
     int got = eval_program(&top_statements);
     ASSERT_EQ(got, expected, "%d != %d for program %s", got, expected, program);
