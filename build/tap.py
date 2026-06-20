@@ -46,7 +46,7 @@ def parse_plan(s: str) -> typing.Tuple[int, int]:
     match1 = re.search(r"\d+", plan)
 
     if match1 == None:
-        print(f"first value in plan: {match1} was invalid")
+        print(f"first value in plan: {s} was invalid")
         exit(1)
     min_str = match1.group()
 
@@ -105,7 +105,7 @@ def read_stdin():
             plan = parse_plan(line)
             start = time.time()
             if plan[0] != 1:
-                print("the first value in the plan was not 1")
+                print(f"the first value in the plan {plan[0]}, {plan[1]} was not 1")
                 exit(1)
 
         else:
@@ -125,7 +125,9 @@ def read_stdin():
 
         if i == plan[1] + 1:
             display_final(failed, format_time(time.time() - total_start))
-            exit(0)
+            sys.stdin.read(1)
+            read_stdin() 
+            # exit(0)
 
 
 def display_result(r: TestResult, time: str):

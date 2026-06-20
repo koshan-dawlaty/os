@@ -691,6 +691,7 @@ ast_function_declare_alloc(struct ast_type *return_type, const char *name)
 
 struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
 {
+    logd("test");
     struct ast_top_statement *out = malloc(sizeof(struct ast_top_statement));
     out->list = LIST2C_INIT();
     struct ast_type *type = parser_parse_type(

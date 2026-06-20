@@ -268,7 +268,6 @@ void kmain()
     /* smp_init(); */
 
     struct task *kernel_task = create_kernel_task();
-    printf("this is the initial kernel task:%p\n", kernel_task);
     add_task(kernel_task);
 
     create_device("/dev/terminal", get_terminal());
@@ -285,8 +284,11 @@ void kmain()
 
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
 
-    /* int err = execv("/bin/wm", (char *[]){"wm", NULL}); */
-    int err = execv("/bin/compiler", (char *[]){"compiler", NULL});
+#ifdef TESTS
+    execv("/bin/compiler", (char *[]){"compiler", NULL});
+#endif
+
+    int err = execv("/bin/wm", (char *[]){"wm", NULL});
     /* int err = execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
     /* int err = execv("/bin/ls", (char *[]){"/bin/ls", "/dev", NULL}); */
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */

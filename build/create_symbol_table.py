@@ -1,6 +1,5 @@
 import sys
 
-
 def error(message): 
     print(message)
     sys.exit(1)
@@ -27,7 +26,7 @@ def main():
         name_bytes = name.encode('ascii')
         name_bytes += bytes([0]) # add null terminator
 
-        print(num_bytes + name_bytes)
+        # print(num_bytes + name_bytes)
         outfile.write(num_bytes + name_bytes)
 
     outfile.write('____SYMTABLE_DONE'.encode('ascii'))

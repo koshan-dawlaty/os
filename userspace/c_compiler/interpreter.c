@@ -56,7 +56,6 @@ struct variable *variable_lookup(struct list2c *scope_head, const char *search)
     list2c_for_each(pos, scope_head)
     {
         struct scope *s = containerof(pos, struct scope, list);
-        logd("looking for %s in %p", search, &s->list);
         for (size_t i = 0; i < ARRAY_LEN(s->vars, sizeof(struct variable)); i++)
         {
             struct variable *var =
@@ -147,7 +146,6 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
             switch (expr->value.literal.type)
             {
-                logd("%s", expr->value.literal.str);
                 /* TODO: bad */
             case AST_LITERAL_TYPE_STRING:
                 return interp_value_alloc(ast_type_alloc("char", 1),
@@ -234,8 +232,6 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                 }
 
                 struct list2c *prev_scope = interp->all_scopes;
-                logd("saving as:%p with %p as first", prev_scope,
-                     prev_scope->next);
 
                 interp->all_scopes = malloc(sizeof(struct list2c));
                 list2c_init_head(interp->all_scopes); /* clear scope */
@@ -249,7 +245,6 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
                 struct interp_value *return_value =
                     statements_eval(&func->block, interp);
-                logd("restoring to:%p", prev_scope);
                 interp->all_scopes = prev_scope;
                 interp->current_scope = prev_scope->next;
 
@@ -282,11 +277,9 @@ struct interp_value *statements_eval(struct list2c *statements_head,
         switch (statement->type)
         {
         case AST_STATEMENT_DECLARE:;
-            logd("declaration of %s", statement->varname);
             struct interp_value *init_val = NULL;
             if (statement->init_value != NULL)
             {
-                logd("assigning inital value");
                 init_val = expr_eval(statement->init_value, interp);
             }
             else
@@ -299,7 +292,6 @@ struct interp_value *statements_eval(struct list2c *statements_head,
             struct scope *current =
                 containerof(interp->current_scope, struct scope, list);
             array_push(&current->vars, &var, sizeof(struct variable));
-            logd("pushing to scope %p", &current->list);
             variable_lookup(interp->all_scopes, "retval");
 
             break;
