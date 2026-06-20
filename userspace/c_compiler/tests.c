@@ -132,7 +132,8 @@ struct test_result *test_ast_expressions(char *expr_str, int expected)
                                 .current = TOKEN_LIST_GET(tokens.next)};
     struct ast_expr *expr = ast_parse_expression(&parser);
     struct interpreter *interpreter = interpreter_init();
-    int val = expr_eval(expr, interpreter);
+    struct interp_value *interp_val = expr_eval(expr, interpreter);
+    int val = interp_val->value.literal.integer;
     ASSERT_EQ(val, expected, "%d != %d for expr %s", val, expected, expr_str);
 
     TEST_OK();
@@ -141,11 +142,12 @@ struct test_result *test_ast_expressions(char *expr_str, int expected)
 #define TEST_AST_EXPRESSIONS(name, expr, expected)                             \
     TEST(name, { return test_ast_expressions(expr, expected); })
 
-TEST_AST_EXPRESSIONS(expr_test1, "1 + ((2 + 3) + 4) ", 10)
-TEST_AST_EXPRESSIONS(expr_test2, "1+1+1+1+1+1", 6)
-TEST_AST_EXPRESSIONS(expr_test3, "(((1+2)+2)+2) + 3", 10)
-TEST_AST_EXPRESSIONS(expr_test4, "(1+2) + 3", 6)
-TEST_AST_EXPRESSIONS(expr_test5, "123", 123)
+TEST_AST_EXPRESSIONS(expr_test1, "1 + 1", 2)
+TEST_AST_EXPRESSIONS(expr_test2, "1 + ((2 + 3) + 4) ", 10)
+TEST_AST_EXPRESSIONS(expr_test3, "1+1+1+1+1+1", 6)
+TEST_AST_EXPRESSIONS(expr_test4, "(((1+2)+2)+2) + 3", 10)
+TEST_AST_EXPRESSIONS(expr_test5, "(1+2) + 3", 6)
+TEST_AST_EXPRESSIONS(expr_test6, "123", 123)
 
 struct test_result *test_interpreter(const char *program, int expected)
 {
@@ -165,21 +167,6 @@ struct test_result *test_interpreter(const char *program, int expected)
     TEST(name, { return test_interpreter(MACRO_STR(program_expr), expected); })
 
 // clang-format off
-TEST_INTERPRETER(interpreter_test_fibonacci,
-int fib(int num) {
-	if (num > 2) {
-		print(num);
-		return fib(num - 1) + fib(num - 2);
-	}
-	return 1;
-}
-
-int main() {
-	return fib(10);
-}
-
-, 55);
-
 TEST_INTERPRETER(interpreter_test_add_vars,
 int main() {
 	int x = 10;
@@ -204,6 +191,33 @@ int main() {
 	return func(20);
 }
 , 25);
+
+TEST_INTERPRETER(interpreter_test_declare_assign_function_retval, 
+
+int func(int num) {
+	return num + 3;
+}
+
+int main() {
+	int retval = func(120);
+	return retval;
+}
+
+, 123)
+
+TEST_INTERPRETER(interpreter_test_call_before_first_scope_declare, 
+
+int func(int num) {
+	return num + 5;
+}
+
+int main() {
+	func(50);
+	int retval = 123;
+	return retval;
+}
+
+, 123)
 
 TEST_INTERPRETER(interpreter_test_call_passing_arg_to_other_arg,
 int f2(int num2) {
@@ -282,5 +296,20 @@ int main() {
  
 }
 , 123);
+
+TEST_INTERPRETER(interpreter_test_fibonacci,
+int fib(int num) {
+	if (num > 2) {
+		print(num);
+		return fib(num - 1) + fib(num - 2);
+	}
+	return 1;
+}
+
+int main() {
+	return fib(10);
+}
+
+, 55);
 
 // clang-format on

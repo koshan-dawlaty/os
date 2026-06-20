@@ -56,6 +56,7 @@ struct ast_type
     size_t num_pointers;
     char *name;
 };
+struct ast_type *ast_type_alloc(const char *name, size_t num_pointers);
 
 struct ast_literal
 {
@@ -72,6 +73,12 @@ struct ast_literal
     };
 };
 
+#define AST_LITERAL_STRING(string)                                             \
+    ((struct ast_literal){.type = AST_LITERAL_TYPE_STRING,                     \
+                          .str = strdup(string)})
+#define AST_LITERAL_INT(num)                                                   \
+    ((struct ast_literal){.type = AST_LITERAL_TYPE_INT, .integer = num})
+
 struct ast_value
 {
     union
@@ -81,6 +88,11 @@ struct ast_value
     };
     bool is_var;
 };
+
+#define AST_VALUE_VAR(_var)                                                    \
+    ((struct ast_value){.is_var = true, .varname = _var})
+#define AST_VALUE_LITERAL(_literal)                                            \
+    ((struct ast_value){.is_var = false, .literal = _literal})
 
 struct ast_function_arg
 {
@@ -207,7 +219,7 @@ struct interpreter
     /* the current scopes the interpreter is in for one function, when a
      * function is called, the scope of that function will be stored on the
      * stack, to not interfere with the scope of the called function  */
-    struct list2c all_scopes;
+    struct list2c *all_scopes;
     struct list2c *current_scope;
     struct array funcs; /* this should probably used a linked list, as it is
                            currently storing pointers */
@@ -217,13 +229,20 @@ static inline struct interpreter *interpreter_init()
 {
     struct interpreter *out = malloc(sizeof(struct interpreter));
     out->funcs = ARRAY_INIT();
-    list2c_init_head(&out->all_scopes);
-    out->current_scope = &out->all_scopes;
+    out->all_scopes = malloc(sizeof(struct list2c));
+    list2c_init_head(out->all_scopes);
+    out->current_scope = out->all_scopes;
     return out;
 }
 
-int statements_eval(struct list2c *statements_head, struct interpreter *);
-int expr_eval(struct ast_expr *expr, struct interpreter *);
+struct interp_value
+{
+    struct ast_type *type;
+    struct ast_value value;
+};
+struct interp_value *statements_eval(struct list2c *statements_head,
+                                     struct interpreter *);
+struct interp_value *expr_eval(struct ast_expr *expr, struct interpreter *);
 int eval_program(struct list2c *top_statements_head);
 
 #endif

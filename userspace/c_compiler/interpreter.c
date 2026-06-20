@@ -20,10 +20,21 @@ struct scope *scope_alloc()
     return out;
 }
 
+struct interp_value *interp_value_alloc(struct ast_type *type,
+                                        struct ast_value value)
+{
+    struct interp_value *out = malloc(sizeof(struct interp_value));
+
+    out->value = value;
+    out->type = type;
+
+    return out;
+}
+
 struct variable
 {
     char *varname;
-    int value;
+    struct interp_value *value;
 };
 
 /* TODO: this won't work correctly if something is declared in an inner scope
@@ -45,6 +56,7 @@ struct variable *variable_lookup(struct list2c *scope_head, const char *search)
     list2c_for_each(pos, scope_head)
     {
         struct scope *s = containerof(pos, struct scope, list);
+        logd("looking for %s in %p", search, &s->list);
         for (size_t i = 0; i < ARRAY_LEN(s->vars, sizeof(struct variable)); i++)
         {
             struct variable *var =
@@ -62,25 +74,14 @@ struct variable *variable_lookup(struct list2c *scope_head, const char *search)
     return NULL;
 }
 
-int expr_eval(struct ast_expr *expr, struct interpreter *interp)
+struct interp_value *expr_eval(struct ast_expr *expr,
+                               struct interpreter *interp)
 {
     NOT_NULL(expr, "expression was null");
     if (expr->type == AST_EXPRESSION_OPERATOR)
     {
-        if (!strcmp(expr->operator,
-                    "+")) /* TODO: maybe want to have enum for operator */
-        {
-            int lhs = expr_eval(expr->lhs, interp);
-            int rhs = expr_eval(expr->rhs, interp);
-            return lhs + rhs;
-        }
-        else if (!strcmp(expr->operator, "-"))
-        {
-            int lhs = expr_eval(expr->lhs, interp);
-            int rhs = expr_eval(expr->rhs, interp);
-            return lhs - rhs;
-        }
-        else if (!strcmp(expr->operator, "="))
+
+        if (!strcmp(expr->operator, "="))
         {
             if (!expr->lhs->value.is_var)
             {
@@ -88,43 +89,80 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
             }
 
             struct variable *var =
-                variable_lookup(&interp->all_scopes, expr->lhs->value.varname);
+                variable_lookup(interp->all_scopes, expr->lhs->value.varname);
             NOT_NULL(var, "variable not found:%s", expr->lhs->value.varname);
             var->value = expr_eval(expr->rhs, interp);
+
             return var->value;
+        }
+        struct interp_value *lhs_val = expr_eval(expr->lhs, interp);
+        struct interp_value *rhs_val = expr_eval(expr->rhs, interp);
+
+        /* for now, just assume that if there is an operator, both sides are
+         * ints */
+
+        ASSERT(lhs_val->value.literal.type == AST_LITERAL_TYPE_INT,
+               "operator %s needs to be an int", expr->operator);
+        ASSERT(rhs_val->value.literal.type == AST_LITERAL_TYPE_INT,
+               "operator %s needs to be an int", expr->operator);
+
+        int lhs = lhs_val->value.literal.integer;
+        int rhs = rhs_val->value.literal.integer;
+
+        int result;
+
+        if (!strcmp(expr->operator,
+                    "+")) /* TODO: maybe want to have enum for operator */
+        {
+            result = lhs + rhs;
+        }
+        else if (!strcmp(expr->operator, "-"))
+        {
+            result = lhs - rhs;
         }
         else if (!strcmp(expr->operator, "<"))
         {
-            int lhs = expr_eval(expr->lhs, interp);
-            int rhs = expr_eval(expr->rhs, interp);
-            return lhs < rhs;
+            result = lhs < rhs;
         }
         else if (!strcmp(expr->operator, ">"))
         {
-            int lhs = expr_eval(expr->lhs, interp);
-            int rhs = expr_eval(expr->rhs, interp);
-            return lhs > rhs;
+            result = lhs > rhs;
         }
         else
         {
             PANIC("unknown operator type for expr_eval() %s", expr->operator);
         }
+
+        struct ast_type *type = ast_type_alloc(
+            "int", 0); /* TODO: this should work for pointer math, and should
+                          use the largest size of the operands */
+        return interp_value_alloc(type,
+                                  AST_VALUE_LITERAL(AST_LITERAL_INT(result)));
     }
     else if (expr->type == AST_EXPRESSION_VALUE)
     {
+
         if (!expr->value.is_var)
         {
 
-            if (expr->value.literal.type == AST_LITERAL_TYPE_STRING)
+            switch (expr->value.literal.type)
             {
-                logd("string in interpreter:%s", expr->value.literal.str);
+                logd("%s", expr->value.literal.str);
+                /* TODO: bad */
+            case AST_LITERAL_TYPE_STRING:
+                return interp_value_alloc(ast_type_alloc("char", 1),
+                                          expr->value);
+            case AST_LITERAL_TYPE_INT:
+                return interp_value_alloc(ast_type_alloc("int", 0),
+                                          expr->value);
+                break;
             }
-            return expr->value.literal.integer;
         }
         else
         {
             struct variable *var =
-                variable_lookup(&interp->all_scopes, expr->value.varname);
+                variable_lookup(interp->all_scopes, expr->value.varname);
+
             NOT_NULL(var, "variable not found:%s", expr->value.varname);
             return var->value;
         }
@@ -141,8 +179,22 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
                     containerof(pos, struct ast_function_arg, list);
                 NOT_NULL(arg->expr, "arg->expr was null");
 
-                int val = expr_eval(arg->expr, interp);
-                logi("print:%d", val);
+                struct interp_value *val = expr_eval(arg->expr, interp);
+                if (!strcmp(val->type->name, "char") &&
+                    val->type->num_pointers == 1)
+                {
+                    logi("print:%s", val->value.literal.str);
+                }
+                else if (!strcmp(val->type->name, "int") &&
+                         val->type->num_pointers == 0)
+                {
+                    logi("print:%d", val->value.literal.integer);
+                }
+                else
+                {
+                    PANIC("dont know how to print %s (%d pointers)",
+                          val->type->name, val->type->num_pointers);
+                }
             }
             return 0;
         }
@@ -173,19 +225,21 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
                     struct ast_function_arg *passed_arg =
                         containerof(passed_pos, struct ast_function_arg, list);
 
-                    logi("adding:%s to scope", def_arg->name);
-
-                    int value = expr_eval(passed_arg->expr, interp);
+                    struct interp_value *value =
+                        expr_eval(passed_arg->expr, interp);
                     struct variable var = {.value = value,
                                            .varname = def_arg->name};
                     array_add(&new_scope->vars, &var, sizeof(struct variable));
-
                     passed_pos = passed_pos->next;
                 }
 
-                struct list2c prev_scope = interp->all_scopes;
-                list2c_init_head(&interp->all_scopes); /* clear scope */
-                list2c_push(&new_scope->list, &interp->all_scopes);
+                struct list2c *prev_scope = interp->all_scopes;
+                logd("saving as:%p with %p as first", prev_scope,
+                     prev_scope->next);
+
+                interp->all_scopes = malloc(sizeof(struct list2c));
+                list2c_init_head(interp->all_scopes); /* clear scope */
+                list2c_push(&new_scope->list, interp->all_scopes);
                 interp->current_scope = &new_scope->list;
 
                 if (passed_pos != &expr->call.arguments_head)
@@ -193,11 +247,13 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
                     PANIC("passed more arguments than required");
                 }
 
-                int return_value = statements_eval(&func->block, interp);
+                struct interp_value *return_value =
+                    statements_eval(&func->block, interp);
+                logd("restoring to:%p", prev_scope);
                 interp->all_scopes = prev_scope;
+                interp->current_scope = prev_scope->next;
 
-                return return_value; /* TODO: change this when there is a better
-                         type system for the interpreter */
+                return return_value;
             }
         }
 
@@ -206,13 +262,14 @@ int expr_eval(struct ast_expr *expr, struct interpreter *interp)
     UNREACHABLE("unknown enum type:%d", expr->type);
 }
 
-int statements_eval(struct list2c *statements_head, struct interpreter *interp)
+struct interp_value *statements_eval(struct list2c *statements_head,
+                                     struct interpreter *interp)
 {
     struct scope *new_scope = scope_alloc();
     list2c_add_after(&new_scope->list, interp->current_scope);
     interp->current_scope = &new_scope->list;
 
-    int retval = -1;
+    struct interp_value *retval = NULL;
 
     struct list2c *pos;
     list2c_for_each(pos, statements_head)
@@ -221,31 +278,45 @@ int statements_eval(struct list2c *statements_head, struct interpreter *interp)
         struct ast_statement *statement =
             containerof(pos, struct ast_statement, list);
 
-        int value;
+        struct interp_value *value;
         switch (statement->type)
         {
         case AST_STATEMENT_DECLARE:;
             logd("declaration of %s", statement->varname);
-            int init_val = 0;
+            struct interp_value *init_val = NULL;
             if (statement->init_value != NULL)
             {
+                logd("assigning inital value");
                 init_val = expr_eval(statement->init_value, interp);
             }
+            else
+            {
+                init_val = interp_value_alloc(statement->declared_type,
+                                              AST_VALUE_LITERAL(0));
+            }
             struct variable var = {statement->varname, init_val};
-            NOT_NULL(interp->current_scope, "");
+            NOT_NULL(interp->current_scope, "current scope was null");
             struct scope *current =
                 containerof(interp->current_scope, struct scope, list);
             array_push(&current->vars, &var, sizeof(struct variable));
+            logd("pushing to scope %p", &current->list);
+            variable_lookup(interp->all_scopes, "retval");
+
             break;
         case AST_STATEMENT_EXPR:
             expr_eval(statement->expr, interp);
             break;
         case AST_STATEMENT_IF:;
             value = expr_eval(statement->block_expr, interp);
-            if (value != 0)
+            if (value->value.literal.type != AST_LITERAL_TYPE_INT)
             {
-                int output = statements_eval(&statement->block, interp);
-                if (output != -1)
+                PANIC("expected int for if condition");
+            }
+            if (value->value.literal.integer != 0)
+            {
+                struct interp_value *output =
+                    statements_eval(&statement->block, interp);
+                if (output != NULL)
                 {
                     retval = output;
                     goto end;
@@ -254,22 +325,30 @@ int statements_eval(struct list2c *statements_head, struct interpreter *interp)
             break;
         case AST_STATEMENT_WHILE:;
             value = expr_eval(statement->block_expr, interp);
-            while (value != 0)
+            if (value->value.literal.type != AST_LITERAL_TYPE_INT)
             {
-                int output = statements_eval(&statement->block, interp);
-                if (output != -1)
+                PANIC("expected int for while loop condition");
+            }
+            while (value->value.literal.integer != 0)
+            {
+                struct interp_value *output =
+                    statements_eval(&statement->block, interp);
+                if (output != NULL)
                 {
                     retval = output;
                     goto end;
                 }
                 value = expr_eval(statement->block_expr, interp);
+                if (value->value.literal.type != AST_LITERAL_TYPE_INT)
+                {
+                    PANIC("expected int for while loop condition");
+                }
             }
             break;
         case AST_STATEMENT_RETURN:
             if (statement->expr != NULL)
             {
                 retval = expr_eval(statement->expr, interp);
-                logd("returning %d", retval);
             }
             goto end;
 
@@ -312,7 +391,8 @@ int eval_program(struct list2c *top_statements_head)
 
     NOT_NULL(main_body, "main() not found!");
 
-    return statements_eval(main_body, i);
+    struct interp_value *val = statements_eval(main_body, i);
+    return val->value.literal.integer;
 }
 
 /* TODO: put in lib/ or make gcc do it in _start */
@@ -335,13 +415,25 @@ int main()
     // clang-format off
 	const char * program = MACRO_STR(
 
-int main() {
-	char *ptr = "abc";
+/* int fib(int num) { */
+/* 	if (num > 2) { */
+/* 		print("in function"); */
+/* 		print(num); */
+/* 		return fib(num - 1) + fib(num - 2); */
+/* 	} */
+/* 	return 1; */
+/* } */
 
-	print(ptr);
-
-	return 0;
+int func(int num) {
+	return num + 1;
 }
+
+int main() {
+	func(10);
+	int result = 10;
+	print(result);
+}
+
 		);
 
     // clang-format on

@@ -275,12 +275,6 @@ struct ast_type *ast_type_alloc(const char *name, size_t num_pointers)
     return out;
 }
 
-#define AST_LITERAL_STRING(string)                                             \
-    ((struct ast_literal){.type = AST_LITERAL_TYPE_STRING,                     \
-                          .str = strdup(string)})
-#define AST_LITERAL_INT(num)                                                   \
-    ((struct ast_literal){.type = AST_LITERAL_TYPE_INT, .integer = num})
-
 #define AST_VALUE_VAR(_var)                                                    \
     ((struct ast_value){.is_var = true, .varname = _var})
 #define AST_VALUE_LITERAL(_literal)                                            \
