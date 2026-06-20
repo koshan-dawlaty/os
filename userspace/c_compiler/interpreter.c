@@ -416,14 +416,10 @@ int main()
 /* 	return 1; */
 /* } */
 
-int func(int num) {
-	return num + 1;
-}
 
-int main() {
-	func(10);
-	int result = 10;
-	print(result);
+int main( int x  ) {
+
+	int x = 1 ;
 }
 
 		);

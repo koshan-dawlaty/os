@@ -428,36 +428,34 @@ bool parser_next_is_type(struct ast_parser *parser, struct token **token)
     return type->type == TOKEN_IDENTIFIER;
 }
 
-struct ast_type *parser_parse_type(struct ast_parser *parser)
+struct ast_type *parser_parse_type(struct ast_parser *parser,
+                                   struct ast_error **err)
 {
     struct token *next_end;
-    ASSERT(parser_next_is_type(parser, &next_end),
-           "next token %s (%s) is not a type",
-           parser_get_current(parser)->token,
-           token_type_str(parser_get_current(parser)->type));
+
+    if (!parser_next_is_type(parser, &next_end))
+    {
+        *err = ast_error_alloc(AST_ERROR_INVALID_TYPE);
+        (*err)->invalid_type.token = parser_get_current(parser);
+        return NULL;
+    }
 
     struct token *typename = parser_advance(parser);
-    logd("typename:%s", typename->token);
-
-    logd("current:%s", parser_get_current(parser)->token);
 
     size_t num_pointers = 0;
     while (parser_get_current(parser)->type == TOKEN_STAR)
     {
-        logd("star");
+
         num_pointers++;
         parser_advance(parser);
     }
 
-    logd("type of name:%s, num_pointers:%d", typename->token, num_pointers);
-
     return ast_type_alloc(typename->token, num_pointers);
 }
 
-struct ast_expr *ast_parse_expression(struct ast_parser *parser);
-
 /* ignores operators, utiltiy */
-static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
+static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
+                                                    struct ast_error **err)
 {
 
     struct token *tok = parser_advance(parser);
@@ -481,7 +479,7 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
 
             while (true)
             {
-                struct ast_expr *expr = ast_parse_expression(parser);
+                struct ast_expr *expr = ast_parse_expression(parser, err);
                 struct ast_function_arg *arg = ast_function_arg_alloc(expr);
                 list2c_push_end(&arg->list, &call->arguments_head);
 
@@ -494,8 +492,9 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
                 }
                 else if (tok->type != TOKEN_COMMA)
                 {
-                    PANIC("expected ',' or ')' got %s of type %s", tok->token,
-                          token_type_str(tok->type));
+                    *err = ast_error_alloc(AST_ERROR_ARUGMENT_EXPECTED);
+                    (*err)->argument_expected.token = tok;
+                    return NULL;
                 }
             }
             /* parser_advance(parser); */
@@ -506,11 +505,13 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
         return ast_expr_alloc_value(ast_token_to_value(tok));
 
     case TOKEN_O_PAREN:;
-        struct ast_expr *out = ast_parse_expression(parser);
+        struct ast_expr *out = ast_parse_expression(parser, err);
         struct token *close_paren = parser_advance(parser);
         if (close_paren->type != TOKEN_C_PAREN)
         {
-            PANIC("expected ')' got %s", token_type_str(close_paren->type));
+            *err = ast_error_alloc(AST_ERROR_CLOSE_PAREN_EXPECTED);
+            (*err)->close_paren_expected.token = close_paren;
+            return NULL;
         }
         return out;
 
@@ -521,19 +522,20 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser)
     }
 }
 
-struct ast_expr *ast_parse_expression(struct ast_parser *parser)
+struct ast_expr *ast_parse_expression(struct ast_parser *parser,
+                                      struct ast_error **err)
 {
     /* TODO:!!! order of operations */
 
     struct ast_expr *lhs = ast_parse_expression_simple(
-        parser); /* the left hand side should always be an expression that does
-                    not require recursion */
+        parser, err); /* the left hand side should always be an expression that
+                    does not require recursion */
 
     struct token *operator_token = parser_get_current(parser);
     if (token_is_operator(operator_token->type))
     {
         parser_advance(parser);
-        struct ast_expr *rhs = ast_parse_expression(parser);
+        struct ast_expr *rhs = ast_parse_expression(parser, err);
 
         struct ast_expr *operator =
             ast_expr_alloc_operator(lhs, rhs, operator_token->token);
@@ -546,10 +548,12 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser)
     }
 }
 
-void ast_parse_statements(struct ast_parser *parser,
-                          struct list2c *statements_head);
+int ast_parse_statements(struct ast_parser *parser,
+                         struct list2c *statements_head,
+                         struct ast_error **err);
 
-struct ast_statement *ast_parse_statement(struct ast_parser *parser)
+struct ast_statement *ast_parse_statement(struct ast_parser *parser,
+                                          struct ast_error **err)
 {
     struct token *tok = parser_get_current(parser);
 
@@ -560,44 +564,43 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser)
         tok->type == TOKEN_INT) /* TODO: this might not work with
          other kinds of statements */
     {
-        logd("here");
         struct token *type_end = NULL;
         struct token *next = parser_get_next(parser);
-        logd("%s", next->token);
         bool next_is_type = parser_next_is_type(parser, &type_end);
-        logd("%d, %s", next_is_type, type_end->token);
         /* TODO: wont work with unsigned types, as it checks that next->type
          * is a variable */
         if (next_is_type && type_end->type == TOKEN_IDENTIFIER) /* 2 identifiers
             in a row means it must be a declaration */
         {
-            logd("declaration");
-            struct ast_type *type = parser_parse_type(parser);
+            struct ast_type *type =
+                parser_parse_type(parser, NULL); /* TODO: dont pass null */
             const char *name = type_end->token;
             struct ast_expr *init_val = NULL;
             parser_advance(parser);
             if (parser_get_current(parser)->type == TOKEN_ASSIGN)
             {
                 parser_advance(parser);
-                init_val = ast_parse_expression(parser);
+                init_val = ast_parse_expression(parser, err);
             }
             out = ast_statement_alloc_declaration(type, name, init_val);
         }
         else if (next->type != TOKEN_IDENTIFIER)
         {
-            logd("expr");
-            out = ast_statement_alloc_expr(ast_parse_expression(parser));
+            out = ast_statement_alloc_expr(ast_parse_expression(parser, err));
         }
         else
         {
-            PANIC("error");
+            *err =
+                ast_error_alloc(AST_ERROR_DECLARATION_OR_EXPRESSION_EXPECTED);
+            return NULL;
         }
 
         struct token *semicolon = parser_advance(parser);
         if (semicolon->type != TOKEN_SEMICOLON)
         {
-            PANIC("expected semicolon got:%s for token %s",
-                  token_type_str(semicolon->type), semicolon->token);
+            *err = ast_error_alloc(AST_ERROR_SEMICOLON_EXPECTED);
+            (*err)->semicolon_expected.token = semicolon;
+            return NULL;
         }
     }
     else if (tok->type == TOKEN_IF)
@@ -606,9 +609,13 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser)
         out = ast_statement_alloc_block(
             AST_STATEMENT_IF,
             ast_parse_expression(
-                parser) /* TODO: this will allow things like if x == y {} */);
+                parser,
+                err) /* TODO: this will allow things like if x == y {} */);
 
-        ast_parse_statements(parser, &out->block);
+        if (ast_parse_statements(parser, &out->block, err))
+        {
+            return NULL;
+        }
     }
     else if (tok->type == TOKEN_WHILE)
     {
@@ -616,9 +623,13 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser)
         out = ast_statement_alloc_block(
             AST_STATEMENT_WHILE,
             ast_parse_expression(
-                parser) /* TODO: this will allow things like if x == y {} */);
+                parser,
+                err) /* TODO: this will allow things like if x == y {} */);
 
-        ast_parse_statements(parser, &out->block);
+        if (ast_parse_statements(parser, &out->block, err))
+        {
+            return NULL;
+        }
     }
     else if (tok->type == TOKEN_RETURN)
     {
@@ -630,14 +641,15 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser)
         }
         else
         {
-            struct ast_expr *expr = ast_parse_expression(parser);
+            struct ast_expr *expr = ast_parse_expression(parser, err);
             out = ast_statement_alloc_return(expr);
 
             struct token *semicolon = parser_advance(parser);
             if (semicolon->type != TOKEN_SEMICOLON)
             {
-                PANIC("expected semicolon got:%s for token %s",
-                      token_type_str(semicolon->type), semicolon->token);
+                *err = ast_error_alloc(AST_ERROR_SEMICOLON_EXPECTED);
+                (*err)->semicolon_expected.token = semicolon;
+                return NULL;
             }
         }
     }
@@ -645,22 +657,28 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser)
     return out;
 }
 
-void ast_parse_statements(struct ast_parser *parser,
-                          struct list2c *statements_head)
+int ast_parse_statements(struct ast_parser *parser,
+                         struct list2c *statements_head, struct ast_error **err)
 {
 
     struct token *open_brace = parser_advance(parser);
     if (open_brace->type != TOKEN_O_BRACE)
     {
-        PANIC("expected '{' at the start of a block");
+        *err = ast_error_alloc(AST_ERROR_OPEN_BRACE_EXPECTED);
     }
 
     while (parser_get_current(parser)->type != TOKEN_C_BRACE)
     {
-        struct ast_statement *statement = ast_parse_statement(parser);
+        struct ast_statement *statement = ast_parse_statement(parser, err);
+        if (statement == NULL)
+        {
+            return -1;
+        }
         list2c_push_end(&statement->list, statements_head);
     }
     parser_advance(parser);
+
+    return 0;
 }
 
 struct ast_function_arg_def *ast_function_arg_def_alloc(struct ast_type *type,
@@ -689,19 +707,24 @@ ast_function_declare_alloc(struct ast_type *return_type, const char *name)
     return out;
 }
 
-struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
+struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser,
+                                                  struct ast_error **err)
 {
-    logd("test");
     struct ast_top_statement *out = malloc(sizeof(struct ast_top_statement));
     out->list = LIST2C_INIT();
     struct ast_type *type = parser_parse_type(
-        parser); /* will not work for parsing type definitions */
+        parser, err); /* will not work for parsing type definitions */
+    if (type == NULL)
+    {
+        return NULL;
+    }
 
     struct token *name = parser_advance(parser);
     if (name->type != TOKEN_IDENTIFIER)
     {
-        PANIC("expected identifier, got %s (%s)", name->token,
-              token_type_str(name->type));
+        *err = ast_error_alloc(AST_ERROR_IDENTIFIER_EXPECTED);
+        (*err)->identifier_expected.token = name;
+        return NULL;
     }
 
     struct token *tok = parser_get_current(parser);
@@ -721,12 +744,19 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
 
         while (true)
         {
-            struct ast_type *type = parser_parse_type(parser);
+
+            struct ast_type *type = parser_parse_type(parser, err);
+            if (type == NULL)
+            {
+                return NULL;
+            }
             struct token *name = parser_advance(parser);
             if (name->type != TOKEN_IDENTIFIER)
             {
-                PANIC("exepcted identifier, got %s (%s)", name->token,
-                      token_type_str(name->type));
+
+                *err = ast_error_alloc(AST_ERROR_IDENTIFIER_EXPECTED);
+                (*err)->identifier_expected.token = name;
+                return NULL;
             }
 
             struct ast_function_arg_def *arg =
@@ -743,14 +773,19 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
             }
             else
             {
-                PANIC("expected ',' or ')', got %s (%s)", current->token,
-                      token_type_str(current->type));
+                *err = ast_error_alloc(AST_ERROR_ARUGMENT_EXPECTED);
+                (*err)->argument_expected.token = current;
+                return NULL;
             }
         }
     args_done:
         parser_advance(parser); /* ')' */
 
-        ast_parse_statements(parser, &func->block);
+        if (ast_parse_statements(parser, &func->block, err))
+        {
+            return NULL;
+        }
+
         struct list2c *pos;
         list2c_for_each(pos, &func->block)
         {
@@ -773,16 +808,64 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser)
     return out;
 }
 
-void ast_parse(struct list2c *tokens, struct list2c *top_statements_head)
+struct ast_error *ast_parse(struct list2c *tokens,
+                            struct list2c *top_statements_head)
 {
     struct ast_parser parser = {tokens,
                                 .current = TOKEN_LIST_GET(tokens->next)};
     while (parser_get_current(&parser)->type != TOKEN_EOF)
     {
 
-        struct ast_top_statement *statement = ast_parse_top_statement(&parser);
+        struct ast_error *error;
+        struct ast_top_statement *statement =
+            ast_parse_top_statement(&parser, &error);
+
+        if (statement == NULL)
+        {
+            ast_error_to_string(error);
+            return error;
+        }
         list2c_push(&statement->list, top_statements_head);
     }
+    return NULL;
+}
+
+char *ast_error_to_string(struct ast_error *err)
+{
+
+    switch (err->type)
+    {
+    case AST_ERROR_IDENTIFIER_EXPECTED:
+        loge("expected identifier, got %s (%s)",
+             err->identifier_expected.token->token,
+             token_type_str(err->identifier_expected.token->type));
+        break;
+    case AST_ERROR_ARUGMENT_EXPECTED:
+        loge("expected ',' or ')' got %s (%s)",
+             err->argument_expected.token->token,
+             token_type_str(err->argument_expected.token->type));
+        break;
+    case AST_ERROR_INVALID_TYPE:
+        loge("invalid type for token %s (%s)", err->invalid_type.token->token,
+             token_type_str(err->invalid_type.token->type));
+        break;
+    case AST_ERROR_OPEN_BRACE_EXPECTED:
+        loge("expected '}' at the start of a block");
+        break;
+    case AST_ERROR_SEMICOLON_EXPECTED:
+        loge("expected ';' got %s (%s)", err->semicolon_expected.token->token,
+             token_type_str(err->semicolon_expected.token->type));
+        break;
+    case AST_ERROR_CLOSE_PAREN_EXPECTED:
+        loge("expected ')' got %s (%s)", err->close_paren_expected.token->token,
+             token_type_str(err->close_paren_expected.token->type));
+        break;
+    case AST_ERROR_DECLARATION_OR_EXPRESSION_EXPECTED:
+        loge("expected declaration or expression");
+        break;
+    }
+
+    return NULL;
 }
 
 /* FIXME: using the libc version of this function will result in linker

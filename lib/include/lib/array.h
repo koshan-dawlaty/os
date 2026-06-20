@@ -1,11 +1,11 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
-#include "kernel/types.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <types.h>
 struct array
 {
     size_t capacity;

@@ -1,6 +1,7 @@
 #ifndef C_COMPILER_H
 #define C_COMPILER_H
 
+#include "lib/log.h"
 #include <lib/array.h>
 #include <lib/list.h>
 #include <stddef.h>
@@ -48,6 +49,55 @@ struct ast_parser
     struct list2c *tokens; /* head all tokens being parsed */
     struct token *current; /* current token */
 };
+
+enum ast_error_type
+{
+    AST_ERROR_IDENTIFIER_EXPECTED,
+    AST_ERROR_ARUGMENT_EXPECTED,
+    AST_ERROR_INVALID_TYPE,
+    AST_ERROR_OPEN_BRACE_EXPECTED,
+    AST_ERROR_CLOSE_PAREN_EXPECTED,
+    AST_ERROR_SEMICOLON_EXPECTED,
+    AST_ERROR_DECLARATION_OR_EXPRESSION_EXPECTED,
+};
+struct ast_error
+{
+
+    enum ast_error_type type;
+    union
+    {
+        struct
+        {
+            struct token *token;
+        } identifier_expected;
+        struct
+        {
+            struct token *token;
+        } argument_expected;
+        struct
+        {
+            struct token *token;
+        } invalid_type;
+        struct
+        {
+            struct token *token;
+        } semicolon_expected;
+        struct
+        {
+            struct token *token;
+        } close_paren_expected;
+    };
+};
+
+char *ast_error_to_string(struct ast_error *err);
+
+static inline struct ast_error *ast_error_alloc(enum ast_error_type type)
+{
+    struct ast_error *err = malloc(sizeof(struct ast_error));
+    err->type = type;
+
+    return err;
+}
 
 void tokenizer_parse_tokens(const char *program, struct list2c *token_list);
 
@@ -127,7 +177,8 @@ struct ast_expr
         AST_EXPRESSION_OPERATOR,
     } type;
 };
-struct ast_expr *ast_parse_expression(struct ast_parser *parser);
+struct ast_expr *ast_parse_expression(struct ast_parser *parser,
+                                      struct ast_error **err);
 
 struct ast_statement
 {
@@ -204,7 +255,9 @@ struct ast_top_statement
     struct list2c list;
 };
 
-void ast_parse(struct list2c *tokens, struct list2c *top_statements_head);
+/* returns NULL if there was no error */
+struct ast_error *ast_parse(struct list2c *tokens,
+                            struct list2c *top_statements_head);
 
 /* interpreter part, maybe move this later */
 

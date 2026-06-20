@@ -288,7 +288,8 @@ void kmain()
     execv("/bin/compiler", (char *[]){"compiler", NULL});
 #endif
 
-    int err = execv("/bin/wm", (char *[]){"wm", NULL});
+    execv("/bin/compiler", (char *[]){"compiler", NULL});
+    /* execv("/bin/wm", (char *[]){"wm", NULL}); */
     /* int err = execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
     /* int err = execv("/bin/ls", (char *[]){"/bin/ls", "/dev", NULL}); */
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
