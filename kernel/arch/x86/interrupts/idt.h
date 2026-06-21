@@ -1,7 +1,7 @@
 #ifndef IDT_H
 #define IDT_H
-#include "kernel/types.h"
 #include <stdint.h>
+#include <types.h>
 
 void init_idt();
 

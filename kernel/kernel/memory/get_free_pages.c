@@ -1,22 +1,22 @@
-#include "kernel/addr_space.h"
-#include "lib/log.h"
-#include "memory/paging_flags.h"
-#include "spinlock.h"
 #include <container_of.h>
+#include <kernel/addr_space.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/stacktrace.h>
-#include <kernel/types.h>
 #include <kmalloc.h>
 #include <lib/binary_tree.h>
 #include <lib/list.h>
+#include <lib/log.h>
 #include <memory/get_free_pages.h>
+#include <memory/paging_flags.h>
 #include <multiboot.h>
 #include <panic.h>
+#include <spinlock.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <types.h>
 
 #define DEFAULT_BITMAP_SIZE 4096 /* size in pages */
 /* #define DEFAULT_BITMAP_SIZE 8000 /1* size in pages *1/ */

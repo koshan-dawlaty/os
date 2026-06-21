@@ -1,8 +1,8 @@
 #include "acpica/acpi.h"
-#include "panic.h"
 #include <kernel/paging.h>
-#include <kernel/types.h>
+#include <panic.h>
 #include <stdio.h>
+#include <types.h>
 
 struct local_apic
 {

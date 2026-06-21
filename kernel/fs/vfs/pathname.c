@@ -1,19 +1,19 @@
 #include "dcache.h"
-#include "lib/assert.h"
-#include "utils.h"
-#include "vfs.h"
 #include "vfs_internal.h"
 #include <err_ptr.h>
+#include <lib/assert.h>
 #include <lib/log.h>
 #include <socket.h>
+#include <utils.h>
+#include <vfs.h>
 
 #include <errno.h>
-#include <kernel/types.h>
 #include <panic.h>
 #include <scheduler.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <types.h>
 
 static dentry *parse_dentries_component(dentry *dir, const char *component)
 {

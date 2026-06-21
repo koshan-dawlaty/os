@@ -1,7 +1,7 @@
 #include <cdev.h>
 #include <errno.h>
-#include <kernel/types.h>
 #include <stdio.h>
+#include <types.h>
 
 int terminal_read(struct cdev *dev, u8 *buf, size_t len)
 {

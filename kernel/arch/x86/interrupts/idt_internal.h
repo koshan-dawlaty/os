@@ -1,7 +1,7 @@
 #ifndef IDT_INTERNAL_H
 #define IDT_INTERNAL_H
-#include "kernel/types.h"
 #include <stdint.h>
+#include <types.h>
 
 typedef struct
 {

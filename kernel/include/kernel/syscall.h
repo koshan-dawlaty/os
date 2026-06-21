@@ -2,7 +2,7 @@
 #define SYSCALL_KERNEL_H
 
 #include <compiler.h>
-#include <kernel/types.h>
+#include <types.h>
 
 typedef ptr (*syscall_func_t)(ptr, ptr, ptr, ptr, ptr);
 

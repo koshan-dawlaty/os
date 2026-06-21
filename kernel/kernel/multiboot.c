@@ -1,17 +1,17 @@
-#include "multiboot.h"
-#include "lib/log.h"
 #include <kernel/graphics.h>
 #include <kernel/multiboot.h>
 #include <kernel/paging.h>
-#include <kernel/types.h>
 #include <kernel/utils.h>
+#include <lib/log.h>
 #include <memory/get_free_pages.h>
 #include <memory/paging_flags.h>
+#include <multiboot.h>
 #include <panic.h>
 #include <stdalign.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <types.h>
 
 #define DEFAULT_MEMORY_REGIONS_MAX 100
 struct memory_region memory_regions[DEFAULT_MEMORY_REGIONS_MAX] = {0};

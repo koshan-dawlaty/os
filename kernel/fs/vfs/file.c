@@ -1,5 +1,4 @@
 #include "dcache.h"
-#include "lib/log.h"
 #include "vfs_internal.h"
 #include <ata/ata.h>
 #include <bdev.h>
@@ -10,8 +9,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <interrupts/pic.h>
-#include <kernel/types.h>
 #include <lib/assert.h>
+#include <lib/log.h>
 #include <memory/get_free_pages.h>
 #include <mutex.h>
 #include <scheduler.h>
@@ -23,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <types.h>
 #include <unistd.h>
 #include <vfs.h>
 

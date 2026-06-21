@@ -1,9 +1,9 @@
 #ifndef BLOCK_DEVICE_H
 #define BLOCK_DEVICE_H
 
-#include <kernel/types.h>
 #include <lib/refcount.h>
 #include <stddef.h>
+#include <types.h>
 
 struct bdev;
 

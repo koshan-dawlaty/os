@@ -1,8 +1,8 @@
 #ifndef I386_UTILS_H
 #define I386_UTILS_H
-#include "kernel/types.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include <types.h>
 
 extern uint32_t stack_top;
 #define kernel_stack_top &stack_top

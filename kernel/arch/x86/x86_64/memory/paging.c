@@ -1,9 +1,9 @@
-#include "kernel/paging.h"
-#include "kernel/types.h"
-#include "kernel/utils.h"
-#include "lib/log.h"
-#include "spinlock.h"
+#include <kernel/paging.h>
+#include <kernel/utils.h>
+#include <lib/log.h>
+#include <spinlock.h>
 #include <string.h>
+#include <types.h>
 
 void *paging_page_table_addr = 0;
 

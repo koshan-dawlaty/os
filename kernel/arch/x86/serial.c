@@ -1,13 +1,12 @@
-#include "serial.h"
-#include "interrupts/pic.h"
-#include "kernel/interrupts.h"
-#include "kernel/types.h"
-#include "utils.h"
-#include "wait_queue.h"
+#include <interrupts/pic.h>
+#include <kernel/interrupts.h>
+#include <serial.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <types.h>
+#include <utils.h>
+#include <wait_queue.h>
 
 void serial_writestring(const char *str, size_t len, u16 port)
 {

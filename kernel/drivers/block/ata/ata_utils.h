@@ -1,8 +1,8 @@
 #ifndef ATA_UTILS_H
 #define ATA_UTILS_H
 
-#include <kernel/types.h>
 #include <stdint.h>
+#include <types.h>
 
 /*
  * waits for bit to be set if set is true, otherwise waits for it to clear

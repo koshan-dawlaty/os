@@ -25,7 +25,6 @@
 #include <kernel/stacktrace.h>
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
-#include <kernel/types.h>
 #include <kernel/userspace.h>
 #include <lib/array.h>
 #include <lib/assert.h>
@@ -55,6 +54,7 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <task_queue.h>
+#include <types.h>
 #include <userspace/mouse.h>
 #include <utils.h>
 #include <vfs.h>

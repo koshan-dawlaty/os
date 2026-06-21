@@ -1,9 +1,9 @@
-#include "elf.h"
-#include "kernel/types.h"
-#include "unistd.h"
+#include <elf.h>
 #include <kernel/utils.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <types.h>
+#include <unistd.h>
 
 typedef struct
 {

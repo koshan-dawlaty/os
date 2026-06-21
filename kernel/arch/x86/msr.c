@@ -1,5 +1,5 @@
-#include "kernel/types.h"
 #include <stdint.h>
+#include <types.h>
 
 const u32 CPUID_FLAG_MSR = 1 << 5;
 

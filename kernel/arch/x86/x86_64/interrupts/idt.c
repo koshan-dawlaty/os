@@ -5,12 +5,12 @@
 #include <interrupts/pic.h>
 #include <kernel/interrupts.h>
 #include <kernel/ps2.h>
-#include <kernel/types.h>
 #include <keyboard/x86_keyboard.h>
 #include <pit/pit.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <types.h>
 
 extern ISR_ATTRIBUTE void syscall_handler_asm(struct interrupt_frame *frame);
 

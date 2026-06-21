@@ -1,13 +1,4 @@
-#include "kernel/syscall.h"
-#include "kmalloc.h"
-#include "lib/log.h"
-#include "lib/refcount.h"
-#include "malloc_internal.h"
 #include "sleep.h"
-#include "sys/syscall.h"
-#include "unistd.h"
-#include "utils.h"
-#include "vfs.h"
 #include <container_of.h>
 #include <drivers/character/terminal.h>
 #include <elf.h>
@@ -16,9 +7,13 @@
 #include <interrupts/pic.h>
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
-#include <kernel/types.h>
+#include <kernel/syscall.h>
+#include <kmalloc.h>
 #include <lib/assert.h>
 #include <lib/list.h>
+#include <lib/log.h>
+#include <lib/refcount.h>
+#include <malloc_internal.h>
 #include <memory/get_free_pages.h>
 #include <panic.h>
 #include <scheduler.h>
@@ -29,7 +24,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/syscall.h>
 #include <task_queue.h>
+#include <types.h>
+#include <unistd.h>
+#include <utils.h>
+#include <vfs.h>
 
 #define SCHED_QUEUE_INIT(name)                                                 \
     ((struct sched_queue){.queue = TASK_QUEUE_INIT((name).queue),              \

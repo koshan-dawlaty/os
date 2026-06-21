@@ -1,13 +1,13 @@
 #include "interrupts/pic.h"
 #include "kernel/interrupts.h"
 #include "kernel/keyboard.h"
-#include "lib/log.h"
 #include "userspace/mouse.h"
 #include <interrupts/idt.h>
-#include <kernel/types.h>
+#include <lib/log.h>
 #include <panic.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <types.h>
 #include <utils.h>
 
 #define PS2_COMMAND 0x64

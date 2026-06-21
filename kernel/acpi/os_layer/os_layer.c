@@ -3,7 +3,6 @@
 #include <ctype.h>
 #include <kernel/paging.h>
 #include <kernel/semaphore.h>
-#include <kernel/types.h>
 #include <kernel/utils.h>
 #include <lib/assert.h>
 #include <lib/log.h>
@@ -18,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <types.h>
 #include <unistd.h>
 #include <utils.h>
 

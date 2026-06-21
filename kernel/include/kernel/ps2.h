@@ -3,7 +3,7 @@
 
 #include <interrupts/idt.h>
 #include <kernel/interrupts.h>
-#include <kernel/types.h>
+#include <types.h>
 
 int ps2_init();
 

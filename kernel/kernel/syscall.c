@@ -1,8 +1,8 @@
 #include <errno.h>
 #include <kernel/syscall.h>
-#include <kernel/types.h>
 #include <lib/assert.h>
 #include <stdlib.h>
+#include <types.h>
 
 #define MAX_SYSCALLS 256
 syscall_func_t syscall_table[MAX_SYSCALLS];

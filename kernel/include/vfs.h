@@ -4,7 +4,6 @@
 #include <device.h>
 #include <dirent.h>
 #include <kernel/stacktrace.h>
-#include <kernel/types.h>
 #include <lib/assert.h>
 #include <lib/log.h>
 #include <lib/refcount.h>
@@ -17,6 +16,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <task_queue.h>
+#include <types.h>
 #include <wait_queue.h>
 
 struct fs_type;

@@ -1,11 +1,11 @@
 #ifndef TESTS_H
 #define TESTS_H
 
-#include <kernel/types.h>
 #include <lib/utils.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <types.h>
 
 void run_tests();
 

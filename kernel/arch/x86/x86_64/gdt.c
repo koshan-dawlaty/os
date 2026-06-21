@@ -1,7 +1,7 @@
 #include "gdt.h"
-#include "kernel/types.h"
 #include <stddef.h>
 #include <stdio.h>
+#include <types.h>
 
 struct tss
 {

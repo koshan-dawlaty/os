@@ -1,5 +1,4 @@
 #include "ext2.h"
-#include <kernel/types.h>
 #include <kernel/utils.h>
 #include <lib/utils.h>
 #include <panic.h>
@@ -8,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <types.h>
 #include <utils.h>
 #include <vfs.h>
 

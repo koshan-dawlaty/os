@@ -1,8 +1,8 @@
 #ifndef KERNEL_UTILS_H
 #define KERNEL_UTILS_H
-#include <kernel/types.h>
 #include <scheduler.h>
 #include <stdint.h>
+#include <types.h>
 
 #define MACRO_STR2(x) #x
 #define MACRO_STR(x) MACRO_STR2(x)

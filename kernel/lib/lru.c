@@ -1,4 +1,3 @@
-#include "kernel/types.h"
 #include <container_of.h>
 #include <lib/assert.h>
 #include <lib/list.h>
@@ -6,6 +5,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <types.h>
 
 struct lru_entry *lru_add(struct lru_head *head, struct lru_entry *new)
 {

@@ -1,7 +1,7 @@
 #ifndef PAGING_H
 #define PAGING_H
 #include "memory/get_free_pages.h"
-#include <kernel/types.h>
+#include <types.h>
 #define PAGE_SIZE 4096
 
 #include <multiboot.h>

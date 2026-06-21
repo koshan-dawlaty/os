@@ -8,7 +8,6 @@
 #include <interrupts/idt.h>
 #include <kernel/paging.h>
 #include <kernel/semaphore.h>
-#include <kernel/types.h>
 #include <memory/paging_flags.h>
 #include <panic.h>
 #include <scheduler.h>
@@ -18,6 +17,7 @@
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
+#include <types.h>
 #include <unistd.h>
 #include <utils.h>
 

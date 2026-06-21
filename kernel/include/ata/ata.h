@@ -4,9 +4,9 @@
 // #include "interrupts/idt.h"
 #include "vfs.h"
 #include <bdev.h>
-#include <kernel/types.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <types.h>
 
 #define ATA_PRIMARY_IO 0x1F0
 #define ATA_PRIMARY_CONTROL 0x3F6

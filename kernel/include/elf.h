@@ -1,9 +1,9 @@
 #ifndef ELF_H
 #define ELF_H
 
-#include "kernel/paging.h"
-#include "kernel/types.h"
+#include <kernel/paging.h>
 #include <stdint.h>
+#include <types.h>
 
 typedef struct
 {

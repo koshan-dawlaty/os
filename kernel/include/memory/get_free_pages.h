@@ -3,10 +3,10 @@
 
 #include "lib/binary_tree.h"
 #include "spinlock.h"
-#include <kernel/types.h>
 #include <lib/list.h>
 #include <memory/paging_flags.h>
 #include <stddef.h>
+#include <types.h>
 
 /* TODO: define this somewhere in an arch file */
 #define PAGE_SIZE 4096

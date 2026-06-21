@@ -3,9 +3,9 @@
 
 #include "lib/font.h"
 #include <compiler.h>
-#include <kernel/types.h>
 #include <lib/framebuffer.h>
 #include <stddef.h>
+#include <types.h>
 
 void graphics_init(struct framebuffer *f);
 

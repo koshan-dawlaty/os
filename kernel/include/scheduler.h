@@ -5,13 +5,13 @@
 #include <kernel/addr_space.h>
 #include <kernel/paging.h>
 #include <kernel/preempt.h>
-#include <kernel/types.h>
 #include <lib/list.h>
 #include <lib/log.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <task_queue.h>
+#include <types.h>
 #include <utils.h>
 #include <vfs.h>
 

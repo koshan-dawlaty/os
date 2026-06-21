@@ -3,9 +3,9 @@
 #include <kernel/stacktrace.h>
 
 #include "interrupts/idt.h"
-#include "kernel/types.h"
-#include "lib/log.h"
 #include <kernel/faults.h>
+#include <lib/log.h>
+#include <types.h>
 
 #include <stdint.h>
 #include <stdio.h>

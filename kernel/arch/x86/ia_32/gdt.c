@@ -1,9 +1,9 @@
 #include "gdt.h"
-#include "kernel/types.h"
-#include "utils.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <types.h>
+#include <utils.h>
 
 extern void reload_segments();
 extern void flush_tss();
