@@ -14,7 +14,8 @@ __noreturn void __panic_func(const char *format, ...);
 #define ASSERT(condition, message, ...)                                        \
     if (!(condition))                                                          \
     {                                                                          \
-        __panic_impl("assertion failed\n" message __VA_OPT__(, ) __VA_ARGS__); \
+        __panic_impl("assertion failed, condition " MACRO_STR(                 \
+            condition) " was false\n" message __VA_OPT__(, ) __VA_ARGS__);     \
     }
 
 #define PANIC(message, ...) __panic_impl(message __VA_OPT__(, ) __VA_ARGS__)

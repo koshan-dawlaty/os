@@ -1,6 +1,4 @@
-#include "lib/log.h"
-#include "stdio.h"
-#include "sys/types.h"
+#include <lib/log.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -9,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 
 #ifdef __is_libk
 #include <kernel/tty.h>
@@ -208,10 +207,14 @@ char printf_data[4096] = {0};
 /* not standard */
 char *vrprintf(const char *format, va_list list)
 {
+    vsnprintf(printf_data, 4096, format, list);
+    return printf_data;
+}
+
+int vsnprintf(char *buf, size_t n, const char *format, va_list list)
+{
     /* puts((char *)format); */
     /* puts("\n"); */
-
-    char *out = printf_data;
 
     /* total bytes */
     size_t out_len = 0;
@@ -243,13 +246,13 @@ that they will not work because the bootstrap has not initialized them
                     str = "null";
                 }
 
-                memcpy(out + (out_len), str, strlen(str));
+                memcpy(buf + (out_len), str, strlen(str));
                 out_len += strlen(str);
             }
             else if (*format == 'c')
             {
                 char c = (char)va_arg(list, int);
-                out[out_len] = c;
+                buf[out_len] = c;
                 out_len++;
 
                 /* append_buf(&out, &out_len, &capacity, c); */
@@ -343,8 +346,11 @@ that they will not work because the bootstrap has not initialized them
                         next_is_format = 1;
                     }
                 }
-
-                memcpy(out + (out_len), str, strlen(str));
+                if (out_len + strlen(str) > n)
+                {
+                    return 1;
+                }
+                memcpy(buf + (out_len), str, strlen(str));
                 out_len += strlen(str);
             }
         }
@@ -354,16 +360,16 @@ that they will not work because the bootstrap has not initialized them
         }
         else
         {
-            out[out_len] = *format;
+            buf[out_len] = *format;
             out_len++;
         }
 
         format++;
     }
 
-    out[out_len] = 0;
+    buf[out_len] = 0;
 
-    return out;
+    return 0;
 }
 
 char *rprintf(char *format, ...)
