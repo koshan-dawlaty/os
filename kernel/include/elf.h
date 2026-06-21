@@ -10,22 +10,22 @@ typedef struct
     u32 type;
     u32 flags;
 
-    ptr virtual_addr;
-    ptr physical_addr;
+    ptr_t virtual_addr;
+    ptr_t physical_addr;
 
-    ptr file_offset;
+    ptr_t file_offset;
 
-    ptr size_file;
-    ptr size_memory;
+    ptr_t size_file;
+    ptr_t size_memory;
 
-    ptr align;
+    ptr_t align;
 } elf_program_header;
 
 typedef struct
 {
     int fd;
     size_t program_headers_len;
-    ptr entry_point;
+    ptr_t entry_point;
     elf_program_header **program_headers;
 } elf;
 

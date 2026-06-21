@@ -35,7 +35,7 @@ struct framebuffer *framebuffer_alloc_user(struct framebuffer *buffer)
 
     for (size_t i = 0; i < num_pages; i++)
     {
-        map_page((void *)(ptr)physaddr + (i * PAGE_SIZE),
+        map_page((void *)(ptr_t)physaddr + (i * PAGE_SIZE),
                  user_buffer + (i * PAGE_SIZE),
                  PAGING_PRESENT | PAGING_USER | PAGING_WRITEABLE);
     }

@@ -1009,10 +1009,10 @@ int main()
     font = font_parse_fd(font_fd);
 
     int server_sock = syscall_wrapper_asm(SYS_create_socket_fs,
-                                          (ptr) "wm_socket", 0, 0, 0, 0);
+                                          (ptr_t) "wm_socket", 0, 0, 0, 0);
 
     int input_sock = syscall_wrapper_asm(SYS_create_socket_fs,
-                                         (ptr) "input_socket", 0, 0, 0, 0);
+                                         (ptr_t) "input_socket", 0, 0, 0, 0);
 
     window_queue_mutex = user_mutex_create();
 
@@ -1058,7 +1058,7 @@ int main()
     draw_window(buffer, mouse);
     draw_window(buffer, background);
 
-    clone((ptr)input_thread);
+    clone((ptr_t)input_thread);
 
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
@@ -1098,7 +1098,7 @@ int main()
         current_client = client_sock;
         current_key_socket = key_socket;
 
-        clone((ptr)(process_connection));
+        clone((ptr_t)(process_connection));
     }
     /* process_connection(client_sock); */
 

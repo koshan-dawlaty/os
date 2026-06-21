@@ -68,9 +68,9 @@ static inline void irq_disable()
 }
 
 #ifdef CONFIG_x86_64
-static inline ptr save_eflags(void)
+static inline ptr_t save_eflags(void)
 {
-    ptr flags;
+    ptr_t flags;
     __asm__ volatile("pushfq\n\t"
                      "pop %0"
                      : "=r"(flags)
@@ -78,7 +78,7 @@ static inline ptr save_eflags(void)
                      : "memory");
     return flags;
 }
-static inline void restore_eflags(ptr flags)
+static inline void restore_eflags(ptr_t flags)
 {
     __asm__ volatile("push %0\n\t"
                      "popfq"
@@ -112,8 +112,8 @@ static inline void restore_eflags(ptr flags)
 typedef bool irq_state_t;
 static inline irq_state_t irq_save()
 {
-    ptr flags = save_eflags();
-    ptr is_set = (flags & (1 << 9)) != 0;
+    ptr_t flags = save_eflags();
+    ptr_t is_set = (flags & (1 << 9)) != 0;
     irq_state_t irq_state = (bool)(is_set);
     restore_eflags(flags);
 

@@ -24,21 +24,21 @@
 /* eax should be at 19 words offset */
 struct syscall_regs
 {
-    ptr ebx;
-    ptr ecx;
-    ptr edx;
-    ptr esi;
-    ptr edi;
-    ptr ebp;
+    ptr_t ebx;
+    ptr_t ecx;
+    ptr_t edx;
+    ptr_t esi;
+    ptr_t edi;
+    ptr_t ebp;
 
-    ptr fs;
-    ptr gs;
-    ptr eax;
-    ptr ip;
-    ptr cs;
-    ptr flags;
-    ptr sp;
-    ptr ss;
+    ptr_t fs;
+    ptr_t gs;
+    ptr_t eax;
+    ptr_t ip;
+    ptr_t cs;
+    ptr_t flags;
+    ptr_t sp;
+    ptr_t ss;
 
 } __attribute__((packed));
 

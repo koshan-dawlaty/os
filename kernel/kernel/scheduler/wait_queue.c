@@ -48,7 +48,7 @@ void wait_queue_wait(struct wait_queue *queue)
     {
         addr_space_load(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
     }
-    set_kernel_stack((ptr)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
+    set_kernel_stack((ptr_t)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
 
     /* FIXME: this should maybe be in load_registers() or something */
     preempt_enable();

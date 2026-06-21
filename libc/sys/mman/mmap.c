@@ -27,8 +27,8 @@ void *mmap(void *addr, size_t len, int prot, int flags, off_t off)
 #endif
 }
 
-SYSCALL_DEFINE5(SYS_mmap, ptr, void *, addr, size_t, len, int, prot, int, flags,
-                off_t, off)
+SYSCALL_DEFINE5(SYS_mmap, ptr_t, void *, addr, size_t, len, int, prot, int,
+                flags, off_t, off)
 {
-    return (ptr)mmap(addr, len, prot, flags, off);
+    return (ptr_t)mmap(addr, len, prot, flags, off);
 }

@@ -129,7 +129,7 @@ void draw_background(struct framebuffer *f)
 
 void sse_enable()
 {
-    ptr cr0 = 0;
+    ptr_t cr0 = 0;
     /* read from cr0 */
     asm volatile("mov %%cr0, %0" : "=r"(cr0) :);
 
@@ -141,7 +141,7 @@ void sse_enable()
     asm volatile("mov %%cr0, %0" : "=r"(cr0) :);
 
     /* TODO: check for long mode / sse support for these */
-    ptr cr4 = 0;
+    ptr_t cr4 = 0;
     asm volatile("mov %%cr4, %0" : "=r"(cr4) :);
 
     cr4 |= (1 << 9); /* set OSFXSR */

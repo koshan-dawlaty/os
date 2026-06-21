@@ -26,7 +26,7 @@ bool compare_test_lru(struct lru_entry *entry, void *parameter)
 {
     struct lru_test *test = containerof(entry, struct lru_test, lru);
 
-    return test->data == (int)(ptr)parameter;
+    return test->data == (int)(ptr_t)parameter;
 }
 
 TEST(lru_test_basic, {

@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-extern ptr get_cr2();
+extern ptr_t get_cr2();
 
 void fault_handler_wait()
 {
@@ -126,7 +126,7 @@ const u8 idt_fault_flags = 0x8F;
     }
 #elif defined(CONFIG_x86_64)
 #define FAULT_IDT_ENTRY(function)                                              \
-    (IDT_entry){(ptr)function, 8, idt_fault_flags, 0}
+    (IDT_entry){(ptr_t)function, 8, idt_fault_flags, 0}
 #endif
 
 void init_faults()

@@ -9,7 +9,7 @@
 
 long align_long(long in, long align);
 
-static inline ptr ptr_align(ptr in, ptr align)
+static inline ptr_t ptr_align(ptr_t in, ptr_t align)
 {
     return (in + align - 1) & ~(align - 1);
 }

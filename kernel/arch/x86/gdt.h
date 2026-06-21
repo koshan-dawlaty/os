@@ -4,6 +4,6 @@
 #include <types.h>
 
 void init_gdt();
-void set_kernel_stack(ptr stack);
+void set_kernel_stack(ptr_t stack);
 
 #endif

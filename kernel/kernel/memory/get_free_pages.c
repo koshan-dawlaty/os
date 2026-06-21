@@ -57,7 +57,7 @@ void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
 
     struct bitmap_memory_zone *zone = z->zone_private;
 
-    ptr i;
+    ptr_t i;
     size_t consecutive = 0;
     size_t consecutive_start = 0;
 
@@ -159,7 +159,7 @@ void *get_free_pages_unmmaped(size_t amount, struct memory_zone *z)
     struct bitmap_memory_zone *zone = z->zone_private;
     spinlock_lock(&z->lock);
 
-    ptr i;
+    ptr_t i;
     size_t consecutive = 0;
     size_t consecutive_start = 0;
     for (i = 0; i < zone->size; i++)

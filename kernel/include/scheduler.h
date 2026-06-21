@@ -63,7 +63,7 @@ struct task
 
     void *stack;
     struct registers regs;
-    ptr bp;
+    ptr_t bp;
     struct dentry *working_dir;
     struct fdlist *descriptors;
 
@@ -96,10 +96,10 @@ void remove_task_queue(struct task **queue, struct task *task);
 /*
  * initializes the page directory as a free page
  */
-struct task *new_task(ptr ip);
+struct task *new_task(ptr_t ip);
 
-struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv);
-struct task *user_thread_alloc(ptr ip);
+struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv);
+struct task *user_thread_alloc(ptr_t ip);
 
 /*
  * frees task t
@@ -119,7 +119,7 @@ extern void switch_tasks_kernel(struct registers *regs, uint32_t ip);
 extern void save_registers(struct registers *regs);
 extern void load_registers(struct registers *regs);
 
-extern void jump_usermode_asm(ptr addr, struct registers *regs, ptr sp);
+extern void jump_usermode_asm(ptr_t addr, struct registers *regs, ptr_t sp);
 
 void schedule();
 void schedule_impl();
@@ -129,7 +129,7 @@ void disable_scheduler();
 bool is_scheduler_enabled();
 
 struct task *get_current_task();
-void scheduler_set_regs_arguments(int argc, char **argv, ptr ip,
+void scheduler_set_regs_arguments(int argc, char **argv, ptr_t ip,
                                   struct registers *regs);
 
 void scheduler_set_regs_argv(int argc, char **argv, struct registers *regs);
@@ -140,7 +140,7 @@ void scheduler_set_first_arg(void *first_arg, struct registers *regs);
  */
 void add_sleep_queue(struct task *task, size_t time);
 
-struct task *new_task_args(ptr ip, void *args);
+struct task *new_task_args(ptr_t ip, void *args);
 
 void ktask_run(void (*task)(void *), void *args);
 /* TODO: make this a good api */

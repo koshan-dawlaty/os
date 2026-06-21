@@ -60,7 +60,7 @@ void free_phys_pages(void *addr, size_t num)
 
     spinlock_lock(&phys_page_lock);
 
-    size_t index = (((size_t)addr - (ptr)phys_page_start)) / 4096;
+    size_t index = (((size_t)addr - (ptr_t)phys_page_start)) / 4096;
 
     /* logd("unmapping:%p at index:%d", addr, index); */
     for (size_t i = 0; i < num; i++)
@@ -76,7 +76,7 @@ struct pagedir *current_pagedir = &init_pgdir;
 void *get_free_phys_page_dir(struct pagedir dir)
 {
     spinlock_lock(&phys_page_lock);
-    ptr i = 0;
+    ptr_t i = 0;
 
     while (i < NUM_PAGES)
     {
@@ -109,7 +109,7 @@ void *get_free_phys_page_dir(struct pagedir dir)
 void *get_free_phys_pages(struct pagedir *dir, size_t amount)
 {
     spinlock_lock(&phys_page_lock);
-    ptr i;
+    ptr_t i;
     size_t consecutive = 0;
     size_t consecutive_start = 0;
     for (i = 0; i < NUM_PAGES; i++)
@@ -230,7 +230,7 @@ void init_paging()
     }
     /* TODO: this could theoretically overflow (maybe) */
     phys_page_start =
-        (void *)((((ptr)(max.start) / PAGE_SIZE) + 1) * PAGE_SIZE);
+        (void *)((((ptr_t)(max.start) / PAGE_SIZE) + 1) * PAGE_SIZE);
 }
 
 #define USER_STACK_BASE 0xBFFF0000
@@ -240,7 +240,7 @@ uint32_t user_stack_physical = 0x300000;
 void create_userspace_stack(struct addr_space *a)
 {
     /* printf("new userspace stack at %p\n", USER_STACK_PHYSICAL); */
-    for (ptr i = USER_STACK_BASE - USER_STACK_SIZE; i < USER_STACK_BASE;
+    for (ptr_t i = USER_STACK_BASE - USER_STACK_SIZE; i < USER_STACK_BASE;
 
          i += PAGE_SIZE)
     {

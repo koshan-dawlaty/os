@@ -28,7 +28,7 @@ volatile size_t default_memory_regions_len = 0;
     (void *)(((void *)addr) - ((void *)KERNEL_VIRTUAL_OFFSET))
 
 void __section(".multiboot.text") __no_ssp
-    multiboot_test(struct multiboot_info *info, ptr magic)
+    multiboot_test(struct multiboot_info *info, ptr_t magic)
 {
 
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
@@ -59,7 +59,7 @@ void __section(".multiboot.text") __no_ssp
             (*length_ptr)++;
 
             memory_regions_ptr[(*length_ptr) - 1] = (struct memory_region){
-                .start = (void *)((ptr)mmmt->addr), .len = mmmt->len};
+                .start = (void *)((ptr_t)mmmt->addr), .len = mmmt->len};
         }
     }
 }
@@ -76,7 +76,7 @@ void multiboot_parse_memory_map(struct multiboot_info *info)
     void *memory_map = get_free_pages_unmmaped(
         ((info->mmap_length * sizeof(multiboot_memory_map_t)) / 4096) + 1,
         &gfp_kernel_zone);
-    map_page((void *)(ptr)info->mmap_addr, memory_map,
+    map_page((void *)(ptr_t)info->mmap_addr, memory_map,
              PAGING_PRESENT | PAGING_WRITEABLE);
 
     for (size_t i = 0; i < info->mmap_length;
@@ -104,7 +104,7 @@ struct bootloader_module multiboot_load_module(multiboot_module_t *modules,
     void *addr = get_free_pages_unmmaped(num_pages, &gfp_kernel_zone);
     for (size_t i = 0; i < num_pages; i++)
     {
-        map_page(((void *)(ptr)mod->mod_start) + i * PAGE_SIZE,
+        map_page(((void *)(ptr_t)mod->mod_start) + i * PAGE_SIZE,
                  addr + i * PAGE_SIZE, PAGING_PRESENT | PAGING_WRITEABLE);
     }
 
@@ -126,18 +126,18 @@ struct framebuffer *multiboot_init()
 
     /* printf("magic:%ux\n", multiboot_magic); */
 
-    struct multiboot_info *info_physical = (void *)(ptr)multiboot_struct_addr;
+    struct multiboot_info *info_physical = (void *)(ptr_t)multiboot_struct_addr;
 
     /* printf("info addr:%p\n", info_physical); */
 
     struct multiboot_info *info = get_free_pages_unmmaped(1, &gfp_kernel_zone);
-    map_page((void *)(ptr)multiboot_struct_addr, info,
+    map_page((void *)(ptr_t)multiboot_struct_addr, info,
              PAGING_PRESENT | PAGING_WRITEABLE);
 
     if (info->flags & MULTIBOOT_INFO_MODS)
     {
 #ifdef CONFIG_SYMBOL_TABLE
-        multiboot_module_t *modules_physical = (void *)(ptr)info->mods_addr;
+        multiboot_module_t *modules_physical = (void *)(ptr_t)info->mods_addr;
         size_t num_pages =
             ((info->mods_count * sizeof(multiboot_module_t)) / PAGE_SIZE) + 1;
 
@@ -194,7 +194,7 @@ struct framebuffer *multiboot_init()
 
     for (size_t i = 0; i < num_pages; i++)
     {
-        map_page((void *)(ptr)info->framebuffer_addr + (i * PAGE_SIZE),
+        map_page((void *)(ptr_t)info->framebuffer_addr + (i * PAGE_SIZE),
                  framebuffer + (i * PAGE_SIZE),
                  PAGING_PRESENT | PAGING_WRITEABLE);
     }

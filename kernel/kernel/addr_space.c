@@ -97,7 +97,7 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
     }
 
     struct addr_space_page *page = addr_space_page_alloc(
-        (void *)ptr_align((ptr)addr, PAGE_SIZE), num_pages);
+        (void *)ptr_align((ptr_t)addr, PAGE_SIZE), num_pages);
 
     if (a->list_head != NULL)
     {

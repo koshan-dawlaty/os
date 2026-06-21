@@ -25,13 +25,13 @@
 
 int pipe(int fds[2])
 {
-    return syscall_wrapper_asm(SYS_pipe, (ptr)fds, 0, 0, 0, 0);
+    return syscall_wrapper_asm(SYS_pipe, (ptr_t)fds, 0, 0, 0, 0);
 }
 
 int execv_stdio(const char *path, char *const argv[], int in, int out)
 {
-    return syscall_wrapper_asm(SYS_execv_stdio, (ptr)path, (ptr)argv, in, out,
-                               0);
+    return syscall_wrapper_asm(SYS_execv_stdio, (ptr_t)path, (ptr_t)argv, in,
+                               out, 0);
 }
 
 size_t mouse_x = 0;
@@ -200,7 +200,7 @@ int main()
     /* execv("/bin/ksh", (char *[]){"ksh", NULL}); */
 
     pipe_write = stdin_pipe[1];
-    clone((ptr)key_thread);
+    clone((ptr_t)key_thread);
     /* client_draw_char(client, font, 'a', 0, 0); */
     /* wm_render(client); */
 

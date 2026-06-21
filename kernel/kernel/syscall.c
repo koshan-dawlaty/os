@@ -7,13 +7,13 @@
 #define MAX_SYSCALLS 256
 syscall_func_t syscall_table[MAX_SYSCALLS];
 
-void syscall_add(ptr num, syscall_func_t f)
+void syscall_add(ptr_t num, syscall_func_t f)
 {
     ASSERT(num < MAX_SYSCALLS, "syscall added at invalid index");
     syscall_table[num] = f;
 }
 
-ptr kernel_syscall(ptr num, ptr b, ptr c, ptr d, ptr si, ptr di)
+ptr_t kernel_syscall(ptr_t num, ptr_t b, ptr_t c, ptr_t d, ptr_t si, ptr_t di)
 {
     if (syscall_table[num] == NULL)
     {

@@ -8,14 +8,14 @@
 /*
  * returns true if test succeeded
  */
-int test_map_page(ptr virtual, ptr physical)
+int test_map_page(ptr_t virtual, ptr_t physical)
 {
 
     map_page((void *)physical, (void *)virtual, PAGING_WRITEABLE);
 
     *(char *)virtual = 'a';
 
-    ptr physaddr = (ptr)get_physaddr((void *)virtual);
+    ptr_t physaddr = (ptr_t)get_physaddr((void *)virtual);
 
     /* printf("%p\n", get_physaddr((void *)virtual)); */
     unmap_page((void *)virtual);

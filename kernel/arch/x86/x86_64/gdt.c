@@ -37,7 +37,7 @@ u64 __attribute__((aligned(8))) gdt[7] = {};
 extern void swap_segments();
 extern void flush_tss();
 
-extern ptr stack_top;
+extern ptr_t stack_top;
 
 extern char double_fault_stack[4096];
 
@@ -67,7 +67,7 @@ void init_gdt()
     gdt[6] = (base >> 32) & 0xFFFFFFFFULL;
 
     gdtr.limit = sizeof(gdt) - 1;
-    gdtr.base = (ptr)&gdt;
+    gdtr.base = (ptr_t)&gdt;
 
     /* tss.ist1 = (ptr)(&double_fault_stack[sizeof(double_fault_stack)]); */
 
@@ -77,7 +77,7 @@ void init_gdt()
     flush_tss();
 }
 
-void set_kernel_stack(ptr stack)
+void set_kernel_stack(ptr_t stack)
 {
     tss.rsp0 = stack;
 }

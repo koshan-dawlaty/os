@@ -11,10 +11,10 @@
 
 struct pagedir
 {
-    ptr *pgdir;
+    ptr_t *pgdir;
     /* the virtual address of the page directory in the initial page directory
      */
-    ptr *pgdir_virtual;
+    ptr_t *pgdir_virtual;
     /* virtual address of the self referencing page table */
     uint32_t *pagetable;
 };

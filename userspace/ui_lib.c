@@ -127,7 +127,7 @@ void rect_free(struct element *e)
 
 void rect_onclick(struct element *e, size_t real_x, size_t real_y)
 {
-    u32 color = (ptr)e->private;
+    u32 color = (ptr_t)e->private;
     logd("%p", color);
     /* color <<= 8; */
     client_draw_pixel(client, real_x, real_y, 0);
@@ -136,7 +136,7 @@ void rect_onclick(struct element *e, size_t real_x, size_t real_y)
 void rect_render(struct element *rect)
 {
     framebuffer_draw_rect(&rect->fb, 0, 0, rect->fb.width, rect->fb.height,
-                          (ptr)rect->private);
+                          (ptr_t)rect->private);
 }
 const struct element_type rect_operations = {
 
@@ -152,12 +152,12 @@ struct element *rectangle_alloc(struct rect_d r, struct element *parent,
 {
     if (parent == NULL) /* TODO: stupid */
     {
-        return element_alloc_root(rect_operations, (void *)(ptr)color,
+        return element_alloc_root(rect_operations, (void *)(ptr_t)color,
                                   client.fb);
     }
     else
     {
-        return element_alloc(r, rect_operations, (void *)(ptr)color, parent);
+        return element_alloc(r, rect_operations, (void *)(ptr_t)color, parent);
     }
 }
 

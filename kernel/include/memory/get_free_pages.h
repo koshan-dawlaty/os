@@ -34,10 +34,10 @@ struct memory_zone
 
 struct bitmap_memory_zone
 {
-    ptr virtual;
-    ptr physical;
+    ptr_t virtual;
+    ptr_t physical;
 
-    ptr size; /* the size of this zone in pages */
+    ptr_t size; /* the size of this zone in pages */
 
     u8 *bitmap;
     u8 pg_flags; /* paging flags to be used with this zone */

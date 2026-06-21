@@ -67,7 +67,7 @@ bool is_scheduler_enabled()
     return scheduler_enabled;
 }
 
-void new_task_usermode_start(int argc, char **argv, ptr addr)
+void new_task_usermode_start(int argc, char **argv, ptr_t addr)
 {
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
@@ -76,18 +76,18 @@ void new_task_usermode_start(int argc, char **argv, ptr addr)
     temp_regs->esp = 0xBFFEF000;
     scheduler_set_regs_argv(argc, argv, temp_regs);
 
-    jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
+    jump_usermode_asm(addr, temp_regs, (ptr_t)temp_regs->esp);
 }
 
-void user_thread_kernel_start(ptr addr)
+void user_thread_kernel_start(ptr_t addr)
 {
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = registers_init_dynamic();
 
-    temp_regs->esp = (ptr)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
+    temp_regs->esp = (ptr_t)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
 
-    jump_usermode_asm(addr, temp_regs, (ptr)temp_regs->esp);
+    jump_usermode_asm(addr, temp_regs, (ptr_t)temp_regs->esp);
 }
 
 /* copies args to userspace */
@@ -139,7 +139,7 @@ static void fdlist_copy_device(struct fdlist *dest, struct fdlist *src,
     }
 }
 
-struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
+struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv)
 {
     struct task *out = new_task(ip);
     out->preempt_count = 0;
@@ -153,8 +153,8 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
 
     out->regs = (struct registers){
 
-        .esp = (ptr)out->stack,
-        .ebp = (ptr)out->stack,
+        .esp = (ptr_t)out->stack,
+        .ebp = (ptr_t)out->stack,
         .eflags = 1 << 9,
 #ifdef CONFIG_x86_64
         .edi = (ip),
@@ -167,7 +167,7 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     /* NULL is used to signify root dir */
     out->working_dir = NULL;
 
-    *(ptr *)(out->stack) = (ptr)new_task_usermode_start;
+    *(ptr_t *)(out->stack) = (ptr_t)new_task_usermode_start;
     /* edx is the third argument first and second are set later in this
      * function
      */
@@ -227,7 +227,7 @@ struct task *new_task_user(ptr ip, ptr sp, int argc, char **argv)
     return out;
 }
 
-struct task *user_thread_alloc(ptr ip)
+struct task *user_thread_alloc(ptr_t ip)
 {
 
     struct addr_space current_addr_space = get_current_task()->addr_space;
@@ -241,13 +241,13 @@ struct task *user_thread_alloc(ptr ip)
     out->start_addr = (void *)ip;
 
     out->stack = get_free_pages(1) + (PAGE_SIZE - 0x60);
-    out->bp = (ptr)out->stack;
+    out->bp = (ptr_t)out->stack;
     out->descriptors = new_fdlist();
 
     out->regs = (struct registers){
 
-        .esp = (ptr)out->stack,
-        .ebp = (ptr)out->stack,
+        .esp = (ptr_t)out->stack,
+        .ebp = (ptr_t)out->stack,
         .eflags = 1 << 9,
 #ifdef CONFIG_x86_64
         .edi = (ip),
@@ -261,11 +261,11 @@ struct task *user_thread_alloc(ptr ip)
     /* NULL is used to signify root dir */
     out->working_dir = NULL;
 
-    *((ptr *)(out->stack)) = (ptr)user_thread_kernel_start;
+    *((ptr_t *)(out->stack)) = (ptr_t)user_thread_kernel_start;
     /* edx is the third argument first and second are set later in this
      * function
      */
-    *(ptr *)(out->stack + sizeof(ptr)) = ip;
+    *(ptr_t *)(out->stack + sizeof(ptr_t)) = ip;
 #ifdef CONFIG_x86_32
     *(ptr *)(out->stack + sizeof(ptr) * 2) = ip;
 #endif
@@ -317,7 +317,7 @@ struct task *user_thread_alloc(ptr ip)
 }
 
 /* TODO: */
-SYSCALL_DEFINE1(SYS_clone, int, ptr, ip)
+SYSCALL_DEFINE1(SYS_clone, int, ptr_t, ip)
 {
     add_task(user_thread_alloc(ip));
 
@@ -326,7 +326,7 @@ SYSCALL_DEFINE1(SYS_clone, int, ptr, ip)
 
 void ktask_run(void (*task)(void *), void *args)
 {
-    struct task *t = new_task_args((ptr)task, args);
+    struct task *t = new_task_args((ptr_t)task, args);
     add_task(t);
 }
 
@@ -347,19 +347,19 @@ void ktask_return()
     panic("ktask_return end reached\n");
 }
 
-struct task *new_task_args(ptr ip, void *args)
+struct task *new_task_args(ptr_t ip, void *args)
 {
 
     struct task *out = new_task(ip);
     scheduler_set_first_arg(args, &out->regs);
     /* *((ptr *)(out->stack - sizeof(ptr))) = (ptr)ktask_return; */
     /* *((ptr *)(out->stack - sizeof(ptr) * 4)) = 0x123; */
-    *((ptr *)(out->stack - sizeof(ptr) * 4)) = (ptr)ktask_return;
-    *((ptr *)(out->stack + sizeof(ptr))) = (ptr)ktask_return;
+    *((ptr_t *)(out->stack - sizeof(ptr_t) * 4)) = (ptr_t)ktask_return;
+    *((ptr_t *)(out->stack + sizeof(ptr_t))) = (ptr_t)ktask_return;
     return out;
 }
 
-struct task *new_task(ptr ip)
+struct task *new_task(ptr_t ip)
 {
     struct task *out = malloc(sizeof(struct task));
     out->preempt_count = 0;
@@ -368,14 +368,14 @@ struct task *new_task(ptr ip)
 
     /* TODO: this is really stupid and runs out of space all the time,
      * however it works */
-    out->stack = get_free_pages(1) + (PAGE_SIZE - sizeof(ptr) * 5);
+    out->stack = get_free_pages(1) + (PAGE_SIZE - sizeof(ptr_t) * 5);
     out->working_dir = NULL;
 
     out->regs = registers_init_dynamic();
-    out->regs.esp = (ptr)out->stack;
+    out->regs.esp = (ptr_t)out->stack;
     out->regs.eflags = 1 << 9;
 
-    *(ptr *)(out->stack) = ip;
+    *(ptr_t *)(out->stack) = ip;
     out->addr_space = (struct addr_space){.dir = NULL, .list_head = NULL};
 
     out->start_addr = (void *)ip;
@@ -417,7 +417,7 @@ bool init_task_exists()
 static void remove_task_sched_queue(struct task *task)
 {
 
-    if ((ptr)task->start_addr == 0xDEADBEEF)
+    if ((ptr_t)task->start_addr == 0xDEADBEEF)
     {
         PANIC("attempt to remove initial task");
     }
@@ -468,7 +468,7 @@ static void remove_task_load(struct task *task)
     {
         addr_space_load(&current->addr_space);
     }
-    set_kernel_stack((ptr)current->stack);
+    set_kernel_stack((ptr_t)current->stack);
 
     load_registers(&current->regs);
 }
@@ -572,7 +572,7 @@ void schedule_impl()
         addr_space_load(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
     }
 
-    set_kernel_stack((ptr)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
+    set_kernel_stack((ptr_t)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
 
     /* PIC_sendEOI(0); */
 

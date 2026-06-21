@@ -4,19 +4,20 @@
 #include <compiler.h>
 #include <types.h>
 
-typedef ptr (*syscall_func_t)(ptr, ptr, ptr, ptr, ptr);
+typedef ptr_t (*syscall_func_t)(ptr_t, ptr_t, ptr_t, ptr_t, ptr_t);
 
 extern syscall_func_t syscall_table[];
 
-void syscall_add(ptr num, syscall_func_t);
-ptr kernel_syscall(ptr num, ptr, ptr, ptr, ptr, ptr);
+void syscall_add(ptr_t num, syscall_func_t);
+ptr_t kernel_syscall(ptr_t num, ptr_t, ptr_t, ptr_t, ptr_t, ptr_t);
 
 #define SYSCALL_INTERNAL_FUNC(num) __sys_##num##_func
 
 #define SYSCALL_DEFINE_GENERIC(num, return_type, body, ...)                    \
     return_type __sys_##num##_func(__VA_ARGS__);                               \
                                                                                \
-    ptr __sys_##num##_func_real(ptr a1, ptr a2, ptr a3, ptr a4, ptr a5)        \
+    ptr_t __sys_##num##_func_real(ptr_t a1, ptr_t a2, ptr_t a3, ptr_t a4,      \
+                                  ptr_t a5)                                    \
     {                                                                          \
         {                                                                      \
             body                                                               \

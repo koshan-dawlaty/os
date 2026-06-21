@@ -16,9 +16,9 @@ typedef struct
 {
     u32 type;
     u32 flags;
-    ptr offset;
-    ptr virtual_addr;
-    ptr physical_addr;
+    ptr_t offset;
+    ptr_t virtual_addr;
+    ptr_t physical_addr;
     u64 file_size;
     u64 memory_size;
     u64 align;

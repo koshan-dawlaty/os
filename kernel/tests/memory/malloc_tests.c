@@ -56,7 +56,7 @@ TEST(malloc_test_diffrent_addrs, {
     int *one = malloc(10);
     int *two = malloc(10);
 
-    ASSERT_NE((ptr)one, (ptr)two,
+    ASSERT_NE((ptr_t)one, (ptr_t)two,
               "malloc returned the same pointer without for two allocations");
 
     free(one);

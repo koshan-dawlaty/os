@@ -48,7 +48,7 @@ void symbol_table_parse()
  * you dont own the returned pointer
  * returns null if @addr is not in the table
  */
-char *symbol_get_name(ptr addr)
+char *symbol_get_name(ptr_t addr)
 {
 #ifdef CONFIG_SYMBOL_TABLE
     for (size_t i = 0; i < symbol_table_len; i++)
@@ -67,7 +67,7 @@ size_t max_frames = 10;
 struct stackframe
 {
     struct stackframe *bp;
-    ptr ip;
+    ptr_t ip;
 };
 void stacktrace_log()
 {
