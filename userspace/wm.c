@@ -869,10 +869,10 @@ static void process_keyboard(char c)
                                                               issues */
         }
     }
-    else if (c == 'a' && focused != NULL)
-    {
-        resize_window(focused, -10, 0);
-    }
+    /* else if (c == 'a' && focused != NULL) */
+    /* { */
+    /* resize_window(focused, -10, 0); */
+    /* } */
     else if (c == 'R')
     {
         execv("/bin/run", (char *const[]){"run", NULL});

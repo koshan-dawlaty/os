@@ -23,7 +23,7 @@ size_t wm_terminal_get_width()
 
 size_t wm_terminal_get_height()
 {
-    return 3;
+    /* return 3; */
     return (client.fb.height / font->header.height) - 2;
 }
 

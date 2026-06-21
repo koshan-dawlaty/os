@@ -1,4 +1,6 @@
 #include "c_compiler.h"
+#include "fcntl.h"
+#include "unistd.h"
 #include <container_of.h>
 #include <init.h>
 #include <lib/array.h>
@@ -7,6 +9,7 @@
 #include <lib/log.h>
 #include <lib/utils.h>
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 #include <tests/tests.h>
 
@@ -398,14 +401,17 @@ void call_constructors(void)
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {
     init_libc();
     call_constructors();
 
     LIST2C_DEFINE_HEAD(tokens);
-    // clang-format off
-	const char * program = MACRO_STR(
+    const char *program;
+    if (argc <= 1)
+    {
+        // clang-format off
+	program = MACRO_STR(
 
 /* int fib(int num) { */
 /* 	if (num > 2) { */
@@ -419,12 +425,44 @@ int main()
 
 int main( int x  ) {
 
+	print("test");
+
 	int x = 1 ;
 }
 
 		);
 
-    // clang-format on
+        // clang-format on
+    }
+    else
+    {
+        int fd = open(argv[1], O_RDONLY);
+        logd("%d", fd);
+
+        size_t read_size = 10;
+        size_t buf_len = read_size;
+
+        char *buf = malloc(buf_len);
+        size_t buf_offset = 0;
+        size_t bytes_read;
+        while ((bytes_read = read(fd, buf + buf_offset, read_size)) >=
+               read_size)
+        {
+
+            if (bytes_read < 0)
+            {
+                PANIC("bad fd");
+            }
+
+            buf_len += read_size;
+            buf_offset += read_size;
+            buf = realloc(buf, buf_len);
+        }
+        buf[buf_offset + bytes_read] = 0;
+
+        program = buf;
+    }
+    logi("parsing tokens with buffer:%p", program);
     tokenizer_parse_tokens(program, &tokens);
 
     /* ast_parse_tokens(&tokens); */

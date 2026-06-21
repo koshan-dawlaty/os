@@ -191,7 +191,6 @@ struct token *get_token(const char *input, size_t *len)
         size_t i = 1;
         while (s[i] != '"' && s[i] != 0)
         {
-            logd("%c", s[i]);
             i++;
         }
         *len += i + 1;
