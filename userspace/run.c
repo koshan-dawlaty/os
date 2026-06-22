@@ -29,6 +29,7 @@ struct array read_dir_array(DIR *d)
 }
 
 #define BIN_DIR "/bin"
+#define NUM_LINES 10
 
 int main()
 {
@@ -54,8 +55,12 @@ int main()
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse_fd(font_fd);
 
-    client = wm_client_connect_focus(font->header.height *
-                                         ARRAY_LEN(ents, sizeof(struct dirent)),
+    /* client = wm_client_connect_focus(font->header.height * */
+    /*                                      ARRAY_LEN(ents, sizeof(struct
+     * dirent)), */
+    /*                                  font->header.width * max); */
+
+    client = wm_client_connect_focus(font->header.height * NUM_LINES,
                                      font->header.width * max);
 
     struct array search = ARRAY_INIT();

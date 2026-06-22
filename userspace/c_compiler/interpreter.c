@@ -185,11 +185,13 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                     val->type->num_pointers == 1)
                 {
                     logi("print:%s", val->value.literal.str);
+                    printf("%s\n", val->value.literal.str);
                 }
                 else if (!strcmp(val->type->name, "int") &&
                          val->type->num_pointers == 0)
                 {
                     logi("print:%d", val->value.literal.integer);
+                    printf("%d\n", val->value.literal.integer);
                 }
                 else
                 {
@@ -462,7 +464,6 @@ int main( int x  ) {
 
         program = buf;
     }
-    logi("parsing tokens with buffer:%p", program);
     tokenizer_parse_tokens(program, &tokens);
 
     /* ast_parse_tokens(&tokens); */
