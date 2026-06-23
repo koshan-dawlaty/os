@@ -174,9 +174,10 @@ static inline int shared_mem_get(int id, void **p)
     return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr_t)p, 0, 0, 0);
 }
 
-static inline int shared_mem_resize(int id, size_t len)
+static inline int shared_mem_resize(int id, size_t len, void **addr)
 {
-    return syscall_wrapper_asm(SYS_shared_mem_resize, id, len, 0, 0, 0);
+    return syscall_wrapper_asm(SYS_shared_mem_resize, id, len, (ptr_t)addr, 0,
+                               0);
 }
 
 static inline int connect(int socket)

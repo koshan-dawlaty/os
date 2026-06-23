@@ -4,6 +4,7 @@
 #include <extension.h>
 #include <fcntl.h>
 #include <init.h>
+#include <kernel/paging.h>
 #include <lib/array.h>
 #include <lib/assert.h>
 #include <lib/font.h>
@@ -690,7 +691,7 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     size_t old_height = WIN_H(ent->win) - WINDOW_DECORATION_ROWS;
     size_t old_width = WIN_W(ent->win);
 
-    size_t new_height = old_height + height_diff;
+    size_t new_height = old_height + height_diff + WINDOW_DECORATION_ROWS;
     size_t new_width = old_width + width_diff;
 
     size_t old_size = old_width * old_height * 4;
@@ -705,7 +706,13 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
         WM_MESSAGE_RESIZE_HEADER,
         .message_data = &resize,
     };
-    shared_mem_resize(ent->conn->shared_mem_id, new_size);
+    void *new_addr;
+    shared_mem_resize(ent->conn->shared_mem_id, new_size, &new_addr);
+    logd("new_addr:%p", new_addr);
+    if (new_addr == NULL)
+    {
+        new_addr = ent->win->fb.buffer;
+    }
     server_send_message(ent->conn, &message);
 
     int ack_code;
@@ -725,23 +732,26 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     /* } */
 
     logd("wm window buffer:%p", ent->win->fb.buffer);
+    ent->win->fb.buffer = new_addr;
     framebuffer_resize(&ent->win->fb, new_width, new_height,
                        ent->win->fb.buffer);
-    ent->win->fb.height = new_height + WINDOW_DECORATION_ROWS;
+    ent->win->fb.height = new_height;
+    logd("%d", new_width);
     ent->win->fb.width = new_width;
     ent->win->fb.pitch = new_width * 4;
 
     /* framebuffer_draw_rect(&ent->win->fb, 0, 0, ent->win->fb.width, */
     /*                       ent->win->fb.height, 0xFF); */
     draw_window_decoration(ent->win, true);
+    logd("updating");
     update_area_up(
         (struct rect){
 
             .x = WIN_X(ent->win),
             .y = WIN_Y(ent->win),
 
-            .w = old_width,
-            .h = old_height + WINDOW_DECORATION_ROWS,
+            .w = new_width,
+            .h = new_height + WINDOW_DECORATION_ROWS,
 
         },
         buffer);
@@ -869,10 +879,10 @@ static void process_keyboard(char c)
                                                               issues */
         }
     }
-    /* else if (c == 'a' && focused != NULL) */
-    /* { */
-    /* resize_window(focused, -10, 0); */
-    /* } */
+    else if (c == 'a' && focused != NULL)
+    {
+        resize_window(focused, 10, 0);
+    }
     else if (c == 'R')
     {
         execv("/bin/run", (char *const[]){"run", NULL});

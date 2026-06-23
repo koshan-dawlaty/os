@@ -1,3 +1,4 @@
+#include "kernel/multiboot.h"
 #include <kernel/paging.h>
 #include <kernel/syscall.h>
 #include <kernel/utils.h>
@@ -11,6 +12,8 @@
 struct shared_memory_entry
 {
     void *mem;
+    /* the virtal address of the entry in the caller's address space */
+    void *creator_addr;
     size_t len;
 };
 
@@ -42,7 +45,7 @@ int shared_mem_alloc(void **addr, size_t len)
     }
 
     shared_memory_list[shared_memory_list_index] =
-        (struct shared_memory_entry){physical, mem_len};
+        (struct shared_memory_entry){physical, memory, mem_len};
     shared_memory_list_index++;
     shared_memory_offset += mem_len;
 
@@ -71,34 +74,62 @@ int shared_mem_get(int id, void **p)
     }
 
     *p = memory;
+    logd("got address:%p %d", memory, ent.len / PAGE_SIZE);
     spinlock_unlock(&shared_mem_lock);
 
     return 0;
 }
 
-int shared_mem_resize(int id, size_t new_size)
+int shared_mem_resize(int id, size_t new_size, void **new_addr)
 {
     spinlock_lock(&shared_mem_lock);
 
-    struct shared_memory_entry ent = shared_memory_list[id];
+    struct shared_memory_entry *ent = &shared_memory_list[id];
 
-    size_t old_size = ent.len;
+    size_t old_size = ent->len;
 
     logd("new:%p old:%p", new_size, old_size);
     if (new_size > old_size)
     {
-        PANIC("not implemented");
+        void *memory = SHARED_MEMORY_START + shared_memory_offset;
+        size_t num_pages = (new_size / PAGE_SIZE) + 3;
+        logd("num_pages:%d, old:%d", num_pages, (old_size / PAGE_SIZE) + 3);
+        shared_memory_offset += (num_pages + PAGE_SIZE) * PAGE_SIZE;
+        void *physical = get_free_phys_pages(get_current_pagedir(), num_pages);
+
+        for (size_t i = 0; i < num_pages; i++)
+        {
+            map_page(physical + (PAGE_SIZE * i), memory + (PAGE_SIZE * i),
+                     PAGING_PRESENT | PAGING_USER | PAGING_WRITEABLE);
+        }
+
+        size_t num_old_pages = (old_size / PAGE_SIZE) + 3;
+
+        free_phys_pages(ent->mem, num_old_pages);
+        memcpy(memory, ent->creator_addr, old_size);
+        ent->creator_addr = memory;
+
+        ent->mem = physical;
+
+        *new_addr = memory;
+    }
+    else
+    {
+        *new_addr = NULL;
     }
 
-    ent.len = new_size;
+    ent->len = new_size;
 
+    logd("done resizing memory, addr is:%p %d", *new_addr,
+         ent->len / PAGE_SIZE);
     spinlock_unlock(&shared_mem_lock);
     return 0;
 }
 
-SYSCALL_DEFINE2(SYS_shared_mem_resize, int, int, id, size_t, new_size)
+SYSCALL_DEFINE3(SYS_shared_mem_resize, int, int, id, size_t, new_size, void **,
+                new_addr)
 {
-    return shared_mem_resize(id, new_size);
+    return shared_mem_resize(id, new_size, new_addr);
 }
 
 /* TODO: */

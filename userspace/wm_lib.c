@@ -174,8 +174,9 @@ void wm_get_message(struct wm_client *client, struct wm_message *message)
 
         struct wm_message_resize *resize = message->message_data;
         void *new_buf;
-
+        logd("client:starting getting memory");
         shared_mem_get(client->mem_id, &new_buf);
+        logd("client:done getting memory");
         framebuffer_resize(&client->fb, resize->new_w, resize->new_h, new_buf);
         client->fb.buffer = new_buf;
         client->fb.width = resize->new_w;

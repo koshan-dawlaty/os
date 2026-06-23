@@ -62,7 +62,6 @@ void free_phys_pages(void *addr, size_t num)
 
     size_t index = (((size_t)addr - (ptr_t)phys_page_start)) / 4096;
 
-    /* logd("unmapping:%p at index:%d", addr, index); */
     for (size_t i = 0; i < num; i++)
     {
         phys_free_page_bitmap[(index + i) / 8] |= GFP_FREE >> ((index + i) % 8);
@@ -138,6 +137,7 @@ void *get_free_phys_pages(struct pagedir *dir, size_t amount)
 
     /* printf("start:%d\n", consecutive_start); */
 
+    /* logd("allocating at index:%d", consecutive_start); */
     for (size_t j = consecutive_start; j < amount + i; j++)
     {
         /* printf("j is:%d\n", j); */
