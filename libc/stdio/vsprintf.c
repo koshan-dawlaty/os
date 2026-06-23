@@ -372,6 +372,18 @@ that they will not work because the bootstrap has not initialized them
     return 0;
 }
 
+int snprintf(char *buf, size_t n, const char *format, ...)
+{
+    va_list parameters;
+    va_start(parameters, format);
+
+    vsnprintf(buf, n, format, parameters);
+
+    va_end(parameters);
+
+    return 1;
+}
+
 char *rprintf(char *format, ...)
 {
     va_list args;

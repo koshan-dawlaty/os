@@ -7,6 +7,7 @@
 #include <lib/font.h>
 #include <lib/list.h>
 #include <lib/log.h>
+#include <math.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -134,8 +135,9 @@ struct test_result *test_ast_expressions(char *expr_str, int expected)
     struct ast_expr *expr = ast_parse_expression(&parser, &err);
     if (expr == NULL)
     {
-        FAIL_TEST("ast expression parsing failed with error %s",
-                  ast_error_to_string(err));
+        static char buf[100];
+        ast_error_to_string(err, buf, 100);
+        FAIL_TEST("ast expression parsing failed with error %s", buf);
     }
     struct interpreter *interpreter = interpreter_init();
     struct interp_value *interp_val = expr_eval(expr, interpreter);
@@ -155,6 +157,28 @@ TEST_AST_EXPRESSIONS(expr_test4, "(((1+2)+2)+2) + 3", 10)
 TEST_AST_EXPRESSIONS(expr_test5, "(1+2) + 3", 6)
 TEST_AST_EXPRESSIONS(expr_test6, "123", 123)
 
+struct test_result *test_interpreter_error(const char *program,
+                                           enum ast_error_type expected)
+{
+    LIST2C_DEFINE_HEAD(tokens);
+    tokenizer_parse_tokens(program, &tokens);
+
+    LIST2C_DEFINE_HEAD(top_statements);
+    struct ast_error *err = ast_parse(&tokens, &top_statements);
+    if (err == NULL)
+    {
+        /* FIXME: maybe have a function to also convert a ast_error_type to a
+         * string */
+        FAIL_TEST("expected error %d, but did not get an error", expected);
+    }
+
+    ASSERT_EQ(expected, err->type,
+              "expected error of type %d, but got error of type %d", expected,
+              err->type);
+
+    TEST_OK();
+}
+
 struct test_result *test_interpreter(const char *program, int expected)
 {
     LIST2C_DEFINE_HEAD(tokens);
@@ -164,7 +188,9 @@ struct test_result *test_interpreter(const char *program, int expected)
     struct ast_error *err = ast_parse(&tokens, &top_statements);
     if (err != NULL)
     {
-        FAIL_TEST("ast parsing failed with error %s", ast_error_to_string(err));
+        static char buf[100];
+        ast_error_to_string(err, buf, 100);
+        FAIL_TEST("ast parsing failed with error %s", buf);
     }
 
     int got = eval_program(&top_statements);
@@ -175,6 +201,8 @@ struct test_result *test_interpreter(const char *program, int expected)
 
 #define TEST_INTERPRETER(name, program_expr, expected)                         \
     TEST(name, { return test_interpreter(MACRO_STR(program_expr), expected); })
+#define TEST_INTERPRETER_ERROR(name, program_expr, expected)                   \
+    TEST(name, { return test_interpreter_error(program_expr, expected); })
 
 // clang-format off
 TEST_INTERPRETER(interpreter_test_add_vars,
@@ -310,7 +338,6 @@ int main() {
 TEST_INTERPRETER(interpreter_test_fibonacci,
 int fib(int num) {
 	if (num > 2) {
-		print(num);
 		return fib(num - 1) + fib(num - 2);
 	}
 	return 1;
@@ -321,5 +348,39 @@ int main() {
 }
 
 , 55);
+
+TEST_INTERPRETER_ERROR(interpreter_test_semicolon_expected_expression,
+	
+	"int main() {"
+		"int x;"
+		"x = x + 1"
+	"}"	
+
+, AST_ERROR_SEMICOLON_EXPECTED)
+
+TEST_INTERPRETER_ERROR(interpreter_test_semicolon_expected_declaration,
+	
+	"int main() {"
+		"int x = 123"
+		"x = x + 1;"
+	"}"	
+
+, AST_ERROR_SEMICOLON_EXPECTED)
+
+
+TEST_INTERPRETER_ERROR(interpreter_test_argument_expected,
+	
+	"int main(int x ; ) {"
+	"}"	
+
+, AST_ERROR_ARUGMENT_EXPECTED)
+
+
+TEST_INTERPRETER_ERROR(interpreter_test_identifier_expected_arg,
+	
+	"int main(int) {"
+	"}"	
+
+, AST_ERROR_IDENTIFIER_EXPECTED)
 
 // clang-format on

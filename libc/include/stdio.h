@@ -27,6 +27,7 @@ int puts(char *c);
 int printf(const char *format, ...);
 int vprintf(const char *format, va_list);
 int vsnprintf(char *buf, size_t n, const char *format, va_list list);
+int snprintf(char *buf, size_t n, const char *format, ...);
 char getchar();
 
 #define SEEK_SET 0

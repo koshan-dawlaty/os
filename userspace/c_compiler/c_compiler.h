@@ -94,7 +94,7 @@ struct ast_error
     };
 };
 
-char *ast_error_to_string(struct ast_error *err);
+int ast_error_to_string(struct ast_error *err, char *buf, size_t len);
 
 static inline struct ast_error *ast_error_alloc(enum ast_error_type type)
 {

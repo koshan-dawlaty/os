@@ -408,6 +408,10 @@ int main(int argc, char **argv)
     init_libc();
     call_constructors();
 
+#ifdef TESTS
+    run_tests();
+#endif
+
     LIST2C_DEFINE_HEAD(tokens);
     const char *program;
     if (argc <= 1)
@@ -425,9 +429,10 @@ int main(int argc, char **argv)
 /* } */
 
 
+	
 int main( int x  ) {
 
-	print("test");
+	/* print("test"); */
 
 	int x = 1 ;
 }
@@ -439,7 +444,6 @@ int main( int x  ) {
     else
     {
         int fd = open(argv[1], O_RDONLY);
-        logd("%d", fd);
 
         size_t read_size = 10;
         size_t buf_len = read_size;
@@ -470,13 +474,15 @@ int main( int x  ) {
 
     LIST2C_DEFINE_HEAD(top_statements_head);
 
-    ast_parse(&tokens, &top_statements_head);
+    struct ast_error *err = ast_parse(&tokens, &top_statements_head);
+    if (err != NULL)
+    {
+        static char buf[100];
+        ast_error_to_string(err, buf, 100);
+        PANIC("ast error:%s", buf);
+    }
     eval_program(&top_statements_head);
     /* statements_eval_simple(&statements_head); */
-
-#ifdef TESTS
-    run_tests();
-#endif
 
     exit(0);
 

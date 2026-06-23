@@ -591,6 +591,7 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser,
                 parser_advance(parser);
                 init_val = ast_parse_expression(parser, err);
             }
+            logd("allocating declaration");
             out = ast_statement_alloc_declaration(type, name, init_val);
         }
         else if (next->type != TOKEN_IDENTIFIER)
@@ -831,7 +832,6 @@ struct ast_error *ast_parse(struct list2c *tokens,
 
         if (statement == NULL)
         {
-            ast_error_to_string(error);
             return error;
         }
         list2c_push(&statement->list, top_statements_head);
@@ -839,47 +839,43 @@ struct ast_error *ast_parse(struct list2c *tokens,
     return NULL;
 }
 
-char *ast_error_to_string(struct ast_error *err)
+int ast_error_to_string(struct ast_error *err, char *buf, size_t len)
 {
 
     switch (err->type)
     {
     case AST_ERROR_IDENTIFIER_EXPECTED:
-        loge("expected identifier, got %s (%s)",
-             err->identifier_expected.token->token,
-             token_type_str(err->identifier_expected.token->type));
-        break;
+        return snprintf(buf, len, "expected identifier, got %s (%s)",
+                        err->identifier_expected.token->token,
+                        token_type_str(err->identifier_expected.token->type));
     case AST_ERROR_ARUGMENT_EXPECTED:
-        loge("expected ',' or ')' got %s (%s)",
-             err->argument_expected.token->token,
-             token_type_str(err->argument_expected.token->type));
-        break;
+        return snprintf(buf, len, "expected ',' or ')' got %s (%s)",
+                        err->argument_expected.token->token,
+                        token_type_str(err->argument_expected.token->type));
     case AST_ERROR_INVALID_TYPE:
-        loge("invalid type for token %s (%s)", err->invalid_type.token->token,
-             token_type_str(err->invalid_type.token->type));
-        break;
+        return snprintf(buf, len, "invalid type for token %s (%s)",
+                        err->invalid_type.token->token,
+                        token_type_str(err->invalid_type.token->type));
     case AST_ERROR_OPEN_BRACE_EXPECTED:
-        loge("expected '}' at the start of a block");
-        break;
+        return snprintf(buf, len, "expected '}' at the start of a block");
     case AST_ERROR_SEMICOLON_EXPECTED:
-        loge("expected ';' got %s (%s)", err->semicolon_expected.token->token,
-             token_type_str(err->semicolon_expected.token->type));
-        break;
+        return snprintf(buf, len, "expected ';' got %s (%s)",
+                        err->semicolon_expected.token->token,
+                        token_type_str(err->semicolon_expected.token->type));
     case AST_ERROR_CLOSE_PAREN_EXPECTED:
-        loge("expected ')' got %s (%s)", err->close_paren_expected.token->token,
-             token_type_str(err->close_paren_expected.token->type));
-        break;
+        return snprintf(buf, len, "expected ')' got %s (%s)",
+                        err->close_paren_expected.token->token,
+                        token_type_str(err->close_paren_expected.token->type));
     case AST_ERROR_INVALID_EXPRESSION_TOKEN:
-        loge("invalid token %s (%s) when parsing expression",
-             err->invalid_expression_token.token->token,
-             token_type_str(err->invalid_expression_token.token->type));
-        break;
+        return snprintf(
+            buf, len, "invalid token %s (%s) when parsing expression",
+            err->invalid_expression_token.token->token,
+            token_type_str(err->invalid_expression_token.token->type));
     case AST_ERROR_DECLARATION_OR_EXPRESSION_EXPECTED:
-        loge("expected declaration or expression");
-        break;
+        return snprintf(buf, len, "expected declaration or expression");
+    default:
+        return snprintf(buf, len, "unknown ast error %d", err->type);
     }
-
-    return "";
 }
 
 /* FIXME: using the libc version of this function will result in linker

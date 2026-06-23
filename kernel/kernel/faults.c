@@ -21,7 +21,6 @@ void page_fault(void *addr, void *ip, struct page_fault_flags flags)
     if (!flags.user)
     {
         printf("page fault\n");
-        logd("test");
         stacktrace_log();
         loge("page fault\naddr:%p\nip:%p", addr, ip);
 
