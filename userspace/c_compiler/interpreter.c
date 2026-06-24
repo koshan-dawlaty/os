@@ -56,7 +56,7 @@ struct variable *variable_lookup(struct list *scope_head, const char *search)
 {
 
     struct list *pos;
-    list2c_for_each(pos, scope_head)
+    list_for_each(pos, scope_head)
     {
         struct scope *s = containerof(pos, struct scope, list);
         for (size_t i = 0; i < ARRAY_LEN(s->vars, sizeof(struct variable)); i++)
@@ -174,7 +174,7 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         if (!strcmp(expr->call.function_name, "print"))
         {
             struct list *pos;
-            list2c_for_each(pos, &expr->call.arguments_head)
+            list_for_each(pos, &expr->call.arguments_head)
             {
                 struct ast_function_arg *arg =
                     containerof(pos, struct ast_function_arg, list);
@@ -217,7 +217,7 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
                 struct list *passed_pos = expr->call.arguments_head.next;
                 struct list *def_pos;
-                list2c_for_each(def_pos, &func->args_head)
+                list_for_each(def_pos, &func->args_head)
                 {
                     if (passed_pos == &expr->call.arguments_head)
                     {
@@ -272,7 +272,7 @@ struct interp_value *statements_eval(struct list *statements_head,
     struct interp_value *retval = NULL;
 
     struct list *pos;
-    list2c_for_each(pos, statements_head)
+    list_for_each(pos, statements_head)
     {
 
         struct ast_statement *statement =
@@ -368,7 +368,7 @@ int eval_program(struct list *top_statements_head)
     struct list *main_body = NULL;
 
     struct list *pos;
-    list2c_for_each(pos, top_statements_head)
+    list_for_each(pos, top_statements_head)
     {
         struct ast_top_statement *statement =
             containerof(pos, struct ast_top_statement, list);

@@ -43,6 +43,7 @@ void addr_space_free(struct addr_space a)
 
     struct pagedir *prev_dir = get_current_pagedir();
     load_pgdir(a.dir);
+
     list1_old_for_each(pos, a.list_head)
     {
         struct addr_space_page *pg =

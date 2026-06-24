@@ -66,7 +66,7 @@ void free_entries(struct list *head)
 {
     struct set_entry *prev = NULL;
     struct list *pos;
-    list2c_for_each(pos, head)
+    list_for_each(pos, head)
     {
         struct set_entry *entry = containerof(pos, struct set_entry, list);
         if (prev != NULL)

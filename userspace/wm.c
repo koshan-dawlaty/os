@@ -216,7 +216,7 @@ void update_area_up(struct rect area, struct framebuffer *fb)
     user_mutex_lock(window_queue_mutex);
 
     struct list *pos;
-    list2c_for_each(pos, &window_queue)
+    list_for_each(pos, &window_queue)
     {
         struct window_queue_entry *ent =
             containerof(pos, struct window_queue_entry, list);
@@ -811,7 +811,7 @@ static void process_mouse(struct mouse_event *ev)
         user_mutex_lock(window_queue_mutex);
         struct list *pos;
         struct list *prev = &window_queue;
-        list2c_for_each(pos, &window_queue)
+        list_for_each(pos, &window_queue)
         {
             prev = pos;
         }

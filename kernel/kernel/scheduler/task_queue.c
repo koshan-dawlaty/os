@@ -63,7 +63,7 @@ void task_queue_remove(struct task_queue *queue, struct task *t)
      * used, but the callers of this function would have difficultly working
      * around that */
     struct list *pos;
-    list2c_for_each(pos, &queue->head)
+    list_for_each(pos, &queue->head)
     {
         if (t == TASK_QUEUE_GET_TASK(pos))
         {

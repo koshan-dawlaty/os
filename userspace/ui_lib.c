@@ -114,7 +114,7 @@ void render(struct element *e)
      * e->color); */
 
     struct list *pos;
-    list2c_for_each(pos, &e->children)
+    list_for_each(pos, &e->children)
     {
         struct element *e2 = containerof(pos, struct element, list);
         render(e2);
@@ -179,7 +179,7 @@ void ui_onclick(
     }
 
     struct list *pos;
-    list2c_for_each(pos, &root->children)
+    list_for_each(pos, &root->children)
     {
         struct element *e = containerof(pos, struct element, list);
         ui_onclick(e, x, y);

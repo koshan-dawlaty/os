@@ -29,7 +29,7 @@ TEST(list2c_test_push_pop, {
 
     int i = 3;
     struct list *pos;
-    list2c_for_each(pos, &head)
+    list_for_each(pos, &head)
     {
         struct list2c_tester *current = LIST2C_TESTER_GET(pos);
         LIST2C_TESTER_CHECK(current, i);

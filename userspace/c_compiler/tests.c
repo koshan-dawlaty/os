@@ -29,7 +29,7 @@ struct test_result *tokenizer_test_impl(const char *program,
 
     size_t i = 0;
     struct list *pos;
-    list2c_for_each(pos, &token_list)
+    list_for_each(pos, &token_list)
     {
         struct token *tok = containerof(pos, struct token, list);
 

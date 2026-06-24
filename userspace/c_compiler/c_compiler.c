@@ -796,7 +796,7 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser,
         }
 
         struct list *pos;
-        list2c_for_each(pos, &func->block)
+        list_for_each(pos, &func->block)
         {
             struct ast_statement *statement =
                 containerof(pos, struct ast_statement, list);

@@ -403,7 +403,7 @@ struct task *create_kernel_task()
 bool init_task_exists()
 {
     struct list *pos;
-    list2c_for_each(pos, &scheduler_queue.queue.head)
+    list_for_each(pos, &scheduler_queue.queue.head)
     {
         struct task *t = TASK_QUEUE_GET_TASK(pos);
         if (t->start_addr == (void *)0xDEADBEEF)
@@ -610,7 +610,7 @@ void free_task(struct task *t)
 void print_tasks()
 {
     struct list *pos;
-    list2c_for_each(pos, &scheduler_queue.queue.head)
+    list_for_each(pos, &scheduler_queue.queue.head)
     {
         struct task *t = TASK_QUEUE_GET_TASK(pos);
         printf("%p ", t->start_addr);

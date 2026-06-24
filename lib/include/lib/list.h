@@ -94,7 +94,7 @@ void list_remove(struct list *value);
 void list_add_after(struct list *new, struct list *other);
 void list_add_before(struct list *new, struct list *other);
 
-#define list2c_for_each(pos, head)                                             \
+#define list_for_each(pos, head)                                               \
     for (pos = (head)->next; pos != (head); pos = pos->next)
 
 #endif
