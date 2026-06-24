@@ -15,13 +15,13 @@ struct list2c_tester
 struct list2c_tester *alloc_tester(int num)
 {
     struct list2c_tester *out = malloc(sizeof(struct list2c_tester));
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
     out->num = num;
     return out;
 }
 
 TEST(list2c_test_push_pop, {
-    LIST2C_INIT_HEAD(head);
+    LIST_INIT_HEAD(head);
 
     list_push(&alloc_tester(1)->list, &head);
     list_push(&alloc_tester(2)->list, &head);
@@ -47,7 +47,7 @@ TEST(list2c_test_push_pop, {
 })
 
 TEST(list2c_pop_empty, {
-    LIST2C_INIT_HEAD(head);
+    LIST_INIT_HEAD(head);
     struct list *should_be_null = list_pop(&head);
     ASSERT_EQ(should_be_null, NULL, "pop on empty list is not null");
 

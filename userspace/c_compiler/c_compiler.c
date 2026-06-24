@@ -75,7 +75,7 @@ struct token *token_alloc_init(enum token_type type, char *str, size_t len)
     out->token = str;
     out->len = len;
     out->type = type;
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
 
     return out;
 }
@@ -304,7 +304,7 @@ struct ast_function_arg *ast_function_arg_alloc(struct ast_expr *expr)
 {
     struct ast_function_arg *arg = malloc(sizeof(struct ast_function_arg));
     arg->expr = expr;
-    arg->list = LIST2C_INIT();
+    arg->list = LIST_INIT();
 
     return arg;
 }
@@ -348,7 +348,7 @@ struct ast_statement *ast_statement_alloc_expr(struct ast_expr *expr)
     struct ast_statement *out = malloc(sizeof(struct ast_statement));
     out->expr = expr;
     out->type = AST_STATEMENT_EXPR;
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
 
     return out;
 }
@@ -358,7 +358,7 @@ struct ast_statement *ast_statement_alloc_return(struct ast_expr *expr)
     struct ast_statement *out = malloc(sizeof(struct ast_statement));
     out->expr = expr;
     out->type = AST_STATEMENT_RETURN;
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
 
     return out;
 }
@@ -372,7 +372,7 @@ ast_statement_alloc_declaration(struct ast_type *type, const char *varname,
     out->type = AST_STATEMENT_DECLARE;
     out->init_value = init_value;
     out->varname = strdup(varname);
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
 
     return out;
 }
@@ -384,7 +384,7 @@ struct ast_statement *ast_statement_alloc_block(enum ast_statement_type type,
     list_init_head(&out->block);
     out->type = type;
     out->block_expr = block_expr;
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
 
     return out;
 }
@@ -698,7 +698,7 @@ struct ast_function_arg_def *ast_function_arg_def_alloc(struct ast_type *type,
 
     out->type = type;
     out->name = strdup(name);
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
 
     return out;
 }
@@ -720,7 +720,7 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser,
                                                   struct ast_error **err)
 {
     struct ast_top_statement *out = malloc(sizeof(struct ast_top_statement));
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
     struct ast_type *type = parser_parse_type(
         parser, err); /* will not work for parsing type definitions */
     if (type == NULL)

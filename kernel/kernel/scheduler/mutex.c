@@ -48,7 +48,7 @@ void mutex_unlock(struct mutex *m)
         panic("mutex unlock may have been called twice on the same mutex!");
     }
 
-    if (LIST2C_IS_EMPTY(m->queue.head))
+    if (LIST_IS_EMPTY(m->queue.head))
     {
         /* printf("unlock 1, %p\n", get_current_task()); */
         m->locked = false;

@@ -24,7 +24,7 @@ struct test_result *tokenizer_test_impl(const char *program,
                                         struct tokenizer_test_input expected[],
                                         size_t expected_len)
 {
-    LIST2C_DEFINE_HEAD(token_list);
+    LIST_DEFINE_HEAD(token_list);
     tokenizer_parse_tokens(program, &token_list);
 
     size_t i = 0;
@@ -127,7 +127,7 @@ tokenizer_test(tokenizer_test3,
 
 struct test_result *test_ast_expressions(char *expr_str, int expected)
 {
-    LIST2C_DEFINE_HEAD(tokens);
+    LIST_DEFINE_HEAD(tokens);
     tokenizer_parse_tokens(expr_str, &tokens);
     struct ast_parser parser = {&tokens,
                                 .current = TOKEN_LIST_GET(tokens.next)};
@@ -160,10 +160,10 @@ TEST_AST_EXPRESSIONS(expr_test6, "123", 123)
 struct test_result *test_interpreter_error(const char *program,
                                            enum ast_error_type expected)
 {
-    LIST2C_DEFINE_HEAD(tokens);
+    LIST_DEFINE_HEAD(tokens);
     tokenizer_parse_tokens(program, &tokens);
 
-    LIST2C_DEFINE_HEAD(top_statements);
+    LIST_DEFINE_HEAD(top_statements);
     struct ast_error *err = ast_parse(&tokens, &top_statements);
     if (err == NULL)
     {
@@ -181,10 +181,10 @@ struct test_result *test_interpreter_error(const char *program,
 
 struct test_result *test_interpreter(const char *program, int expected)
 {
-    LIST2C_DEFINE_HEAD(tokens);
+    LIST_DEFINE_HEAD(tokens);
     tokenizer_parse_tokens(program, &tokens);
 
-    LIST2C_DEFINE_HEAD(top_statements);
+    LIST_DEFINE_HEAD(top_statements);
     struct ast_error *err = ast_parse(&tokens, &top_statements);
     if (err != NULL)
     {

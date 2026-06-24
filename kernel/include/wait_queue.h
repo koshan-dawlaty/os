@@ -25,7 +25,7 @@ static inline void wait_queue_init(struct wait_queue *queue)
 
 #define WAIT_QUEUE_DEFINE(name) struct wait_queue name = WAIT_QUEUE_INIT(name)
 
-#define WAIT_QUEUE_EMPTY(q) (LIST2C_IS_EMPTY((q).queue.head))
+#define WAIT_QUEUE_EMPTY(q) (LIST_IS_EMPTY((q).queue.head))
 
 /*
  * adds the current task to the queue

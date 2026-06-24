@@ -83,7 +83,7 @@ struct window_queue_entry *mouse_queue_ent;
 struct window_queue_entry *background_queue_ent;
 struct window *background;
 
-LIST2C_DEFINE_HEAD(window_queue);
+LIST_DEFINE_HEAD(window_queue);
 int window_queue_mutex = -1;
 struct framebuffer *buffer;
 
@@ -538,7 +538,7 @@ void process_connection()
     /* x += 40; */
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
-    ent->list = LIST2C_INIT();
+    ent->list = LIST_INIT();
     ent->win = w;
     ent->conn = conn;
     ent->nonblock_info.is_nonblock = win_info.is_nonblock;
@@ -1050,14 +1050,14 @@ int main()
     mouse_queue_ent = malloc(sizeof(struct window_queue_entry));
     mouse_queue_ent->conn = NULL;
     mouse_queue_ent->win = mouse;
-    mouse_queue_ent->list = LIST2C_INIT();
+    mouse_queue_ent->list = LIST_INIT();
 
     mouse_queue_ent->nonblock_info.is_nonblock = false;
     mouse_queue_ent->nonblock_info.current_key = 0;
 
     background_queue_ent = malloc(sizeof(struct window_queue_entry));
     background_queue_ent->win = background;
-    background_queue_ent->list = LIST2C_INIT();
+    background_queue_ent->list = LIST_INIT();
     background_queue_ent->conn = NULL;
     background_queue_ent->nonblock_info.is_nonblock = false;
     background_queue_ent->nonblock_info.current_key = 0;

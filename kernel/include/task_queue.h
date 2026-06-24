@@ -19,7 +19,7 @@ struct task_queue_entry
 #define TASK_QUEUE_INIT(name)                                                  \
     (struct task_queue)                                                        \
     {                                                                          \
-        .head = LIST2C_HEAD_INIT(&(name).head)                                 \
+        .head = LIST_HEAD_INIT(&(name).head)                                   \
     }
 
 #define TASK_QUEUE_DEFINE(name) struct task_queue name = TASK_QUEUE_INIT(name)

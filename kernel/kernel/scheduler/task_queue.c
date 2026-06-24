@@ -11,7 +11,7 @@ struct task_queue_entry *task_queue_entry_alloc(struct task *task)
 {
     struct task_queue_entry *out = malloc(sizeof(struct task_queue_entry));
     out->task = task;
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
     return out;
 }
 
@@ -30,7 +30,7 @@ void task_queue_push(struct task_queue *queue, struct task *t)
 struct task *task_queue_pop(struct task_queue *queue)
 {
 
-    if (LIST2C_IS_EMPTY(queue->head))
+    if (LIST_IS_EMPTY(queue->head))
     {
         return NULL;
     }
@@ -54,7 +54,7 @@ struct task *task_queue_pop(struct task_queue *queue)
 
 void task_queue_remove(struct task_queue *queue, struct task *t)
 {
-    if (LIST2C_IS_EMPTY(queue->head))
+    if (LIST_IS_EMPTY(queue->head))
     {
         return;
     }

@@ -38,7 +38,7 @@ struct undo_entry
     struct list list;
 };
 
-LIST2C_DEFINE_HEAD(undo_queue);
+LIST_DEFINE_HEAD(undo_queue);
 
 struct undo_entry *undo_entry_alloc(int player_x, int player_y)
 {
@@ -48,7 +48,7 @@ struct undo_entry *undo_entry_alloc(int player_x, int player_y)
 
     out->prev_state = -1;
 
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
 
     return out;
 }

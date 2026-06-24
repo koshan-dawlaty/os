@@ -379,7 +379,7 @@ struct task *new_task(ptr_t ip)
     out->addr_space = (struct addr_space){.dir = NULL, .list_head = NULL};
 
     out->start_addr = (void *)ip;
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
     out->preempt_count = 0;
 
     out->can_sleep = true;

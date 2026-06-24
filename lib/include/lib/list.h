@@ -70,19 +70,19 @@ struct list
     struct list *prev, *next;
 };
 
-#define LIST2C_IS_EMPTY(head) (head.next == &head)
-#define LIST2C_HEAD_INIT(name) ((struct list){.prev = name, .next = name})
-#define LIST2C_INIT_HEAD(name)                                                 \
+#define LIST_IS_EMPTY(head) (head.next == &head)
+#define LIST_HEAD_INIT(name) ((struct list){.prev = name, .next = name})
+#define LIST_INIT_HEAD(name)                                                   \
     struct list name;                                                          \
-    name = LIST2C_HEAD_INIT(&name);
+    name = LIST_HEAD_INIT(&name);
 
 static inline void list_init_head(struct list *head)
 {
-    *head = LIST2C_HEAD_INIT(head);
+    *head = LIST_HEAD_INIT(head);
 }
 
-#define LIST2C_DEFINE_HEAD(name) struct list name = LIST2C_HEAD_INIT(&name);
-#define LIST2C_INIT() ((struct list){.prev = NULL, .next = NULL})
+#define LIST_DEFINE_HEAD(name) struct list name = LIST_HEAD_INIT(&name);
+#define LIST_INIT() ((struct list){.prev = NULL, .next = NULL})
 
 void list_push(struct list *new, struct list *head);
 void list_push_end(struct list *new, struct list *head);

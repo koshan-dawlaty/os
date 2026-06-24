@@ -44,7 +44,7 @@ void parse_flashcards(char *buf, struct list *head)
         if (is_question)
         {
             struct set_entry *new_entry = malloc(sizeof(struct set_entry));
-            new_entry->list = LIST2C_INIT();
+            new_entry->list = LIST_INIT();
             list_add_after(&new_entry->list, current_list);
             current_entry = new_entry;
             current_list = &new_entry->list;
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     flashcards[flashcards_offset + result] = 0;
     close(fd);
 
-    LIST2C_DEFINE_HEAD(head);
+    LIST_DEFINE_HEAD(head);
 
     parse_flashcards(flashcards, &head);
 

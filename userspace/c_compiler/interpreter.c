@@ -17,7 +17,7 @@ struct scope *scope_alloc()
 {
     struct scope *out = malloc(sizeof(struct scope));
 
-    out->list = LIST2C_INIT();
+    out->list = LIST_INIT();
     out->vars = ARRAY_INIT();
 
     return out;
@@ -412,7 +412,7 @@ int main(int argc, char **argv)
     run_tests();
 #endif
 
-    LIST2C_DEFINE_HEAD(tokens);
+    LIST_DEFINE_HEAD(tokens);
     const char *program;
     if (argc <= 1)
     {
@@ -472,7 +472,7 @@ int main( int x  ) {
 
     /* ast_parse_tokens(&tokens); */
 
-    LIST2C_DEFINE_HEAD(top_statements_head);
+    LIST_DEFINE_HEAD(top_statements_head);
 
     struct ast_error *err = ast_parse(&tokens, &top_statements_head);
     if (err != NULL)

@@ -44,8 +44,8 @@ static inline struct element *element_alloc_partial(struct element_type t,
                                                     void *private)
 {
     struct element *out = malloc(sizeof(struct element));
-    out->children = LIST2C_HEAD_INIT(&out->children);
-    out->list = LIST2C_INIT();
+    out->children = LIST_HEAD_INIT(&out->children);
+    out->list = LIST_INIT();
 
     out->type = t;
     out->private = private;
