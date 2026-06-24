@@ -65,18 +65,18 @@ struct dcache_dir *new_dcache_dir(dentry *dir)
     out->dir = dir;
     out->values_head = NULL;
     out->permanent_values = NULL;
-    out->l = LIST_INIT();
+    out->l = LIST1_OLD_INIT();
 
     return out;
 }
 
-list1_old dcache_list = LIST_INIT();
+list1_old dcache_list = LIST1_OLD_INIT();
 
 struct dcache_dir *get_dcache_dir(dentry *entry)
 {
 
     list1_old *pos;
-    list_for_each(pos, &dcache_list)
+    list1_old_for_each(pos, &dcache_list)
     {
 
         struct dcache_dir *dir = containerof(pos, struct dcache_dir, l);
@@ -114,7 +114,7 @@ struct dcache_value *get_dcache_value(char *component, struct dcache_dir *dir)
     {
 
         list1_old *pos;
-        list_for_each(pos, dir->permanent_values)
+        list1_old_for_each(pos, dir->permanent_values)
         {
             struct dcache_value *value =
                 LIST_ENTRY(pos, struct dcache_value, list);
@@ -196,7 +196,7 @@ struct dentry *get_dcache(char *component, struct dentry *parent)
 struct dcache_dir *add_dcache_dir(dentry *dir)
 {
     struct dcache_dir *new_dir = new_dcache_dir(dir);
-    list_add(&new_dir->l, &dcache_list);
+    list1_old_add(&new_dir->l, &dcache_list);
 
     return new_dir;
 }
@@ -213,12 +213,12 @@ void add_dcache_permanent(dentry *parent, dentry *new_entry)
 
     if (dir->permanent_values == NULL)
     {
-        new_value->list = LIST_INIT();
+        new_value->list = LIST1_OLD_INIT();
         dir->permanent_values = &new_value->list;
     }
     else
     {
-        list_add(&new_value->list, dir->permanent_values);
+        list1_old_add(&new_value->list, dir->permanent_values);
     }
 }
 
@@ -319,7 +319,7 @@ struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
      * read */
     size_t i = 2;
     list1_old *pos;
-    list_for_each(pos, dir->permanent_values)
+    list1_old_for_each(pos, dir->permanent_values)
     {
         struct dcache_value *value = LIST_ENTRY(pos, struct dcache_value, list);
 

@@ -4,34 +4,34 @@
 #include <stdlib.h>
 #include <string.h>
 
-list1_old new_list()
+list1_old new_list1_old()
 {
     list1_old out;
     out.next = NULL;
     return out;
 }
 
-list1_old *list_pop(list1_old **head)
+list1_old *list1_old_pop(list1_old **head)
 {
     list1_old *retval = *head;
     *head = (*head)->next;
     return retval;
 }
 
-void list_add(list1_old *new, list1_old *head)
+void list1_old_add(list1_old *new, list1_old *head)
 {
     list1_old *temp = head->next;
     head->next = new;
     new->next = temp;
 }
-void list_push(struct list1_old *new, struct list1_old **head)
+void list1_old_push(struct list1_old *new, struct list1_old **head)
 {
     struct list1_old *temp = *head;
     *head = new;
     (*head)->next = temp;
 }
 
-bool list_remove(list1_old *entry, list1_old **head)
+bool list1_old_remove(list1_old *entry, list1_old **head)
 {
 
     if (entry == *head)
@@ -42,7 +42,7 @@ bool list_remove(list1_old *entry, list1_old **head)
 
     struct list1_old *pos;
     struct list1_old *prev;
-    list_for_each(pos, *head)
+    list1_old_for_each(pos, *head)
     {
         if (pos == entry)
         {

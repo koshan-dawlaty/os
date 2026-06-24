@@ -233,7 +233,7 @@ int tmpfs_dentry_remove(dentry *parent, char *name, superblock *sb)
            "tmpfs_remove_dentry needs a directory passed as the dentry");
 
     list2 *pos;
-    list_for_each(pos, node->dir_head)
+    list1_old_for_each(pos, node->dir_head)
     {
         struct tmpfs_node *current = LIST_ENTRY(pos, struct tmpfs_node, list);
 

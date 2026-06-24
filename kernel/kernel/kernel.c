@@ -286,9 +286,10 @@ void kmain()
 
 #ifdef TESTS
     execv("/bin/compiler", (char *[]){"compiler", NULL});
+#else
+    execv("/bin/compiler", (char *[]){"compiler", NULL});
 #endif
 
-    execv("/bin/compiler", (char *[]){"compiler", NULL});
     /* execv("/bin/wm", (char *[]){"wm", NULL}); */
     /* int err = execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
     /* int err = execv("/bin/ls", (char *[]){"/bin/ls", "/dev", NULL}); */

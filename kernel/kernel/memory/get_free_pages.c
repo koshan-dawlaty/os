@@ -247,7 +247,7 @@ struct gfp_tree_value *gfp_tree_value_init(void *addr)
         kmalloc(sizeof(struct gfp_tree_value), KMALLOC_BASIC);
 
     out->addr = addr;
-    out->list = LIST_INIT();
+    out->list = LIST1_OLD_INIT();
     return out;
 }
 
@@ -293,7 +293,7 @@ void *get_free_pages_tree(size_t amount, struct memory_zone *z)
     }
     else
     {
-        list1_old *l = list_pop(&gfp_node->values);
+        list1_old *l = list1_old_pop(&gfp_node->values);
         struct gfp_tree_value *out =
             containerof(l, struct gfp_tree_value, list);
 
@@ -325,7 +325,7 @@ void free_pages_tree(void *addr, size_t amount, struct memory_zone *z)
         return;
     }
 
-    list_add(&value->list, gfp_node->values);
+    list1_old_add(&value->list, gfp_node->values);
 }
 
 /*

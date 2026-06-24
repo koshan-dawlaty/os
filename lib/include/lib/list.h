@@ -13,23 +13,24 @@ typedef struct list1_old
     struct list1_old *next;
 } list1_old;
 
-list1_old new_list();
-void list_add(list1_old *new, list1_old *head);
+list1_old new_list1_old();
+void list1_old_add(list1_old *new, list1_old *head);
 
 /*
  * returns true if @entry was found in the list, false otherwise
  */
-bool list_remove(list1_old *entry, list1_old **head);
-list1_old *list_pop(list1_old **head);
-void list_push(struct list1_old *new, struct list1_old **head);
+bool list1_old_remove(list1_old *entry, list1_old **head);
+list1_old *list1_old_pop(list1_old **head);
+void list1_old_push(struct list1_old *new, struct list1_old **head);
 
-#define LIST_INIT(...)                                                         \
+#define LIST1_OLD_INIT(...)                                                    \
     (list1_old)                                                                \
     {                                                                          \
         .next = NULL                                                           \
     }
 #define LIST_ENTRY(ptr, type, member) containerof(ptr, type, member)
-#define list_for_each(pos, head) for (pos = head; pos != NULL; pos = pos->next)
+#define list1_old_for_each(pos, head)                                          \
+    for (pos = head; pos != NULL; pos = pos->next)
 
 /*
  * doubly linked list

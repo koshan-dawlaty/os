@@ -23,7 +23,7 @@ struct ramdisk_block
 struct ramdisk_block *new_ramdisk_block(struct bdev *dev)
 {
     struct ramdisk_block *out = malloc(sizeof(struct ramdisk_block));
-    out->l = LIST_INIT();
+    out->l = LIST1_OLD_INIT();
     out->data = get_free_pages(dev->block_size / PAGE_SIZE);
 
     memset(out->data, 'b', dev->block_size);
@@ -43,7 +43,7 @@ int ramdisk_read_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
      * array? */
     list1_old *pos = NULL;
     list1_old *prev = &head->l;
-    list_for_each(pos, &head->l)
+    list1_old_for_each(pos, &head->l)
     {
         if (i == offset)
         {
@@ -97,7 +97,7 @@ int ramdisk_write_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
 
     list1_old *pos = NULL;
     list1_old *prev = &head->l;
-    list_for_each(pos, &head->l)
+    list1_old_for_each(pos, &head->l)
     {
         if (i == block_num)
         {
@@ -173,7 +173,7 @@ struct bdev *new_ramdisk()
 {
     struct ramdisk_block *head = malloc(sizeof(struct ramdisk_block));
     head->data = get_free_pages(RAMDISK_BLOCK_PAGES);
-    head->l = LIST_INIT();
+    head->l = LIST1_OLD_INIT();
     memset(head->data, 'b', PAGE_SIZE * RAMDISK_BLOCK_PAGES);
 
     struct bdev *out =
