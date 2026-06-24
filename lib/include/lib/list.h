@@ -8,23 +8,23 @@
 /*
  * singly linked list
  */
-typedef struct list
+typedef struct list1_old
 {
-    struct list *next;
-} list;
+    struct list1_old *next;
+} list1_old;
 
-list new_list();
-void list_add(list *new, list *head);
+list1_old new_list();
+void list_add(list1_old *new, list1_old *head);
 
 /*
  * returns true if @entry was found in the list, false otherwise
  */
-bool list_remove(list *entry, list **head);
-list *list_pop(list **head);
-void list_push(struct list *new, struct list **head);
+bool list_remove(list1_old *entry, list1_old **head);
+list1_old *list_pop(list1_old **head);
+void list_push(struct list1_old *new, struct list1_old **head);
 
 #define LIST_INIT(...)                                                         \
-    (list)                                                                     \
+    (list1_old)                                                                \
     {                                                                          \
         .next = NULL                                                           \
     }

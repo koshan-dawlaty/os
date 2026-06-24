@@ -20,8 +20,8 @@ struct dcache_dir
     /* parent directory, NULL is root */
     struct dentry *dir;
     struct lru_head *values_head;
-    struct list *permanent_values;
-    list l;
+    struct list1_old *permanent_values;
+    list1_old l;
 };
 
 struct dcache_value
@@ -30,7 +30,7 @@ struct dcache_value
     union
     {
         struct lru_entry lru;
-        struct list list;
+        struct list1_old list;
     };
 
     struct refcount rc;
@@ -70,12 +70,12 @@ struct dcache_dir *new_dcache_dir(dentry *dir)
     return out;
 }
 
-list dcache_list = LIST_INIT();
+list1_old dcache_list = LIST_INIT();
 
 struct dcache_dir *get_dcache_dir(dentry *entry)
 {
 
-    list *pos;
+    list1_old *pos;
     list_for_each(pos, &dcache_list)
     {
 
@@ -113,7 +113,7 @@ struct dcache_value *get_dcache_value(char *component, struct dcache_dir *dir)
     if (dir->permanent_values != NULL)
     {
 
-        list *pos;
+        list1_old *pos;
         list_for_each(pos, dir->permanent_values)
         {
             struct dcache_value *value =
@@ -318,7 +318,7 @@ struct dentry *dcache_readdir(struct dentry *entry, struct dir_context *context)
     /* because of the trick used to get "." and ".." 2 entries have already been
      * read */
     size_t i = 2;
-    list *pos;
+    list1_old *pos;
     list_for_each(pos, dir->permanent_values)
     {
         struct dcache_value *value = LIST_ENTRY(pos, struct dcache_value, list);

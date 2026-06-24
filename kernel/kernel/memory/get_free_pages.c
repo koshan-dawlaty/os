@@ -216,13 +216,13 @@ void *get_free_pages_unmmaped(size_t amount, struct memory_zone *z)
 struct gfp_tree_value
 {
     void *addr;
-    struct list list;
+    struct list1_old list;
 };
 
 struct gfp_tree_node
 {
     struct bintree_node bintree;
-    struct list *values;
+    struct list1_old *values;
 };
 
 struct tree_memory_zone kernel_tree_zone = {};
@@ -293,7 +293,7 @@ void *get_free_pages_tree(size_t amount, struct memory_zone *z)
     }
     else
     {
-        list *l = list_pop(&gfp_node->values);
+        list1_old *l = list_pop(&gfp_node->values);
         struct gfp_tree_value *out =
             containerof(l, struct gfp_tree_value, list);
 

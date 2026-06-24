@@ -38,7 +38,7 @@ static struct addr_space_page *addr_space_page_alloc(void *addr,
 void addr_space_free(struct addr_space a)
 {
 
-    struct list *pos;
+    struct list1_old *pos;
     struct addr_space_page *prev = NULL;
 
     struct pagedir *prev_dir = get_current_pagedir();
@@ -108,7 +108,7 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
         a->list_head = &page->list;
     }
 
-    struct list *pos;
+    struct list1_old *pos;
     list_for_each(pos, a->list_head)
     {
         struct addr_space_page *pg =
@@ -134,7 +134,7 @@ int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages)
     load_pgdir(a->dir);
 
     struct addr_space_page *pg = NULL;
-    struct list *pos = NULL;
+    struct list1_old *pos = NULL;
     list_for_each(pos, a->list_head)
     {
         pg = LIST_ENTRY(pos, struct addr_space_page, list);

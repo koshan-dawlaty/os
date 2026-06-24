@@ -1,8 +1,8 @@
 #include <ata/ata.h>
 #include <bdev.h>
+#include <container_of.h>
 #include <errno.h>
 #include <kernel/paging.h>
-#include <container_of.h>
 #include <lib/list.h>
 #include <memory/get_free_pages.h>
 #include <panic.h>
@@ -13,7 +13,7 @@
 struct ramdisk_block
 {
     void *data;
-    list l;
+    list1_old l;
 };
 
 #define RAMDISK_BLOCK_PAGES 1
@@ -41,8 +41,8 @@ int ramdisk_read_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
 
     /* TODO: this is slow, maybe store pointers to some of the blocks in an
      * array? */
-    list *pos = NULL;
-    list *prev = &head->l;
+    list1_old *pos = NULL;
+    list1_old *prev = &head->l;
     list_for_each(pos, &head->l)
     {
         if (i == offset)
@@ -57,7 +57,7 @@ int ramdisk_read_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
     if (pos == NULL)
     {
 
-        list *current = prev;
+        list1_old *current = prev;
 
         for (size_t j = 0; j < num_blocks; j++)
         {
@@ -71,7 +71,7 @@ int ramdisk_read_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
     }
 
     size_t buf_offset = 0;
-    list *current = pos;
+    list1_old *current = pos;
     for (size_t j = 0; j < num_blocks; j++)
     {
 
@@ -95,8 +95,8 @@ int ramdisk_write_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
 
     size_t i = 0;
 
-    list *pos = NULL;
-    list *prev = &head->l;
+    list1_old *pos = NULL;
+    list1_old *prev = &head->l;
     list_for_each(pos, &head->l)
     {
         if (i == block_num)
@@ -108,11 +108,11 @@ int ramdisk_write_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
         i++;
     }
 
-    list *start = pos;
+    list1_old *start = pos;
 
     if (pos == NULL)
     {
-        list *current = prev;
+        list1_old *current = prev;
 
         size_t new_blocks = (block_num + num_blocks) - i;
 
@@ -130,7 +130,7 @@ int ramdisk_write_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
         }
     }
 
-    list *current = start;
+    list1_old *current = start;
     size_t buf_offset = 0;
     for (size_t i = 0; i < num_blocks; i++)
     {
@@ -151,8 +151,8 @@ int ramdisk_write_blocks(struct bdev *dev, u8 *buf, size_t num_blocks,
 void free_ramdisk(struct bdev *dev)
 {
     struct ramdisk_block *start_block = RAMDISK_BDEV(dev);
-    list *current = &start_block->l;
-    list *prev = current;
+    list1_old *current = &start_block->l;
+    list1_old *prev = current;
 
     while (current != NULL)
     {
