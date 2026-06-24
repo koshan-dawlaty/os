@@ -879,10 +879,10 @@ static void process_keyboard(char c)
                                                               issues */
         }
     }
-    else if (c == 'a' && focused != NULL)
-    {
-        resize_window(focused, 10, 0);
-    }
+    /* else if (c == 'a' && focused != NULL) */
+    /* { */
+    /*     resize_window(focused, 10, 0); */
+    /* } */
     else if (c == 'R')
     {
         execv("/bin/run", (char *const[]){"run", NULL});
@@ -1077,7 +1077,7 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
-    execv("/bin/term", (char *[]){"term", NULL});
+    execv("/bin/edit", (char *[]){"edit", NULL});
     /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
     /* execv("/bin/sokoban", (char *[]){"/bin/sokoban", NULL}); */
     /* execv("/bin/run", (char *[]){"run", NULL}); */

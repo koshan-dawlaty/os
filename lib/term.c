@@ -1,5 +1,5 @@
-#include "lib/assert.h"
 #include <lib/array.h>
+#include <lib/assert.h>
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/term.h>

@@ -1,9 +1,14 @@
+#include "container_of.h"
+#include "lib/array.h"
+#include "lib/font.h"
+#include "lib/list.h"
 #include "wm_lib.h"
 #include <err_ptr.h>
 #include <fcntl.h>
 #include <init.h>
 #include <lib/assert.h>
 #include <lib/framebuffer.h>
+#include <lib/list.h>
 #include <lib/log.h>
 #include <lib/term.h>
 #include <sched.h>
@@ -16,65 +21,150 @@
 struct wm_client client;
 struct PSF_font *font;
 
-size_t wm_terminal_get_width()
+struct editor_row
 {
-    return client.fb.width / font->header.width;
-}
+    struct array characters;
 
-size_t wm_terminal_get_height()
+    struct list list;
+};
+struct editor_buffer
 {
-    /* return 3; */
-    return (client.fb.height / font->header.height) - 2;
-}
+    size_t cursor_x, cursor_y;
 
-u32 bg_color = 0xFF;
-u32 cursor_color = 0xFF00FF;
-
-void wm_terminal_draw_char_at(char character, size_t x, size_t y,
-                              bool is_cursor)
-{
-
-    if (character == -1)
-    {
-        /* PANIC("invalid character"); */
-        logw("invalid character at position:%d, %d", x, y);
-        return;
-    }
-
-    if (is_cursor)
-    {
-        client_draw_rect(client, x * font->header.width,
-                         y * font->header.height, font->header.width,
-                         font->header.height, cursor_color);
-    }
-    else
-    {
-        client_draw_rect(client, x * font->header.width,
-                         y * font->header.height, font->header.width,
-                         font->header.height, bg_color);
-    }
-    client_draw_char(client, font, character, x * font->header.width,
-                     y * font->header.height);
-}
-
-struct terminal_operations term_ops = {
-    .draw_char_at = wm_terminal_draw_char_at,
-    .get_height = wm_terminal_get_height,
-    .get_width = wm_terminal_get_width,
+    struct list rows_head;
+    struct editor_row *current_row;
 };
 
-void write_to_file(struct terminal *characters)
+struct editor_row *editor_row_alloc()
+{
+    struct editor_row *out = malloc(sizeof(struct editor_row));
+    out->characters = ARRAY_INIT();
+    out->list = LIST_INIT();
+
+    return out;
+}
+
+void editor_buffer_redraw(struct editor_buffer *buffer, struct framebuffer *fb,
+                          size_t x_pos, size_t y_pos)
+{
+
+    framebuffer_draw_rect(fb, buffer->cursor_x * font->header.width,
+                          font->header.height * buffer->cursor_y,
+                          font->header.width, font->header.height, 0x00FF00);
+    struct list *pos;
+    size_t y = 0;
+    list_for_each(pos, &buffer->rows_head)
+    {
+        struct editor_row *row = containerof(pos, struct editor_row, list);
+
+        for (size_t x = 0; x < row->characters.len; x++)
+        {
+            char c = ((char *)row->characters.data)[x];
+
+            size_t real_x = x_pos + (x * font->header.width);
+            size_t real_y = y_pos + (y * font->header.height);
+            framebuffer_draw_char(fb, font, c, real_x, real_y);
+        }
+        y++;
+    }
+}
+
+void editor_buffer_delete_cursor(struct editor_buffer *buffer)
+{
+    array_pop_middle(&buffer->current_row->characters, buffer->cursor_x);
+    buffer->cursor_x--;
+}
+
+void editor_buffer_insert_newline_cursor(struct editor_buffer *buffer)
+{
+    struct editor_row *new_row = editor_row_alloc();
+    list_add_after(&new_row->list, &buffer->current_row->list);
+
+    array_push(&new_row->characters,
+               buffer->current_row->characters.data + buffer->cursor_x,
+               buffer->current_row->characters.len - buffer->cursor_x);
+
+    for (size_t i = buffer->current_row->characters.len; i > buffer->cursor_x;
+         i--)
+    {
+        /* stupid, because  it should be one function to do this */
+        array_pop_middle(&buffer->current_row->characters, i);
+    }
+
+    buffer->current_row = new_row;
+    buffer->cursor_y++;
+    buffer->cursor_x = 0;
+}
+
+void editor_buffer_insert_cursor(struct editor_buffer *buffer, char c)
+{
+    array_insert(&buffer->current_row->characters, buffer->cursor_x, &c, 1);
+    buffer->cursor_x++;
+}
+
+void editor_buffer_set_cursor(struct editor_buffer *buffer, int cursor_x,
+                              int cursor_y)
+{
+    if (cursor_x < 0)
+    {
+        cursor_x = 0;
+    }
+    if (cursor_y < 0)
+    {
+        cursor_y = 0;
+    }
+
+    /* traversing the list here is slower, in editor_buffer_move_cursor(),
+     * maybe use buffer->current_row? */
+    struct list *pos;
+    size_t y = 0;
+    list_for_each(pos, &buffer->rows_head)
+    {
+        if (y == cursor_y)
+        {
+            goto found;
+        }
+
+        y++;
+    }
+    /* FIXME: will break if it is empty */
+    if (pos == &buffer->rows_head)
+    {
+        cursor_y = y - 1;
+        pos = pos->prev;
+    }
+
+found:;
+
+    struct editor_row *row = containerof(pos, struct editor_row, list);
+    buffer->current_row = row;
+    if (cursor_x > row->characters.len)
+    {
+        cursor_x = row->characters.len;
+    }
+
+    buffer->cursor_x = cursor_x;
+    buffer->cursor_y = cursor_y;
+}
+
+void editor_buffer_move_cursor(struct editor_buffer *buffer, int x_diff,
+                               int y_diff)
+{
+    editor_buffer_set_cursor(buffer, buffer->cursor_x + x_diff,
+                             buffer->cursor_y + y_diff);
+}
+
+void write_to_file(struct editor_buffer *buffer)
 {
     int fd = open("/one", O_WRONLY);
-    for (size_t i = 0; i < characters->characters.len / sizeof(struct array);
-         i++)
+    struct list *pos;
+    list_for_each(pos, &buffer->rows_head)
     {
-        struct array *line =
-            array_get(&characters->characters, i, sizeof(struct array));
-        if (line->data != NULL)
+        struct editor_row *row = containerof(pos, struct editor_row, list);
+        if (row->characters.data != NULL)
         {
-            logd("writing:%s", line->data);
-            write(fd, line->data, line->len);
+            logd("writing:%s", row->characters.data);
+            write(fd, row->characters.data, row->characters.len);
         }
         char newline = '\n';
         write(fd, &newline, 1);
@@ -95,30 +185,20 @@ int main()
         exit(1);
     }
 
-    struct terminal characters = terminal_init(term_ops);
     /* characters.y = 0; */
     size_t w = 300, h = 300;
     size_t x = 0, y = 0;
     client = wm_client_connect(h, w);
 
-    /* terminal_addchar('\n', &characters); */
-    /* terminal_draw_line(&characters, 0, 0); */
-
-    /* terminal_add("abcdef", 6, &characters); */
-    /* terminal_draw_line(&characters, 0, 0); */
-    terminal_add("a\nb\nc123\nd\ne", 7, &characters);
-
-    /* terminal_add("\b", 1, &characters); */
-    /* terminal_add("123\b\n", 5, &characters); */
-    /* terminal_add("2\n", 2, &characters); */
-    /* terminal_add("3", 1, &characters); */
-
-    /* terminal_set_cursor(&characters, 0, 1); */
-
     wm_render(client);
 
-    bool insert_mode = false;
+    struct editor_buffer buffer = {0, 0};
+    list_init_head(&buffer.rows_head);
+    struct editor_row *row = editor_row_alloc();
+    list_push(&row->list, &buffer.rows_head);
+    buffer.current_row = row;
 
+    bool insert_mode = true;
     while (1)
     {
         struct wm_message message;
@@ -135,9 +215,30 @@ int main()
                 {
                     insert_mode = false;
                 }
+                else if (c == '\b')
+                {
+                    editor_buffer_delete_cursor(&buffer);
+
+                    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                                          client.fb.height, 0);
+                    editor_buffer_redraw(&buffer, &client.fb, 0, 0);
+                    wm_render(client);
+                }
+                else if (c == '\n')
+                {
+                    editor_buffer_insert_newline_cursor(&buffer);
+                    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                                          client.fb.height, 0);
+                    editor_buffer_redraw(&buffer, &client.fb, 0, 0);
+                    wm_render(client);
+                }
                 else
                 {
-                    terminal_addchar(c, &characters);
+                    editor_buffer_insert_cursor(&buffer, c);
+
+                    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                                          client.fb.height, 0);
+                    editor_buffer_redraw(&buffer, &client.fb, 0, 0);
                     wm_render(client);
                 }
             }
@@ -148,28 +249,27 @@ int main()
                 case 'i':
                     insert_mode = true;
                     break;
-                case 'a':
-                    term_scroll_up(&characters);
-                    break;
-                case 's':
-                    term_scroll_down(&characters);
-                    break;
                 case 'k':
-                    terminal_move_cursor(&characters, 0, -1);
+                    editor_buffer_move_cursor(&buffer, 0, -1);
                     break;
                 case 'j':
-                    terminal_move_cursor(&characters, 0, 1);
+                    editor_buffer_move_cursor(&buffer, 0, 1);
                     break;
                 case 'h':
-                    terminal_move_cursor(&characters, -1, 0);
+                    editor_buffer_move_cursor(&buffer, -1, 0);
                     break;
                 case 'l':
-                    terminal_move_cursor(&characters, 1, 0);
+                    editor_buffer_move_cursor(&buffer, 1, 0);
                     break;
                 case 'w':
-                    write_to_file(&characters);
+                    write_to_file(&buffer);
                     break;
                 }
+
+                framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                                      client.fb.height, 0);
+                editor_buffer_redraw(&buffer, &client.fb, 0, 0);
+                wm_render(client);
 
                 wm_render(client);
             }
