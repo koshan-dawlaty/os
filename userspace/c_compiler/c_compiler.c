@@ -241,7 +241,7 @@ struct token *get_token(const char *input, size_t *len)
     return token_alloc(TOKEN_UNKNOWN, "", 0);
 }
 
-void tokenizer_parse_tokens(const char *program, struct list2c *token_list)
+void tokenizer_parse_tokens(const char *program, struct list *token_list)
 {
 
     size_t offset = 0;
@@ -410,7 +410,7 @@ bool parser_next_is_type(struct ast_parser *parser, struct token **token)
 {
     struct token *type = parser_get_current(parser);
 
-    struct list2c *pos = parser_get_current(parser)->list.next;
+    struct list *pos = parser_get_current(parser)->list.next;
     struct token *tok = containerof(pos, struct token, list);
 
     while (tok->type == TOKEN_STAR)
@@ -558,8 +558,7 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
 }
 
 int ast_parse_statements(struct ast_parser *parser,
-                         struct list2c *statements_head,
-                         struct ast_error **err);
+                         struct list *statements_head, struct ast_error **err);
 
 struct ast_statement *ast_parse_statement(struct ast_parser *parser,
                                           struct ast_error **err)
@@ -668,7 +667,7 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser,
 }
 
 int ast_parse_statements(struct ast_parser *parser,
-                         struct list2c *statements_head, struct ast_error **err)
+                         struct list *statements_head, struct ast_error **err)
 {
 
     struct token *open_brace = parser_advance(parser);
@@ -796,7 +795,7 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser,
             return NULL;
         }
 
-        struct list2c *pos;
+        struct list *pos;
         list2c_for_each(pos, &func->block)
         {
             struct ast_statement *statement =
@@ -818,8 +817,8 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser,
     return out;
 }
 
-struct ast_error *ast_parse(struct list2c *tokens,
-                            struct list2c *top_statements_head)
+struct ast_error *ast_parse(struct list *tokens,
+                            struct list *top_statements_head)
 {
     struct ast_parser parser = {tokens,
                                 .current = TOKEN_LIST_GET(tokens->next)};

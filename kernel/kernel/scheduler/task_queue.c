@@ -35,7 +35,7 @@ struct task *task_queue_pop(struct task_queue *queue)
         return NULL;
     }
 
-    struct list2c *list = list2c_pop(&queue->head);
+    struct list *list = list2c_pop(&queue->head);
 
     if (list == NULL)
     {
@@ -62,7 +62,7 @@ void task_queue_remove(struct task_queue *queue, struct task *t)
     /* TODO: this would be possible to do without a loop if list2c_remove() was
      * used, but the callers of this function would have difficultly working
      * around that */
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, &queue->head)
     {
         if (t == TASK_QUEUE_GET_TASK(pos))

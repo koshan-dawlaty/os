@@ -24,14 +24,14 @@ struct set_entry
 {
     char *question;
     char *answer;
-    struct list2c list;
+    struct list list;
 };
 
-void parse_flashcards(char *buf, struct list2c *head)
+void parse_flashcards(char *buf, struct list *head)
 {
     char *tok = strtok(buf, "\n");
 
-    struct list2c *current_list = head;
+    struct list *current_list = head;
     struct set_entry *current_entry = NULL;
     bool is_question = true;
 
@@ -62,10 +62,10 @@ void parse_flashcards(char *buf, struct list2c *head)
     }
 }
 
-void free_entries(struct list2c *head)
+void free_entries(struct list *head)
 {
     struct set_entry *prev = NULL;
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, head)
     {
         struct set_entry *entry = containerof(pos, struct set_entry, list);
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 
     parse_flashcards(flashcards, &head);
 
-    struct list2c *current = head.next;
+    struct list *current = head.next;
 
     while (1)
     {

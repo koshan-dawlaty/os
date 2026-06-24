@@ -57,7 +57,7 @@ static inline struct registers registers_init_dynamic()
 
 struct task
 {
-    struct list2c list;
+    struct list list;
 
     struct addr_space addr_space;
 

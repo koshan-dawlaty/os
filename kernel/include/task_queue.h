@@ -7,13 +7,13 @@ struct task;
 
 struct task_queue
 {
-    struct list2c head;
+    struct list head;
 };
 
 struct task_queue_entry
 {
     struct task *task;
-    struct list2c list;
+    struct list list;
 };
 
 #define TASK_QUEUE_INIT(name)                                                  \

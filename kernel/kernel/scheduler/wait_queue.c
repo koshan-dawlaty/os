@@ -25,7 +25,7 @@ void wait_queue_wait(struct wait_queue *queue)
     if (current == SCHED_QUEUE_CURRENT_TASK(scheduler_queue))
     {
 
-        struct list2c *list = scheduler_queue.queue.head.next;
+        struct list *list = scheduler_queue.queue.head.next;
         scheduler_queue.current_task =
             containerof(list, struct task_queue_entry, list);
 

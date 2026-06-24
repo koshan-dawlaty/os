@@ -7,7 +7,7 @@
 struct list2c_tester
 {
     int num;
-    struct list2c list;
+    struct list list;
 };
 #define LIST2C_TESTER_GET(l) containerof(l, struct list2c_tester, list)
 
@@ -28,7 +28,7 @@ TEST(list2c_test_push_pop, {
     list2c_push(&alloc_tester(3)->list, &head);
 
     int i = 3;
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, &head)
     {
         struct list2c_tester *current = LIST2C_TESTER_GET(pos);
@@ -48,7 +48,7 @@ TEST(list2c_test_push_pop, {
 
 TEST(list2c_pop_empty, {
     LIST2C_INIT_HEAD(head);
-    struct list2c *should_be_null = list2c_pop(&head);
+    struct list *should_be_null = list2c_pop(&head);
     ASSERT_EQ(should_be_null, NULL, "pop on empty list is not null");
 
     list2c_push(&alloc_tester(1)->list, &head);

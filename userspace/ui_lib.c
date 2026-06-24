@@ -32,8 +32,8 @@ struct element
     size_t x, y;
     size_t abs_x, abs_y; /* position of element in the screen framebuffer */
     struct framebuffer fb;
-    struct list2c list;
-    struct list2c children;
+    struct list list;
+    struct list children;
 
     struct element_type type;
     struct element *parent;
@@ -113,7 +113,7 @@ void render(struct element *e)
     /* client_draw_rect(client, screen.x, screen.y, screen.w, screen.h,
      * e->color); */
 
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, &e->children)
     {
         struct element *e2 = containerof(pos, struct element, list);
@@ -178,7 +178,7 @@ void ui_onclick(
         }
     }
 
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, &root->children)
     {
         struct element *e = containerof(pos, struct element, list);

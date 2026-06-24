@@ -65,34 +65,34 @@ void list2_insert_end(list2 *new, list2 **head);
 
 struct list2 *list2_pop(struct list2 **head);
 
-struct list2c
+struct list
 {
-    struct list2c *prev, *next;
+    struct list *prev, *next;
 };
 
 #define LIST2C_IS_EMPTY(head) (head.next == &head)
-#define LIST2C_HEAD_INIT(name) ((struct list2c){.prev = name, .next = name})
+#define LIST2C_HEAD_INIT(name) ((struct list){.prev = name, .next = name})
 #define LIST2C_INIT_HEAD(name)                                                 \
-    struct list2c name;                                                        \
+    struct list name;                                                          \
     name = LIST2C_HEAD_INIT(&name);
 
-static inline void list2c_init_head(struct list2c *head)
+static inline void list2c_init_head(struct list *head)
 {
     *head = LIST2C_HEAD_INIT(head);
 }
 
-#define LIST2C_DEFINE_HEAD(name) struct list2c name = LIST2C_HEAD_INIT(&name);
-#define LIST2C_INIT() ((struct list2c){.prev = NULL, .next = NULL})
+#define LIST2C_DEFINE_HEAD(name) struct list name = LIST2C_HEAD_INIT(&name);
+#define LIST2C_INIT() ((struct list){.prev = NULL, .next = NULL})
 
-void list2c_push(struct list2c *new, struct list2c *head);
-void list2c_push_end(struct list2c *new, struct list2c *head);
-struct list2c *list2c_pop(struct list2c *head);
-struct list2c *list2c_pop_end(struct list2c *head);
+void list2c_push(struct list *new, struct list *head);
+void list2c_push_end(struct list *new, struct list *head);
+struct list *list2c_pop(struct list *head);
+struct list *list2c_pop_end(struct list *head);
 // bool list2c_remove(struct list2c *value, struct list2c *head);
-void list2c_remove(struct list2c *value);
+void list2c_remove(struct list *value);
 
-void list2c_add_after(struct list2c *new, struct list2c *other);
-void list2c_add_before(struct list2c *new, struct list2c *other);
+void list2c_add_after(struct list *new, struct list *other);
+void list2c_add_before(struct list *new, struct list *other);
 
 #define list2c_for_each(pos, head)                                             \
     for (pos = (head)->next; pos != (head); pos = pos->next)

@@ -402,7 +402,7 @@ struct task *create_kernel_task()
 
 bool init_task_exists()
 {
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, &scheduler_queue.queue.head)
     {
         struct task *t = TASK_QUEUE_GET_TASK(pos);
@@ -439,7 +439,7 @@ static void remove_task_sched_queue(struct task *task)
 
     if (task == get_current_task())
     {
-        struct list2c *list = scheduler_queue.queue.head.next;
+        struct list *list = scheduler_queue.queue.head.next;
         scheduler_queue.current_task =
             containerof(list, struct task_queue_entry, list);
 
@@ -525,7 +525,7 @@ int num_task_switches = 0;
 void switch_tasks()
 {
     struct task_queue_entry *ent = scheduler_queue.current_task;
-    struct list2c *temp = ent->list.next;
+    struct list *temp = ent->list.next;
 
     if (temp == &scheduler_queue.queue.head)
     {
@@ -609,7 +609,7 @@ void free_task(struct task *t)
 
 void print_tasks()
 {
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, &scheduler_queue.queue.head)
     {
         struct task *t = TASK_QUEUE_GET_TASK(pos);

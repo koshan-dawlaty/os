@@ -67,7 +67,7 @@ struct window_queue_entry
 {
     struct window *win;
     struct wm_connection *conn;
-    struct list2c list;
+    struct list list;
 
     /* FIXME: stupid, should use O_NONBLOCK globally or just find a better way
      * of doing this */
@@ -175,7 +175,7 @@ struct array compute_visible(struct window_queue_entry *win_ent,
     }
     array_add(&visible, &intersection, sizeof(struct rect));
 
-    struct list2c *pos;
+    struct list *pos;
     for (pos = win_ent->list.next; pos != &window_queue; pos = pos->next)
     {
         struct window_queue_entry *ent =
@@ -215,7 +215,7 @@ void update_area_up(struct rect area, struct framebuffer *fb)
 {
     user_mutex_lock(window_queue_mutex);
 
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, &window_queue)
     {
         struct window_queue_entry *ent =
@@ -809,8 +809,8 @@ static void process_mouse(struct mouse_event *ev)
         /* TODO: this should be its own function that traverses the list
          * backwards */
         user_mutex_lock(window_queue_mutex);
-        struct list2c *pos;
-        struct list2c *prev = &window_queue;
+        struct list *pos;
+        struct list *prev = &window_queue;
         list2c_for_each(pos, &window_queue)
         {
             prev = pos;
@@ -889,10 +889,10 @@ static void process_keyboard(char c)
     }
     else if (c == '\t')
     {
-        struct list2c *next = window_queue.next->next;
+        struct list *next = window_queue.next->next;
         if (focused != NULL)
         {
-            struct list2c *next = focused->list.next;
+            struct list *next = focused->list.next;
         }
         if (next == &window_queue)
         {

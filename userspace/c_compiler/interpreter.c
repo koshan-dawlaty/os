@@ -52,10 +52,10 @@ struct variable
  * you dont own the returned pointer, it is from the array in the
  * scope
  */
-struct variable *variable_lookup(struct list2c *scope_head, const char *search)
+struct variable *variable_lookup(struct list *scope_head, const char *search)
 {
 
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, scope_head)
     {
         struct scope *s = containerof(pos, struct scope, list);
@@ -173,7 +173,7 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
         if (!strcmp(expr->call.function_name, "print"))
         {
-            struct list2c *pos;
+            struct list *pos;
             list2c_for_each(pos, &expr->call.arguments_head)
             {
                 struct ast_function_arg *arg =
@@ -215,8 +215,8 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
                 struct scope *new_scope = scope_alloc();
 
-                struct list2c *passed_pos = expr->call.arguments_head.next;
-                struct list2c *def_pos;
+                struct list *passed_pos = expr->call.arguments_head.next;
+                struct list *def_pos;
                 list2c_for_each(def_pos, &func->args_head)
                 {
                     if (passed_pos == &expr->call.arguments_head)
@@ -236,9 +236,9 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                     passed_pos = passed_pos->next;
                 }
 
-                struct list2c *prev_scope = interp->all_scopes;
+                struct list *prev_scope = interp->all_scopes;
 
-                interp->all_scopes = malloc(sizeof(struct list2c));
+                interp->all_scopes = malloc(sizeof(struct list));
                 list2c_init_head(interp->all_scopes); /* clear scope */
                 list2c_push(&new_scope->list, interp->all_scopes);
                 interp->current_scope = &new_scope->list;
@@ -262,7 +262,7 @@ struct interp_value *expr_eval(struct ast_expr *expr,
     UNREACHABLE("unknown enum type:%d", expr->type);
 }
 
-struct interp_value *statements_eval(struct list2c *statements_head,
+struct interp_value *statements_eval(struct list *statements_head,
                                      struct interpreter *interp)
 {
     struct scope *new_scope = scope_alloc();
@@ -271,7 +271,7 @@ struct interp_value *statements_eval(struct list2c *statements_head,
 
     struct interp_value *retval = NULL;
 
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, statements_head)
     {
 
@@ -361,13 +361,13 @@ end:
     return retval;
 }
 
-int eval_program(struct list2c *top_statements_head)
+int eval_program(struct list *top_statements_head)
 {
     struct interpreter *i = interpreter_init();
 
-    struct list2c *main_body = NULL;
+    struct list *main_body = NULL;
 
-    struct list2c *pos;
+    struct list *pos;
     list2c_for_each(pos, top_statements_head)
     {
         struct ast_top_statement *statement =

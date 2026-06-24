@@ -166,10 +166,10 @@ struct list2 *list2_pop(struct list2 **head)
     return retval;
 }
 
-void list2c_push(struct list2c *new, struct list2c *head)
+void list2c_push(struct list *new, struct list *head)
 {
     /* printf("PUSH\n"); */
-    struct list2c *temp = head->next;
+    struct list *temp = head->next;
     new->prev = head;
     new->next = temp;
 
@@ -177,10 +177,10 @@ void list2c_push(struct list2c *new, struct list2c *head)
     head->next = new;
 }
 
-void list2c_push_end(struct list2c *new, struct list2c *head)
+void list2c_push_end(struct list *new, struct list *head)
 {
     /* printf("PUSH\n"); */
-    struct list2c *temp = head->prev;
+    struct list *temp = head->prev;
     new->next = head;
     new->prev = temp;
 
@@ -188,9 +188,9 @@ void list2c_push_end(struct list2c *new, struct list2c *head)
     head->prev = new;
 }
 
-struct list2c *list2c_pop(struct list2c *head)
+struct list *list2c_pop(struct list *head)
 {
-    struct list2c *out = head->next;
+    struct list *out = head->next;
 
     if (out == head)
     {
@@ -206,9 +206,9 @@ struct list2c *list2c_pop(struct list2c *head)
     return out;
 }
 
-struct list2c *list2c_pop_end(struct list2c *head)
+struct list *list2c_pop_end(struct list *head)
 {
-    struct list2c *out = head->prev;
+    struct list *out = head->prev;
 
     if (out == head)
     {
@@ -224,7 +224,7 @@ struct list2c *list2c_pop_end(struct list2c *head)
     return out;
 }
 
-void list2c_remove(struct list2c *value)
+void list2c_remove(struct list *value)
 {
     /* printf("REMOVE\n"); */
     value->prev->next = value->next;
@@ -234,18 +234,18 @@ void list2c_remove(struct list2c *value)
     value->prev = NULL;
 }
 
-void list2c_add_after(struct list2c *new, struct list2c *other)
+void list2c_add_after(struct list *new, struct list *other)
 {
-    struct list2c *temp = other->next;
+    struct list *temp = other->next;
     other->next = new;
     new->next = temp;
     new->prev = other;
     temp->prev = new;
 }
 
-void list2c_add_before(struct list2c *new, struct list2c *other)
+void list2c_add_before(struct list *new, struct list *other)
 {
-    struct list2c *temp = other->prev;
+    struct list *temp = other->prev;
     other->prev = new;
     new->prev = temp;
     new->next = other;

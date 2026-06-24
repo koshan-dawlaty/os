@@ -35,7 +35,7 @@ struct undo_entry
     int box_x, box_y;
     int new_box_x, new_box_y;
 
-    struct list2c list;
+    struct list list;
 };
 
 LIST2C_DEFINE_HEAD(undo_queue);
@@ -327,7 +327,7 @@ void move_player(int x, int y)
 
 void undo()
 {
-    struct list2c *list = list2c_pop_end(&undo_queue);
+    struct list *list = list2c_pop_end(&undo_queue);
     if (list == NULL)
     {
         return;

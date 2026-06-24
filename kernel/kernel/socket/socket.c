@@ -88,7 +88,7 @@ int unix_socket_close(struct file *f)
     struct unix_socket *sock = f->file_private;
     sock->is_closing = true;
 
-    struct list2c *recv_queue = &sock->recv_queue.queue.head;
+    struct list *recv_queue = &sock->recv_queue.queue.head;
     struct task *t = containerof(recv_queue->next, struct task, list);
 
     wait_queue_wake_all(&sock->recv_queue);

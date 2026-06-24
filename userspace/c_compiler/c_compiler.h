@@ -39,14 +39,14 @@ struct token
     enum token_type type;
     char *token;
     size_t len;
-    struct list2c list;
+    struct list list;
 };
 #define TOKEN_LIST_GET(l) containerof(l, struct token, list)
 
 struct ast_parser
 {
 
-    struct list2c *tokens; /* head all tokens being parsed */
+    struct list *tokens;   /* head all tokens being parsed */
     struct token *current; /* current token */
 };
 
@@ -104,7 +104,7 @@ static inline struct ast_error *ast_error_alloc(enum ast_error_type type)
     return err;
 }
 
-void tokenizer_parse_tokens(const char *program, struct list2c *token_list);
+void tokenizer_parse_tokens(const char *program, struct list *token_list);
 
 struct ast_type
 {
@@ -152,12 +152,12 @@ struct ast_value
 struct ast_function_arg
 {
     struct ast_expr *expr;
-    struct list2c list;
+    struct list list;
 };
 
 struct ast_function_call
 {
-    struct list2c arguments_head;
+    struct list arguments_head;
     char *function_name;
 };
 
@@ -207,7 +207,7 @@ struct ast_statement
 
         struct
         {
-            struct list2c block; /* type is if, while, or for */
+            struct list block; /* type is if, while, or for */
             struct ast_expr
                 *block_expr; /* used for the expression with the if or while
                                 loop, will need to change for for loop */
@@ -221,7 +221,7 @@ struct ast_statement
         };
     };
 
-    struct list2c list;
+    struct list list;
 };
 
 /* function argument definition */
@@ -229,16 +229,16 @@ struct ast_function_arg_def
 {
     struct ast_type *type;
     char *name;
-    struct list2c list;
+    struct list list;
 };
 
 struct ast_function_declare
 {
     struct ast_type *return_type;
     char *name;
-    struct list2c args_head;
+    struct list args_head;
 
-    struct list2c block;
+    struct list block;
 };
 
 /* top level statements, like type / global variable definitions, and
@@ -257,18 +257,18 @@ struct ast_top_statement
         struct ast_function_declare *function;
     };
 
-    struct list2c list;
+    struct list list;
 };
 
 /* returns NULL if there was no error */
-struct ast_error *ast_parse(struct list2c *tokens,
-                            struct list2c *top_statements_head);
+struct ast_error *ast_parse(struct list *tokens,
+                            struct list *top_statements_head);
 
 /* interpreter part, maybe move this later */
 
 struct scope
 {
-    struct list2c list;
+    struct list list;
     struct array vars;
 };
 
@@ -277,8 +277,8 @@ struct interpreter
     /* the current scopes the interpreter is in for one function, when a
      * function is called, the scope of that function will be stored on the
      * stack, to not interfere with the scope of the called function  */
-    struct list2c *all_scopes;
-    struct list2c *current_scope;
+    struct list *all_scopes;
+    struct list *current_scope;
     struct array funcs; /* this should probably used a linked list, as it is
                            currently storing pointers */
 };
@@ -287,7 +287,7 @@ static inline struct interpreter *interpreter_init()
 {
     struct interpreter *out = malloc(sizeof(struct interpreter));
     out->funcs = ARRAY_INIT();
-    out->all_scopes = malloc(sizeof(struct list2c));
+    out->all_scopes = malloc(sizeof(struct list));
     list2c_init_head(out->all_scopes);
     out->current_scope = out->all_scopes;
     return out;
@@ -298,9 +298,9 @@ struct interp_value
     struct ast_type *type;
     struct ast_value value;
 };
-struct interp_value *statements_eval(struct list2c *statements_head,
+struct interp_value *statements_eval(struct list *statements_head,
                                      struct interpreter *);
 struct interp_value *expr_eval(struct ast_expr *expr, struct interpreter *);
-int eval_program(struct list2c *top_statements_head);
+int eval_program(struct list *top_statements_head);
 
 #endif
