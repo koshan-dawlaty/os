@@ -288,7 +288,7 @@ static inline struct interpreter *interpreter_init()
     struct interpreter *out = malloc(sizeof(struct interpreter));
     out->funcs = ARRAY_INIT();
     out->all_scopes = malloc(sizeof(struct list));
-    list2c_init_head(out->all_scopes);
+    list_init_head(out->all_scopes);
     out->current_scope = out->all_scopes;
     return out;
 }

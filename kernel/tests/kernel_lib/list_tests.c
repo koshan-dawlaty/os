@@ -23,9 +23,9 @@ struct list2c_tester *alloc_tester(int num)
 TEST(list2c_test_push_pop, {
     LIST2C_INIT_HEAD(head);
 
-    list2c_push(&alloc_tester(1)->list, &head);
-    list2c_push(&alloc_tester(2)->list, &head);
-    list2c_push(&alloc_tester(3)->list, &head);
+    list_push(&alloc_tester(1)->list, &head);
+    list_push(&alloc_tester(2)->list, &head);
+    list_push(&alloc_tester(3)->list, &head);
 
     int i = 3;
     struct list *pos;
@@ -37,9 +37,9 @@ TEST(list2c_test_push_pop, {
         i--;
     }
 
-    struct list2c_tester *three = LIST2C_TESTER_GET(list2c_pop(&head));
-    struct list2c_tester *two = LIST2C_TESTER_GET(list2c_pop(&head));
-    struct list2c_tester *one = LIST2C_TESTER_GET(list2c_pop(&head));
+    struct list2c_tester *three = LIST2C_TESTER_GET(list_pop(&head));
+    struct list2c_tester *two = LIST2C_TESTER_GET(list_pop(&head));
+    struct list2c_tester *one = LIST2C_TESTER_GET(list_pop(&head));
 
     LIST2C_TESTER_CHECK(three, 3)
     LIST2C_TESTER_CHECK(two, 2)
@@ -48,14 +48,14 @@ TEST(list2c_test_push_pop, {
 
 TEST(list2c_pop_empty, {
     LIST2C_INIT_HEAD(head);
-    struct list *should_be_null = list2c_pop(&head);
+    struct list *should_be_null = list_pop(&head);
     ASSERT_EQ(should_be_null, NULL, "pop on empty list is not null");
 
-    list2c_push(&alloc_tester(1)->list, &head);
-    struct list2c_tester *one = LIST2C_TESTER_GET(list2c_pop(&head));
+    list_push(&alloc_tester(1)->list, &head);
+    struct list2c_tester *one = LIST2C_TESTER_GET(list_pop(&head));
     LIST2C_TESTER_CHECK(one, 1)
 
-    should_be_null = list2c_pop(&head);
+    should_be_null = list_pop(&head);
     ASSERT_EQ(should_be_null, NULL,
               "pop on empty list after operation is not null");
 })

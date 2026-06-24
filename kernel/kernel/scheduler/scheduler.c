@@ -512,7 +512,7 @@ void add_task(struct task *task)
         {
             struct task_queue_entry *ent = task_queue_entry_alloc(task);
 
-            list2c_push(&ent->list, &scheduler_queue.queue.head);
+            list_push(&ent->list, &scheduler_queue.queue.head);
 
             scheduler_queue.current_task = ent;
         }

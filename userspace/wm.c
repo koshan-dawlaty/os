@@ -389,8 +389,8 @@ void change_focus(struct window_queue_entry *new_focus)
     }
 
     user_mutex_lock(window_queue_mutex);
-    list2c_remove(&new_focus->list);
-    list2c_add_before(&new_focus->list, window_queue.prev);
+    list_remove(&new_focus->list);
+    list_add_before(&new_focus->list, window_queue.prev);
     focused = new_focus;
     user_mutex_unlock(window_queue_mutex);
     draw_window(buffer, new_focus->win);
@@ -545,7 +545,7 @@ void process_connection()
     ent->nonblock_info.current_key = 0;
 
     user_mutex_lock(window_queue_mutex);
-    list2c_add_after(&ent->list, window_queue.next);
+    list_add_after(&ent->list, window_queue.next);
     user_mutex_unlock(window_queue_mutex);
     if (win_info.auto_foucs)
     {
@@ -668,7 +668,7 @@ disconnect:;
     /* } */
 
     user_mutex_lock(window_queue_mutex);
-    list2c_remove(&ent->list);
+    list_remove(&ent->list);
     user_mutex_unlock(window_queue_mutex);
 
     struct rect old_area = WIN_RECT(ent->win);
@@ -1062,8 +1062,8 @@ int main()
     background_queue_ent->nonblock_info.is_nonblock = false;
     background_queue_ent->nonblock_info.current_key = 0;
 
-    list2c_push(&mouse_queue_ent->list, &window_queue);
-    list2c_push(&background_queue_ent->list, &window_queue);
+    list_push(&mouse_queue_ent->list, &window_queue);
+    list_push(&background_queue_ent->list, &window_queue);
 
     draw_window(buffer, mouse);
     draw_window(buffer, background);

@@ -24,7 +24,7 @@ void task_queue_push(struct task_queue *queue, struct task *t)
     /* logd("%p", t->start_addr); */
     /* printf("start:%p\n", t->start_addr); */
 
-    list2c_push(&ent->list, &queue->head);
+    list_push(&ent->list, &queue->head);
 }
 
 struct task *task_queue_pop(struct task_queue *queue)
@@ -35,7 +35,7 @@ struct task *task_queue_pop(struct task_queue *queue)
         return NULL;
     }
 
-    struct list *list = list2c_pop(&queue->head);
+    struct list *list = list_pop(&queue->head);
 
     if (list == NULL)
     {
@@ -75,5 +75,5 @@ void task_queue_remove(struct task_queue *queue, struct task *t)
 
 found:
 
-    list2c_remove(pos);
+    list_remove(pos);
 }

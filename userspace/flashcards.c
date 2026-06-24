@@ -45,7 +45,7 @@ void parse_flashcards(char *buf, struct list *head)
         {
             struct set_entry *new_entry = malloc(sizeof(struct set_entry));
             new_entry->list = LIST2C_INIT();
-            list2c_add_after(&new_entry->list, current_list);
+            list_add_after(&new_entry->list, current_list);
             current_entry = new_entry;
             current_list = &new_entry->list;
 

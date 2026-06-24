@@ -252,7 +252,7 @@ void tokenizer_parse_tokens(const char *program, struct list *token_list)
     while (t->type != TOKEN_UNKNOWN)
     {
 
-        list2c_push_end(&t->list, token_list);
+        list_push_end(&t->list, token_list);
         if (t->type == TOKEN_EOF)
         {
             return; /* done */
@@ -315,7 +315,7 @@ struct ast_expr *ast_expr_alloc_call(const char *function_name)
     expr->type = AST_EXPRESSION_CALL;
     expr->call =
         (struct ast_function_call){.function_name = strdup(function_name)};
-    list2c_init_head(&expr->call.arguments_head);
+    list_init_head(&expr->call.arguments_head);
 
     return expr;
 }
@@ -381,7 +381,7 @@ struct ast_statement *ast_statement_alloc_block(enum ast_statement_type type,
                                                 struct ast_expr *block_expr)
 {
     struct ast_statement *out = malloc(sizeof(struct ast_statement));
-    list2c_init_head(&out->block);
+    list_init_head(&out->block);
     out->type = type;
     out->block_expr = block_expr;
     out->list = LIST2C_INIT();
@@ -480,7 +480,7 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
             {
                 struct ast_expr *expr = ast_parse_expression(parser, err);
                 struct ast_function_arg *arg = ast_function_arg_alloc(expr);
-                list2c_push_end(&arg->list, &call->arguments_head);
+                list_push_end(&arg->list, &call->arguments_head);
 
                 struct token *tok = parser_advance(parser);
                 /* logd(", or ) %s", tok->token); */
@@ -683,7 +683,7 @@ int ast_parse_statements(struct ast_parser *parser,
         {
             return -1;
         }
-        list2c_push_end(&statement->list, statements_head);
+        list_push_end(&statement->list, statements_head);
     }
     parser_advance(parser);
 
@@ -709,8 +709,8 @@ ast_function_declare_alloc(struct ast_type *return_type, const char *name)
     struct ast_function_declare *out =
         malloc(sizeof(struct ast_function_declare));
     out->name = strdup(name);
-    list2c_init_head(&out->args_head);
-    list2c_init_head(&out->block);
+    list_init_head(&out->args_head);
+    list_init_head(&out->block);
     out->return_type = return_type;
 
     return out;
@@ -770,7 +770,7 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser,
 
             struct ast_function_arg_def *arg =
                 ast_function_arg_def_alloc(type, name->token);
-            list2c_push_end(&arg->list, &func->args_head);
+            list_push_end(&arg->list, &func->args_head);
             struct token *current = parser_get_current(parser);
             if (current->type == TOKEN_C_PAREN)
             {
@@ -833,7 +833,7 @@ struct ast_error *ast_parse(struct list *tokens,
         {
             return error;
         }
-        list2c_push(&statement->list, top_statements_head);
+        list_push(&statement->list, top_statements_head);
     }
     return NULL;
 }

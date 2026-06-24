@@ -239,8 +239,8 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                 struct list *prev_scope = interp->all_scopes;
 
                 interp->all_scopes = malloc(sizeof(struct list));
-                list2c_init_head(interp->all_scopes); /* clear scope */
-                list2c_push(&new_scope->list, interp->all_scopes);
+                list_init_head(interp->all_scopes); /* clear scope */
+                list_push(&new_scope->list, interp->all_scopes);
                 interp->current_scope = &new_scope->list;
 
                 if (passed_pos != &expr->call.arguments_head)
@@ -266,7 +266,7 @@ struct interp_value *statements_eval(struct list *statements_head,
                                      struct interpreter *interp)
 {
     struct scope *new_scope = scope_alloc();
-    list2c_add_after(&new_scope->list, interp->current_scope);
+    list_add_after(&new_scope->list, interp->current_scope);
     interp->current_scope = &new_scope->list;
 
     struct interp_value *retval = NULL;
@@ -356,7 +356,7 @@ struct interp_value *statements_eval(struct list *statements_head,
 end:
 
     interp->current_scope = new_scope->list.prev;
-    list2c_remove(&new_scope->list);
+    list_remove(&new_scope->list);
 
     return retval;
 }

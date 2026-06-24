@@ -265,7 +265,7 @@ void move_player(int x, int y)
         draw_tile(old_x, old_y);
         draw_player(player_x, player_y);
         struct undo_entry *ent = undo_entry_alloc(old_x, old_y);
-        list2c_push_end(&ent->list, &undo_queue);
+        list_push_end(&ent->list, &undo_queue);
     }
 
     if (state == TILE_BOX || state == TILE_BOX_GOAL)
@@ -287,7 +287,7 @@ void move_player(int x, int y)
             ent->box_x = new_x;
             ent->box_y = new_y;
             ent->new_tile = new_box_location;
-            list2c_push_end(&ent->list, &undo_queue);
+            list_push_end(&ent->list, &undo_queue);
 
             if (new_box_location == TILE_EMPTY)
             {
@@ -327,7 +327,7 @@ void move_player(int x, int y)
 
 void undo()
 {
-    struct list *list = list2c_pop_end(&undo_queue);
+    struct list *list = list_pop_end(&undo_queue);
     if (list == NULL)
     {
         return;

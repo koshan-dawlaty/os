@@ -77,7 +77,7 @@ struct element *element_alloc(struct rect_d r, const struct element_type t,
     if (parent != NULL)
     {
 
-        list2c_push(&out->list, &parent->children);
+        list_push(&out->list, &parent->children);
 
         out->abs_x = (r.x * parent->fb.width) + parent->abs_x;
         out->abs_y = (r.y * parent->fb.height) + parent->abs_y;

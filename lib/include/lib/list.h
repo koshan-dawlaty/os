@@ -76,7 +76,7 @@ struct list
     struct list name;                                                          \
     name = LIST2C_HEAD_INIT(&name);
 
-static inline void list2c_init_head(struct list *head)
+static inline void list_init_head(struct list *head)
 {
     *head = LIST2C_HEAD_INIT(head);
 }
@@ -84,15 +84,15 @@ static inline void list2c_init_head(struct list *head)
 #define LIST2C_DEFINE_HEAD(name) struct list name = LIST2C_HEAD_INIT(&name);
 #define LIST2C_INIT() ((struct list){.prev = NULL, .next = NULL})
 
-void list2c_push(struct list *new, struct list *head);
-void list2c_push_end(struct list *new, struct list *head);
-struct list *list2c_pop(struct list *head);
-struct list *list2c_pop_end(struct list *head);
+void list_push(struct list *new, struct list *head);
+void list_push_end(struct list *new, struct list *head);
+struct list *list_pop(struct list *head);
+struct list *list_pop_end(struct list *head);
 // bool list2c_remove(struct list2c *value, struct list2c *head);
-void list2c_remove(struct list *value);
+void list_remove(struct list *value);
 
-void list2c_add_after(struct list *new, struct list *other);
-void list2c_add_before(struct list *new, struct list *other);
+void list_add_after(struct list *new, struct list *other);
+void list_add_before(struct list *new, struct list *other);
 
 #define list2c_for_each(pos, head)                                             \
     for (pos = (head)->next; pos != (head); pos = pos->next)
