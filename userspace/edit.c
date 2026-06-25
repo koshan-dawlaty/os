@@ -11,6 +11,7 @@
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/term.h>
+#include <math.h>
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,8 +72,32 @@ void editor_buffer_redraw(struct editor_buffer *buffer, struct framebuffer *fb,
 
 void editor_buffer_delete_cursor(struct editor_buffer *buffer)
 {
-    array_pop_middle(&buffer->current_row->characters, buffer->cursor_x);
-    buffer->cursor_x--;
+    if (buffer->cursor_x > 0)
+    {
+        array_pop_middle(&buffer->current_row->characters, buffer->cursor_x);
+        buffer->cursor_x--;
+    }
+    else if (buffer->cursor_y != 0)
+    {
+        if (buffer->current_row->characters.len != 0)
+        {
+            struct editor_row *prev_row = containerof(
+                buffer->current_row->list.prev, struct editor_row, list);
+
+            /* place cursor so that if more characters are deleted, they will be
+             * from the correct location */
+            buffer->cursor_x = prev_row->characters.len;
+
+            array_add(&prev_row->characters,
+                      buffer->current_row->characters.data,
+                      buffer->current_row->characters.len);
+        }
+
+        struct list *temp = buffer->current_row->list.prev;
+        list_remove(&buffer->current_row->list);
+        buffer->current_row = containerof(temp, struct editor_row, list);
+        buffer->cursor_y--;
+    }
 }
 
 void editor_buffer_insert_newline_cursor(struct editor_buffer *buffer)

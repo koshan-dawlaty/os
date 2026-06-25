@@ -88,7 +88,6 @@ void list_push(struct list *new, struct list *head);
 void list_push_end(struct list *new, struct list *head);
 struct list *list_pop(struct list *head);
 struct list *list_pop_end(struct list *head);
-// bool list2c_remove(struct list2c *value, struct list2c *head);
 void list_remove(struct list *value);
 
 void list_add_after(struct list *new, struct list *other);
