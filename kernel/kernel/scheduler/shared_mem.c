@@ -12,7 +12,7 @@
 struct shared_memory_entry
 {
     void *mem;
-    /* the virtal address of the entry in the caller's address space */
+    /* the virtal address of the entry in the creator's address space */
     void *creator_addr;
     size_t len;
 };
@@ -105,10 +105,10 @@ int shared_mem_resize(int id, size_t new_size, void **new_addr)
 
         size_t num_old_pages = (old_size / PAGE_SIZE) + 3;
 
-        free_phys_pages(ent->mem, num_old_pages);
         memcpy(memory, ent->creator_addr, old_size);
-        ent->creator_addr = memory;
+        free_phys_pages(ent->mem, num_old_pages);
 
+        ent->creator_addr = memory;
         ent->mem = physical;
 
         *new_addr = memory;

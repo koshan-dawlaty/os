@@ -103,8 +103,10 @@ void framebuffer_resize(struct framebuffer *fb, size_t new_width,
     size_t copy_size = MIN(new_width, fb->width) * 4;
     size_t min_height = MIN(new_height, fb->height);
 
+    logd("resizing to h:%d w:%d", new_height, new_width);
+
     logd("new_buffer:%p, old:%p", new_buffer, fb->buffer);
-    logd("height:%p", min_height);
+    logd("height:%d", min_height);
 
     for (size_t y = 0; y < min_height; y++)
     {
@@ -116,6 +118,14 @@ void framebuffer_resize(struct framebuffer *fb, size_t new_width,
         u8 *src = fb->buffer + old_offset;
 
         /* memset(new_buffer + new_offset, 0xFF, copy_size); */
+
+        /* logd("new offset:%d old_offset:%d, copy_size:%d", new_offset,
+     old_offset, copy_size); */
+
+        /* for (size_t i = copy_size; i > 0; i--) */
+        /* { */
+        /*     dest[i] = src[i]; */
+        /* } */
         memcpy(new_buffer + new_offset, fb->buffer + old_offset, copy_size);
     }
 }

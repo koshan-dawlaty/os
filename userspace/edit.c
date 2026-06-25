@@ -256,6 +256,13 @@ int main()
     list_push(&row->list, &buffer.rows_head);
     buffer.current_row = row;
 
+    array_push(&row->characters, "abc", 3);
+
+    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
+                          0);
+    editor_buffer_redraw(&buffer, &client.fb, 0, 0);
+    wm_render(client);
+
     bool insert_mode = true;
     while (1)
     {
