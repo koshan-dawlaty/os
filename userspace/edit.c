@@ -103,24 +103,24 @@ void editor_buffer_delete_cursor(struct editor_buffer *buffer)
     }
     else if (buffer->cursor_y != 0)
     {
+        struct editor_row *prev_row = containerof(
+            buffer->current_row->list.prev, struct editor_row, list);
         if (buffer->current_row->characters.len != 0)
         {
-            struct editor_row *prev_row = containerof(
-                buffer->current_row->list.prev, struct editor_row, list);
-
-            /* place cursor so that if more characters are deleted, they will be
-             * from the correct location */
-            buffer->cursor_x = prev_row->characters.len;
 
             array_add(&prev_row->characters,
                       buffer->current_row->characters.data,
                       buffer->current_row->characters.len);
         }
 
-        struct list *temp = buffer->current_row->list.prev;
         list_remove(&buffer->current_row->list);
-        buffer->current_row = containerof(temp, struct editor_row, list);
-        buffer->cursor_y--;
+        buffer->current_row = prev_row;
+
+        /* place the cursor at the start of the old line, so that if more
+         * characters are deleted, it won't start deleting the part of the line
+         * after the cursor */
+        editor_buffer_set_cursor(buffer, prev_row->characters.len,
+                                 buffer->cursor_y - 1);
     }
 }
 
@@ -246,7 +246,11 @@ int main()
 
     wm_render(client);
 
-    struct editor_buffer buffer = {0, 0, .top_line = 0, .num_lines = 3};
+    /* struct editor_buffer buffer = {0, 0, .top_line = 0, */
+    /*                                .num_lines = */
+    /*                                    client.fb.height /
+     * font->header.height}; */
+    struct editor_buffer buffer = {0, 0, .top_line = 0, .num_lines = 4};
     list_init_head(&buffer.rows_head);
     struct editor_row *row = editor_row_alloc();
     list_push(&row->list, &buffer.rows_head);
