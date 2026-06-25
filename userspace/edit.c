@@ -31,6 +31,11 @@ struct editor_row
 struct editor_buffer
 {
     size_t cursor_x, cursor_y;
+    /* the topmost line that is visible */
+    size_t top_line;
+    /* the number of lines that can be viewed, the height the buffer on the
+     * screen */
+    size_t num_lines;
 
     struct list rows_head;
     struct editor_row *current_row;
@@ -45,28 +50,47 @@ struct editor_row *editor_row_alloc()
     return out;
 }
 
+void editor_buffer_scroll_up(struct editor_buffer *buffer)
+{
+    if (buffer->top_line > 0)
+    {
+        buffer->top_line--;
+    }
+}
+
+void editor_buffer_set_cursor(struct editor_buffer *buffer, int cursor_x,
+                              int cursor_y);
+
 void editor_buffer_redraw(struct editor_buffer *buffer, struct framebuffer *fb,
                           size_t x_pos, size_t y_pos)
 {
 
     framebuffer_draw_rect(fb, buffer->cursor_x * font->header.width,
-                          font->header.height * buffer->cursor_y,
+                          font->header.height *
+                              (buffer->cursor_y - buffer->top_line),
                           font->header.width, font->header.height, 0x00FF00);
+
     struct list *pos;
     size_t y = 0;
+    size_t i = 0;
     list_for_each(pos, &buffer->rows_head)
     {
-        struct editor_row *row = containerof(pos, struct editor_row, list);
-
-        for (size_t x = 0; x < row->characters.len; x++)
+        if (i >= buffer->top_line && i <= buffer->num_lines + buffer->top_line)
         {
-            char c = ((char *)row->characters.data)[x];
+            struct editor_row *row = containerof(pos, struct editor_row, list);
 
-            size_t real_x = x_pos + (x * font->header.width);
-            size_t real_y = y_pos + (y * font->header.height);
-            framebuffer_draw_char(fb, font, c, real_x, real_y);
+            for (size_t x = 0; x < row->characters.len; x++)
+            {
+                char c = ((char *)row->characters.data)[x];
+
+                size_t real_x = x_pos + (x * font->header.width);
+                size_t real_y = y_pos + (y * font->header.height);
+                framebuffer_draw_char(fb, font, c, real_x, real_y);
+            }
+            y++;
         }
-        y++;
+
+        i++;
     }
 }
 
@@ -117,8 +141,7 @@ void editor_buffer_insert_newline_cursor(struct editor_buffer *buffer)
     }
 
     buffer->current_row = new_row;
-    buffer->cursor_y++;
-    buffer->cursor_x = 0;
+    editor_buffer_set_cursor(buffer, 0, buffer->cursor_y + 1);
 }
 
 void editor_buffer_insert_cursor(struct editor_buffer *buffer, char c)
@@ -130,6 +153,7 @@ void editor_buffer_insert_cursor(struct editor_buffer *buffer, char c)
 void editor_buffer_set_cursor(struct editor_buffer *buffer, int cursor_x,
                               int cursor_y)
 {
+
     if (cursor_x < 0)
     {
         cursor_x = 0;
@@ -152,14 +176,19 @@ void editor_buffer_set_cursor(struct editor_buffer *buffer, int cursor_x,
 
         y++;
     }
-    /* FIXME: will break if it is empty */
-    if (pos == &buffer->rows_head)
-    {
-        cursor_y = y - 1;
-        pos = pos->prev;
-    }
+    cursor_y = y - 1;
+    pos = pos->prev;
 
 found:;
+
+    if (cursor_y == buffer->top_line)
+    {
+        editor_buffer_scroll_up(buffer);
+    }
+    else if (cursor_y == buffer->num_lines + buffer->top_line)
+    {
+        buffer->top_line++;
+    }
 
     struct editor_row *row = containerof(pos, struct editor_row, list);
     buffer->current_row = row;
@@ -217,7 +246,7 @@ int main()
 
     wm_render(client);
 
-    struct editor_buffer buffer = {0, 0};
+    struct editor_buffer buffer = {0, 0, .top_line = 0, .num_lines = 3};
     list_init_head(&buffer.rows_head);
     struct editor_row *row = editor_row_alloc();
     list_push(&row->list, &buffer.rows_head);
@@ -273,6 +302,12 @@ int main()
                 {
                 case 'i':
                     insert_mode = true;
+                    break;
+                case 'f':
+                    buffer.top_line++;
+                    break;
+                case 'd':
+                    buffer.top_line--;
                     break;
                 case 'k':
                     editor_buffer_move_cursor(&buffer, 0, -1);
