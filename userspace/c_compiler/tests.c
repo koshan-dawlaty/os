@@ -141,7 +141,7 @@ struct test_result *test_ast_expressions(char *expr_str, int expected)
     }
     struct interpreter *interpreter = interpreter_init();
     struct interp_value *interp_val = expr_eval(expr, interpreter);
-    int val = interp_val->value.literal.integer;
+    int val = interp_val->value;
     ASSERT_EQ(val, expected, "%d != %d for expr %s", val, expected, expr_str);
 
     TEST_OK();
@@ -306,6 +306,31 @@ int main() {
 	return *str;
 }
 , 97);
+
+TEST_INTERPRETER(interpreter_test_strlen,
+
+int strlen(char * str) {
+	int i = 0;
+	while (*(str + i)) {
+		i = i + 1;
+	}
+	return i;
+}
+	
+int main() {
+	char * s = "abc 123";
+	return strlen(s);
+}
+, 7);
+
+TEST_INTERPRETER(interpreter_test_derefrence_offset_str,
+int main() {
+	char * str = "abc";
+	
+
+	return *(str + 1);
+}
+, 98);
 
 TEST_INTERPRETER(interpreter_test_derefrence_no_assign,
 int main() {

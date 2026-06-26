@@ -12,4 +12,4 @@ SECTIONS
 	}
 }
 
-INSERT AFTER .text
+/* INSERT AFTER .text */

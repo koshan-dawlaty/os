@@ -287,6 +287,9 @@ struct interpreter
     struct list *current_scope;
     struct array funcs; /* this should probably used a linked list, as it is
                            currently storing pointers */
+    u8 *memory;
+    size_t string_offset; /* TODO: string literals should probably be stored in
+                             their own area */
 };
 
 static inline struct interpreter *interpreter_init()
@@ -296,13 +299,15 @@ static inline struct interpreter *interpreter_init()
     out->all_scopes = malloc(sizeof(struct list));
     list_init_head(out->all_scopes);
     out->current_scope = out->all_scopes;
+    out->memory = malloc(100);
+    out->string_offset = 0;
     return out;
 }
 
 struct interp_value
 {
     struct ast_type *type;
-    struct ast_value value;
+    u64 value;
 };
 struct interp_value *statements_eval(struct list *statements_head,
                                      struct interpreter *);

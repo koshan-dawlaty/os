@@ -22,8 +22,7 @@ struct scope *scope_alloc()
     return out;
 }
 
-struct interp_value *interp_value_alloc(struct ast_type *type,
-                                        struct ast_value value)
+struct interp_value *interp_value_alloc(struct ast_type *type, u64 value)
 {
     struct interp_value *out = malloc(sizeof(struct interp_value));
 
@@ -101,14 +100,10 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
         /* for now, just assume that if there is an operator, both sides are
          * ints */
+        /* TODO: maybe add asserts to ensure that they are ints */
 
-        ASSERT(lhs_val->value.literal.type == AST_LITERAL_TYPE_INT,
-               "operator %s needs to be an int", expr->operator);
-        ASSERT(rhs_val->value.literal.type == AST_LITERAL_TYPE_INT,
-               "operator %s needs to be an int", expr->operator);
-
-        int lhs = lhs_val->value.literal.integer;
-        int rhs = rhs_val->value.literal.integer;
+        int lhs = lhs_val->value;
+        int rhs = rhs_val->value;
 
         int result;
 
@@ -135,10 +130,10 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         }
 
         struct ast_type *type = ast_type_alloc(
-            "int", 0); /* TODO: this should work for pointer math, and should
-                          use the largest size of the operands */
-        return interp_value_alloc(type,
-                                  AST_VALUE_LITERAL(AST_LITERAL_INT(result)));
+            "int", MAX(lhs_val->type->num_pointers,
+                       rhs_val->type->num_pointers)); /* TODO: this should work
+for pointer math, and should use the largest size of the operands */
+        return interp_value_alloc(type, result);
     }
     else if (expr->type == AST_EXPRESSION_UNARY_OPERATOR)
     {
@@ -152,11 +147,8 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                 PANIC("attempt to dereference not a pointer");
             }
 
-            /* TODO: the interpreter should have memory that this would be
-             * indexing into */
-            return interp_value_alloc(
-                ast_type_alloc("int", 0),
-                AST_VALUE_LITERAL(AST_LITERAL_INT(*value->value.literal.str)));
+            u8 *ptr = interp->memory + value->value;
+            return interp_value_alloc(ast_type_alloc("int", 0), *ptr);
         }
         else
         {
@@ -172,13 +164,19 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
             switch (expr->value.literal.type)
             {
-                /* TODO: bad */
-            case AST_LITERAL_TYPE_STRING:
-                return interp_value_alloc(ast_type_alloc("char", 1),
-                                          expr->value);
+            case AST_LITERAL_TYPE_STRING:;
+                size_t len = strlen(expr->value.literal.str);
+
+                memcpy(interp->memory + interp->string_offset,
+                       expr->value.literal.str, len + 1);
+                struct interp_value *out = interp_value_alloc(
+                    ast_type_alloc("char", 1), interp->string_offset);
+                interp->string_offset += len + 1;
+
+                return out;
             case AST_LITERAL_TYPE_INT:
                 return interp_value_alloc(ast_type_alloc("int", 0),
-                                          expr->value);
+                                          expr->value.literal.integer);
                 break;
             }
         }
@@ -207,14 +205,15 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                 if (!strcmp(val->type->name, "char") &&
                     val->type->num_pointers == 1)
                 {
-                    logi("print:%s", val->value.literal.str);
-                    printf("%s\n", val->value.literal.str);
+                    u8 *str = interp->memory + val->value;
+                    logi("print:%s", str);
+                    printf("%d\n", str);
                 }
                 else if (!strcmp(val->type->name, "int") &&
                          val->type->num_pointers == 0)
                 {
-                    logi("print:%d", val->value.literal.integer);
-                    printf("%d\n", val->value.literal.integer);
+                    logi("print:%d", val->value);
+                    printf("%d\n", val->value);
                 }
                 else
                 {
@@ -312,8 +311,7 @@ struct interp_value *statements_eval(struct list *statements_head,
             }
             else
             {
-                init_val = interp_value_alloc(statement->declared_type,
-                                              AST_VALUE_LITERAL(0));
+                init_val = interp_value_alloc(statement->declared_type, 0);
             }
             struct variable var = {statement->varname, init_val};
             NOT_NULL(interp->current_scope, "current scope was null");
@@ -328,11 +326,8 @@ struct interp_value *statements_eval(struct list *statements_head,
             break;
         case AST_STATEMENT_IF:;
             value = expr_eval(statement->block_expr, interp);
-            if (value->value.literal.type != AST_LITERAL_TYPE_INT)
-            {
-                PANIC("expected int for if condition");
-            }
-            if (value->value.literal.integer != 0)
+            /* TODO: add error if it is not an int maybe */
+            if (value->value != 0)
             {
                 struct interp_value *output =
                     statements_eval(&statement->block, interp);
@@ -345,11 +340,8 @@ struct interp_value *statements_eval(struct list *statements_head,
             break;
         case AST_STATEMENT_WHILE:;
             value = expr_eval(statement->block_expr, interp);
-            if (value->value.literal.type != AST_LITERAL_TYPE_INT)
-            {
-                PANIC("expected int for while loop condition");
-            }
-            while (value->value.literal.integer != 0)
+            /* TODO: add error if it is not an int maybe */
+            while (value->value != 0)
             {
                 struct interp_value *output =
                     statements_eval(&statement->block, interp);
@@ -359,10 +351,6 @@ struct interp_value *statements_eval(struct list *statements_head,
                     goto end;
                 }
                 value = expr_eval(statement->block_expr, interp);
-                if (value->value.literal.type != AST_LITERAL_TYPE_INT)
-                {
-                    PANIC("expected int for while loop condition");
-                }
             }
             break;
         case AST_STATEMENT_RETURN:
@@ -416,7 +404,7 @@ int eval_program(struct list *top_statements_head)
     {
         return 0;
     }
-    return val->value.literal.integer;
+    return val->value;
 }
 
 /* TODO: put in lib/ or make gcc do it in _start */
@@ -456,10 +444,20 @@ int main(int argc, char **argv)
 /* } */
 
 
+int strlen(char * str) {
+	int i = 0;
+	while (*(str + i)) {
+		i = i + 1;
+	}
+	return i;
+}
 	
 int main() {
-	char * s = "abc";
+	char * s = "abc 123";
 	print(*s);
+	print(*(s + 1));
+	print(strlen(s));
+
 	/* print("test"); */
 
 }
