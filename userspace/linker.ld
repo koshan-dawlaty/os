@@ -11,3 +11,5 @@ SECTIONS
 		PROVIDE(__ctors_end = .);
 	}
 }
+
+INSERT AFTER .text

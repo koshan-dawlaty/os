@@ -122,6 +122,7 @@ clean:
 		$(MAKE) -C $$dir clean; \
 	done
 
+# debug : QEMU_FLAGS += -display none
 debug : $(ISO)
 	rm -f build/qemu.img
 	./build/get-ext2-image.sh "build/qemu.img" build/fs-root

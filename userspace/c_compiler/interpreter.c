@@ -1,17 +1,16 @@
 #include "c_compiler.h"
-#include "fcntl.h"
-#include "unistd.h"
 #include <container_of.h>
+#include <fcntl.h>
 #include <init.h>
 #include <lib/array.h>
 #include <lib/assert.h>
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/utils.h>
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <tests/tests.h>
+#include <unistd.h>
 
 struct scope *scope_alloc()
 {
@@ -140,6 +139,30 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                           use the largest size of the operands */
         return interp_value_alloc(type,
                                   AST_VALUE_LITERAL(AST_LITERAL_INT(result)));
+    }
+    else if (expr->type == AST_EXPRESSION_UNARY_OPERATOR)
+    {
+        if (!strcmp(expr->unary_operator.operator, "*"))
+        {
+            struct interp_value *value =
+                expr_eval(expr->unary_operator.expr, interp);
+
+            if (value->type->num_pointers <= 0)
+            {
+                PANIC("attempt to dereference not a pointer");
+            }
+
+            /* TODO: the interpreter should have memory that this would be
+             * indexing into */
+            return interp_value_alloc(
+                ast_type_alloc("int", 0),
+                AST_VALUE_LITERAL(AST_LITERAL_INT(*value->value.literal.str)));
+        }
+        else
+        {
+            PANIC("unknown unary operator type for expr_eval() %s",
+                  expr->operator);
+        }
     }
     else if (expr->type == AST_EXPRESSION_VALUE)
     {
@@ -389,6 +412,10 @@ int eval_program(struct list *top_statements_head)
     NOT_NULL(main_body, "main() not found!");
 
     struct interp_value *val = statements_eval(main_body, i);
+    if (val == NULL)
+    {
+        return 0;
+    }
     return val->value.literal.integer;
 }
 
@@ -430,11 +457,11 @@ int main(int argc, char **argv)
 
 
 	
-int main( int x  ) {
-
+int main() {
+	char * s = "abc";
+	print(*s);
 	/* print("test"); */
 
-	int x = 1 ;
 }
 
 		);
@@ -481,7 +508,10 @@ int main( int x  ) {
         ast_error_to_string(err, buf, 100);
         PANIC("ast error:%s", buf);
     }
-    eval_program(&top_statements_head);
+    else
+    {
+        eval_program(&top_statements_head);
+    }
     /* statements_eval_simple(&statements_head); */
 
     exit(0);

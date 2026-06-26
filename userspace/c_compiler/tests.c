@@ -299,6 +299,23 @@ int main() {
 }
 , 10);
 
+TEST_INTERPRETER(interpreter_test_derefrence_literal_string,
+int main() {
+	char * str = "abc";
+
+	return *str;
+}
+, 97);
+
+TEST_INTERPRETER(interpreter_test_derefrence_no_assign,
+int main() {
+	char * str = "abc";
+	*str;
+
+	return 123;
+}
+, 123);
+
 TEST_INTERPRETER(interpreter_test_loop_while_early_return,
 int main() {
 	int i = 0;

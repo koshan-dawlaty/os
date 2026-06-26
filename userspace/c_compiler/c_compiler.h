@@ -173,6 +173,11 @@ struct ast_expr
             struct ast_expr *rhs;
             char *operator;
         };
+        struct
+        {
+            struct ast_expr *expr;
+            char *operator;
+        } unary_operator;
     };
 
     enum ast_expr_type
@@ -180,6 +185,7 @@ struct ast_expr
         AST_EXPRESSION_VALUE,
         AST_EXPRESSION_CALL,
         AST_EXPRESSION_OPERATOR,
+        AST_EXPRESSION_UNARY_OPERATOR,
     } type;
 };
 struct ast_expr *ast_parse_expression(struct ast_parser *parser,

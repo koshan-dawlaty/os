@@ -150,6 +150,11 @@ struct token_simple_map_entry token_simple_map[] = {
 
 };
 
+bool token_is_unary_operator(enum token_type type)
+{
+    return type == TOKEN_STAR;
+}
+
 /*
  * gets a one character token
  */
@@ -179,7 +184,6 @@ struct token *get_token(const char *input, size_t *len)
     }
 
     const char *s = input + *len;
-    /* logd("|%s|", s); */
 
     if (*s == 0)
     {
@@ -316,6 +320,18 @@ struct ast_expr *ast_expr_alloc_call(const char *function_name)
     expr->call =
         (struct ast_function_call){.function_name = strdup(function_name)};
     list_init_head(&expr->call.arguments_head);
+
+    return expr;
+}
+
+struct ast_expr *ast_expr_alloc_unary_operator(struct ast_expr *e,
+                                               const char *operator)
+{
+    struct ast_expr *expr = malloc(sizeof(struct ast_expr));
+
+    expr->type = AST_EXPRESSION_UNARY_OPERATOR;
+    expr->unary_operator.operator = strdup(operator);
+    expr->unary_operator.expr = e;
 
     return expr;
 }
@@ -459,8 +475,22 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
 
     struct token *tok = parser_advance(parser);
 
+    if (token_is_unary_operator(tok->type))
+    {
+        /* TODO: also have postfix operators */
+
+        struct ast_expr *expr = ast_parse_expression(parser, err);
+        if (expr == NULL)
+        {
+            return NULL;
+        }
+
+        return ast_expr_alloc_unary_operator(expr, tok->token);
+    }
+
     switch (tok->type)
     {
+
     case TOKEN_IDENTIFIER:
         if (parser_get_current(parser)->type ==
             TOKEN_O_PAREN) /* function call */
@@ -483,7 +513,6 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
                 list_push_end(&arg->list, &call->arguments_head);
 
                 struct token *tok = parser_advance(parser);
-                /* logd(", or ) %s", tok->token); */
 
                 if (tok->type == TOKEN_C_PAREN)
                 {
@@ -528,8 +557,8 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
     /* TODO:!!! order of operations */
 
     struct ast_expr *lhs = ast_parse_expression_simple(
-        parser, err); /* the left hand side should always be an expression that
-                    does not require recursion */
+        parser, err); /* the left hand side should always be an
+                    expression that does not require recursion */
 
     if (lhs == NULL)
     {
@@ -552,8 +581,8 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
     }
     else
     {
-        return lhs; /* there was no right hand side, so we need to return this
-                       to the caller */
+        return lhs; /* there was no right hand side, so we need to
+                       return this to the caller */
     }
 }
 
@@ -566,19 +595,18 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser,
     struct token *tok = parser_get_current(parser);
 
     struct ast_statement *out = NULL;
-    /* logd("%s, %s", tok->token, token_type_str(tok->type)); */
 
-    if (tok->type == TOKEN_IDENTIFIER ||
-        tok->type == TOKEN_INT) /* TODO: this might not work with
-         other kinds of statements */
+    if (tok->type == TOKEN_IDENTIFIER || tok->type == TOKEN_INT ||
+        token_is_unary_operator(tok->type)) /* TODO: this might not work
+with other kinds of statements */
     {
         struct token *type_end = NULL;
         struct token *next = parser_get_next(parser);
         bool next_is_type = parser_next_is_type(parser, &type_end);
-        /* TODO: wont work with unsigned types, as it checks that next->type
-         * is a variable */
-        if (next_is_type && type_end->type == TOKEN_IDENTIFIER) /* 2 identifiers
-            in a row means it must be a declaration */
+        /* TODO: wont work with unsigned types, as it checks that
+         * next->type is a variable */
+        if (next_is_type && type_end->type == TOKEN_IDENTIFIER) /* 2
+            identifiers in a row means it must be a declaration */
         {
             struct ast_type *type =
                 parser_parse_type(parser, NULL); /* TODO: dont pass null */
@@ -590,10 +618,10 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser,
                 parser_advance(parser);
                 init_val = ast_parse_expression(parser, err);
             }
-            logd("allocating declaration");
             out = ast_statement_alloc_declaration(type, name, init_val);
         }
-        else if (next->type != TOKEN_IDENTIFIER)
+        else if (next->type != TOKEN_IDENTIFIER ||
+                 token_is_unary_operator(tok->type))
         {
             out = ast_statement_alloc_expr(ast_parse_expression(parser, err));
         }
@@ -662,6 +690,11 @@ struct ast_statement *ast_parse_statement(struct ast_parser *parser,
             }
         }
     }
+    else
+    {
+        PANIC("unknown statement type for token %s (%s)", tok->token,
+              token_type_str(tok->type));
+    }
 
     return out;
 }
@@ -674,6 +707,7 @@ int ast_parse_statements(struct ast_parser *parser,
     if (open_brace->type != TOKEN_O_BRACE)
     {
         *err = ast_error_alloc(AST_ERROR_OPEN_BRACE_EXPECTED);
+        return -1;
     }
 
     while (parser_get_current(parser)->type != TOKEN_C_BRACE)
