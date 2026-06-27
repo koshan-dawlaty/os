@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <types.h>
 #include <unistd.h>
+#include <vfs.h>
 
 struct wm_client client;
 struct PSF_font *font;
@@ -39,6 +40,8 @@ struct editor_buffer
 
     struct list rows_head;
     struct editor_row *current_row;
+
+    FILE *file;
 };
 
 struct editor_row *editor_row_alloc()
@@ -208,9 +211,50 @@ void editor_buffer_move_cursor(struct editor_buffer *buffer, int x_diff,
                              buffer->cursor_y + y_diff);
 }
 
+void set_filename(struct editor_buffer *buffer)
+{
+    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                          font->header.height * 2, 0);
+    framebuffer_draw_string(&client.fb, font, "filename:", 0, 0);
+    wm_render(client);
+
+    struct array filename = ARRAY_INIT();
+    struct wm_message message;
+    size_t x = 0;
+    while (true)
+    {
+
+        wm_get_message(&client, &message);
+        if (message.header.type == WM_MESSAGE_KEY)
+        {
+            char c = *(char *)message.message_data;
+            if (c == '\n')
+            {
+                break;
+            }
+
+            array_add(&filename, &c, 1);
+            framebuffer_draw_char(&client.fb, font, c, x * font->header.width,
+                                  font->header.height);
+            wm_render(client);
+            x++;
+        }
+    }
+    char zero = 0;
+    array_add(&filename, &zero, 1);
+    char *name = array_free_ptr(filename);
+    logd("got filename:%s", name);
+    buffer->file = fopen(name, "c");
+}
+
 void write_to_file(struct editor_buffer *buffer)
 {
-    int fd = open("/one", O_WRONLY);
+
+    while (buffer->file == NULL)
+    {
+        set_filename(buffer);
+    }
+
     struct list *pos;
     list_for_each(pos, &buffer->rows_head)
     {
@@ -218,10 +262,10 @@ void write_to_file(struct editor_buffer *buffer)
         if (row->characters.data != NULL)
         {
             logd("writing:%s", row->characters.data);
-            write(fd, row->characters.data, row->characters.len);
+            fwrite(row->characters.data, row->characters.len, 1, buffer->file);
         }
         char newline = '\n';
-        write(fd, &newline, 1);
+        fwrite(&newline, 1, 1, buffer->file);
     }
 }
 
@@ -334,6 +378,9 @@ int main()
                     break;
                 case 'w':
                     write_to_file(&buffer);
+                    break;
+                case 'W':
+                    set_filename(&buffer);
                     break;
                 }
 

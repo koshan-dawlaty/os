@@ -143,11 +143,9 @@ void term_scroll_down(struct terminal *term)
     size_t min_height = MIN(term->operations.get_height(),
                             ARRAY_LEN(term->characters, sizeof(struct array)));
 
-    logd("loop %d:%d", term->top_line - 1, min_height + term->top_line);
     for (size_t i = term->top_line - 1; i < min_height + term->top_line; i++)
     {
         /* terminal_draw_line(term, i, i + 1); */
-        logd("drawing line at %d", i);
         terminal_update_line(term, i);
     }
     terminal_redraw_char(term, term->x, term->y);

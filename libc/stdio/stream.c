@@ -22,8 +22,11 @@ static int string_flags_to_oflags(const char *flags)
     }
     else if (!strcmp(flags, "r+"))
     {
-
         return O_RDWR;
+    }
+    else if (!strcmp(flags, "c"))
+    {
+        return O_RDWR | O_CREAT;
     }
     else if (!strcmp(flags, ""))
     {
@@ -39,6 +42,10 @@ static int string_flags_to_oflags(const char *flags)
 
 static FILE *new_stream(int fd, const char *flags, size_t buffer_max)
 {
+    if (fd < 0)
+    {
+        return NULL;
+    }
     FILE *out = malloc(sizeof(FILE));
 
     out->fd = fd;

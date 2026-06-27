@@ -1,3 +1,4 @@
+#include "fcntl.h"
 #include "lib/log.h"
 #include <err_ptr.h>
 #include <errno.h>
@@ -21,8 +22,23 @@ int open(const char *path, int flags)
     struct file *f = open_file(path, flags, &fd);
     if (IS_ERR(f))
     {
-        /* TODO: we might want to set errno here */
-        return -GET_ERR(f);
+        int err = GET_ERR(f);
+        if (err == ENOENT && (flags & O_CREAT))
+        {
+            struct file *f = create_file((char *)path);
+            if (IS_ERR(f))
+            {
+                return -1;
+            }
+            int retval = fdlist_add(get_current_fdlist(), f);
+
+            return retval;
+        }
+        else
+        {
+            /* TODO: we might want to set errno here */
+            return -GET_ERR(f);
+        }
     }
 
     return fd;
