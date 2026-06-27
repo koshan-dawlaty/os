@@ -332,7 +332,25 @@ int main() {
 }
 , 98);
 
-TEST_INTERPRETER(interpreter_test_derefrence_no_assign,
+TEST_INTERPRETER(interpreter_test_derefrence_as_lvalue,
+int main() {
+	char * str = "abc";
+	*str = 123;
+
+	return *str;
+}
+, 123);
+
+TEST_INTERPRETER(interpreter_test_derefrence_as_lvalue_offset,
+int main() {
+	char * str = "abc";
+	*(str + 3) = 123;
+
+	return *(str + 3);
+}
+, 123);
+
+TEST_INTERPRETER(interpreter_test_derefrence_no_use,
 int main() {
 	char * str = "abc";
 	*str;

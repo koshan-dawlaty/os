@@ -474,12 +474,22 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
 {
 
     struct token *tok = parser_advance(parser);
+    logd("first token in expr:%s", tok->token);
 
     if (token_is_unary_operator(tok->type))
     {
         /* TODO: also have postfix operators */
 
-        struct ast_expr *expr = ast_parse_expression(parser, err);
+        logd("parsing expression because there was a unary operator");
+        /*
+         * this uses the simple version of this function because, in some cases,
+         * there can be operators after the unary operator application that
+         * should be excluded from the unary operator node in the ast.
+         * calling ast_parse_expression_simple() here instead will not parse the
+         * binary operators after the left hand side of the expression  that
+         * ast_parse_expression() does
+         */
+        struct ast_expr *expr = ast_parse_expression_simple(parser, err);
         if (expr == NULL)
         {
             return NULL;
@@ -530,6 +540,7 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
         }
     case TOKEN_INT:
     case TOKEN_STRING:
+        logd("value:%s", tok->token);
         return ast_expr_alloc_value(ast_token_to_value(tok));
 
     case TOKEN_O_PAREN:;
@@ -554,6 +565,7 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
 struct ast_expr *ast_parse_expression(struct ast_parser *parser,
                                       struct ast_error **err)
 {
+    logd("ast_parse_expression");
     /* TODO:!!! order of operations */
 
     struct ast_expr *lhs = ast_parse_expression_simple(
@@ -565,9 +577,15 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
         return NULL;
     }
 
+    logd("lhs type when parsing %d", lhs->type);
+    if (lhs->type == 3)
+    {
+        logd("lhs is unary");
+    }
     struct token *operator_token = parser_get_current(parser);
     if (token_is_operator(operator_token->type))
     {
+        logd("binary operator:%s", operator_token->token);
         parser_advance(parser);
         struct ast_expr *rhs = ast_parse_expression(parser, err);
         if (rhs == NULL)

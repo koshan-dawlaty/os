@@ -7,6 +7,7 @@
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/utils.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <tests/tests.h>
@@ -83,17 +84,42 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
         if (!strcmp(expr->operator, "="))
         {
-            if (!expr->lhs->value.is_var)
+
+            logd("lhs type:%d", expr->lhs->type);
+            logd("%d", expr->lhs->value.is_var);
+            if (!(expr->lhs->type == AST_EXPRESSION_VALUE &&
+                  expr->lhs->value.is_var) &&
+                !(expr->lhs->type == AST_EXPRESSION_UNARY_OPERATOR &&
+                  !strcmp(expr->lhs->unary_operator.operator, "*")))
             {
                 PANIC("attempt to assign to not variable");
             }
 
-            struct variable *var =
-                variable_lookup(interp->all_scopes, expr->lhs->value.varname);
-            NOT_NULL(var, "variable not found:%s", expr->lhs->value.varname);
-            var->value = expr_eval(expr->rhs, interp);
+            if (expr->lhs->type == AST_EXPRESSION_UNARY_OPERATOR &&
+                !strcmp(expr->lhs->unary_operator.operator, "*"))
+            {
+                logd("dereference");
+                struct interp_value *value =
+                    expr_eval(expr->lhs->unary_operator.expr, interp);
+                logd("ptr value:%d", value->value);
+                *((u8 *)interp->memory + value->value) =
+                    expr_eval(expr->rhs, interp)->value;
 
-            return var->value;
+                return value;
+            }
+            else if (expr->lhs->type == AST_EXPRESSION_VALUE)
+            {
+                struct variable *var = variable_lookup(
+                    interp->all_scopes, expr->lhs->value.varname);
+                NOT_NULL(var, "variable not found:%s",
+                         expr->lhs->value.varname);
+                var->value = expr_eval(expr->rhs, interp);
+                return var->value;
+            }
+            else
+            {
+                PANIC("TODO: error");
+            }
         }
         struct interp_value *lhs_val = expr_eval(expr->lhs, interp);
         struct interp_value *rhs_val = expr_eval(expr->rhs, interp);
@@ -131,8 +157,8 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
         struct ast_type *type = ast_type_alloc(
             "int", MAX(lhs_val->type->num_pointers,
-                       rhs_val->type->num_pointers)); /* TODO: this should work
-for pointer math, and should use the largest size of the operands */
+                       rhs_val->type->num_pointers)); /* TODO: this should
+work for pointer math, and should use the largest size of the operands */
         return interp_value_alloc(type, result);
     }
     else if (expr->type == AST_EXPRESSION_UNARY_OPERATOR)
@@ -142,6 +168,8 @@ for pointer math, and should use the largest size of the operands */
             struct interp_value *value =
                 expr_eval(expr->unary_operator.expr, interp);
 
+            logd("type:%d", expr->unary_operator.expr->type);
+            logd("name:%s", value->type->name);
             if (value->type->num_pointers <= 0)
             {
                 PANIC("attempt to dereference not a pointer");
@@ -207,7 +235,7 @@ for pointer math, and should use the largest size of the operands */
                 {
                     u8 *str = interp->memory + val->value;
                     logi("print:%s", str);
-                    printf("%d\n", str);
+                    printf("%s\n", str);
                 }
                 else if (!strcmp(val->type->name, "int") &&
                          val->type->num_pointers == 0)
@@ -444,22 +472,15 @@ int main(int argc, char **argv)
 /* } */
 
 
-int strlen(char * str) {
-	int i = 0;
-	while (*(str + i)) {
-		i = i + 1;
-	}
-	return i;
-}
 	
 int main() {
+/* int x ; */
+/* x = 100; */
 	char * s = "abc 123";
-	print(*s);
-	print(*(s + 1));
-	print(strlen(s));
-
+	*(s + 3) = 100;
+	print(s);
 	/* print("test"); */
-
+	return 0;
 }
 
 		);
