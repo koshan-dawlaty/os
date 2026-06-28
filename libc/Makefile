@@ -88,7 +88,11 @@ LIBK_OBJS_BIN_NO_SUFFIX = $(foreach obj,$(LIBK_OBJS),bin/$(obj))
 LIBK_OBJS_BIN= $(addsuffix $(TEST_SUFFIX), $(LIBK_OBJS_BIN_NO_SUFFIX))
 
 
+ifndef CONFIG_HOST_SDL
 BINARIES=libc$(TEST_SUFFIX).a libk$(TEST_SUFFIX).a 
+else 
+BINARIES=libc$(TEST_SUFFIX).a 
+endif
 # BINARIES=libk.a
 
 .PHONY: all clean install install-headers install-libs

@@ -4,7 +4,6 @@
 #include <extension.h>
 #include <fcntl.h>
 #include <init.h>
-#include <kernel/paging.h>
 #include <lib/array.h>
 #include <lib/assert.h>
 #include <lib/font.h>
@@ -16,7 +15,6 @@
 #include <lib/utils.h>
 #include <poll.h>
 #include <sched.h>
-#include <scheduler.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

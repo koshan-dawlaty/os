@@ -1,8 +1,14 @@
+#include <compiler.h>
+#include <lib/assert.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 
 #include <stdlib.h>
+
+__noreturn void __stack_chk_fail(void)
+{
+    PANIC("stack smashing detected");
+}
 
 void init_libc()
 {

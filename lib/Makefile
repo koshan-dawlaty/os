@@ -27,6 +27,9 @@ TEST_SUFFIX?=
 
 
 CFLAGS:=$(CFLAGS) -Iinclude $(KERNEL_ARCH_CFLAGS) 
+ifdef CONFIG_HOST_SDL
+CFLAGS:=$(CFLAGS) -I../libc/include
+endif
 CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
@@ -60,9 +63,17 @@ $(info $(LIBK_OBJS_BIN))
 
 LIB_BINARY=$(BIN)/libutil$(TEST_SUFFIX).a
 KERNEL_LIB_BINARY=$(BIN)/libutilkernel$(TEST_SUFFIX).a
+ifndef CONFIG_HOST_SDL
+BINARIES=$(LIB_BINARY) $(KERNEL_LIB_BINARY)	
+else
+BINARIES=$(LIB_BINARY)
+endif
+
 .PHONY : all install install-headers install-lib clean
 
-all : $(LIB_BINARY) $(KERNEL_LIB_BINARY)
+all : # $(LIB_BINARY) $(KERNEL_LIB_BINARY)
+	exit 1
+	echo | gcc -E -Wp,-v -
 
 $(LIB_BINARY) : $(OBJS_BIN)
 	@mkdir -p $(BIN)
@@ -84,10 +95,12 @@ $(BIN)/%.o$(TEST_SUFFIX): %.c
 
 install: install-lib
 
-install-lib: $(LIB_BINARY) $(KERNEL_LIB_BINARY)
+install-lib: $(BINARIES)
 	mkdir -p $(DESTDIR)$(LIBDIR)
 	cp $(LIB_BINARY) $(DESTDIR)$(LIBDIR)
+ifndef CONFIG_HOST_SDL
 	cp $(KERNEL_LIB_BINARY) $(DESTDIR)$(LIBDIR)
+endif
 
 install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)

@@ -1,11 +1,11 @@
 #include <kernel_syscall.h>
 #include <lib/log.h>
-#include <sched.h>
 #include <stdlib.h>
 #include <sys/syscall.h>
 #include <utils.h>
 
 #ifdef __is_libk
+#include <sched.h>
 #include <scheduler.h>
 #include <vfs.h>
 #endif

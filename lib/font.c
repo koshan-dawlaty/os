@@ -1,8 +1,8 @@
-#include "lib/log.h"
 #include <err_ptr.h>
 #include <errno.h>
 #include <lib/font.h>
 #include <lib/framebuffer.h>
+#include <lib/log.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>

@@ -1,11 +1,10 @@
 #ifndef WM_LIB_H
 #define WM_LIB_H
 
-#include "lib/log.h"
-#include "userspace/mouse.h"
 #include <fcntl.h>
 #include <lib/font.h>
 #include <lib/framebuffer.h>
+#include <lib/log.h>
 #include <lib/rect.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -14,6 +13,7 @@
 #include <stdlib.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <userspace/mouse.h>
 
 #define __packed __attribute__((packed))
 
@@ -40,12 +40,28 @@ struct client_window
     void *buffer;
 };
 
+#ifdef HOST_SDL
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_main.h>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL_surface.h>
+#include <SDL3/SDL_video.h>
+#endif
+
 struct wm_client
 {
+#ifndef HOST_SDL
     int socket;
     int key_socket;
     int mem_id;
     struct framebuffer fb;
+#else
+    SDL_Surface *surface;
+    SDL_Renderer *renderer;
+    SDL_Texture *texture;
+    SDL_Window *win;
+#endif
 };
 
 #define WM_MESSAGE_INVALID -1

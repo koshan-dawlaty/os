@@ -1,13 +1,14 @@
 #include <fcntl.h>
 #include <kernel_syscall.h>
-#include <scheduler.h>
 #include <stdbool.h>
 #include <sys/syscall.h>
 #include <utils.h>
 
 #include <err_ptr.h>
+
 #ifdef __is_libk
 #include <errno.h>
+#include <scheduler.h>
 #include <vfs.h>
 #endif
 

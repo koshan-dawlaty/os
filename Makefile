@@ -14,6 +14,7 @@ export FS_ROOT := fs-root
 
 export DESTDIR := $(SYSROOT)
 export ARCH := $(shell ./build/default-host.sh)
+
 export CC := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
 
 # once printf supports the actual standard format specifiers, -Wno-format can be removed
@@ -70,6 +71,12 @@ libc: headers
 kernel: headers lib libc
 	mkdir -p "$(SYSROOT)"
 	$(MAKE) -C kernel install
+
+sdl-host: export CONFIG_HOST_SDL=1 
+sdl-host: CC=gcc
+sdl-host: CFLAGS=-isystem=/usr/include -DCONFIG_HOST_SDL
+sdl-host: lib libc userspace
+
 
 userspace: headers lib libc
 	mkdir -p "$(SYSROOT)"

@@ -22,7 +22,10 @@ CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
 
+
 CFLAGS:=$(CFLAGS) -ffreestanding -Wno-unknown-pragmas  
+
+
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
@@ -87,7 +90,12 @@ BINARIES=\
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
+ifndef CONFIG_HOST_SDL
 DEPENDENCIES=../libc/libc$(TEST_SUFFIX).a ../lib/bin/libutil$(TEST_SUFFIX).a
+else
+DEPENDENCIES=../lib/bin/libutil$(TEST_SUFFIX).a
+CFLAGS:=$(CFLAGS) -lc -lutil -I../lib/include/ -I../libc/include/
+endif
 
 # UTIL_FLAG=-lutil$(TEST_SUFFIX)
 

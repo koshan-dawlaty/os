@@ -1,16 +1,17 @@
-#include "kernel/tty.h"
-#include "lib/assert.h"
-#include "lib/log.h"
+#ifdef __is_libk
 #include "serial.h"
+#endif
 #include "tap.h"
-#include "tests/tests.h"
 #include <extension.h>
 #include <fcntl.h>
+#include <lib/assert.h>
+#include <lib/log.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tests/tests.h>
 #include <unistd.h>
 
 #define TEST_OUTPUT_SERIAL_PORT 0x3F8

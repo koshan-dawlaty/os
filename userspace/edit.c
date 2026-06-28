@@ -1,12 +1,11 @@
-#include "container_of.h"
-#include "lib/array.h"
-#include "lib/font.h"
-#include "lib/list.h"
 #include "wm_lib.h"
+#include <container_of.h>
 #include <err_ptr.h>
 #include <fcntl.h>
 #include <init.h>
+#include <lib/array.h>
 #include <lib/assert.h>
+#include <lib/font.h>
 #include <lib/framebuffer.h>
 #include <lib/list.h>
 #include <lib/log.h>
@@ -18,7 +17,6 @@
 #include <sys/types.h>
 #include <types.h>
 #include <unistd.h>
-#include <vfs.h>
 
 struct wm_client client;
 struct PSF_font *font;
