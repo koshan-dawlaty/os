@@ -150,6 +150,10 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         {
             result = lhs > rhs;
         }
+        else if (!strcmp(expr->operator, "=="))
+        {
+            result = lhs == rhs;
+        }
         else
         {
             PANIC("unknown operator type for expr_eval() %s", expr->operator);
@@ -168,7 +172,6 @@ work for pointer math, and should use the largest size of the operands */
             struct interp_value *value =
                 expr_eval(expr->unary_operator.expr, interp);
 
-            logd("type:%d", expr->unary_operator.expr->type);
             logd("name:%s", value->type->name);
             if (value->type->num_pointers <= 0)
             {
@@ -474,12 +477,10 @@ int main(int argc, char **argv)
 
 	
 int main() {
-/* int x ; */
-/* x = 100; */
-	char * s = "abc 123";
-	*(s + 3) = 100;
-	print(s);
-	/* print("test"); */
+int x = 100 ;
+	if (x == 100) {
+		print("test");
+	}
 	return 0;
 }
 

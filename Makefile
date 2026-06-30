@@ -15,6 +15,7 @@ export FS_ROOT := fs-root
 export DESTDIR := $(SYSROOT)
 export ARCH := $(shell ./build/default-host.sh)
 export CC := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
+export AS := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
 
 # once printf supports the actual standard format specifiers, -Wno-format can be removed
 export CFLAGS :=  -DMYOS1234 -Werror \

@@ -185,7 +185,7 @@ $(BIN)/kernel_symbols$(TEST_SUFFIX) : $(BIN)/os.kernel$(TEST_SUFFIX)
 
 $(BIN)/%.o$(TEST_SUFFIX): %.S
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+	$(AS) -MD -MF$(BIN)/$*.d -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
 $(BIN)/%.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)

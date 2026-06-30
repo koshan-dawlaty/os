@@ -213,6 +213,21 @@ int main() {
 }
 , 15);
 
+TEST_INTERPRETER(interpreter_test_if_equals,
+int main() {
+	int x = 10;
+	int y = 10;
+	y= y + 5;
+	y = y - 5;
+	if (x == y) {
+	return 123;
+	}
+
+	return 1;
+}
+, 123);
+
+
 TEST_INTERPRETER(interpreter_test_basic_return,
 int main() {
 	return  123;
@@ -331,6 +346,7 @@ int main() {
 	return *(str + 1);
 }
 , 98);
+
 
 TEST_INTERPRETER(interpreter_test_derefrence_as_lvalue,
 int main() {

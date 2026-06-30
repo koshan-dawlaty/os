@@ -29,4 +29,8 @@ static inline void user_mutex_unlock(int mutex)
     syscall_wrapper_asm(SYS_mutex_unlock, mutex, 0, 0, 0, 0);
 }
 
+#ifndef EWRONGSIZE /* TODO: remove this, it is also in errno.h */
+#define EWRONGSIZE 300
+#endif
+
 #endif

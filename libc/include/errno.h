@@ -84,8 +84,10 @@ extern int errno;
 #define EXDEV 18           /* Invalid cross-device link */
 
 /* these are not part of the standard */
+#ifndef EWRONGSIZE /* TODO: remove this, it is also in extension.h */
 #define EWRONGSIZE                                                             \
     300 /* invalid size, used for reads that need to read a certain amount of  \
            data */
+#endif
 
 #endif

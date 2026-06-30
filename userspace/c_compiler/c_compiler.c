@@ -16,7 +16,7 @@
 bool token_is_operator(enum token_type type)
 {
     return type == TOKEN_ASSIGN || type == TOKEN_PLUS || type == TOKEN_MINUS ||
-           type == TOKEN_GREATER || type == TOKEN_LESS;
+           type == TOKEN_GREATER || type == TOKEN_LESS || type == TOKEN_EQUALS;
 }
 
 const char *token_type_str(enum token_type type)
@@ -232,7 +232,7 @@ struct token *get_token(const char *input, size_t *len)
     /* stupid */
     if (s[0] == '=')
     {
-        if (s[1] == '=' && s[2] == 0)
+        if (s[1] == '=')
         {
             return token_alloc_literal(TOKEN_EQUALS, "==", len);
         }
@@ -565,7 +565,6 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
 struct ast_expr *ast_parse_expression(struct ast_parser *parser,
                                       struct ast_error **err)
 {
-    logd("ast_parse_expression");
     /* TODO:!!! order of operations */
 
     struct ast_expr *lhs = ast_parse_expression_simple(
