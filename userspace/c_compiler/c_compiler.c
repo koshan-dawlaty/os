@@ -13,6 +13,11 @@
 #include <string.h>
 #include <tests/tests.h>
 
+bool token_is_branch_statement(enum token_type type)
+{
+    return type == TOKEN_IF || type == TOKEN_WHILE || type == TOKEN_FOR;
+}
+
 bool token_is_operator(enum token_type type)
 {
     return type == TOKEN_ASSIGN || type == TOKEN_PLUS || type == TOKEN_MINUS ||
@@ -617,6 +622,84 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
 
 int ast_parse_statements(struct ast_parser *parser,
                          struct list *statements_head, struct ast_error **err);
+struct ast_statement *ast_parse_statement_branch(struct ast_parser *parser,
+                                                 struct ast_error **err)
+{
+    struct ast_statement *out = NULL;
+    struct token *tok = parser_advance(parser);
+
+    struct token *open_paren = parser_advance(parser);
+    if (open_paren->type != TOKEN_O_PAREN)
+    {
+        *err = ast_error_alloc(AST_ERROR_OPEN_PAREN_EXPECTED);
+        (*err)->open_paren_expected.token = open_paren;
+        return NULL;
+    }
+
+    if (tok->type == TOKEN_IF)
+    {
+
+        out = ast_statement_alloc_block(AST_STATEMENT_IF,
+                                        ast_parse_expression(parser, err));
+    }
+    else if (tok->type == TOKEN_WHILE)
+    {
+
+        out = ast_statement_alloc_block(AST_STATEMENT_WHILE,
+                                        ast_parse_expression(parser, err));
+    }
+    else if (tok->type == TOKEN_FOR)
+    {
+
+        /* TODO: this does not allow delcarations as the first expression in a
+         * for loop, maybe check if it is a type then parse accordingly? */
+        struct ast_expr *expr1 = ast_parse_expression(parser, err);
+        if (expr1 == NULL)
+        {
+            return NULL;
+        }
+        struct token *semicolon = parser_advance(parser);
+
+        if (semicolon->type != TOKEN_SEMICOLON)
+        {
+            *err = ast_error_alloc(AST_ERROR_SEMICOLON_EXPECTED);
+            (*err)->semicolon_expected.token = semicolon;
+            return NULL;
+        }
+        struct ast_expr *expr2 = ast_parse_expression(parser, err);
+        if (expr2 == NULL)
+        {
+            return NULL;
+        }
+        semicolon = parser_advance(parser);
+        if (semicolon->type != TOKEN_SEMICOLON)
+        {
+            *err = ast_error_alloc(AST_ERROR_SEMICOLON_EXPECTED);
+            (*err)->semicolon_expected.token = semicolon;
+            return NULL;
+        }
+        struct ast_expr *expr3 = ast_parse_expression(parser, err);
+        if (expr3 == NULL)
+        {
+            return NULL;
+        }
+        out = ast_statement_alloc_block_for(expr1, expr2, expr3);
+    }
+
+    struct token *close_paren = parser_advance(parser);
+    if (close_paren->type != TOKEN_C_PAREN)
+    {
+        *err = ast_error_alloc(AST_ERROR_CLOSE_PAREN_EXPECTED);
+        (*err)->open_paren_expected.token = open_paren;
+        return NULL;
+    }
+
+    if (ast_parse_statements(parser, &out->block, err))
+    {
+        return NULL;
+    }
+    return out;
+}
 
 struct ast_statement *ast_parse_statement(struct ast_parser *parser,
                                           struct ast_error **err)
@@ -669,74 +752,9 @@ with other kinds of statements */
             return NULL;
         }
     }
-    else if (tok->type == TOKEN_IF)
+    else if (token_is_branch_statement(tok->type))
     {
-        parser_advance(parser);
-        out = ast_statement_alloc_block(
-            AST_STATEMENT_IF,
-            ast_parse_expression(
-                parser,
-                err) /* TODO: this will allow things like if x == y {} */);
-
-        if (ast_parse_statements(parser, &out->block, err))
-        {
-            return NULL;
-        }
-    }
-    else if (tok->type == TOKEN_WHILE)
-    {
-        parser_advance(parser);
-        /* TODO: this will allow things like if x == y {} */
-        out = ast_statement_alloc_block(AST_STATEMENT_WHILE,
-                                        ast_parse_expression(parser, err));
-
-        if (ast_parse_statements(parser, &out->block, err))
-        {
-            return NULL;
-        }
-    }
-    else if (tok->type == TOKEN_FOR)
-    {
-        parser_advance(parser);
-
-        /* TODO: this does not allow delcarations as the first expression in a
-         * for loop, maybe check if it is a type then parse accordingly? */
-        struct ast_expr *expr1 = ast_parse_expression(parser, err);
-        if (expr1 == NULL)
-        {
-            return NULL;
-        }
-        struct token *semicolon = parser_advance(parser);
-
-        if (semicolon->type != TOKEN_SEMICOLON)
-        {
-            *err = ast_error_alloc(AST_ERROR_SEMICOLON_EXPECTED);
-            (*err)->semicolon_expected.token = semicolon;
-            return NULL;
-        }
-        struct ast_expr *expr2 = ast_parse_expression(parser, err);
-        if (expr2 == NULL)
-        {
-            return NULL;
-        }
-        semicolon = parser_advance(parser);
-        if (semicolon->type != TOKEN_SEMICOLON)
-        {
-            *err = ast_error_alloc(AST_ERROR_SEMICOLON_EXPECTED);
-            (*err)->semicolon_expected.token = semicolon;
-            return NULL;
-        }
-        struct ast_expr *expr3 = ast_parse_expression(parser, err);
-        if (expr3 == NULL)
-        {
-            return NULL;
-        }
-        out = ast_statement_alloc_block_for(expr1, expr2, expr3);
-
-        if (ast_parse_statements(parser, &out->block, err))
-        {
-            return NULL;
-        }
+        return ast_parse_statement_branch(parser, err);
     }
     else if (tok->type == TOKEN_RETURN)
     {
@@ -965,6 +983,10 @@ int ast_error_to_string(struct ast_error *err, char *buf, size_t len)
         return snprintf(buf, len, "expected ';' got %s (%s)",
                         err->semicolon_expected.token->token,
                         token_type_str(err->semicolon_expected.token->type));
+    case AST_ERROR_OPEN_PAREN_EXPECTED:
+        return snprintf(buf, len, "expected '(' got %s (%s)",
+                        err->close_paren_expected.token->token,
+                        token_type_str(err->close_paren_expected.token->type));
     case AST_ERROR_CLOSE_PAREN_EXPECTED:
         return snprintf(buf, len, "expected ')' got %s (%s)",
                         err->close_paren_expected.token->token,

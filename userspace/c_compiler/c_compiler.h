@@ -57,6 +57,7 @@ enum ast_error_type
     AST_ERROR_ARUGMENT_EXPECTED,
     AST_ERROR_INVALID_TYPE,
     AST_ERROR_OPEN_BRACE_EXPECTED,
+    AST_ERROR_OPEN_PAREN_EXPECTED,
     AST_ERROR_CLOSE_PAREN_EXPECTED,
     AST_ERROR_SEMICOLON_EXPECTED,
     AST_ERROR_DECLARATION_OR_EXPRESSION_EXPECTED,
@@ -84,6 +85,10 @@ struct ast_error
         {
             struct token *token;
         } semicolon_expected;
+        struct
+        {
+            struct token *token;
+        } open_paren_expected;
         struct
         {
             struct token *token;
