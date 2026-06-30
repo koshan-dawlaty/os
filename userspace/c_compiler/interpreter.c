@@ -85,8 +85,6 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         if (!strcmp(expr->operator, "="))
         {
 
-            logd("lhs type:%d", expr->lhs->type);
-            logd("%d", expr->lhs->value.is_var);
             if (!(expr->lhs->type == AST_EXPRESSION_VALUE &&
                   expr->lhs->value.is_var) &&
                 !(expr->lhs->type == AST_EXPRESSION_UNARY_OPERATOR &&
@@ -388,6 +386,24 @@ struct interp_value *statements_eval(struct list *statements_head,
                 value = expr_eval(statement->block_expr, interp);
             }
             break;
+        case AST_STATEMENT_FOR:
+            expr_eval(statement->for_expr.expr1, interp);
+            value = expr_eval(statement->for_expr.expr2, interp);
+            /* TODO: add error if it is not an int maybe */
+            while (value->value != 0)
+            {
+                struct interp_value *output =
+                    statements_eval(&statement->block, interp);
+                if (output != NULL)
+                {
+                    retval = output;
+                    goto end;
+                }
+                expr_eval(statement->for_expr.expr3, interp);
+                value = expr_eval(statement->for_expr.expr2, interp);
+            }
+            break;
+
         case AST_STATEMENT_RETURN:
             if (statement->expr != NULL)
             {
@@ -481,9 +497,10 @@ int main(int argc, char **argv)
 
 	
 int main() {
-int x = 100 ;
-x = x * 2;
-	return 0;
+	int i;
+	for i = 0; i < 10; i = i + 1 {
+		print(i);
+	}
 }
 
 		);

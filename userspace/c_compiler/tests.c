@@ -421,6 +421,39 @@ int main() {
 }
 , 123);
 
+TEST_INTERPRETER(interpreter_test_for_return_in_loop,
+	int main() {
+		int i;
+		for i = 0; i < 100; i = i + 1 {
+			if (i == 10) {
+			return 123;
+			}	
+		}
+		return 456;
+	}
+		, 123) 
+
+TEST_INTERPRETER(interpreter_test_for_assign, 
+	int main() {
+		int i = 456;
+		for i = 123; 1 == 0; i = i + 1 {
+			print("execution should not get here");
+		}
+		return i;
+	}
+	,	123);
+
+TEST_INTERPRETER(interpreter_test_for_sum, 
+	int main() {
+		int sum;
+		int i;
+		for i = 1; i < 11 ; i=  i +  1 {
+		sum =sum + i;
+		}
+		return sum;
+	}
+	,	55);
+
 TEST_INTERPRETER(interpreter_test_pow,
 int pow(int num1, int num2) {
 int i = 0;

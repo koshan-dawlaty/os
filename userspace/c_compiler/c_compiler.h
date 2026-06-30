@@ -29,6 +29,7 @@ enum token_type
     TOKEN_EOF,
     TOKEN_IF,
     TOKEN_WHILE,
+    TOKEN_FOR,
     TOKEN_STAR,
 
 };
@@ -198,6 +199,7 @@ struct ast_statement
         AST_STATEMENT_EXPR,
         AST_STATEMENT_IF,
         AST_STATEMENT_WHILE,
+        AST_STATEMENT_FOR,
         AST_STATEMENT_DECLARE,
         AST_STATEMENT_RETURN,
     } type;
@@ -211,15 +213,25 @@ struct ast_statement
          */
         struct ast_expr *expr;
 
+        /* type is if, while, or for */
         struct
         {
-            struct list block; /* type is if, while, or for */
-            struct ast_expr
-                *block_expr; /* used for the expression with the if or while
-                                loop, will need to change for for loop */
+            struct list block;
+            union
+            {
+                /* the expression to evaluate for an if or while statement*/
+                struct ast_expr *block_expr;
+                struct
+                {
+                    struct ast_expr *expr1;
+                    struct ast_expr *expr2;
+                    struct ast_expr *expr3;
+                } for_expr;
+            };
         };
+        /* type is declare */
         struct
-        { /* type is declare */
+        {
 
             struct ast_expr *init_value; /* can be null */
             struct ast_type *declared_type;

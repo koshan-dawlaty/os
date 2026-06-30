@@ -66,6 +66,9 @@ const char *token_type_str(enum token_type type)
         return "GREATER";
     case TOKEN_LESS:
         return "LESS";
+    case TOKEN_FOR:
+        return "FOR";
+        break;
     }
 }
 
@@ -146,6 +149,7 @@ struct token_simple_map_entry token_simple_map[] = {
     {"while", TOKEN_WHILE},
     {",", TOKEN_COMMA},
     {"return", TOKEN_RETURN},
+    {"for", TOKEN_FOR},
 
     // clang-format on
 
@@ -394,6 +398,21 @@ ast_statement_alloc_declaration(struct ast_type *type, const char *varname,
     return out;
 }
 
+struct ast_statement *ast_statement_alloc_block_for(struct ast_expr *expr1,
+                                                    struct ast_expr *expr2,
+                                                    struct ast_expr *expr3)
+{
+    struct ast_statement *out = malloc(sizeof(struct ast_statement));
+    list_init_head(&out->block);
+    out->type = AST_STATEMENT_FOR;
+    out->for_expr.expr1 = expr1;
+    out->for_expr.expr2 = expr2;
+    out->for_expr.expr3 = expr3;
+    out->list = LIST_INIT();
+
+    return out;
+}
+
 struct ast_statement *ast_statement_alloc_block(enum ast_statement_type type,
                                                 struct ast_expr *block_expr)
 {
@@ -475,7 +494,6 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
 {
 
     struct token *tok = parser_advance(parser);
-    logd("first token in expr:%s", tok->token);
 
     if (token_is_unary_operator(tok->type))
     {
@@ -541,7 +559,6 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
         }
     case TOKEN_INT:
     case TOKEN_STRING:
-        logd("value:%s", tok->token);
         return ast_expr_alloc_value(ast_token_to_value(tok));
 
     case TOKEN_O_PAREN:;
@@ -577,15 +594,9 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
         return NULL;
     }
 
-    logd("lhs type when parsing %d", lhs->type);
-    if (lhs->type == 3)
-    {
-        logd("lhs is unary");
-    }
     struct token *operator_token = parser_get_current(parser);
     if (token_is_operator(operator_token->type))
     {
-        logd("binary operator:%s", operator_token->token);
         parser_advance(parser);
         struct ast_expr *rhs = ast_parse_expression(parser, err);
         if (rhs == NULL)
@@ -675,11 +686,52 @@ with other kinds of statements */
     else if (tok->type == TOKEN_WHILE)
     {
         parser_advance(parser);
-        out = ast_statement_alloc_block(
-            AST_STATEMENT_WHILE,
-            ast_parse_expression(
-                parser,
-                err) /* TODO: this will allow things like if x == y {} */);
+        /* TODO: this will allow things like if x == y {} */
+        out = ast_statement_alloc_block(AST_STATEMENT_WHILE,
+                                        ast_parse_expression(parser, err));
+
+        if (ast_parse_statements(parser, &out->block, err))
+        {
+            return NULL;
+        }
+    }
+    else if (tok->type == TOKEN_FOR)
+    {
+        parser_advance(parser);
+
+        /* TODO: this does not allow delcarations as the first expression in a
+         * for loop, maybe check if it is a type then parse accordingly? */
+        struct ast_expr *expr1 = ast_parse_expression(parser, err);
+        if (expr1 == NULL)
+        {
+            return NULL;
+        }
+        struct token *semicolon = parser_advance(parser);
+
+        if (semicolon->type != TOKEN_SEMICOLON)
+        {
+            *err = ast_error_alloc(AST_ERROR_SEMICOLON_EXPECTED);
+            (*err)->semicolon_expected.token = semicolon;
+            return NULL;
+        }
+        struct ast_expr *expr2 = ast_parse_expression(parser, err);
+        if (expr2 == NULL)
+        {
+            return NULL;
+        }
+        semicolon = parser_advance(parser);
+        if (semicolon->type != TOKEN_SEMICOLON)
+        {
+            *err = ast_error_alloc(AST_ERROR_SEMICOLON_EXPECTED);
+            (*err)->semicolon_expected.token = semicolon;
+            return NULL;
+        }
+        struct ast_expr *expr3 = ast_parse_expression(parser, err);
+        if (expr3 == NULL)
+        {
+            return NULL;
+        }
+        out = ast_statement_alloc_block_for(expr1, expr2, expr3);
 
         if (ast_parse_statements(parser, &out->block, err))
         {
