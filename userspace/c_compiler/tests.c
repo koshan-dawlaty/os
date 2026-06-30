@@ -213,6 +213,16 @@ int main() {
 }
 , 15);
 
+TEST_INTERPRETER(interpreter_test_multiply,
+int main() {
+int x = 10;
+int y = 2;
+
+return y * x;
+}
+, 20);
+
+
 TEST_INTERPRETER(interpreter_test_if_equals,
 int main() {
 	int x = 10;
@@ -410,6 +420,23 @@ int main() {
  
 }
 , 123);
+
+TEST_INTERPRETER(interpreter_test_pow,
+int pow(int num1, int num2) {
+int i = 0;
+int sum = 1 ;
+while (i < num2) {
+sum = sum * num1;	
+i = i + 1;
+}
+return sum;
+}
+
+int main() {
+	return pow(2, 5);
+}
+
+, 32);
 
 TEST_INTERPRETER(interpreter_test_fibonacci,
 int fib(int num) {

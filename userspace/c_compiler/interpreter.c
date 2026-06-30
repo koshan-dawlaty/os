@@ -154,6 +154,10 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         {
             result = lhs == rhs;
         }
+        else if (!strcmp(expr->operator, "*"))
+        {
+            result = lhs * rhs;
+        }
         else
         {
             PANIC("unknown operator type for expr_eval() %s", expr->operator);
@@ -478,9 +482,7 @@ int main(int argc, char **argv)
 	
 int main() {
 int x = 100 ;
-	if (x == 100) {
-		print("test");
-	}
+x = x * 2;
 	return 0;
 }
 

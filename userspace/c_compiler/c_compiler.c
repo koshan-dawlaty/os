@@ -16,7 +16,8 @@
 bool token_is_operator(enum token_type type)
 {
     return type == TOKEN_ASSIGN || type == TOKEN_PLUS || type == TOKEN_MINUS ||
-           type == TOKEN_GREATER || type == TOKEN_LESS || type == TOKEN_EQUALS;
+           type == TOKEN_GREATER || type == TOKEN_LESS ||
+           type == TOKEN_EQUALS || type == TOKEN_STAR;
 }
 
 const char *token_type_str(enum token_type type)
