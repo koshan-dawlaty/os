@@ -74,6 +74,9 @@ const char *token_type_str(enum token_type type)
     case TOKEN_FOR:
         return "FOR";
         break;
+    case TOKEN_CHAR:
+        return "CHAR LITERAL";
+        break;
     }
 }
 
@@ -211,6 +214,23 @@ struct token *get_token(const char *input, size_t *len)
         return token_alloc(TOKEN_STRING, s + 1, i - 1);
     }
 
+    if (*s == '\'')
+    {
+        if (s[1] == 0)
+        {
+            *len += 1;
+            return token_alloc(TOKEN_UNKNOWN, "expected character, got EOF", 0);
+        }
+        if (s[2] != '\'')
+        {
+            *len += 2;
+            return token_alloc(TOKEN_UNKNOWN, "expected ' in character literal",
+                               0);
+        }
+        *len += 3;
+        return token_alloc(TOKEN_CHAR, &s[1], 1);
+    }
+
     struct token *simple = get_token_simple(s, len);
     if (simple != NULL)
     {
@@ -299,6 +319,10 @@ static inline struct ast_value ast_token_to_value(struct token *tok)
     {
         int num = atoi(tok->token);
         return AST_VALUE_LITERAL(AST_LITERAL_INT(num));
+    }
+    else if (tok->type == TOKEN_CHAR)
+    {
+        return AST_VALUE_LITERAL(AST_LITERAL_INT(*tok->token));
     }
     else if (tok->type == TOKEN_STRING)
     {
@@ -563,6 +587,7 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
             return out;
         }
     case TOKEN_INT:
+    case TOKEN_CHAR:
     case TOKEN_STRING:
         return ast_expr_alloc_value(ast_token_to_value(tok));
 

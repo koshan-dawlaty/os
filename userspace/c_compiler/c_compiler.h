@@ -9,6 +9,7 @@
 
 enum token_type
 {
+    TOKEN_CHAR,
     TOKEN_IDENTIFIER,
     TOKEN_STRING,
     TOKEN_RETURN,

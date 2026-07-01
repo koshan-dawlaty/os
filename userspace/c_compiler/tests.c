@@ -398,6 +398,13 @@ int main() {
 }
 , 123);
 
+
+TEST_INTERPRETER(interpreter_test_char_literal_basic,
+	int main() {
+	return  'a';
+	}
+		, 97) 
+
 TEST_INTERPRETER(interpreter_test_nested_if,
 int main() {
 	int i = 10;
@@ -484,6 +491,7 @@ int main() {
 }
 
 , 55);
+
 
 TEST_INTERPRETER_ERROR(interpreter_test_semicolon_expected_expression,
 	

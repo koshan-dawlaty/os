@@ -497,9 +497,6 @@ int main(int argc, char **argv)
 
 	
 int main() {
-if (1) {
-print("test");
-}	
 }
 
 
