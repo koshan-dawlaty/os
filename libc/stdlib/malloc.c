@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include <extension.h>
 #include <malloc_internal.h>
 #include <sched.h>

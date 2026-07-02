@@ -283,6 +283,7 @@ struct ast_top_statement
 
     struct list list;
 };
+void ast_top_statements_free(struct list *top_statements_head);
 
 /* returns NULL if there was no error */
 struct ast_error *ast_parse(struct list *tokens,

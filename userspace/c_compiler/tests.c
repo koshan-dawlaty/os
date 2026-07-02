@@ -195,6 +195,7 @@ struct test_result *test_interpreter(const char *program, int expected)
 
     int got = eval_program(&top_statements);
     ASSERT_EQ(got, expected, "%d != %d for program %s", got, expected, program);
+    ast_top_statements_free(&top_statements);
 
     TEST_OK();
 }

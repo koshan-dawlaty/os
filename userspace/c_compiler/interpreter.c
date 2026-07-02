@@ -497,6 +497,7 @@ int main(int argc, char **argv)
 
 	
 int main() {
+print("hello world");
 }
 
 
@@ -548,6 +549,9 @@ int main() {
     {
         eval_program(&top_statements_head);
     }
+    ast_top_statements_free(&top_statements_head);
+    logd("done freeing");
+
     /* statements_eval_simple(&statements_head); */
 
     exit(0);

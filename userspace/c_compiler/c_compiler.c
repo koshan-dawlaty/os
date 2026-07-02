@@ -5,6 +5,7 @@
 #include <lib/assert.h>
 #include <lib/list.h>
 #include <lib/log.h>
+#include <math.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -308,6 +309,12 @@ struct ast_type *ast_type_alloc(const char *name, size_t num_pointers)
     return out;
 }
 
+void ast_type_free(struct ast_type *type)
+{
+    free(type->name);
+    free(type);
+}
+
 #define AST_VALUE_VAR(_var)                                                    \
     ((struct ast_value){.is_var = true, .varname = _var})
 #define AST_VALUE_LITERAL(_literal)                                            \
@@ -411,6 +418,81 @@ struct ast_statement *ast_statement_alloc_return(struct ast_expr *expr)
     out->list = LIST_INIT();
 
     return out;
+}
+
+void ast_expr_free(struct ast_expr *expr)
+{
+    switch (expr->type)
+    {
+    case AST_EXPRESSION_OPERATOR:
+        ast_expr_free(expr->lhs);
+        ast_expr_free(expr->rhs);
+        free(expr->operator);
+        break;
+
+    case AST_EXPRESSION_UNARY_OPERATOR:
+        ast_expr_free(expr->unary_operator.expr);
+        free(expr->unary_operator.operator);
+        break;
+
+    case AST_EXPRESSION_CALL:
+        free(expr->call.function_name);
+        break;
+
+    case AST_EXPRESSION_VALUE:
+        if (!expr->value.is_var &&
+            expr->value.literal.type == AST_LITERAL_TYPE_STRING)
+        {
+            free(expr->value.literal.str);
+        }
+        break;
+    }
+    free(expr);
+}
+
+void ast_statements_free(struct list *statements_head);
+void ast_statement_free(struct ast_statement *statement)
+{
+    switch (statement->type)
+    {
+    case AST_STATEMENT_RETURN:
+    case AST_STATEMENT_EXPR:
+        ast_expr_free(statement->expr);
+        break;
+    case AST_STATEMENT_IF:
+    case AST_STATEMENT_WHILE:
+        ast_expr_free(statement->block_expr);
+        ast_statements_free(&statement->block);
+        break;
+    case AST_STATEMENT_FOR:
+        ast_expr_free(statement->for_expr.expr1);
+        ast_expr_free(statement->for_expr.expr2);
+        ast_expr_free(statement->for_expr.expr3);
+        ast_statements_free(&statement->block);
+        break;
+    case AST_STATEMENT_DECLARE:
+        free(statement->varname);
+        break;
+    }
+    free(statement);
+}
+
+void ast_statements_free(struct list *statements_head)
+{
+    struct list *prev = NULL;
+    struct list *pos;
+    list_for_each(pos, statements_head)
+    {
+        if (prev != NULL)
+        {
+            ast_statement_free(containerof(prev, struct ast_statement, list));
+        }
+        prev = pos;
+    }
+    if (prev != NULL)
+    {
+        ast_statement_free(containerof(prev, struct ast_statement, list));
+    }
 }
 
 struct ast_statement *
@@ -530,12 +612,12 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
 
         logd("parsing expression because there was a unary operator");
         /*
-         * this uses the simple version of this function because, in some cases,
-         * there can be operators after the unary operator application that
-         * should be excluded from the unary operator node in the ast.
-         * calling ast_parse_expression_simple() here instead will not parse the
-         * binary operators after the left hand side of the expression  that
-         * ast_parse_expression() does
+         * this uses the simple version of this function because, in
+         * some cases, there can be operators after the unary operator
+         * application that should be excluded from the unary operator
+         * node in the ast. calling ast_parse_expression_simple() here
+         * instead will not parse the binary operators after the left
+         * hand side of the expression  that ast_parse_expression() does
          */
         struct ast_expr *expr = ast_parse_expression_simple(parser, err);
         if (expr == NULL)
@@ -676,8 +758,9 @@ struct ast_statement *ast_parse_statement_branch(struct ast_parser *parser,
     else if (tok->type == TOKEN_FOR)
     {
 
-        /* TODO: this does not allow delcarations as the first expression in a
-         * for loop, maybe check if it is a type then parse accordingly? */
+        /* TODO: this does not allow delcarations as the first
+         * expression in a for loop, maybe check if it is a type then
+         * parse accordingly? */
         struct ast_expr *expr1 = ast_parse_expression(parser, err);
         if (expr1 == NULL)
         {
@@ -850,6 +933,13 @@ struct ast_function_arg_def *ast_function_arg_def_alloc(struct ast_type *type,
     return out;
 }
 
+void ast_function_arg_def_free(struct ast_function_arg_def *arg)
+{
+    ast_type_free(arg->type);
+    free(arg->name);
+    free(arg);
+}
+
 struct ast_function_declare *
 ast_function_declare_alloc(struct ast_type *return_type, const char *name)
 {
@@ -861,6 +951,31 @@ ast_function_declare_alloc(struct ast_type *return_type, const char *name)
     out->return_type = return_type;
 
     return out;
+}
+
+void ast_function_declare_free(struct ast_function_declare *declare)
+{
+    ast_statements_free(&declare->block);
+    free(declare->name);
+    ast_type_free(declare->return_type);
+    struct list *prev = NULL;
+    struct list *pos;
+    list_for_each(pos, &declare->args_head)
+    {
+        if (prev != NULL)
+        {
+            ast_function_arg_def_free(
+                containerof(prev, struct ast_function_arg_def, list));
+        }
+        prev = pos;
+    }
+    if (prev != NULL)
+    {
+        ast_function_arg_def_free(
+            containerof(prev, struct ast_function_arg_def, list));
+    }
+
+    free(declare);
 }
 
 struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser,
@@ -962,6 +1077,41 @@ struct ast_top_statement *ast_parse_top_statement(struct ast_parser *parser,
     }
 
     return out;
+}
+
+void ast_top_statement_free(struct ast_top_statement *statement)
+{
+    switch (statement->type)
+    {
+    case AST_TOP_STATEMENT_FUNC:
+        ast_function_declare_free(statement->function);
+        break;
+    case AST_TOP_STATEMENT_VAR:
+        PANIC("ast top level variables are not implemented");
+    case AST_TOP_STATEMENT_TYPE:
+        PANIC("ast top level types are not implemented");
+    }
+    free(statement);
+}
+
+void ast_top_statements_free(struct list *top_statements_head)
+{
+    struct list *prev = NULL;
+    struct list *pos;
+    list_for_each(pos, top_statements_head)
+    {
+        if (prev != NULL)
+        {
+            ast_top_statement_free(
+                containerof(prev, struct ast_top_statement, list));
+        }
+        prev = pos;
+    }
+    if (prev != NULL)
+    {
+        ast_top_statement_free(
+            containerof(prev, struct ast_top_statement, list));
+    }
 }
 
 struct ast_error *ast_parse(struct list *tokens,
