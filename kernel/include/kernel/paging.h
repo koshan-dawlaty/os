@@ -57,7 +57,10 @@ static inline void *map_physaddr(void *physaddr, size_t num_pages, uint flags)
 {
     /* FIXME: this should use the binary tree allocation api */
     void *virtual = get_free_pages_unmmaped(num_pages, &gfp_kernel_zone);
-    map_page(physaddr, virtual, flags);
+    for (size_t i = 0; i < num_pages; i++)
+    {
+        map_page(physaddr + i * PAGE_SIZE, virtual + i * PAGE_SIZE, flags);
+    }
 
     return virtual;
 }

@@ -210,7 +210,7 @@ void kernel_init()
     keyboard_init();
 
     init_pit();
-    init_pci();
+
     init_ata();
 
     init_vfs();
@@ -232,6 +232,7 @@ void kernel_init()
 #else
     symbol_table_parse(); /* seems to break with tests */
 #endif
+    init_pci();
 }
 
 WAIT_QUEUE_DEFINE(poll_wait_queue);

@@ -116,6 +116,7 @@ drivers/character/cdev.o \
 drivers/character/mouse.o \
 drivers/character/serial.o \
 drivers/character/terminal/device.o \
+drivers/character/network/e1000.o \
 drivers/character/keyboard/device.o \
 drivers/device.o \
 \
