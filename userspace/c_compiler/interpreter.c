@@ -8,6 +8,7 @@
 #include <lib/log.h>
 #include <lib/utils.h>
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <tests/tests.h>
@@ -81,6 +82,7 @@ struct interp_value *expr_eval(struct ast_expr *expr,
     NOT_NULL(expr, "expression was null");
     if (expr->type == AST_EXPRESSION_OPERATOR)
     {
+        logd("operator:%s", expr->operator);
 
         if (!strcmp(expr->operator, "="))
         {
@@ -160,6 +162,8 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         {
             PANIC("unknown operator type for expr_eval() %s", expr->operator);
         }
+        logd("lhs %d, operator:%s rhs:%d, result:%d", lhs, expr->operator, rhs,
+             result);
 
         struct ast_type *type = ast_type_alloc(
             "int", MAX(lhs_val->type->num_pointers,
@@ -208,6 +212,7 @@ work for pointer math, and should use the largest size of the operands */
 
                 return out;
             case AST_LITERAL_TYPE_INT:
+                logd("int:%d", expr->value.literal.integer);
                 return interp_value_alloc(ast_type_alloc("int", 0),
                                           expr->value.literal.integer);
                 break;
@@ -474,6 +479,25 @@ int main(int argc, char **argv)
     init_libc();
     call_constructors();
 
+    LIST_DEFINE_HEAD(expr_tokens);
+    tokenizer_parse_tokens("1 + 2 * 3 * 4", &expr_tokens);
+    struct ast_parser parser = {
+        .tokens = &expr_tokens,
+        .current = containerof(expr_tokens.next, struct token, list)};
+    struct ast_error *error = NULL;
+    struct ast_expr *expr = ast_parse_expression(&parser, &error);
+    if (error != NULL)
+    {
+        static char buf[100];
+        ast_error_to_string(error, buf, 100);
+        PANIC("ast error:%s", buf);
+    }
+
+    struct interpreter *interp = interpreter_init();
+    logd("evaluated:%d", expr_eval(expr, interp)->value);
+
+    exit(0);
+
 #ifdef TESTS
     run_tests();
 #endif
@@ -497,7 +521,9 @@ int main(int argc, char **argv)
 
 	
 int main() {
-print("hello world");
+print(4 + 2 * 3);
+print("");
+print(2 * 3 + 4);
 }
 
 
