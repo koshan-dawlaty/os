@@ -700,6 +700,17 @@ struct ast_operator
     struct list list;
 };
 
+static const char *operator_table[][10] = {
+    // clang-format off
+    {"*", NULL},
+	{"+", "-", NULL},
+	/* {"==", "!=", NULL}, */
+    /* {"&&", NULL}, */
+	/* {"||", NULL}, */
+	/* {"=", NULL}, */
+    // clang-format on
+};
+
 static void print_op(struct ast_operator *operator)
 {
     logd("lhs:%d, operator:%s rhs:%d",
@@ -718,6 +729,7 @@ struct ast_operator *ast_operator_alloc(struct ast_expr *expr)
 struct ast_expr *ast_parse_expression(struct ast_parser *parser,
                                       struct ast_error **err)
 {
+    bool first_operator = true;
     LIST_DEFINE_HEAD(operators);
     struct ast_expr *lhs = ast_parse_expression_simple(parser, err);
     while (true)
@@ -725,7 +737,14 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
         struct token *operator_token = parser_get_current(parser);
         if (!token_is_operator(operator_token->type))
         {
-            break;
+            if (first_operator)
+            {
+                return lhs;
+            }
+            else
+            {
+                break;
+            }
         }
         parser_advance(parser);
         struct ast_expr *rhs = ast_parse_expression_simple(parser, err);
@@ -733,186 +752,97 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
             ast_expr_alloc_operator(lhs, rhs, operator_token->token));
         list_push_end(&operator->list, &operators);
         lhs = rhs;
+        first_operator = false;
     }
-
     struct list *pos;
-    for (pos = (&operators)->next; pos != (&operators);)
-    {
-        struct ast_operator *next = NULL, *prev = NULL;
-        if (pos->next != &operators)
-        {
-            next = containerof(pos->next, struct ast_operator, list);
-        }
-        if (pos->prev != &operators)
-        {
-            prev = containerof(pos->prev, struct ast_operator, list);
-        }
-
-        struct ast_operator *op = containerof(pos, struct ast_operator, list);
-        if (!strcmp(op->expr->operator, "*"))
-        {
-            logd("merging *");
-            print_op(op);
-            if (prev != NULL)
-            {
-                logd("prev:");
-                print_op(prev);
-                /* if (prev->expr != op->expr->lhs) */
-                /* { */
-                /*     prev->expr->rhs = op->expr; */
-                /* } */
-                /* else */
-                {
-                    struct ast_expr *temp = prev->expr->rhs;
-                    logd("prev->expr->rhs:%p",
-                         prev->expr->rhs->value.literal.integer);
-                    prev->expr->rhs = op->expr;
-                    op->expr->lhs = temp;
-                }
-            }
-            if (next != NULL)
-            {
-                /* if (next->expr != op->expr->rhs) */
-                /* { */
-                /*     next->expr->lhs = op->expr; */
-                /* } */
-                /* else */
-                {
-                    struct ast_expr *temp = next->expr->lhs;
-                    logd("next->expr->lhs:%p",
-                         next->expr->lhs->value.literal.integer);
-                    next->expr->lhs = op->expr;
-                    op->expr->rhs = temp;
-                }
-            }
-            struct list *temp = pos;
-            pos = pos->next;
-            if (operators.next->next != &operators)
-            {
-                list_remove(temp);
-            }
-        }
-        else
-        {
-            pos = pos->next;
-        }
-    }
-
-    /*
-for (pos = (&operators)->next; pos != (&operators);)
-{
-    struct ast_operator *op = containerof(pos, struct ast_operator, list);
-    if (!strcmp(op->expr->operator, "*"))
-    {
-        struct list *temp = pos;
-        pos = pos->next;
-        if (operators.next != operators.prev)
-        {
-            logd("removing *");
-            list_remove(temp);
-            logd("%d", LIST_IS_EMPTY(operators));
-        }
-    }
-    else
-    {
-        pos = pos->next;
-    }
-} */
-
-    logd("done with *");
-    for (pos = (&operators)->next; pos != (&operators); pos = pos->next)
-    {
-        print_op(containerof(pos, struct ast_operator, list));
-    }
-
-    for (pos = (&operators)->next; pos != (&operators);)
-    {
-        struct ast_operator *next = NULL, *prev = NULL;
-        if (pos->next != &operators)
-        {
-            next = containerof(pos->next, struct ast_operator, list);
-        }
-        if (pos->prev != &operators)
-        {
-            prev = containerof(pos->prev, struct ast_operator, list);
-        }
-
-        struct ast_operator *op = containerof(pos, struct ast_operator, list);
-        if (!strcmp(op->expr->operator, "+"))
-        {
-            logd("merging +, %p, %p", prev, next);
-            print_op(op);
-            if (prev != NULL)
-            {
-                /* if (prev->expr != op->expr->lhs) */
-                /* { */
-                /*     prev->expr->rhs = op->expr; */
-                /* } */
-                /* else */
-                {
-                    struct ast_expr *temp = prev->expr->rhs;
-                    prev->expr->rhs = op->expr;
-                    op->expr->lhs = temp;
-                }
-            }
-            if (next != NULL)
-            {
-                /* if (next->expr != op->expr->rhs) */
-                /* { */
-                /*     next->expr->lhs = op->expr; */
-                /* } */
-                /* else */
-                {
-                    struct ast_expr *temp = next->expr->lhs;
-                    next->expr->lhs = op->expr;
-                    op->expr->rhs = temp;
-                }
-            }
-            struct list *temp = pos;
-            pos = pos->next;
-            if (operators.next->next != &operators)
-            {
-                list_remove(temp);
-            }
-        }
-        else
-        {
-            pos = pos->next;
-        }
-    }
-
-    /*
-for (pos = (&operators)->next; pos != (&operators);)
-{
-    struct ast_operator *op = containerof(pos, struct ast_operator, list);
-    if (!strcmp(op->expr->operator, "+"))
-    {
-        struct list *temp = pos;
-        pos = pos->next;
-        if (operators.next != operators.prev)
-        {
-            logd("removing +");
-            list_remove(temp);
-            logd("%d", LIST_IS_EMPTY(operators));
-        }
-    }
-    else
-    {
-        pos = pos->next;
-    }
-}
-    */
-
-    logd("done with +");
     list_for_each(pos, &operators)
     {
-        print_op(containerof(pos, struct ast_operator, list));
+        struct ast_operator *op = containerof(pos, struct ast_operator, list);
+        logd("type:%d", op->expr->type);
+    }
+
+    for (size_t i = 0; i < sizeof(operator_table) / sizeof(operator_table[i]);
+         i++)
+    {
+        logd("%d", i);
+
+        const char **table_row = operator_table[i];
+        struct list *pos;
+        for (pos = (&operators)->next; pos != (&operators);)
+        {
+            struct ast_operator *next = NULL, *prev = NULL;
+            if (pos->next != &operators)
+            {
+                next = containerof(pos->next, struct ast_operator, list);
+            }
+            if (pos->prev != &operators)
+            {
+                prev = containerof(pos->prev, struct ast_operator, list);
+            }
+
+            struct ast_operator *op =
+                containerof(pos, struct ast_operator, list);
+            logd("current op:");
+            print_op(op);
+            size_t j = 0;
+            while (table_row[j] != NULL)
+            {
+
+                if (!strcmp(op->expr->operator, table_row[j]))
+                {
+                    /* logd("merging %s", table_row[j]); */
+                    /* print_op(op); */
+                    if (prev != NULL)
+                    {
+                        /* logd("prev:"); */
+                        /* print_op(prev); */
+                        /* if (prev->expr != op->expr->lhs) */
+                        /* { */
+                        /*     prev->expr->rhs = op->expr; */
+                        /* } */
+                        /* else */
+                        {
+                            struct ast_expr *temp = prev->expr->rhs;
+                            /* logd("prev->expr->rhs:%p", */
+                            /*      prev->expr->rhs->value.literal.integer); */
+                            prev->expr->rhs = op->expr;
+                            op->expr->lhs = temp;
+                        }
+                    }
+                    if (next != NULL)
+                    {
+                        /* if (next->expr != op->expr->rhs) */
+                        /* { */
+                        /*     next->expr->lhs = op->expr; */
+                        /* } */
+                        /* else */
+                        {
+                            struct ast_expr *temp = next->expr->lhs;
+                            /* logd("next->expr->lhs:%p", */
+                            /*      next->expr->lhs->value.literal.integer); */
+                            next->expr->lhs = op->expr;
+                            op->expr->rhs = temp;
+                        }
+                    }
+                    struct list *temp = pos;
+                    pos = pos->next;
+                    if (operators.next->next != &operators)
+                    {
+                        list_remove(temp);
+                    }
+                    goto loop_end;
+                }
+                j++;
+            }
+            pos = pos->next;
+        loop_end:;
+        }
     }
 
     struct ast_operator *out =
         containerof(operators.next, struct ast_operator, list);
 
-    logd("returning:%p", out->expr);
+    /* logd("returning:%p", out->expr); */
     print_op(out);
     return out->expr;
 }

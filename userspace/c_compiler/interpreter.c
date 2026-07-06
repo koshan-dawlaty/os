@@ -479,26 +479,26 @@ int main(int argc, char **argv)
     init_libc();
     call_constructors();
 
-    LIST_DEFINE_HEAD(expr_tokens);
-    tokenizer_parse_tokens("1 + 2 * 3 * 4", &expr_tokens);
-    /* tokenizer_parse_tokens("1 + (1 * 1)", &expr_tokens); */
-    struct ast_parser parser = {
-        .tokens = &expr_tokens,
-        .current = containerof(expr_tokens.next, struct token, list)};
-    struct ast_error *error = NULL;
-    struct ast_expr *expr = ast_parse_expression(&parser, &error);
-    logd("got expr");
-    if (error != NULL)
-    {
-        static char buf[100];
-        ast_error_to_string(error, buf, 100);
-        PANIC("ast error:%s", buf);
-    }
+    /* LIST_DEFINE_HEAD(expr_tokens); */
+    /* tokenizer_parse_tokens("2 * (1 + 3) + (5)", &expr_tokens); */
+    /* /1* tokenizer_parse_tokens("1 + (1 * 1)", &expr_tokens); *1/ */
+    /* struct ast_parser parser = { */
+    /*     .tokens = &expr_tokens, */
+    /*     .current = containerof(expr_tokens.next, struct token, list)}; */
+    /* struct ast_error *error = NULL; */
+    /* struct ast_expr *expr = ast_parse_expression(&parser, &error); */
+    /* logd("got expr"); */
+    /* if (error != NULL) */
+    /* { */
+    /*     static char buf[100]; */
+    /*     ast_error_to_string(error, buf, 100); */
+    /*     PANIC("ast error:%s", buf); */
+    /* } */
 
-    struct interpreter *interp = interpreter_init();
-    logd("evaluated:%d", expr_eval(expr, interp)->value);
+    /* struct interpreter *interp = interpreter_init(); */
+    /* logd("evaluated:%d", expr_eval(expr, interp)->value); */
 
-    exit(0);
+    /* exit(0); */
 
 #ifdef TESTS
     run_tests();
