@@ -481,11 +481,13 @@ int main(int argc, char **argv)
 
     LIST_DEFINE_HEAD(expr_tokens);
     tokenizer_parse_tokens("1 + 2 * 3 * 4", &expr_tokens);
+    /* tokenizer_parse_tokens("1 + (1 * 1)", &expr_tokens); */
     struct ast_parser parser = {
         .tokens = &expr_tokens,
         .current = containerof(expr_tokens.next, struct token, list)};
     struct ast_error *error = NULL;
     struct ast_expr *expr = ast_parse_expression(&parser, &error);
+    logd("got expr");
     if (error != NULL)
     {
         static char buf[100];
