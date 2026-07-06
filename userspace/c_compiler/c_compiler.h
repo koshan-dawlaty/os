@@ -32,6 +32,7 @@ enum token_type
     TOKEN_WHILE,
     TOKEN_FOR,
     TOKEN_STAR,
+    TOKEN_INVALID,
 
 };
 const char *token_type_str(enum token_type type);
@@ -178,7 +179,7 @@ struct ast_expr
         {
             struct ast_expr *lhs;
             struct ast_expr *rhs;
-            char *operator;
+            enum token_type operator;
         };
         struct
         {

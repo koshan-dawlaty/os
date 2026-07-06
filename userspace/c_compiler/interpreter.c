@@ -82,9 +82,8 @@ struct interp_value *expr_eval(struct ast_expr *expr,
     NOT_NULL(expr, "expression was null");
     if (expr->type == AST_EXPRESSION_OPERATOR)
     {
-        logd("operator:%s", expr->operator);
 
-        if (!strcmp(expr->operator, "="))
+        if (expr->operator == TOKEN_ASSIGN)
         {
 
             if (!(expr->lhs->type == AST_EXPRESSION_VALUE &&
@@ -133,37 +132,31 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
         int result;
 
-        if (!strcmp(expr->operator,
-                    "+")) /* TODO: maybe want to have enum for operator */
+        switch (expr->operator)
         {
+        case TOKEN_PLUS:
             result = lhs + rhs;
-        }
-        else if (!strcmp(expr->operator, "-"))
-        {
+            break;
+        case TOKEN_MINUS:
             result = lhs - rhs;
-        }
-        else if (!strcmp(expr->operator, "<"))
-        {
-            result = lhs < rhs;
-        }
-        else if (!strcmp(expr->operator, ">"))
-        {
-            result = lhs > rhs;
-        }
-        else if (!strcmp(expr->operator, "=="))
-        {
-            result = lhs == rhs;
-        }
-        else if (!strcmp(expr->operator, "*"))
-        {
+            break;
+        case TOKEN_STAR:
             result = lhs * rhs;
+            break;
+        case TOKEN_LESS:
+            result = lhs < rhs;
+            break;
+        case TOKEN_GREATER:
+            result = lhs > rhs;
+            break;
+        case TOKEN_EQUALS:
+            result = lhs == rhs;
+            break;
+
+        default:
+            PANIC("(internal error) unknown operator token from ast:%s",
+                  token_type_str(expr->operator));
         }
-        else
-        {
-            PANIC("unknown operator type for expr_eval() %s", expr->operator);
-        }
-        logd("lhs %d, operator:%s rhs:%d, result:%d", lhs, expr->operator, rhs,
-             result);
 
         struct ast_type *type = ast_type_alloc(
             "int", MAX(lhs_val->type->num_pointers,
@@ -212,7 +205,6 @@ work for pointer math, and should use the largest size of the operands */
 
                 return out;
             case AST_LITERAL_TYPE_INT:
-                logd("int:%d", expr->value.literal.integer);
                 return interp_value_alloc(ast_type_alloc("int", 0),
                                           expr->value.literal.integer);
                 break;
@@ -523,9 +515,6 @@ int main(int argc, char **argv)
 
 	
 int main() {
-print(4 + 2 * 3);
-print("");
-print(2 * 3 + 4);
 }
 
 

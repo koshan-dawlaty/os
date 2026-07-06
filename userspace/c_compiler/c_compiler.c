@@ -74,10 +74,10 @@ const char *token_type_str(enum token_type type)
         return "LESS";
     case TOKEN_FOR:
         return "FOR";
-        break;
     case TOKEN_CHAR:
         return "CHAR LITERAL";
-        break;
+    case TOKEN_INVALID:
+        return "INVALID TOKEN";
     }
 }
 
@@ -379,12 +379,12 @@ struct ast_expr *ast_expr_alloc_unary_operator(struct ast_expr *e,
 
 struct ast_expr *ast_expr_alloc_operator(struct ast_expr *lhs,
                                          struct ast_expr *rhs,
-                                         const char *operator)
+                                         enum token_type operator)
 {
     struct ast_expr *expr = malloc(sizeof(struct ast_expr));
 
     expr->type = AST_EXPRESSION_OPERATOR;
-    expr->operator = strdup(operator);
+    expr->operator = operator;
     expr->lhs = lhs;
     expr->rhs = rhs;
 
@@ -427,7 +427,6 @@ void ast_expr_free(struct ast_expr *expr)
     case AST_EXPRESSION_OPERATOR:
         ast_expr_free(expr->lhs);
         ast_expr_free(expr->rhs);
-        free(expr->operator);
         break;
 
     case AST_EXPRESSION_UNARY_OPERATOR:
@@ -700,20 +699,20 @@ struct ast_operator
     struct list list;
 };
 
-static const char *operator_table[][10] = {
+static const enum token_type operator_table[][10] = {
     // clang-format off
-    {"*", "/", NULL},
-	{"+", "-", NULL},
-	{"==", "!=", NULL},
-    {"&&", NULL},
-	{"||", NULL},
-	{"=", NULL},
+    {TOKEN_STAR, TOKEN_INVALID},
+	{TOKEN_PLUS, TOKEN_MINUS, TOKEN_INVALID},
+	{TOKEN_EQUALS, TOKEN_INVALID},
+    /* {"&&", TOKEN_INVALID}, */
+	/* {"||", TOKEN_INVALID}, */
+	{TOKEN_ASSIGN, TOKEN_INVALID},
     // clang-format on
 };
 
 static void print_op(struct ast_operator *operator)
 {
-    logd("lhs:%d, operator:%s rhs:%d",
+    logd("lhs:%d, operator:%d rhs:%d",
          operator->expr->lhs->value.literal.integer, operator->expr->operator,
          operator->expr->rhs->value.literal.integer);
 }
@@ -749,7 +748,7 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
         parser_advance(parser);
         struct ast_expr *rhs = ast_parse_expression_simple(parser, err);
         struct ast_operator *operator = ast_operator_alloc(
-            ast_expr_alloc_operator(lhs, rhs, operator_token->token));
+            ast_expr_alloc_operator(lhs, rhs, operator_token->type));
         list_push_end(&operator->list, &operators);
         lhs = rhs;
         first_operator = false;
@@ -758,15 +757,13 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
     list_for_each(pos, &operators)
     {
         struct ast_operator *op = containerof(pos, struct ast_operator, list);
-        logd("type:%d", op->expr->type);
     }
 
     for (size_t i = 0; i < sizeof(operator_table) / sizeof(operator_table[i]);
          i++)
     {
-        logd("%d", i);
 
-        const char **table_row = operator_table[i];
+        const enum token_type *table_row = operator_table[i];
         struct list *pos;
         for (pos = (&operators)->next; pos != (&operators);)
         {
@@ -782,13 +779,11 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
 
             struct ast_operator *op =
                 containerof(pos, struct ast_operator, list);
-            logd("current op:");
-            print_op(op);
             size_t j = 0;
-            while (table_row[j] != NULL)
+            while (table_row[j] != TOKEN_INVALID)
             {
 
-                if (!strcmp(op->expr->operator, table_row[j]))
+                if (op->expr->operator == table_row[j])
                 {
                     /* logd("merging %s", table_row[j]); */
                     /* print_op(op); */
@@ -843,7 +838,6 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
         containerof(operators.next, struct ast_operator, list);
 
     /* logd("returning:%p", out->expr); */
-    print_op(out);
     return out->expr;
 }
 
