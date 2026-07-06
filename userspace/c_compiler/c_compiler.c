@@ -702,12 +702,12 @@ struct ast_operator
 
 static const char *operator_table[][10] = {
     // clang-format off
-    {"*", NULL},
+    {"*", "/", NULL},
 	{"+", "-", NULL},
-	/* {"==", "!=", NULL}, */
-    /* {"&&", NULL}, */
-	/* {"||", NULL}, */
-	/* {"=", NULL}, */
+	{"==", "!=", NULL},
+    {"&&", NULL},
+	{"||", NULL},
+	{"=", NULL},
     // clang-format on
 };
 

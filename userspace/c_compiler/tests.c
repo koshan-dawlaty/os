@@ -156,6 +156,25 @@ TEST_AST_EXPRESSIONS(expr_test3, "1+1+1+1+1+1", 6)
 TEST_AST_EXPRESSIONS(expr_test4, "(((1+2)+2)+2) + 3", 10)
 TEST_AST_EXPRESSIONS(expr_test5, "(1+2) + 3", 6)
 TEST_AST_EXPRESSIONS(expr_test6, "123", 123)
+TEST_AST_EXPRESSIONS(expr_test_order_of_operations1, "2 * 3 + 4", 10)
+TEST_AST_EXPRESSIONS(expr_test_order_of_operations2, "4 + 2 * 3", 10)
+TEST_AST_EXPRESSIONS(expr_test_order_of_operations3, "4 + 2 * 3 == 10", 1)
+TEST_AST_EXPRESSIONS(expr_test_order_of_operations4, "(2 + 3) * 4", 20)
+TEST_AST_EXPRESSIONS(
+    expr_test_order_of_operations_long,
+    "7 + 3 * 5 - 2 * 8 + 9 * 4 - 6 + 11 * 3 - 5 * 7 + 8 * 2 - 13 + 4 * 9 - 10 "
+    "* 6 + 12 * 5 - 7 + 14 * 3 - 9 * 8 + 15 - 2 * 11 + 6 * 7 - 4 + 13 * 2 - 5 "
+    "* 9 + 8 * 10 - 12 + 3 * 14 - 6 * 5 + 17 - 4 * 8 + 9 * 11 - 7 + 10 * 12 - "
+    "13 * 2 + 5 * 6 - 14 + 8 * 9",
+    387)
+
+TEST_AST_EXPRESSIONS(expr_test_order_of_operations_parentheses,
+                     " 3 + 5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9"
+                     "+ 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2"
+                     "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8"
+                     "+ 10 * (2 + 3 * (4 + 5)) - 7 * 8 + 9"
+                     "- 11 + 2 * 3 * (4 + 5) - 6 * (7 + 8)",
+                     255)
 
 struct test_result *test_interpreter_error(const char *program,
                                            enum ast_error_type expected)
