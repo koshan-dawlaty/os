@@ -23,7 +23,9 @@ bool token_is_operator(enum token_type type)
 {
     return type == TOKEN_ASSIGN || type == TOKEN_PLUS || type == TOKEN_MINUS ||
            type == TOKEN_GREATER || type == TOKEN_LESS ||
-           type == TOKEN_EQUALS || type == TOKEN_STAR;
+           type == TOKEN_EQUALS || type == TOKEN_STAR ||
+           type == TOKEN_LESS_EQUAL || type == TOKEN_GREATER_EQUAL ||
+           type == TOKEN_NOT_EQUAL;
 }
 
 const char *token_type_str(enum token_type type)
@@ -78,6 +80,13 @@ const char *token_type_str(enum token_type type)
         return "CHAR LITERAL";
     case TOKEN_INVALID:
         return "INVALID TOKEN";
+    case TOKEN_NOT_EQUAL:
+        return "NOT EQUAL";
+    case TOKEN_GREATER_EQUAL:
+        return "GREATER EQUAL";
+    case TOKEN_LESS_EQUAL:
+        return "LESS EQUAL";
+        break;
     }
 }
 
@@ -151,7 +160,10 @@ struct token_simple_map_entry token_simple_map[] = {
     {";", TOKEN_SEMICOLON},
     {"+", TOKEN_PLUS},
     {"-", TOKEN_MINUS},
+    {"!=", TOKEN_NOT_EQUAL},
+    {">=", TOKEN_GREATER_EQUAL},
     {">", TOKEN_GREATER},
+    {"<=", TOKEN_LESS_EQUAL},
     {"<", TOKEN_LESS},
     {"*", TOKEN_STAR},
     {"if", TOKEN_IF},
@@ -703,7 +715,8 @@ static const enum token_type operator_table[][10] = {
     // clang-format off
     {TOKEN_STAR, TOKEN_INVALID},
 	{TOKEN_PLUS, TOKEN_MINUS, TOKEN_INVALID},
-	{TOKEN_EQUALS, TOKEN_INVALID},
+	{TOKEN_LESS, TOKEN_LESS_EQUAL, TOKEN_GREATER, TOKEN_GREATER_EQUAL, TOKEN_INVALID},
+	{TOKEN_EQUALS, TOKEN_NOT_EQUAL, TOKEN_INVALID},
     /* {"&&", TOKEN_INVALID}, */
 	/* {"||", TOKEN_INVALID}, */
 	{TOKEN_ASSIGN, TOKEN_INVALID},

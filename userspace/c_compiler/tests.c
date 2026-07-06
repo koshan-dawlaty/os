@@ -156,10 +156,23 @@ TEST_AST_EXPRESSIONS(expr_test3, "1+1+1+1+1+1", 6)
 TEST_AST_EXPRESSIONS(expr_test4, "(((1+2)+2)+2) + 3", 10)
 TEST_AST_EXPRESSIONS(expr_test5, "(1+2) + 3", 6)
 TEST_AST_EXPRESSIONS(expr_test6, "123", 123)
+
+TEST_AST_EXPRESSIONS(expr_test_less_equal_true1, "1 <= 1", true)
+TEST_AST_EXPRESSIONS(expr_test_less_equal_true2, "1 <= 3", true)
+TEST_AST_EXPRESSIONS(expr_test_less_equal_false1, "1 <= 0", false)
+TEST_AST_EXPRESSIONS(expr_test_less_equal_false2, "3 <= 1", false)
+TEST_AST_EXPRESSIONS(expr_test_greater_equal_false1, "1 >= 2", false)
+TEST_AST_EXPRESSIONS(expr_test_greater_equal_false2, "1 >= 3", false)
+TEST_AST_EXPRESSIONS(expr_test_greater_equal_true1, "1 >= 1", true)
+TEST_AST_EXPRESSIONS(expr_test_greater_equal_true2, "3 >= 1", true)
+TEST_AST_EXPRESSIONS(expr_test_not_equal_true, "1 != 2", true)
+TEST_AST_EXPRESSIONS(expr_test_not_equal_false, "1 != 1", false)
+
 TEST_AST_EXPRESSIONS(expr_test_order_of_operations1, "2 * 3 + 4", 10)
 TEST_AST_EXPRESSIONS(expr_test_order_of_operations2, "4 + 2 * 3", 10)
 TEST_AST_EXPRESSIONS(expr_test_order_of_operations3, "4 + 2 * 3 == 10", 1)
 TEST_AST_EXPRESSIONS(expr_test_order_of_operations4, "(2 + 3) * 4", 20)
+
 TEST_AST_EXPRESSIONS(
     expr_test_order_of_operations_long,
     "7 + 3 * 5 - 2 * 8 + 9 * 4 - 6 + 11 * 3 - 5 * 7 + 8 * 2 - 13 + 4 * 9 - 10 "

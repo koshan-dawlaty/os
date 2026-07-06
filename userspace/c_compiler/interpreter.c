@@ -85,7 +85,6 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
         if (expr->operator == TOKEN_ASSIGN)
         {
-
             if (!(expr->lhs->type == AST_EXPRESSION_VALUE &&
                   expr->lhs->value.is_var) &&
                 !(expr->lhs->type == AST_EXPRESSION_UNARY_OPERATOR &&
@@ -146,11 +145,20 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         case TOKEN_LESS:
             result = lhs < rhs;
             break;
+        case TOKEN_LESS_EQUAL:
+            result = lhs <= rhs;
+            break;
         case TOKEN_GREATER:
             result = lhs > rhs;
             break;
+        case TOKEN_GREATER_EQUAL:
+            result = lhs >= rhs;
+            break;
         case TOKEN_EQUALS:
             result = lhs == rhs;
+            break;
+        case TOKEN_NOT_EQUAL:
+            result = lhs != rhs;
             break;
 
         default:
