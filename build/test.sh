@@ -78,7 +78,7 @@ mkfifo "${SERIAL_PIPE}.out"
 # 	-ex ""
 
 # redirect stderr to stop message when qemu is killed
-$QEMU_COMMAND -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE  2>/dev/null &  
+$QEMU_COMMAND -monitor stdio $QEMU_FLAGS -display none -serial pipe:$SERIAL_PIPE  2>/dev/null &  
 QEMU_PID=$!
 
 

@@ -798,39 +798,17 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
 
                 if (op->expr->operator == table_row[j])
                 {
-                    /* logd("merging %s", table_row[j]); */
-                    /* print_op(op); */
                     if (prev != NULL)
                     {
-                        /* logd("prev:"); */
-                        /* print_op(prev); */
-                        /* if (prev->expr != op->expr->lhs) */
-                        /* { */
-                        /*     prev->expr->rhs = op->expr; */
-                        /* } */
-                        /* else */
-                        {
-                            struct ast_expr *temp = prev->expr->rhs;
-                            /* logd("prev->expr->rhs:%p", */
-                            /*      prev->expr->rhs->value.literal.integer); */
-                            prev->expr->rhs = op->expr;
-                            op->expr->lhs = temp;
-                        }
+                        struct ast_expr *temp = prev->expr->rhs;
+                        prev->expr->rhs = op->expr;
+                        op->expr->lhs = temp;
                     }
                     if (next != NULL)
                     {
-                        /* if (next->expr != op->expr->rhs) */
-                        /* { */
-                        /*     next->expr->lhs = op->expr; */
-                        /* } */
-                        /* else */
-                        {
-                            struct ast_expr *temp = next->expr->lhs;
-                            /* logd("next->expr->lhs:%p", */
-                            /*      next->expr->lhs->value.literal.integer); */
-                            next->expr->lhs = op->expr;
-                            op->expr->rhs = temp;
-                        }
+                        struct ast_expr *temp = next->expr->lhs;
+                        next->expr->lhs = op->expr;
+                        op->expr->rhs = temp;
                     }
                     struct list *temp = pos;
                     pos = pos->next;
@@ -880,13 +858,11 @@ struct ast_statement *ast_parse_statement_branch(struct ast_parser *parser,
 
     if (tok->type == TOKEN_IF)
     {
-
         out = ast_statement_alloc_block(AST_STATEMENT_IF,
                                         ast_parse_expression(parser, err));
     }
     else if (tok->type == TOKEN_WHILE)
     {
-
         out = ast_statement_alloc_block(AST_STATEMENT_WHILE,
                                         ast_parse_expression(parser, err));
     }
