@@ -1,6 +1,7 @@
 #include "wm_lib.h"
 #include <container_of.h>
 #include <err_ptr.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <init.h>
 #include <lib/array.h>
@@ -14,6 +15,7 @@
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <types.h>
 #include <unistd.h>
@@ -272,7 +274,8 @@ int main()
 
     init_libc();
 
-    int font_fd = open("/font.psfu", O_RDONLY);
+    int font_fd = open("/home/koshan/os/build/fs-root/font.psfu", O_RDONLY);
+    printf("%s\n", strerror(errno));
     font = font_parse_fd(font_fd);
 
     if (IS_ERR(font))

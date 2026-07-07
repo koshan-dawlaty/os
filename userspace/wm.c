@@ -13,7 +13,6 @@
 #include <lib/log.h>
 #include <lib/rect.h>
 #include <lib/utils.h>
-#include <poll.h>
 #include <sched.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -25,6 +24,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <userspace/mouse.h>
+#include <userspace/syscall_wrappers.h>
 
 struct wm_connection
 {
@@ -1012,11 +1012,8 @@ int main()
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse_fd(font_fd);
 
-    int server_sock = syscall_wrapper_asm(SYS_create_socket_fs,
-                                          (ptr_t) "wm_socket", 0, 0, 0, 0);
-
-    int input_sock = syscall_wrapper_asm(SYS_create_socket_fs,
-                                         (ptr_t) "input_socket", 0, 0, 0, 0);
+    int server_sock = create_socket_fs("wm_socket");
+    int input_sock = create_socket_fs("input_socket");
 
     window_queue_mutex = user_mutex_create();
 

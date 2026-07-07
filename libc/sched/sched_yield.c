@@ -4,13 +4,14 @@
 #include <scheduler.h>
 #endif
 
-void sched_yield()
+int sched_yield()
 {
 #ifdef __is_libk
     schedule();
 #else
     syscall_wrapper_asm(3, 0, 0, 0, 0, 0);
 #endif
+    return 0;
 }
 
 SYSCALL_DEFINE0(3, int)

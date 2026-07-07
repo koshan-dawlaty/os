@@ -22,17 +22,7 @@
 #include <sys/syscall.h>
 #include <types.h>
 #include <unistd.h>
-
-int pipe(int fds[2])
-{
-    return syscall_wrapper_asm(SYS_pipe, (ptr_t)fds, 0, 0, 0, 0);
-}
-
-int execv_stdio(const char *path, char *const argv[], int in, int out)
-{
-    return syscall_wrapper_asm(SYS_execv_stdio, (ptr_t)path, (ptr_t)argv, in,
-                               out, 0);
-}
+#include <userspace/syscall_wrappers.h>
 
 size_t mouse_x = 0;
 size_t mouse_y = 0;

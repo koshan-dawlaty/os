@@ -71,7 +71,6 @@ BINARIES=\
 	flashcards$(TEST_SUFFIX) \
 	term$(TEST_SUFFIX) \
 	edit$(TEST_SUFFIX) \
-	elf_test2$(TEST_SUFFIX) \
 	overwrite$(TEST_SUFFIX) \
 	touch$(TEST_SUFFIX) \
 	ksh$(TEST_SUFFIX) \
@@ -94,7 +93,7 @@ ifndef CONFIG_HOST_SDL
 DEPENDENCIES=../libc/libc$(TEST_SUFFIX).a ../lib/bin/libutil$(TEST_SUFFIX).a
 else
 DEPENDENCIES=../lib/bin/libutil$(TEST_SUFFIX).a
-CFLAGS:=$(CFLAGS) -lc -lutil -I../lib/include/ -I../libc/include/
+CFLAGS:=$(CFLAGS) -lc -lutil -I../lib/include/ -I../libc/include/ -Tlinux.ld
 endif
 
 # UTIL_FLAG=-lutil$(TEST_SUFFIX)
@@ -124,7 +123,7 @@ $(BIN)/ls$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/ls.o$(TEST_SUFFIX) $(DEPENDEN
 
 $(BIN)/overwrite$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/overwrite.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+	$(CC) -Ttext=0x800000 -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
 $(BIN)/cat$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/cat.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
@@ -156,7 +155,7 @@ $(BIN)/explore$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/explore.o$(TEST_SUFFIX) 
 
 $(BIN)/flashcards$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/flashcards.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CC)  -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
 $(BIN)/render_test$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/render_test.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)

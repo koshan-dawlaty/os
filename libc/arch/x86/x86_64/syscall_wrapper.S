@@ -15,7 +15,7 @@ syscall_wrapper_asm:
 	mov %rdi, %rax
 	mov %rsi, %rbx
 	mov %rdx, %rcx
-	mov 0(%esp), %rdx
+	mov 0(%rsp), %rdx
 	mov %r8, %rsi
 	mov %r9, %rdi
 

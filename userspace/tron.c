@@ -109,7 +109,5 @@ int main()
         sleep(1);
     }
 
-    syscall_wrapper_asm(SYS_close_socket, client.socket, 0, 0, 0, 0);
-
     exit(0);
 }

@@ -18,9 +18,9 @@ export ARCH := $(shell ./build/default-host.sh)
 export CC := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
 
 # once printf supports the actual standard format specifiers, -Wno-format can be removed
-export CFLAGS :=  -DMYOS1234 -Werror \
+export CFLAGS := -DMYOS1234 -Werror \
 -Wno-format	\
--Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fno-omit-frame-pointer -Wno-unused-parameter
+-Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fno-omit-frame-pointer -Wno-unused-parameter 
 
 
 export QEMU_COMMAND := qemu-system-$(shell ./build/qemu-arch.sh $(ARCH))
@@ -74,7 +74,7 @@ kernel: headers lib libc
 
 sdl-host: export CONFIG_HOST_SDL=1 
 sdl-host: CC=gcc
-sdl-host: CFLAGS=-isystem=/usr/include -DCONFIG_HOST_SDL
+sdl-host: CFLAGS=-isystem=/usr/include -DCONFIG_HOST_SDL -Wl,--noinhibit-exec -no-pie -g  -fno-stack-protector
 sdl-host: lib libc userspace
 
 

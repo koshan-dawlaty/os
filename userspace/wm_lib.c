@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <userspace/syscall_wrappers.h>
 
 void client_draw_char(struct wm_client client, struct PSF_font *font, char c,
                       size_t x, size_t y)

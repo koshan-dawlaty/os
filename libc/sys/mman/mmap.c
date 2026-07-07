@@ -21,7 +21,7 @@ void *mmap(void *addr, size_t len, int prot, int flags, off_t off)
                            PAGING_USER | PAGING_WRITEABLE);
     return addr;
 #else
-    syscall_wrapper_asm(SYS_mmap, (uintptr_t)addr, len, 0, 0, 0);
+    syscall_wrapper_asm(SYS_mmap, (uintptr_t)addr, len, prot, flags, 0);
 
     return addr;
 #endif

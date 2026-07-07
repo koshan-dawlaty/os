@@ -51,17 +51,17 @@ struct client_window
 
 struct wm_client
 {
-#ifndef HOST_SDL
+    /* #ifndef CONFIG_HOST_SDL */
     int socket;
     int key_socket;
     int mem_id;
     struct framebuffer fb;
-#else
-    SDL_Surface *surface;
-    SDL_Renderer *renderer;
-    SDL_Texture *texture;
-    SDL_Window *win;
-#endif
+    /* #else */
+    /* SDL_Surface *surface; */
+    /* SDL_Renderer *renderer; */
+    /* SDL_Texture *texture; */
+    /* SDL_Window *win; */
+    /* #endif */
 };
 
 #define WM_MESSAGE_INVALID -1
@@ -147,59 +147,6 @@ void client_draw_char(struct wm_client client, struct PSF_font *font, char c,
 
 void client_draw_string(struct wm_client client, struct PSF_font *font,
                         const char *str, size_t x, size_t y);
-
-typedef uintptr_t ptr_t;
-extern int syscall_wrapper_asm(ptr_t ax, ptr_t bx, ptr_t cx, ptr_t dx, ptr_t si,
-                               ptr_t di);
-
-static inline struct framebuffer *framebuffer_alloc()
-{
-    struct framebuffer *out = NULL;
-    syscall_wrapper_asm(SYS_get_framebuffer, (ptr_t)&out, 0, 0, 0, 0);
-
-    return out;
-}
-
-static inline int socket_create()
-{
-    return syscall_wrapper_asm(SYS_create_socket, 0, 0, 0, 0, 0);
-}
-
-static inline int send(int socket, void *buf, size_t len)
-{
-    return write(socket, buf, len);
-}
-
-static inline int recv(int socket, void *buf, size_t len)
-{
-    return read(socket, buf, len);
-}
-
-static inline int clone(ptr_t ip)
-{
-    return syscall_wrapper_asm(SYS_clone, ip, 0, 0, 0, 0);
-}
-
-static inline int shared_mem_alloc(void **addr, size_t len)
-{
-    return syscall_wrapper_asm(SYS_shared_mem_alloc, (ptr_t)addr, len, 0, 0, 0);
-}
-
-static inline int shared_mem_get(int id, void **p)
-{
-    return syscall_wrapper_asm(SYS_shared_mem_get, id, (ptr_t)p, 0, 0, 0);
-}
-
-static inline int shared_mem_resize(int id, size_t len, void **addr)
-{
-    return syscall_wrapper_asm(SYS_shared_mem_resize, id, len, (ptr_t)addr, 0,
-                               0);
-}
-
-static inline int connect(int socket)
-{
-    return syscall_wrapper_asm(SYS_connect, socket, 0, 0, 0, 0);
-}
 
 void wm_render(struct wm_client client);
 char wm_get_key(struct wm_client client);
