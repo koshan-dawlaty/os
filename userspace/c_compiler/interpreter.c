@@ -333,6 +333,99 @@ work for pointer math, and should use the largest size of the operands */
     UNREACHABLE("unknown enum type:%d", expr->type);
 }
 
+struct interp_value *statement_eval(struct ast_statement *statement,
+                                    struct interpreter *interp)
+{
+
+    struct interp_value *value;
+    switch (statement->type)
+    {
+    case AST_STATEMENT_DECLARE:;
+        struct interp_value *init_val = NULL;
+        if (statement->init_value != NULL)
+        {
+            init_val = expr_eval(statement->init_value, interp);
+        }
+        else
+        {
+            init_val = interp_value_alloc(statement->declared_type, 0);
+        }
+        struct variable var = {statement->varname, init_val};
+        NOT_NULL(interp->current_scope, "current scope was null");
+        struct scope *current =
+            containerof(interp->current_scope, struct scope, list);
+        array_push(&current->vars, &var, sizeof(struct variable));
+        variable_lookup(interp->all_scopes, "retval");
+
+        break;
+    case AST_STATEMENT_EXPR:
+        expr_eval(statement->expr, interp);
+        break;
+    case AST_STATEMENT_IF:;
+        value = expr_eval(statement->block_expr, interp);
+        /* TODO: add error if it is not an int maybe */
+        if (value->value != 0)
+        {
+            struct interp_value *output =
+                statements_eval(&statement->block, interp);
+            if (output != NULL)
+            {
+                return output;
+            }
+        }
+        break;
+    case AST_STATEMENT_WHILE:;
+        value = expr_eval(statement->block_expr, interp);
+        /* TODO: add error if it is not an int maybe */
+        while (value->value != 0)
+        {
+            struct interp_value *output =
+                statements_eval(&statement->block, interp);
+            if (output != NULL)
+            {
+                return output;
+            }
+            value = expr_eval(statement->block_expr, interp);
+        }
+        break;
+    case AST_STATEMENT_FOR:
+        if (statement->for_expr.first_is_statement)
+        {
+            logd("evaluating for loop first statement");
+            statement_eval(statement->for_expr.statement1, interp);
+        }
+        else
+        {
+            expr_eval(statement->for_expr.expr1, interp);
+        }
+        value = expr_eval(statement->for_expr.expr2, interp);
+        /* TODO: add error if it is not an int maybe */
+        while (value->value != 0)
+        {
+            struct interp_value *output =
+                statements_eval(&statement->block, interp);
+            if (output != NULL)
+            {
+                return output;
+            }
+            expr_eval(statement->for_expr.expr3, interp);
+            value = expr_eval(statement->for_expr.expr2, interp);
+        }
+        break;
+
+    case AST_STATEMENT_RETURN:
+        if (statement->expr != NULL)
+        {
+            return expr_eval(statement->expr, interp);
+        }
+
+    default:
+        UNREACHABLE("unhandled switch case:%d", statement->type);
+    }
+
+    return NULL;
+}
+
 struct interp_value *statements_eval(struct list *statements_head,
                                      struct interpreter *interp)
 {
@@ -348,90 +441,13 @@ struct interp_value *statements_eval(struct list *statements_head,
 
         struct ast_statement *statement =
             containerof(pos, struct ast_statement, list);
-
-        struct interp_value *value;
-        switch (statement->type)
+        struct interp_value *value = statement_eval(statement, interp);
+        if (value != NULL)
         {
-        case AST_STATEMENT_DECLARE:;
-            struct interp_value *init_val = NULL;
-            if (statement->init_value != NULL)
-            {
-                init_val = expr_eval(statement->init_value, interp);
-            }
-            else
-            {
-                init_val = interp_value_alloc(statement->declared_type, 0);
-            }
-            struct variable var = {statement->varname, init_val};
-            NOT_NULL(interp->current_scope, "current scope was null");
-            struct scope *current =
-                containerof(interp->current_scope, struct scope, list);
-            array_push(&current->vars, &var, sizeof(struct variable));
-            variable_lookup(interp->all_scopes, "retval");
-
+            retval = value;
             break;
-        case AST_STATEMENT_EXPR:
-            expr_eval(statement->expr, interp);
-            break;
-        case AST_STATEMENT_IF:;
-            value = expr_eval(statement->block_expr, interp);
-            /* TODO: add error if it is not an int maybe */
-            if (value->value != 0)
-            {
-                struct interp_value *output =
-                    statements_eval(&statement->block, interp);
-                if (output != NULL)
-                {
-                    retval = output;
-                    goto end;
-                }
-            }
-            break;
-        case AST_STATEMENT_WHILE:;
-            value = expr_eval(statement->block_expr, interp);
-            /* TODO: add error if it is not an int maybe */
-            while (value->value != 0)
-            {
-                struct interp_value *output =
-                    statements_eval(&statement->block, interp);
-                if (output != NULL)
-                {
-                    retval = output;
-                    goto end;
-                }
-                value = expr_eval(statement->block_expr, interp);
-            }
-            break;
-        case AST_STATEMENT_FOR:
-            expr_eval(statement->for_expr.expr1, interp);
-            value = expr_eval(statement->for_expr.expr2, interp);
-            /* TODO: add error if it is not an int maybe */
-            while (value->value != 0)
-            {
-                struct interp_value *output =
-                    statements_eval(&statement->block, interp);
-                if (output != NULL)
-                {
-                    retval = output;
-                    goto end;
-                }
-                expr_eval(statement->for_expr.expr3, interp);
-                value = expr_eval(statement->for_expr.expr2, interp);
-            }
-            break;
-
-        case AST_STATEMENT_RETURN:
-            if (statement->expr != NULL)
-            {
-                retval = expr_eval(statement->expr, interp);
-            }
-            goto end;
-
-        default:
-            UNREACHABLE("unhandled switch case:%d", statement->type);
         }
     }
-end:
 
     interp->current_scope = new_scope->list.prev;
     list_remove(&new_scope->list);
@@ -534,15 +550,10 @@ int main(int argc, char **argv)
 
 	
 int main() {
-int x = 10;
-int i = 0;
-for (i = 0; i < 10; i++) {
-print(i + x);
-x++;
-x = x * 3;
+for (int i = 0; i < 10; i++) {
+	print(i);
 }
-print(x);
-return x;
+
 }
 
 

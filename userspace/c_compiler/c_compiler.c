@@ -522,16 +522,12 @@ ast_statement_alloc_declaration(struct ast_type *type, const char *varname,
     return out;
 }
 
-struct ast_statement *ast_statement_alloc_block_for(struct ast_expr *expr1,
-                                                    struct ast_expr *expr2,
-                                                    struct ast_expr *expr3)
+struct ast_statement *ast_statement_alloc_block_for(bool first_is_statement)
 {
     struct ast_statement *out = malloc(sizeof(struct ast_statement));
     list_init_head(&out->block);
     out->type = AST_STATEMENT_FOR;
-    out->for_expr.expr1 = expr1;
-    out->for_expr.expr2 = expr2;
-    out->for_expr.expr3 = expr3;
+    out->for_expr.first_is_statement = first_is_statement;
     out->list = LIST_INIT();
 
     return out;
@@ -858,7 +854,6 @@ end:;
     struct token *end_token = parser_get_current(parser);
     if (token_is_unary_operator(end_token->type))
     {
-        logd("%s", end_token->token);
         retval = ast_expr_alloc_unary_operator(retval, end_token->token);
         parser_advance(parser);
     }
@@ -898,14 +893,36 @@ struct ast_statement *ast_parse_statement_branch(struct ast_parser *parser,
     else if (tok->type == TOKEN_FOR)
     {
 
-        /* TODO: this does not allow delcarations as the first
-         * expression in a for loop, maybe check if it is a type then
-         * parse accordingly? */
-        struct ast_expr *expr1 = ast_parse_expression(parser, err);
-        if (expr1 == NULL)
+        struct token *type_end;
+        if (parser_next_is_type(parser, &type_end) &&
+            type_end->type == TOKEN_IDENTIFIER)
         {
-            return NULL;
+            struct ast_type *type = parser_parse_type(parser, err);
+            /* variable name */
+            parser_advance(parser);
+            struct token *assign = parser_advance(parser);
+            if (assign->type != TOKEN_ASSIGN)
+            {
+                /* it might techincally be wrong to panic here */
+                PANIC("for loop init value not initialized");
+            }
+
+            struct ast_statement *first = ast_statement_alloc_declaration(
+                type, type_end->token, ast_parse_expression(parser, err));
+            out = ast_statement_alloc_block_for(true);
+            out->for_expr.statement1 = first;
         }
+        else
+        {
+            logd("not a declaration");
+            out = ast_statement_alloc_block_for(false);
+            out->for_expr.expr1 = ast_parse_expression(parser, err);
+            if (out->for_expr.expr1 == NULL)
+            {
+                return NULL;
+            }
+        }
+
         struct token *semicolon = parser_advance(parser);
 
         if (semicolon->type != TOKEN_SEMICOLON)
@@ -914,8 +931,8 @@ struct ast_statement *ast_parse_statement_branch(struct ast_parser *parser,
             (*err)->semicolon_expected.token = semicolon;
             return NULL;
         }
-        struct ast_expr *expr2 = ast_parse_expression(parser, err);
-        if (expr2 == NULL)
+        out->for_expr.expr2 = ast_parse_expression(parser, err);
+        if (out->for_expr.expr2 == NULL)
         {
             return NULL;
         }
@@ -926,12 +943,12 @@ struct ast_statement *ast_parse_statement_branch(struct ast_parser *parser,
             (*err)->semicolon_expected.token = semicolon;
             return NULL;
         }
-        struct ast_expr *expr3 = ast_parse_expression(parser, err);
-        if (expr3 == NULL)
+        out->for_expr.expr3 = ast_parse_expression(parser, err);
+
+        if (out->for_expr.expr3 == NULL)
         {
             return NULL;
         }
-        out = ast_statement_alloc_block_for(expr1, expr2, expr3);
     }
 
     struct token *close_paren = parser_advance(parser);

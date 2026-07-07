@@ -494,6 +494,36 @@ TEST_INTERPRETER(interpreter_test_for_sum,
 	}
 	,	55);
 
+TEST_INTERPRETER(interpreter_test_for_declare, 
+	int main() {
+		int sum = 0;
+		for (int i = 0; i < 11; i = i + 1) {
+		sum =sum + i;
+		}
+		return sum;
+	}
+	,	55);
+
+TEST_INTERPRETER(interpreter_test_increment_unary_operator, 
+	int main() {
+		int x = 4;
+		x++;
+		return x;
+	}
+, 5)
+
+TEST_INTERPRETER(interpreter_test_for_increment_unary_operator, 
+	int main() {
+		int sum = 0;
+		for (int i = 0; i < 11; i++) {
+		sum =sum + i;
+		}
+		return sum;
+	}
+	,	55);
+
+
+
 TEST_INTERPRETER(interpreter_test_pow,
 int pow(int num1, int num2) {
 int i = 0;

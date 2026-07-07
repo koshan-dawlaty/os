@@ -234,7 +234,12 @@ struct ast_statement
                 struct ast_expr *block_expr;
                 struct
                 {
-                    struct ast_expr *expr1;
+                    bool first_is_statement;
+                    union
+                    {
+                        struct ast_expr *expr1;
+                        struct ast_statement *statement1;
+                    };
                     struct ast_expr *expr2;
                     struct ast_expr *expr3;
                 } for_expr;
