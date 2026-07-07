@@ -286,7 +286,7 @@ void kmain()
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
 
 #ifdef TESTS
-    execv("/bin/compiler", (char *[]){"compiler", NULL});
+    execv("/bin/compiler.test", (char *[]){"compiler", NULL});
 #else
     execv("/bin/compiler", (char *[]){"compiler", NULL});
     /* execv("/bin/wm", (char *[]){"wm", NULL}); */
