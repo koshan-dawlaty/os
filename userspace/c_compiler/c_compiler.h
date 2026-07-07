@@ -1,9 +1,9 @@
 #ifndef C_COMPILER_H
 #define C_COMPILER_H
 
-#include "lib/log.h"
 #include <lib/array.h>
 #include <lib/list.h>
+#include <lib/log.h>
 #include <stddef.h>
 #include <types.h>
 
@@ -36,6 +36,7 @@ enum token_type
     TOKEN_FOR,
     TOKEN_STAR,
     TOKEN_INVALID,
+    TOKEN_INCREMENT,
 
 };
 const char *token_type_str(enum token_type type);

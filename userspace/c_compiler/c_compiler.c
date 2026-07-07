@@ -86,7 +86,8 @@ const char *token_type_str(enum token_type type)
         return "GREATER EQUAL";
     case TOKEN_LESS_EQUAL:
         return "LESS EQUAL";
-        break;
+    case TOKEN_INCREMENT:
+        return "INCREMENT (++)";
     }
 }
 
@@ -158,6 +159,7 @@ struct token_simple_map_entry token_simple_map[] = {
     {"{", TOKEN_O_BRACE},
     {"}", TOKEN_C_BRACE},
     {";", TOKEN_SEMICOLON},
+    {"++", TOKEN_INCREMENT},
     {"+", TOKEN_PLUS},
     {"-", TOKEN_MINUS},
     {"!=", TOKEN_NOT_EQUAL},
@@ -178,7 +180,7 @@ struct token_simple_map_entry token_simple_map[] = {
 
 bool token_is_unary_operator(enum token_type type)
 {
-    return type == TOKEN_STAR;
+    return type == TOKEN_STAR || type == TOKEN_INCREMENT;
 }
 
 /*
@@ -741,6 +743,7 @@ struct ast_operator *ast_operator_alloc(struct ast_expr *expr)
 struct ast_expr *ast_parse_expression(struct ast_parser *parser,
                                       struct ast_error **err)
 {
+    struct ast_expr *retval = NULL;
     bool first_operator = true;
     LIST_DEFINE_HEAD(operators);
     struct ast_expr *lhs = ast_parse_expression_simple(parser, err);
@@ -751,7 +754,8 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
         {
             if (first_operator)
             {
-                return lhs;
+                retval = lhs;
+                goto end;
             }
             else
             {
@@ -849,9 +853,18 @@ struct ast_expr *ast_parse_expression(struct ast_parser *parser,
 
     struct ast_operator *out =
         containerof(operators.next, struct ast_operator, list);
+    retval = out->expr;
+end:;
+    struct token *end_token = parser_get_current(parser);
+    if (token_is_unary_operator(end_token->type))
+    {
+        logd("%s", end_token->token);
+        retval = ast_expr_alloc_unary_operator(retval, end_token->token);
+        parser_advance(parser);
+    }
 
     /* logd("returning:%p", out->expr); */
-    return out->expr;
+    return retval;
 }
 
 int ast_parse_statements(struct ast_parser *parser,

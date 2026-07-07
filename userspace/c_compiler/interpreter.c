@@ -188,6 +188,17 @@ work for pointer math, and should use the largest size of the operands */
             u8 *ptr = interp->memory + value->value;
             return interp_value_alloc(ast_type_alloc("int", 0), *ptr);
         }
+        else if (!strcmp(expr->unary_operator.operator, "++"))
+        {
+            struct interp_value *value =
+                expr_eval(expr->unary_operator.expr, interp);
+
+            logd("name:%s", value->type->name);
+
+            value->value++;
+
+            return value;
+        }
         else
         {
             PANIC("unknown unary operator type for expr_eval() %s",
@@ -523,6 +534,15 @@ int main(int argc, char **argv)
 
 	
 int main() {
+int x = 10;
+int i = 0;
+for (i = 0; i < 10; i++) {
+print(i + x);
+x++;
+x = x * 3;
+}
+print(x);
+return x;
 }
 
 
