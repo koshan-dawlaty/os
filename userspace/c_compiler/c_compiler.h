@@ -301,6 +301,13 @@ struct ast_error *ast_parse(struct list *tokens,
 
 /* interpreter part, maybe move this later */
 
+struct interp_type
+{
+    char *name;
+    /* the size of this type, in bytes */
+    size_t size;
+};
+
 struct scope
 {
     struct list list;
@@ -335,7 +342,9 @@ static inline struct interpreter *interpreter_init()
 
 struct interp_value
 {
-    struct ast_type *type;
+    struct interp_type *type;
+    /* the number of pointers that this value's type has */
+    size_t num_pointers;
     u64 value;
 };
 struct interp_value *statements_eval(struct list *statements_head,

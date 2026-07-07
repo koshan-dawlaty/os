@@ -24,11 +24,22 @@ struct scope *scope_alloc()
     return out;
 }
 
-struct interp_value *interp_value_alloc(struct ast_type *type, u64 value)
+struct interp_type *interp_type_alloc(const char *name, size_t size)
+{
+    struct interp_type *out = malloc(sizeof(struct interp_type));
+    out->name = strdup(name);
+    out->size = size;
+
+    return out;
+}
+
+struct interp_value *interp_value_alloc(struct interp_type *type,
+                                        size_t num_pointers, u64 value)
 {
     struct interp_value *out = malloc(sizeof(struct interp_value));
 
     out->value = value;
+    out->num_pointers = num_pointers;
     out->type = type;
 
     return out;
@@ -166,11 +177,10 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                   token_type_str(expr->operator));
         }
 
-        struct ast_type *type = ast_type_alloc(
-            "int", MAX(lhs_val->type->num_pointers,
-                       rhs_val->type->num_pointers)); /* TODO: this should
-work for pointer math, and should use the largest size of the operands */
-        return interp_value_alloc(type, result);
+        /* TODO: type / size should not be int */
+        return interp_value_alloc(
+            interp_type_alloc("int", 4),
+            MAX(lhs_val->num_pointers, rhs_val->num_pointers), result);
     }
     else if (expr->type == AST_EXPRESSION_UNARY_OPERATOR)
     {
@@ -180,13 +190,16 @@ work for pointer math, and should use the largest size of the operands */
                 expr_eval(expr->unary_operator.expr, interp);
 
             logd("name:%s", value->type->name);
-            if (value->type->num_pointers <= 0)
+            if (value->num_pointers <= 0)
             {
                 PANIC("attempt to dereference not a pointer");
             }
 
             u8 *ptr = interp->memory + value->value;
-            return interp_value_alloc(ast_type_alloc("int", 0), *ptr);
+
+            /* TODO: type / size should not be int */
+            return interp_value_alloc(interp_type_alloc("int", 4),
+                                      value->num_pointers - 1, *ptr);
         }
         else if (!strcmp(expr->unary_operator.operator, "++"))
         {
@@ -219,12 +232,12 @@ work for pointer math, and should use the largest size of the operands */
                 memcpy(interp->memory + interp->string_offset,
                        expr->value.literal.str, len + 1);
                 struct interp_value *out = interp_value_alloc(
-                    ast_type_alloc("char", 1), interp->string_offset);
+                    interp_type_alloc("char", 1), 1, interp->string_offset);
                 interp->string_offset += len + 1;
 
                 return out;
             case AST_LITERAL_TYPE_INT:
-                return interp_value_alloc(ast_type_alloc("int", 0),
+                return interp_value_alloc(interp_type_alloc("int", 4), 0,
                                           expr->value.literal.integer);
                 break;
             }
@@ -251,15 +264,14 @@ work for pointer math, and should use the largest size of the operands */
                 NOT_NULL(arg->expr, "arg->expr was null");
 
                 struct interp_value *val = expr_eval(arg->expr, interp);
-                if (!strcmp(val->type->name, "char") &&
-                    val->type->num_pointers == 1)
+                if (!strcmp(val->type->name, "char") && val->num_pointers == 1)
                 {
                     u8 *str = interp->memory + val->value;
                     logi("print:%s", str);
                     printf("%s\n", str);
                 }
                 else if (!strcmp(val->type->name, "int") &&
-                         val->type->num_pointers == 0)
+                         val->num_pointers == 0)
                 {
                     logi("print:%d", val->value);
                     printf("%d\n", val->value);
@@ -267,7 +279,7 @@ work for pointer math, and should use the largest size of the operands */
                 else
                 {
                     PANIC("dont know how to print %s (%d pointers)",
-                          val->type->name, val->type->num_pointers);
+                          val->type->name, val->num_pointers);
                 }
             }
             return 0;
@@ -348,7 +360,10 @@ struct interp_value *statement_eval(struct ast_statement *statement,
         }
         else
         {
-            init_val = interp_value_alloc(statement->declared_type, 0);
+            /* TODO: get size of declared type */
+            init_val = interp_value_alloc(
+                interp_type_alloc(statement->declared_type->name, 4),
+                statement->declared_type->num_pointers, 0);
         }
         struct variable var = {statement->varname, init_val};
         NOT_NULL(interp->current_scope, "current scope was null");
@@ -549,12 +564,15 @@ int main(int argc, char **argv)
 
 
 	
+
 int main() {
-for (int i = 0; i < 10; i++) {
-	print(i);
+	char * s1 = "abc";
+	char * s = "abc";
+	*(s + 1) = 'a';
+	print(s);
 }
 
-}
+	
 
 
 		);
