@@ -37,7 +37,7 @@ enum token_type
     TOKEN_STAR,
     TOKEN_INVALID,
     TOKEN_INCREMENT,
-
+    TOKEN_REFERENCE,
 };
 const char *token_type_str(enum token_type type);
 
@@ -326,6 +326,7 @@ struct interpreter
     u8 *memory;
     size_t string_offset; /* TODO: string literals should probably be stored in
                              their own area */
+    size_t var_offset;
 };
 
 static inline struct interpreter *interpreter_init()
@@ -335,8 +336,9 @@ static inline struct interpreter *interpreter_init()
     out->all_scopes = malloc(sizeof(struct list));
     list_init_head(out->all_scopes);
     out->current_scope = out->all_scopes;
-    out->memory = malloc(100);
+    out->memory = malloc(1000);
     out->string_offset = 0;
+    out->var_offset = 500;
     return out;
 }
 

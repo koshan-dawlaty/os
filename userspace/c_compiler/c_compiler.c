@@ -88,6 +88,8 @@ const char *token_type_str(enum token_type type)
         return "LESS EQUAL";
     case TOKEN_INCREMENT:
         return "INCREMENT (++)";
+    case TOKEN_REFERENCE:
+        return "REFERENCE";
     }
 }
 
@@ -171,6 +173,7 @@ struct token_simple_map_entry token_simple_map[] = {
     {"if", TOKEN_IF},
     {"while", TOKEN_WHILE},
     {",", TOKEN_COMMA},
+    {"&", TOKEN_REFERENCE},
     {"return", TOKEN_RETURN},
     {"for", TOKEN_FOR},
 
@@ -180,7 +183,8 @@ struct token_simple_map_entry token_simple_map[] = {
 
 bool token_is_unary_operator(enum token_type type)
 {
-    return type == TOKEN_STAR || type == TOKEN_INCREMENT;
+    return type == TOKEN_STAR || type == TOKEN_INCREMENT ||
+           type == TOKEN_REFERENCE;
 }
 
 /*

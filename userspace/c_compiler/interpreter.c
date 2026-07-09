@@ -49,6 +49,7 @@ struct variable
 {
     char *varname;
     struct interp_value *value;
+    ptr_t addr;
 };
 
 /* TODO: this won't work correctly if something is declared in an inner scope
@@ -201,6 +202,20 @@ struct interp_value *expr_eval(struct ast_expr *expr,
             return interp_value_alloc(interp_type_alloc("int", 4),
                                       value->num_pointers - 1, *ptr);
         }
+        else if (!strcmp(expr->unary_operator.operator, "&"))
+        {
+            struct interp_value *value =
+                expr_eval(expr->unary_operator.expr, interp);
+
+            struct ast_expr *e = expr->unary_operator.expr;
+            ASSERT(e->type == AST_EXPRESSION_VALUE && e->value.is_var,
+                   "attempt to reference not a variable");
+            struct variable *var =
+                variable_lookup(interp->all_scopes, e->value.varname);
+
+            return interp_value_alloc(var->value->type,
+                                      var->value->num_pointers + 1, var->addr);
+        }
         else if (!strcmp(expr->unary_operator.operator, "++"))
         {
             struct interp_value *value =
@@ -270,8 +285,8 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                     logi("print:%s", str);
                     printf("%s\n", str);
                 }
-                else if (!strcmp(val->type->name, "int") &&
-                         val->num_pointers == 0)
+                else if (!strcmp(val->type->name, "int") 
+                         /* && val->num_pointers == 0  might be a good idea to have this but it is simpler */ )
                 {
                     logi("print:%d", val->value);
                     printf("%d\n", val->value);
@@ -365,12 +380,17 @@ struct interp_value *statement_eval(struct ast_statement *statement,
                 interp_type_alloc(statement->declared_type->name, 4),
                 statement->declared_type->num_pointers, 0);
         }
-        struct variable var = {statement->varname, init_val};
+        struct variable var = {statement->varname, init_val,
+                               interp->var_offset};
+        size_t type_size = init_val->type->size;
+        memcpy(interp->memory + interp->var_offset, &init_val->value,
+               type_size);
+        interp->var_offset += type_size;
+
         NOT_NULL(interp->current_scope, "current scope was null");
         struct scope *current =
             containerof(interp->current_scope, struct scope, list);
         array_push(&current->vars, &var, sizeof(struct variable));
-        variable_lookup(interp->all_scopes, "retval");
 
         break;
     case AST_STATEMENT_EXPR:
@@ -566,10 +586,12 @@ int main(int argc, char **argv)
 	
 
 int main() {
-	char * s1 = "abc";
-	char * s = "abc";
-	*(s + 1) = 'a';
-	print(s);
+int x  = 10;
+int* ptr = &x;
+	print(x);
+	print(ptr);
+	*(ptr) = 123;
+	print(x);
 }
 
 	
