@@ -40,7 +40,7 @@ struct client_window
     void *buffer;
 };
 
-#ifdef HOST_SDL
+#ifdef CONFIG_HOST_SDL
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_main.h>
@@ -51,17 +51,17 @@ struct client_window
 
 struct wm_client
 {
-    /* #ifndef CONFIG_HOST_SDL */
+#ifndef CONFIG_HOST_SDL
     int socket;
     int key_socket;
     int mem_id;
     struct framebuffer fb;
-    /* #else */
-    /* SDL_Surface *surface; */
-    /* SDL_Renderer *renderer; */
-    /* SDL_Texture *texture; */
-    /* SDL_Window *win; */
-    /* #endif */
+#else
+    SDL_Surface *surface;
+    SDL_Renderer *renderer;
+    SDL_Texture *texture;
+    SDL_Window *win;
+#endif
 };
 
 #define WM_MESSAGE_INVALID -1

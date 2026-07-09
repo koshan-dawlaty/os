@@ -43,7 +43,7 @@ int open(const char *path, int flags)
 
     return fd;
 #else
-    int fd = syscall_wrapper_asm(7, (uintptr_t)path, flags, 0, 0, 0);
+    int fd = syscall_wrapper_asm(SYS_open, (uintptr_t)path, flags, 0, 0, 0);
     if (fd < 0)
     {
         errno = -fd;

@@ -274,8 +274,8 @@ int main()
 
     init_libc();
 
-    int font_fd = open("/home/koshan/os/build/fs-root/font.psfu", O_RDONLY);
-    printf("%s\n", strerror(errno));
+    const char *str = "/home/koshan/os/build/fs-root/font.psfu";
+    int font_fd = open(str, O_RDONLY);
     font = font_parse_fd(font_fd);
 
     if (IS_ERR(font))
