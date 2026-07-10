@@ -7,8 +7,6 @@
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/utils.h>
-#include <math.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <tests/tests.h>
@@ -32,6 +30,8 @@ struct interp_type *interp_type_alloc(const char *name, size_t size)
 
     return out;
 }
+
+typedef u64 value_int_t;
 
 struct interp_value *interp_value_alloc(struct interp_type *type,
                                         size_t num_pointers, u64 value)
@@ -88,6 +88,15 @@ struct variable *variable_lookup(struct list *scope_head, const char *search)
     return NULL;
 }
 
+void variable_assign(struct variable *var, value_int_t value,
+                     struct interpreter *interp)
+{
+    /* TODO: check types */
+    memcpy(interp->memory + var->addr, &value, var->value->type->size);
+    /* this might be very stupid and useless */
+    var->value->value = value;
+}
+
 struct interp_value *expr_eval(struct ast_expr *expr,
                                struct interpreter *interp)
 {
@@ -108,7 +117,7 @@ struct interp_value *expr_eval(struct ast_expr *expr,
             if (expr->lhs->type == AST_EXPRESSION_UNARY_OPERATOR &&
                 !strcmp(expr->lhs->unary_operator.operator, "*"))
             {
-                logd("dereference");
+                /* dereference */
                 struct interp_value *value =
                     expr_eval(expr->lhs->unary_operator.expr, interp);
                 logd("ptr value:%d", value->value);
@@ -123,7 +132,9 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                     interp->all_scopes, expr->lhs->value.varname);
                 NOT_NULL(var, "variable not found:%s",
                          expr->lhs->value.varname);
-                var->value = expr_eval(expr->rhs, interp);
+                struct interp_value *new_value = expr_eval(expr->rhs, interp);
+                variable_assign(var, new_value->value, interp);
+
                 return var->value;
             }
             else
@@ -134,12 +145,53 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         struct interp_value *lhs_val = expr_eval(expr->lhs, interp);
         struct interp_value *rhs_val = expr_eval(expr->rhs, interp);
 
+        struct interp_type *out_type = NULL;
+        size_t num_pointers_out = 0;
+        /* first, if one has more pointers, use that */
+        if (lhs_val->num_pointers > rhs_val->num_pointers)
+        {
+            out_type = lhs_val->type;
+            num_pointers_out = lhs_val->num_pointers;
+        }
+        else if (rhs_val->num_pointers > lhs_val->num_pointers)
+        {
+            out_type = rhs_val->type;
+            num_pointers_out = rhs_val->num_pointers;
+        }
+        else
+        {
+            /* if they have the same number of pointers, then use whichever is
+             * larger */
+            if (lhs_val->type->size > rhs_val->type->size)
+            {
+                out_type = lhs_val->type;
+                num_pointers_out = lhs_val->num_pointers;
+            }
+            else
+            {
+                out_type = rhs_val->type;
+                num_pointers_out = rhs_val->num_pointers;
+            }
+        }
+
         /* for now, just assume that if there is an operator, both sides are
          * ints */
         /* TODO: maybe add asserts to ensure that they are ints */
 
         int lhs = lhs_val->value;
         int rhs = rhs_val->value;
+        if (lhs_val->num_pointers >= 1)
+        {
+            logd("multiplying rhs (%d) by:%d because", rhs,
+                 lhs_val->type->size);
+            rhs *= lhs_val->type->size;
+        }
+        if (rhs_val->num_pointers >= 1)
+        {
+            logd("multiplying lhs (%d) by:%d because", lhs,
+                 rhs_val->type->size);
+            lhs *= rhs_val->type->size;
+        }
 
         int result;
 
@@ -179,9 +231,7 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         }
 
         /* TODO: type / size should not be int */
-        return interp_value_alloc(
-            interp_type_alloc("int", 4),
-            MAX(lhs_val->num_pointers, rhs_val->num_pointers), result);
+        return interp_value_alloc(out_type, num_pointers_out, result);
     }
     else if (expr->type == AST_EXPRESSION_UNARY_OPERATOR)
     {
@@ -196,11 +246,16 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                 PANIC("attempt to dereference not a pointer");
             }
 
+            logd("a pointer with value:%d", value->value);
+            logd("a pointer with size:%d", value->type->size);
             u8 *ptr = interp->memory + value->value;
+            struct interp_value *out =
+                interp_value_alloc(value->type, value->num_pointers - 1, 0);
+            logd("%p", ptr);
+            memcpy(&out->value, ptr, value->type->size);
 
             /* TODO: type / size should not be int */
-            return interp_value_alloc(interp_type_alloc("int", 4),
-                                      value->num_pointers - 1, *ptr);
+            return out;
         }
         else if (!strcmp(expr->unary_operator.operator, "&"))
         {
@@ -218,14 +273,17 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         }
         else if (!strcmp(expr->unary_operator.operator, "++"))
         {
-            struct interp_value *value =
-                expr_eval(expr->unary_operator.expr, interp);
 
-            logd("name:%s", value->type->name);
+            struct ast_expr *e = expr->unary_operator.expr;
+            ASSERT(e->type == AST_EXPRESSION_VALUE && e->value.is_var,
+                   "attempt to reference not a variable");
+            struct variable *var =
+                variable_lookup(interp->all_scopes, e->value.varname);
+            ASSERT(e->type == AST_EXPRESSION_VALUE && e->value.is_var,
+                   "attempt to reference not a variable");
 
-            value->value++;
-
-            return value;
+            variable_assign(var, var->value->value + 1, interp);
+            return var->value;
         }
         else
         {
@@ -263,6 +321,9 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                 variable_lookup(interp->all_scopes, expr->value.varname);
 
             NOT_NULL(var, "variable not found:%s", expr->value.varname);
+            memcpy(&var->value->value, interp->memory + var->addr,
+                   var->value->type->size);
+            logd("var %s has size of %d", var->varname, var->value->type->size);
             return var->value;
         }
     }
@@ -285,16 +346,10 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                     logi("print:%s", str);
                     printf("%s\n", str);
                 }
-                else if (!strcmp(val->type->name, "int") 
-                         /* && val->num_pointers == 0  might be a good idea to have this but it is simpler */ )
+                else
                 {
                     logi("print:%d", val->value);
                     printf("%d\n", val->value);
-                }
-                else
-                {
-                    PANIC("dont know how to print %s (%d pointers)",
-                          val->type->name, val->num_pointers);
                 }
             }
             return 0;
@@ -328,8 +383,13 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
                     struct interp_value *value =
                         expr_eval(passed_arg->expr, interp);
+                    logd("arg:%d", value->value);
                     struct variable var = {.value = value,
-                                           .varname = def_arg->name};
+                                           .varname = def_arg->name,
+                                           .addr = interp->var_offset};
+                    memcpy(interp->memory + interp->var_offset, &value->value,
+                           value->type->size);
+                    interp->var_offset += value->type->size;
                     array_add(&new_scope->vars, &var, sizeof(struct variable));
                     passed_pos = passed_pos->next;
                 }
@@ -385,6 +445,7 @@ struct interp_value *statement_eval(struct ast_statement *statement,
         size_t type_size = init_val->type->size;
         memcpy(interp->memory + interp->var_offset, &init_val->value,
                type_size);
+        logd("created variable at:%d", interp->var_offset);
         interp->var_offset += type_size;
 
         NOT_NULL(interp->current_scope, "current scope was null");
@@ -398,9 +459,11 @@ struct interp_value *statement_eval(struct ast_statement *statement,
         break;
     case AST_STATEMENT_IF:;
         value = expr_eval(statement->block_expr, interp);
+        logd("if:%d", value->value);
         /* TODO: add error if it is not an int maybe */
         if (value->value != 0)
         {
+            logd("evaluating");
             struct interp_value *output =
                 statements_eval(&statement->block, interp);
             if (output != NULL)
@@ -585,16 +648,31 @@ int main(int argc, char **argv)
 
 	
 
-int main() {
-int x  = 10;
-int* ptr = &x;
-	print(x);
-	print(ptr);
-	*(ptr) = 123;
-	print(x);
-}
+/* int main() { */
+/* int x  = 10; */
+/* int y  = 11; */
+/* int* ptr = &x; */
+/* 	print(x); */
+/* 	print(y); */
+/* 	print(ptr); */
+/* 	*(ptr + 1) = 123; */
+/* 	print(x); */
+/* 	print(y); */
+/* } */
 
+
+int strlen(char * str) {
+	int i = 0;
+	while (*(str + i)) {
+		i = i + 1;
+	}
+	return i;
+}
 	
+int main() {
+	char * s = "abc 123";
+	print(*(s + 1));
+}
 
 
 		);
