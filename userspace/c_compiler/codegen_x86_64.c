@@ -11,7 +11,6 @@ extern int syscall_wrapper_asm(ptr_t ax, ptr_t bx, ptr_t cx, ptr_t dx, ptr_t si,
 
 int main()
 {
-    init_libc();
 
     LIST_DEFINE_HEAD(tokens);
     const char *program = MACRO_STR(

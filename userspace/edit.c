@@ -273,8 +273,6 @@ void write_to_file(struct editor_buffer *buffer)
 int main(int argc, char **argv)
 {
 
-    init_libc();
-
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse_fd(font_fd);
 

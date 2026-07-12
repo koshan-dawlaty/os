@@ -130,8 +130,6 @@ const struct terminal_operations wm_term_operations = {
 int main()
 {
 
-    init_libc();
-
     /* int serial = open("/serial0", O_RDWR); */
 
     /* write(serial, "abc", 3); */

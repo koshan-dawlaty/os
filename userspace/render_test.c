@@ -115,7 +115,6 @@ void draw_line(struct point3d one, struct point3d two)
 
 int main()
 {
-    init_libc();
 
     size_t w = 300, h = 300;
     size_t x = 0, y = 0;

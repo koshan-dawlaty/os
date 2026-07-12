@@ -33,7 +33,6 @@ struct array read_dir_array(DIR *d)
 
 int main()
 {
-    init_libc();
 
     DIR *bin_dir = opendir(BIN_DIR);
     if (bin_dir == NULL)

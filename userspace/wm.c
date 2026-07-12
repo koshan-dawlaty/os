@@ -993,7 +993,6 @@ void thread1()
 
 int main()
 {
-    init_libc();
 
     /* char c = getchar(); */
     /* logd("%c", c); */

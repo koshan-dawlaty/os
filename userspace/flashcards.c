@@ -98,8 +98,6 @@ void draw_string(struct wm_client client, const char *str, size_t x, size_t y)
 int main(int argc, char **argv)
 {
 
-    init_libc();
-
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse_fd(font_fd);
     client = wm_client_connect(font->header.height * 2, 500);

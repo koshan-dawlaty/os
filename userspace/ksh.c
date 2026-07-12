@@ -16,8 +16,6 @@
 int main()
 {
 
-    init_libc();
-
     printf(
         " \n"); /* TODO: remove, this needs to be here so the terminal works */
 

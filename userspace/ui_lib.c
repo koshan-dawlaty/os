@@ -211,8 +211,6 @@ struct element *text_alloc(struct rect_d r, struct element *parent, char *str)
 int main()
 {
 
-    init_libc();
-
     client = wm_client_connect(600, 600);
 
     int font_fd = open("/font.psfu", O_RDONLY);

@@ -604,7 +604,6 @@ void call_constructors(void)
 
 int main(int argc, char **argv)
 {
-    init_libc();
     call_constructors();
 
     /* LIST_DEFINE_HEAD(expr_tokens); */

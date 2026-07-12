@@ -8,8 +8,6 @@
 int main(int argc, char **argv)
 {
 
-    init_libc();
-
     if (argc <= 2)
     {
         printf("need more arguments\n");

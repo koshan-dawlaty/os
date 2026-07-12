@@ -413,7 +413,6 @@ void load_level(const char *path)
 
 int main()
 {
-    init_libc();
     image_parse(SOKOBAN_ROOT "images/player.tga", &player_img);
     image_parse(SOKOBAN_ROOT "images/box_goal.tga", &check_img);
     image_parse(SOKOBAN_ROOT "images/goal.tga", &goal_img);
