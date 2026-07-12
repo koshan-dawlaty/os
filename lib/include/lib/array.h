@@ -79,4 +79,27 @@ void array_insert(struct array *array, size_t offset, void *data, size_t len);
 
 u8 array_pop_middle(struct array *array, size_t offset);
 
+#define ARRAY_DEFAULT_CAPACITY 2
+#define array_macro_append(array, item)                                        \
+    do                                                                         \
+    {                                                                          \
+        if (array.num >= array.capacity)                                       \
+        {                                                                      \
+            if (array.capacity == 0)                                           \
+            {                                                                  \
+                array.capacity = ARRAY_DEFAULT_CAPACITY;                       \
+            }                                                                  \
+            else                                                               \
+            {                                                                  \
+                array.capacity *= 2;                                           \
+            }                                                                  \
+            array.items =                                                      \
+                realloc(array.items, array.capacity * sizeof(*array.items));   \
+        }                                                                      \
+        array.items[array.num] = item;                                         \
+        array.num++;                                                           \
+    } while (0)
+
+#define array_macro_remove_end(array) (array.num--, array.items[array.num])
+
 #endif
