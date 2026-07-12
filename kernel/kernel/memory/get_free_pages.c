@@ -30,18 +30,18 @@ struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
 #endif
     .size = DEFAULT_BITMAP_SIZE,
     .bitmap = gfp_kernel_bitmap,
-    .pg_flags = PAGING_WRITEABLE,
+    .pg_flags = PAGING_WRITEABLE | PAGING_PRESENT,
 };
 
 struct memory_zone gfp_kernel_zone =
     BITMAP_TO_GFP_ZONE(&gfp_bitmap_kernel_zone);
 
-struct bitmap_memory_zone gfp_bitmap_user_zone = {.virtual = 0x80000000,
-                                                  .physical = 0xC00000,
-                                                  .size = DEFAULT_BITMAP_SIZE,
-                                                  .bitmap = NULL,
-                                                  .pg_flags = PAGING_WRITEABLE |
-                                                              PAGING_USER};
+struct bitmap_memory_zone gfp_bitmap_user_zone = {
+    .virtual = 0x80000000,
+    .physical = 0xC00000,
+    .size = DEFAULT_BITMAP_SIZE,
+    .bitmap = NULL,
+    .pg_flags = PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT};
 
 struct memory_zone gfp_user_zone = BITMAP_TO_GFP_ZONE(&gfp_bitmap_user_zone);
 
@@ -87,7 +87,7 @@ void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
 
     if (i >= zone->size)
     {
-        panic("out of memory in get_free_pages_bitmap() for requested size:%d, "
+        PANIC("out of memory in get_free_pages_bitmap() for requested size:%d, "
               "and offset:%d, max size:%d",
               amount, i, zone->size);
     }
@@ -111,6 +111,7 @@ void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
         /* FIXME: stupid */
         if ((zone->pg_flags & PAGING_USER))
         {
+            logd("mapping %p in userspace, i is:%d", virtual_addr, i);
             addr_space_map_current(virtual_addr, 1, zone->pg_flags);
         }
         else

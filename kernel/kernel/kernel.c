@@ -22,6 +22,7 @@
 #include <kernel/paging.h>
 #include <kernel/ps2.h>
 #include <kernel/semaphore.h>
+#include <kernel/simple_binary.h>
 #include <kernel/stacktrace.h>
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
@@ -284,6 +285,21 @@ void kmain()
     /* printf("%p, %p\n", read, write); */
 
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
+
+    /* u8 bytecode[] = {0xa3, 0x34, 0x12, 0, 0, 0, 0, 0, 0}; */
+    /* logd("%d", sizeof(bytecode)); */
+
+    /* u8 *binary_test = malloc(9 + sizeof(bytecode)); */
+    /* binary_test[0] = 'T'; */
+    /* binary_test[1] = 'E'; */
+    /* binary_test[2] = 'S'; */
+    /* binary_test[3] = 'T'; */
+    /* binary_test[4] = 0; */
+    /* *(u32 *)(binary_test + 5) = sizeof(bytecode); */
+    /* memcpy(binary_test + 9, bytecode, sizeof(bytecode)); */
+
+    /* struct task *simple_binary = simple_binary_load(binary_test); */
+    /* add_task(simple_binary); */
 
 #ifdef TESTS
     execv("/bin/compiler.test", (char *[]){"compiler", NULL});

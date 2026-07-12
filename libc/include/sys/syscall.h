@@ -43,4 +43,6 @@
 
 #define SYS_shared_mem_resize 37
 
+#define SYS_load_simple_binary 123
+
 #endif

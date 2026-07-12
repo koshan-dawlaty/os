@@ -77,6 +77,7 @@ kernel/stack_trace.o \
 kernel/elf/elf.o \
 kernel/elf/elf32.o \
 kernel/elf/elf64.o \
+kernel/elf/simple_binary.o \
 kernel/scheduler/scheduler.o \
 kernel/scheduler/task_queue.o \
 kernel/scheduler/wait_queue.o \
