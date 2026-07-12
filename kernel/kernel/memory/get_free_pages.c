@@ -111,7 +111,6 @@ void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
         /* FIXME: stupid */
         if ((zone->pg_flags & PAGING_USER))
         {
-            logd("mapping %p in userspace, i is:%d", virtual_addr, i);
             addr_space_map_current(virtual_addr, 1, zone->pg_flags);
         }
         else

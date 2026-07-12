@@ -4,6 +4,7 @@
 _init:
 	push %rbp
 	mov %rsp, %rbp
+	call init_libc
 
 	/* gcc will nicely put the contents of crtbegin.o's .init section here. */
 
@@ -14,3 +15,4 @@ _fini:
 	push %rbp
 	mov %rsp, %rbp
 	/* gcc will nicely put the contents of crtbegin.o's .fini section here. */
+

@@ -304,11 +304,11 @@ void kmain()
 #ifdef TESTS
     execv("/bin/compiler.test", (char *[]){"compiler", NULL});
 #else
-    execv("/bin/compiler", (char *[]){"compiler", NULL});
-    /* execv("/bin/wm", (char *[]){"wm", NULL}); */
+    /* execv("/bin/compiler", (char *[]){"compiler", NULL}); */
+    execv("/bin/wm", (char *[]){"wm", NULL});
+    /* execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
 #endif
 
-    /* int err = execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
     /* int err = execv("/bin/ls", (char *[]){"/bin/ls", "/dev", NULL}); */
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 

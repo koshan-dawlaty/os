@@ -2,7 +2,6 @@
 #include <dirent.h>
 #include <err_ptr.h>
 #include <errno.h>
-#include <init.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,8 +9,6 @@
 
 int main(int argc, char **argv)
 {
-
-    init_libc();
 
     /* printf("%p\n", malloc(4095)); */
     /* printf("%p\n", malloc(4095)); */

@@ -12,7 +12,7 @@
 
 int main(int argc, char **argv)
 {
-    init_libc();
+    logd("%d", argc);
 
     if (argc <= 1)
     {

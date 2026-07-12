@@ -277,7 +277,6 @@ struct e1000 *e1000_alloc(u32 bar0)
 
         /* FIXME: this probably doesnt work for a 64 bit physical address */
         void *paddr = (void *)((ptr_t)bar0 & 0xFFFFFFF0);
-        logd("paddr:%p", paddr);
         out->mem_base = (ptr_t)map_physaddr(paddr, 10,
                                             PAGING_WRITEABLE | PAGING_PRESENT |
                                                 PAGING_WRITE_THROUGH |

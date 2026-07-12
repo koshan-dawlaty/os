@@ -76,7 +76,6 @@ void new_task_usermode_start(int argc, char **argv, ptr_t addr)
     temp_regs->esp = 0xBFFEF000;
     scheduler_set_regs_argv(argc, argv, temp_regs);
 
-    logd("%p", addr);
     jump_usermode_asm(addr, temp_regs, (ptr_t)temp_regs->esp);
 }
 
