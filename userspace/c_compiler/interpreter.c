@@ -120,9 +120,12 @@ struct interp_value *expr_eval(struct ast_expr *expr,
                 /* dereference */
                 struct interp_value *value =
                     expr_eval(expr->lhs->unary_operator.expr, interp);
-                logd("ptr value:%d", value->value);
-                *((u8 *)interp->memory + value->value) =
-                    expr_eval(expr->rhs, interp)->value;
+                struct interp_value *new_value = expr_eval(expr->rhs, interp);
+                /* TODO: check size */
+                memcpy(interp->memory + value->value, &new_value->value,
+                       value->type->size);
+                /* *((u8 *)interp->memory + value->value) = */
+                /*     expr_eval(expr->rhs, interp)->value; */
 
                 return value;
             }
@@ -660,18 +663,14 @@ int main(int argc, char **argv)
 /* 	print(y); */
 /* } */
 
-
-int strlen(char * str) {
-	int i = 0;
-	while (*(str + i)) {
-		i = i + 1;
-	}
-	return i;
+int func(int num, int * result) {
+	*result = num;
 }
 	
 int main() {
-	char * s = "abc 123";
-	print(*(s + 1));
+	int result;
+	func(1234, &result);
+	print(result);
 }
 
 

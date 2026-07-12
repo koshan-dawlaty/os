@@ -255,6 +255,7 @@ void write_to_file(struct editor_buffer *buffer)
         set_filename(buffer);
     }
 
+    lseek(buffer->file->fd, 0, SEEK_SET);
     struct list *pos;
     list_for_each(pos, &buffer->rows_head)
     {
@@ -269,7 +270,7 @@ void write_to_file(struct editor_buffer *buffer)
     }
 }
 
-int main()
+int main(int argc, char **argv)
 {
 
     init_libc();
@@ -294,7 +295,9 @@ int main()
     /*                                .num_lines = */
     /*                                    client.fb.height /
      * font->header.height}; */
-    struct editor_buffer buffer = {0, 0, .top_line = 0, .num_lines = 4};
+    struct editor_buffer buffer = {0, 0, .top_line = 0, .file = NULL,
+                                   .num_lines =
+                                       client.fb.height / font->header.height};
     list_init_head(&buffer.rows_head);
     struct editor_row *row = editor_row_alloc();
     list_push(&row->list, &buffer.rows_head);
@@ -387,7 +390,6 @@ int main()
                 framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
                                       client.fb.height, 0);
                 editor_buffer_redraw(&buffer, &client.fb, 0, 0);
-                wm_render(client);
 
                 wm_render(client);
             }

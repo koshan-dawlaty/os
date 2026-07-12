@@ -485,6 +485,17 @@ TEST_INTERPRETER(interpreter_test_for_assign,
 	}
 	,	123);
 
+TEST_INTERPRETER(interpreter_test_derefrence_size, 
+int func(int num, int * result) {
+	*result = num;
+}
+	
+int main() {
+	int result;
+	func(1234, &result);
+	return result;
+}, 1234);
+
 TEST_INTERPRETER(interpreter_test_for_sum, 
 	int main() {
 		int sum;
