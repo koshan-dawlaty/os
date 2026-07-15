@@ -267,24 +267,6 @@ struct test_array
 void kmain()
 {
 
-    struct test_array array = {0};
-    for (size_t i = 0; i < 10; i++)
-    {
-        array_macro_append(array, i);
-    }
-
-    for (size_t i = 0; i < array.num; i++)
-    {
-        logd("%d, %d", array.items[i], i);
-    }
-    for (int i = 9; i >= 0; i--)
-    {
-        int num = array_macro_remove_end(array);
-        logd("%d, %d", num, i);
-    }
-    logd("%d", array.num);
-    return;
-
     scheduler_init();
 
     irq_disable();

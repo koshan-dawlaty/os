@@ -5,7 +5,6 @@
 #include <lib/assert.h>
 #include <lib/list.h>
 #include <lib/log.h>
-#include <math.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>

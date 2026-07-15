@@ -1,3 +1,5 @@
+#include "lib/img.h"
+#include "unistd.h"
 #include "wm_lib.h"
 #include <container_of.h>
 #include <init.h>
@@ -10,202 +12,224 @@
 #include <string.h>
 #include <userspace/mouse.h>
 
-struct rect_d
-{
-    double x, y, w, h;
-};
-#define RECT_D_INIT(_x, _y, _w, _h)                                            \
-    ((struct rect_d){.x = _x, .y = _y, .w = _w, .h = _h})
-
 struct wm_client client;
 struct PSF_font *font;
 
-struct element;
-struct element_type
+enum view_type
 {
-    void (*render)(struct element *e);
-    void (*on_click)(struct element *e, size_t real_x, size_t real_y);
-    void (*free)(struct element *e);
+    VIEW_LAYOUT,
+    VIEW_ELEMENT,
 };
-struct element
+
+struct view
 {
     size_t x, y;
-    size_t abs_x, abs_y; /* position of element in the screen framebuffer */
+
     struct framebuffer fb;
     struct list list;
-    struct list children;
+    union
+    {
+        struct
+        {
+            struct layout *layout;
+        };
+        struct element *element;
+    };
+    enum view_type type;
+};
+struct element_type
+{
+    void (*render)(struct view *e);
+    void (*on_click)(struct view *e, size_t real_x, size_t real_y);
+    void (*free)(struct view *e);
+};
 
+struct element
+{
     struct element_type type;
-    struct element *parent;
     void *private;
 };
 
-static inline struct element *element_alloc_partial(struct element_type t,
-                                                    void *private)
+static void image_render(struct view *e)
+{
+    struct image *img = (struct image *)e->element->private;
+    e->fb.height = img->header.h;
+    e->fb.width = img->header.w;
+    framebuffer_draw_img(&e->fb, 0, 0, *img);
+}
+
+struct element_type element_image = {.render = image_render};
+
+static void rect_render(struct view *e)
+{
+    logd("%p", e->element->private);
+    framebuffer_draw_rect(&e->fb, 0, 0, e->fb.width, e->fb.height,
+                          (ptr_t)e->element->private);
+}
+
+struct element_type element_rect = {.render = rect_render};
+
+struct element *element_alloc(struct element_type type, void *private)
 {
     struct element *out = malloc(sizeof(struct element));
-    out->children = LIST_HEAD_INIT(&out->children);
-    out->list = LIST_INIT();
-
-    out->type = t;
+    out->type = type;
     out->private = private;
-
     return out;
 }
 
-struct element *element_alloc_root(const struct element_type t,
-                                   void *element_private,
-                                   struct framebuffer screen)
+struct layout_type
 {
-    struct element *out = element_alloc_partial(t, element_private);
-    out->x = 0;
-    out->y = 0;
-    out->abs_x = 0;
-    out->abs_y = 0;
-
-    out->fb = screen;
-
-    return out;
-}
-
-struct element *element_alloc(struct rect_d r, const struct element_type t,
-                              void *element_private, struct element *parent)
-{
-
-    struct element *out = element_alloc_partial(t, element_private);
-
-    if (parent != NULL)
-    {
-
-        list_push(&out->list, &parent->children);
-
-        out->abs_x = (r.x * parent->fb.width) + parent->abs_x;
-        out->abs_y = (r.y * parent->fb.height) + parent->abs_y;
-        out->x = (r.x * parent->fb.width);
-        out->y = (r.y * parent->fb.height);
-
-        logd("%d, %d", out->x, out->y);
-
-        size_t w = r.w * parent->fb.width;
-        size_t h = r.h * parent->fb.height;
-        size_t pitch = (parent->fb.pitch / parent->fb.pixel_width) - w;
-        if (unlikely(parent->fb.pitch / parent->fb.pixel_width == w))
-        {
-            pitch = parent->fb.pitch / parent->fb.pixel_width;
-        }
-
-        void *buf =
-            parent->fb.buffer + FRAMEBUFFER_OFFSET(parent->fb, out->x, out->y);
-
-        out->fb = FRAMEBUFFER_INIT(w, h, parent->fb.pitch, parent->fb.depth,
-                                   parent->fb.pixel_width, buf);
-    }
-
-    return out;
-}
-
-void render(struct element *e)
-{
-
-    /* struct rect_d screen = get_real_pos(parent, e->r); */
-    NOT_NULL(e->type.render, "element did not implement render operation");
-    e->type.render(e);
-    /* client_draw_rect(client, screen.x, screen.y, screen.w, screen.h,
-     * e->color); */
-
-    struct list *pos;
-    list_for_each(pos, &e->children)
-    {
-        struct element *e2 = containerof(pos, struct element, list);
-        render(e2);
-    }
-}
-
-void rect_free(struct element *e)
-{
-}
-
-void rect_onclick(struct element *e, size_t real_x, size_t real_y)
-{
-    u32 color = (ptr_t)e->private;
-    logd("%p", color);
-    /* color <<= 8; */
-    client_draw_pixel(client, real_x, real_y, 0);
-}
-
-void rect_render(struct element *rect)
-{
-    framebuffer_draw_rect(&rect->fb, 0, 0, rect->fb.width, rect->fb.height,
-                          (ptr_t)rect->private);
-}
-const struct element_type rect_operations = {
-
-    .render = rect_render,
-
-    .free = rect_free,
-    .on_click = rect_onclick
-
+    void (*render_children)(struct view *);
 };
 
-struct element *rectangle_alloc(struct rect_d r, struct element *parent,
-                                u32 color)
+struct layout
 {
-    if (parent == NULL) /* TODO: stupid */
+    struct layout_type type;
+    struct list children;
+    void *private;
+};
+
+void view_render(struct view *view);
+
+void line_layout_render_children(struct view *view)
+{
+    size_t p = 0;
+    struct list *pos;
+    list_for_each(pos, &view->layout->children)
     {
-        return element_alloc_root(rect_operations, (void *)(ptr_t)color,
-                                  client.fb);
+        struct view *child = containerof(pos, struct view, list);
+        if (view->layout->private != 0)
+        {
+            child->x = p;
+            child->y = 0;
+        }
+        else
+        {
+            child->x = 0;
+            child->y = p;
+        }
+        child->fb.pitch = view->fb.pitch;
+        child->fb.depth = view->fb.depth;
+        child->fb.pixel_width = view->fb.pixel_width;
+        child->fb.buffer =
+            view->fb.buffer + FRAMEBUFFER_OFFSET(view->fb, child->x, child->y);
+
+        logd("%d, %d", child->fb.width, child->fb.height);
+
+        view_render(child);
+        if (view->layout->private != 0)
+        {
+            p += child->fb.width + 10;
+        }
+        else
+        {
+            p += child->fb.height + 10;
+        }
+    }
+}
+
+struct layout_type line_layout = {.render_children =
+                                      line_layout_render_children};
+
+struct layout *layout_alloc(struct layout_type type, void *private)
+{
+    struct layout *out = malloc(sizeof(struct layout));
+    out->type = type;
+    out->private = private;
+    list_init_head(&out->children);
+    return out;
+}
+
+static inline struct view *view_alloc_partial(enum view_type type)
+{
+    struct view *out = malloc(sizeof(struct view));
+    out->list = LIST_INIT();
+    out->x = 0;
+    out->y = 0;
+    out->fb.width = 10;
+    out->fb.height = 10;
+    out->type = type;
+
+    return out;
+}
+static inline struct view *view_alloc_element(struct element *element)
+{
+    struct view *out = view_alloc_partial(VIEW_ELEMENT);
+    out->element = element;
+    return out;
+}
+static inline struct view *view_alloc_layout(struct layout *layout)
+{
+    struct view *out = view_alloc_partial(VIEW_LAYOUT);
+    out->layout = layout;
+    return out;
+}
+
+struct view *ui_rect_alloc(size_t w, size_t h, u32 color)
+{
+    struct view *out =
+        view_alloc_element(element_alloc(element_rect, (void *)(ptr_t)color));
+    out->fb.width = w;
+    out->fb.height = h;
+    return out;
+}
+
+struct view *ui_image_alloc(struct image *img)
+{
+    struct view *out = view_alloc_element(element_alloc(element_image, img));
+    out->fb.width = img->header.w;
+    out->fb.height = img->header.h;
+
+    return out;
+}
+
+static inline struct view *layout_line_horizontal_alloc()
+{
+    return view_alloc_layout(layout_alloc(line_layout, (void *)1));
+}
+static inline struct view *layout_line_vertical_alloc()
+{
+    return view_alloc_layout(layout_alloc(line_layout, (void *)0));
+}
+
+void layout_add_child(struct view *layout, struct view *child)
+{
+    ASSERT(layout->type == VIEW_LAYOUT, "layout was not a layout");
+
+    if (child->fb.width > layout->fb.width)
+    {
+        layout->fb.width = child->fb.width;
+    }
+    if (child->fb.height > layout->fb.height)
+    {
+        layout->fb.height = child->fb.height;
+    }
+
+    list_push(&child->list, &layout->layout->children);
+}
+
+struct view *ui_image_alloc_str(const char *path)
+{
+    struct image *img = malloc(sizeof(struct image));
+    image_parse(path, img);
+
+    return ui_image_alloc(img);
+}
+
+void view_render(struct view *view)
+{
+    if (view->type == VIEW_ELEMENT)
+    {
+        view->element->type.render(view);
+    }
+    else if (view->type == VIEW_LAYOUT)
+    {
+        view->layout->type.render_children(view);
     }
     else
     {
-        return element_alloc(r, rect_operations, (void *)(ptr_t)color, parent);
+        PANIC("unknown enum type:%d", view->type);
     }
-}
-
-void ui_onclick(
-    struct element *root, size_t x,
-    size_t y) /* TODO: SLOW: this would be faster if it only ran on_click on
-                 ones we knew were in the right position */
-{
-
-    if (x > root->abs_x && x < root->fb.width + root->abs_x &&
-        y > root->abs_y && y < root->abs_y + root->fb.height)
-    {
-
-        if (root->type.on_click !=
-            NULL) /* many things don't have a click operation */
-        {
-            root->type.on_click(root, x, y);
-        }
-    }
-
-    struct list *pos;
-    list_for_each(pos, &root->children)
-    {
-        struct element *e = containerof(pos, struct element, list);
-        ui_onclick(e, x, y);
-    }
-}
-
-void text_free(struct element *e)
-{
-    free(e->private);
-}
-
-void text_click(struct element *rect)
-{
-}
-
-void text_render(struct element *text)
-{
-    framebuffer_draw_string(&text->fb, font, text->private, 0, 0);
-}
-
-const struct element_type text_operations = {
-    .render = text_render, .on_click = NULL, .free = text_free};
-
-struct element *text_alloc(struct rect_d r, struct element *parent, char *str)
-{
-    return element_alloc(r, text_operations, strdup(str), parent);
 }
 
 int main()
@@ -216,20 +240,27 @@ int main()
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse_fd(font_fd);
 
-    struct element *root =
-        rectangle_alloc(RECT_D_INIT(0.0, 0.0, 1.0, 1.0), NULL, 0xFF0000);
-    struct element *one =
-        rectangle_alloc(RECT_D_INIT(0.25, 0.5, 0.25, 0.25), root, 0x0000FF);
-    struct element *two =
-        rectangle_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1.0), one, 0xFF00FF);
-    struct element *three =
-        text_alloc(RECT_D_INIT(0.5, 0.0, 0.5, 1), two, "abc");
+    struct view *image = ui_image_alloc_str("dog.tga");
+    struct view *osdev = ui_image_alloc_str("osdev.tga");
 
-    /* list2c_push(&three->list, &two->children); */
+    struct view *blue = ui_rect_alloc(10, 10, 0xFF);
+    struct view *purple = ui_rect_alloc(10, 10, 0xFF00FF);
+    struct view *green = ui_rect_alloc(10, 10, 0xFF00);
+    struct view *cyan = ui_rect_alloc(10, 10, 0xFFFF);
 
-    int mouse_x = 0, mouse_y = 0;
+    struct view *horizontal = layout_line_horizontal_alloc();
+    struct view *vertical = layout_line_vertical_alloc();
 
-    render(root);
+    layout_add_child(horizontal, image);
+    layout_add_child(horizontal, purple);
+    layout_add_child(horizontal, vertical);
+
+    layout_add_child(vertical, green);
+    layout_add_child(vertical, blue);
+
+    horizontal->fb = client.fb;
+
+    view_render(horizontal);
 
     while (true)
     {
@@ -240,15 +271,7 @@ int main()
         {
         case WM_MESSAGE_MOUSE:;
             struct mouse_event *ev = message.message_data;
-            /* logd("%d, %d", ev.x, mouse_y); */
-            mouse_x += ev->x_change;
-            mouse_y += ev->y_change;
-            /* logd("mouse_x:%d, %d", mouse_x, mouse_y); */
-            /* client_draw_pixel(client, mouse_x, mouse_y, 0xFFFFFF); */
-            if (ev->buttons.left_click)
-            {
-                ui_onclick(root, mouse_x, mouse_y);
-            }
+
             break;
         }
     }
