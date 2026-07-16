@@ -256,8 +256,16 @@ void t1(void *a)
 
 extern void scheduler_init();
 
+extern void *get_free_phys_pages2(size_t num);
+extern void *free_phys_pages2(void *addr, size_t num);
+extern void phys_pages_init(struct memory_region *regions, size_t len);
 void kmain()
 {
+    phys_pages_init(memory_regions, memory_regions_len());
+    void *one = get_free_phys_pages2(1);
+    void *two = get_free_phys_pages2(3);
+    free_phys_pages2(two, 3);
+    void *three = get_free_phys_pages2(2);
 
     scheduler_init();
 
