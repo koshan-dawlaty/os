@@ -66,19 +66,18 @@ mkfifo "${SERIAL_PIPE}.out"
 
 
 
-
-
 # gdb \
 # 	-ex "source pretty-print.py" \
 # 	-ex "set print pretty" \
-# 	-ex " add-symbol-file isodir/boot/os.kernel $KERNEL_ADDR" \
+# 	-ex "add-symbol-file build/isodir/boot/os.kernel.test $KERNEL_ADDR" \
 # 	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
 # 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
 # 	-ex "target remote | $QEMU_COMMAND -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")" \
 # 	-ex ""
 
 # redirect stderr to stop message when qemu is killed
-$QEMU_COMMAND -monitor stdio $QEMU_FLAGS -display none -serial pipe:$SERIAL_PIPE  2>/dev/null &  
+# $QEMU_COMMAND -monitor stdio $QEMU_FLAGS -display none -serial pipe:$SERIAL_PIPE  2>/dev/null &  
+$QEMU_COMMAND -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE  2>/dev/null &  
 QEMU_PID=$!
 
 
@@ -91,7 +90,7 @@ FILE_NAME="$SERIAL_PIPE.out"
 while [[ ! -p "$FILE_NAME" ]]; do
     sleep 0.05
 done
-cat "$FILE_NAME" 2>/dev/null | python3 build/tap.py
+cat "$FILE_NAME" 2>/dev/null | python3 build/tap.py -v
 
 kill $QEMU_PID 2>/dev/null
 

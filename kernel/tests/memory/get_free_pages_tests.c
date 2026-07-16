@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-TEST(get_free_pages_test_basic, {
+struct test_result *a()
+{
+
     int *one = get_free_pages(1);
     int *two = get_free_pages(1);
     int *three = get_free_pages(1);
@@ -22,7 +24,10 @@ TEST(get_free_pages_test_basic, {
     free_pages(one, 1);
     free_pages(two, 1);
     free_pages(three, 1);
-})
+    TEST_OK();
+}
+
+TEST(get_free_pages_test_basic, { return a(); })
 
 test_result *get_free_pages_test_multiple_test()
 {

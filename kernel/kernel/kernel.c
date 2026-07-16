@@ -158,6 +158,7 @@ void sse_enable()
     asm("fninit");
 }
 
+extern void phys_pages_init(struct memory_region *regions, size_t len);
 extern __int_handler void syscall_handler_asm(struct interrupt_frame *frame);
 void kernel_init()
 {
@@ -165,7 +166,7 @@ void kernel_init()
     terminal_initialize();
 
     init_paging();
-
+    phys_pages_init(memory_regions, memory_regions_len());
     init_heap();
     init_gfp_zones();
 
@@ -314,9 +315,6 @@ void kmain()
     execv("/bin/wm", (char *[]){"wm", NULL});
     /* execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
 #endif
-
-    /* int err = execv("/bin/ls", (char *[]){"/bin/ls", "/dev", NULL}); */
-    /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
 
     enable_scheduler();
     irq_enable();

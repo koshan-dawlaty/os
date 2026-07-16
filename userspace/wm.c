@@ -1082,7 +1082,6 @@ int main()
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
 
-    /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog2.tga", NULL}); */
 
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
@@ -1092,6 +1091,11 @@ int main()
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("tron", (char *[]){"imgview", "osdev.tga", NULL}); */
+
+    /* for (size_t i = 0; i < 20; i++) */
+    /* { */
+    /*     execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    /* } */
 
     while (true)
     {

@@ -111,7 +111,7 @@ void *dma_malloc(size_t size)
 {
     /* TODO: this should be a kmalloc zone */
     size_t num_pages = (size / PAGE_SIZE) + 1;
-    void *physaddr = get_free_phys_pages(get_current_pagedir(), num_pages);
+    void *physaddr = get_free_phys_pages(num_pages);
     return map_physaddr(physaddr, num_pages,
                         PAGING_PRESENT | PAGING_WRITEABLE |
                             PAGING_WRITE_THROUGH_CACHE);

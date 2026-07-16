@@ -89,6 +89,7 @@ int main()
                                            strlen(BIN_DIR) + 1 /* slash */ + 1);
                         stpcpy(stpcpy(stpcpy(str, BIN_DIR), "/"), ent->d_name);
                         execv(str, (char *[]){str, NULL});
+                        break;
                     }
                 }
                 array_free(&search);
