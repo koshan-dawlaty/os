@@ -45,6 +45,7 @@ void page_fault(void *addr, void *ip, struct page_fault_flags flags)
         printf("\n");
         while (1)
         {
+            irq_wait();
         }
 
         /* TODO: free task (maybe make a separate function to remove and free at

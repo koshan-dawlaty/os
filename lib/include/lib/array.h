@@ -79,6 +79,15 @@ void array_insert(struct array *array, size_t offset, void *data, size_t len);
 
 u8 array_pop_middle(struct array *array, size_t offset);
 
+/*
+ * macros that take a struct that looks like
+ *  {
+ * 		type * items;
+ *		size_t capacity;
+ *		size_t num;
+ *	}
+ */
+
 #define ARRAY_DEFAULT_CAPACITY 2
 #define array_macro_append(array, item)                                        \
     do                                                                         \
