@@ -46,7 +46,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
 void write_kernel_page_tables(struct pagedir *pgdir);
 
 struct pagedir *get_current_pagedir();
-void *get_free_phys_pages(struct pagedir *dir, size_t amount);
+void *get_free_phys_pages(size_t amount);
 
 /*
  * maps physical address to an arbitrary virtual address using flags

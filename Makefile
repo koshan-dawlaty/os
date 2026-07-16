@@ -115,6 +115,7 @@ qemu : $(ISO)
 	rm -f build/qemu.img
 	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
 	$(QEMU_COMMAND) -serial mon:stdio $(QEMU_FLAGS)
+	# $(QEMU_COMMAND) -monitor stdio $(QEMU_FLAGS)
 
 clean:
 	$(RM) -r $(SYSROOT)

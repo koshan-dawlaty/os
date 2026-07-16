@@ -33,7 +33,7 @@ int shared_mem_alloc(void **addr, size_t len)
     void *memory = SHARED_MEMORY_START + shared_memory_offset;
     size_t mem_len = ((len / PAGE_SIZE) + 1) * PAGE_SIZE;
     size_t num_pages = (mem_len / PAGE_SIZE) + 2;
-    void *physical = get_free_phys_pages(get_current_pagedir(), num_pages);
+    void *physical = get_free_phys_pages(num_pages);
 
     /* printf("physaddr:%p-%p, %d\n", physical, physical + len, num_pages); */
     /* printf("virtaddr:%p-%p, %d\n", memory, memory + num_pages * PAGE_SIZE, */
@@ -95,7 +95,7 @@ int shared_mem_resize(int id, size_t new_size, void **new_addr)
         size_t num_pages = (new_size / PAGE_SIZE) + 3;
         logd("num_pages:%d, old:%d", num_pages, (old_size / PAGE_SIZE) + 3);
         shared_memory_offset += (num_pages + PAGE_SIZE) * PAGE_SIZE;
-        void *physical = get_free_phys_pages(get_current_pagedir(), num_pages);
+        void *physical = get_free_phys_pages(num_pages);
 
         for (size_t i = 0; i < num_pages; i++)
         {

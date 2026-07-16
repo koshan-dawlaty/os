@@ -157,6 +157,7 @@ void sse_enable()
     asm("fninit");
 }
 
+extern void phys_pages_init(struct memory_region *regions, size_t len);
 extern __int_handler void syscall_handler_asm(struct interrupt_frame *frame);
 void kernel_init()
 {
@@ -164,7 +165,7 @@ void kernel_init()
     terminal_initialize();
 
     init_paging();
-
+    phys_pages_init(memory_regions, memory_regions_len());
     init_heap();
     init_gfp_zones();
 
@@ -256,16 +257,8 @@ void t1(void *a)
 
 extern void scheduler_init();
 
-extern void *get_free_phys_pages2(size_t num);
-extern void *free_phys_pages2(void *addr, size_t num);
-extern void phys_pages_init(struct memory_region *regions, size_t len);
 void kmain()
 {
-    phys_pages_init(memory_regions, memory_regions_len());
-    void *one = get_free_phys_pages2(1);
-    void *two = get_free_phys_pages2(3);
-    free_phys_pages2(two, 3);
-    void *three = get_free_phys_pages2(2);
 
     scheduler_init();
 
@@ -295,8 +288,8 @@ void kmain()
 #ifdef TESTS
     execv("/bin/compiler", (char *[]){"compiler", NULL});
 #else
-    execv("/bin/compiler", (char *[]){"compiler", NULL});
-    /* execv("/bin/wm", (char *[]){"wm", NULL}); */
+    /* execv("/bin/compiler", (char *[]){"compiler", NULL}); */
+    execv("/bin/wm", (char *[]){"wm", NULL});
     /* int err = execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
     /* int err = execv("/bin/ls", (char *[]){"/bin/ls", "/dev", NULL}); */
     /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
