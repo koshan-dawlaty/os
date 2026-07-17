@@ -178,6 +178,9 @@ void kernel_init()
         draw_background(f);
     }
 
+    /* TODO: put in arch init */
+    sse_enable();
+
     init_gdt();
     init_idt();
 
@@ -225,9 +228,6 @@ void kernel_init()
         register_interrupt_handler(0x80, syscall_handler_asm,
                                    (int_handler_flags){.is_user = true});
     })
-
-    /* TODO: put in arch init */
-    sse_enable();
 
 #ifdef TESTS
     run_tests();
