@@ -33,6 +33,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 
 OBJS=\
+	compiler/c_compiler.o \
 	list.o \
 	font.o \
 	img.o \
@@ -71,12 +72,12 @@ $(LIB_BINARY) : $(OBJS_BIN)
 
 $(KERNEL_LIB_BINARY) : $(LIBK_OBJS_BIN)
 	@mkdir -p $(BIN)
-	$(AR) rcs $@ $^
+	$(AR) rcs $@ $^ 
 
 
 $(BIN)/%.libk.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -D__is_libk
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -D__is_libk 
 
 $(BIN)/%.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)

@@ -116,8 +116,12 @@ extern void switch_tasks_asm(uint32_t ip, uint32_t kernel_sp, uint32_t user_sp,
                              uint32_t user_bp, struct registers *regs);
 
 extern void switch_tasks_kernel(struct registers *regs, uint32_t ip);
-extern void save_registers(struct registers *regs);
-extern void load_registers(struct registers *regs);
+
+#define ASM_ATTR __attribute__((noinline))
+
+extern void ASM_ATTR
+    __attribute__((returns_twice)) save_registers(struct registers *regs);
+extern void ASM_ATTR load_registers(struct registers *regs);
 
 extern void jump_usermode_asm(ptr_t addr, struct registers *regs, ptr_t sp);
 

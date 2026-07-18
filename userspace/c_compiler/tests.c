@@ -1,13 +1,12 @@
-#include "c_compiler.h"
-#include "lib/utils.h"
 #include <container_of.h>
 #include <init.h>
 #include <lib/array.h>
 #include <lib/assert.h>
+#include <lib/compiler/c_compiler.h>
 #include <lib/font.h>
 #include <lib/list.h>
 #include <lib/log.h>
-#include <math.h>
+#include <lib/utils.h>
 #include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>

@@ -1,5 +1,5 @@
-#include "c_compiler.h"
 #include <init.h>
+#include <lib/compiler/c_compiler.h>
 #include <lib/list.h>
 #include <lib/utils.h>
 #include <sys/syscall.h>

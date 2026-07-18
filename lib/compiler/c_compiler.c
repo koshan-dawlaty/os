@@ -1,8 +1,8 @@
-#include "c_compiler.h"
 #include <container_of.h>
 #include <init.h>
 #include <lib/array.h>
 #include <lib/assert.h>
+#include <lib/compiler/c_compiler.h>
 #include <lib/list.h>
 #include <lib/log.h>
 #include <stdatomic.h>
@@ -1312,13 +1312,4 @@ int ast_error_to_string(struct ast_error *err, char *buf, size_t len)
     default:
         return snprintf(buf, len, "unknown ast error %d", err->type);
     }
-}
-
-/* FIXME: using the libc version of this function will result in linker
- * errors, and the tests need it, this version should be removed */
-char *strcat(char *restrict dest, const char *restrict src)
-{
-    memcpy(dest + strlen(dest), src, strlen(src) + 1);
-
-    return dest;
 }
