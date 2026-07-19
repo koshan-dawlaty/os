@@ -101,6 +101,10 @@ void LineLayout::add_child(View *child)
             fb.width = child->fb.width;
         }
         fb.height += child->fb.height;
+        if (added_first_element)
+        {
+            fb.height += offset;
+        }
     }
     else
     {
@@ -109,7 +113,13 @@ void LineLayout::add_child(View *child)
             fb.height = child->fb.height;
         }
         fb.width += child->fb.width;
+        if (added_first_element)
+        {
+            fb.width += offset;
+        }
     }
+
+    added_first_element = true;
 
     list_push(&child->list, &children);
 }
@@ -148,3 +158,17 @@ void Layout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
         }
     }
 }
+
+size_t View::get_width()
+{
+    return fb.width;
+}
+size_t View::get_height()
+{
+    return fb.height;
+}
+
+// size_t Layout::get_height()
+// {
+// 	return fb.
+// }

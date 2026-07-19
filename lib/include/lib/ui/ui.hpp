@@ -23,6 +23,8 @@ class View
                               size_t abs_y);
 
     virtual void render() = 0;
+    size_t get_width();
+    size_t get_height();
 };
 
 class Layout : public View
@@ -32,7 +34,9 @@ class Layout : public View
     virtual void add_child(View *view) = 0;
     Layout();
     void handle_click(size_t click_x, size_t click_y, size_t abs_x,
-                      size_t abs_y);
+                      size_t abs_y) override;
+    // size_t get_width() override;
+    // size_t get_height() override;
 };
 
 class Element : public View
@@ -40,8 +44,10 @@ class Element : public View
   public:
     Element(size_t w, size_t h);
     void handle_click(size_t click_x, size_t click_y, size_t abs_x,
-                      size_t abs_y);
+                      size_t abs_y) override;
     virtual void onclick();
+    // size_t get_width();
+    // size_t get_height();
 };
 
 class RectElement : public Element
@@ -60,6 +66,9 @@ class LineLayout : public Layout
     void render() override;
     void add_child(View *view) override;
     LineLayout(bool is_vertical, size_t offset);
+
+  private:
+    bool added_first_element = false;
 };
 
 class VerticalLineLayout : public LineLayout

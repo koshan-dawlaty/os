@@ -32,14 +32,21 @@ int main()
     Layout *horizontal = new HorizontalLineLayout(10);
     Layout *vertical = new VerticalLineLayout(10);
 
+    Layout *child = new HorizontalLineLayout(20);
+    child->add_child(new RectElement(100, 100, 0xFF0000));
+    child->add_child(new ImageElement("dog.tga"));
+    child->add_child(new RectElement(50, 50, 0xFF00FF));
+
     // horizontal->add_child(blue);
     horizontal->add_child(vertical);
-    // horizontal->add_child(green);
-    horizontal->add_child(new ButtonElement(new ImageElement("dog.tga")));
+    // horizontal->add_child(child);
+    horizontal->add_child(green);
 
     vertical->add_child(purple);
     // vertical->add_child(new ImageElement("dog.tga"));
+    vertical->add_child(child);
     vertical->add_child(cyan);
+    // horizontal->add_child(new ButtonElement(child));
 
     horizontal->fb = client.fb;
 

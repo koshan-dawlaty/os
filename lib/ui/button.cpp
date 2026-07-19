@@ -15,7 +15,7 @@ void ButtonElement::onclick()
 void ButtonElement::render()
 {
     framebuffer_draw_rect(&fb, 0, 0, fb.width, fb.height, 0xFF);
-    logd("%d, %d", fb.width, fb.height);
+
     child->x = 5;
     child->y = 5;
 
@@ -24,8 +24,10 @@ void ButtonElement::render()
     child->fb.pixel_width = fb.pixel_width;
     child->fb.buffer =
         (u8 *)fb.buffer + FRAMEBUFFER_OFFSET(fb, child->x, child->y);
+
     logd("x:%d, y:%d", child->x, child->y);
     logd("w:%d, h:%d", child->fb.width, child->fb.height);
+
     child->render();
 }
 
