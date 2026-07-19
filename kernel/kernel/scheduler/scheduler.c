@@ -163,10 +163,6 @@ struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv)
 
     };
 
-    /* out->working_dir = get_root_dir(); */
-    /* NULL is used to signify root dir */
-    out->working_dir = NULL;
-
     *(ptr_t *)(out->stack) = (ptr_t)new_task_usermode_start;
     /* edx is the third argument first and second are set later in this
      * function
@@ -223,6 +219,8 @@ struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv)
         fdlist_set(out->descriptors, 2, open_device(term_path));
         fdlist_set(out->descriptors, 3, open_device(serial_path));
     }
+
+    out->working_dir = current_task->working_dir;
 
     return out;
 }

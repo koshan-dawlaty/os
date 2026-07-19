@@ -215,11 +215,8 @@ void kernel_init()
     keyboard_init();
 
     init_pit();
-
     init_ata();
-
     init_vfs();
-
     ps2_init();
 
     call_constructors();

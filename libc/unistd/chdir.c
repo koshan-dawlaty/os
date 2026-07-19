@@ -18,9 +18,9 @@ int chdir(const char *path)
 
     if (IS_ERR(dir))
     {
-        /* printf("error:%p\n", GET_ERR(dir)); */
         return GET_ERR(dir);
     }
+    /* logd("new dir:%s", dir->name); */
 
     /* printf("%s\n", dir->name); */
 
