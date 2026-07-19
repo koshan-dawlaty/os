@@ -310,8 +310,11 @@ void free_pages_tree(void *addr, size_t amount, struct memory_zone *z)
     if (node == NULL)
     {
         /* invalid */
-        loge("possible double free_pages_tree for addr:%p", addr);
-        stacktrace_log();
+        /* TODO: this sometimes seems to happen when it is not an invalid page,
+         * it might be due to the page allocation zone in malloc changing from a
+         * bitmap one to a tree one */
+        /* loge("possible double free_pages_tree for addr:%p", addr); */
+        /* stacktrace_log(); */
         return;
     }
 

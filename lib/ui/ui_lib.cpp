@@ -19,38 +19,43 @@
 
 #include <lib/ui/ui.hpp>
 
-RectElement::RectElement(size_t w, size_t h, u32 color)
+Element::Element(size_t w, size_t h) : View()
 {
-    this->fb.width = w;
-    this->fb.height = h;
-    this->color = color;
+    fb.height = h;
+    fb.width = w;
 }
+
+RectElement::RectElement(size_t w, size_t h, u32 color)
+    : Element(w, h), color(color)
+{
+}
+
 void RectElement::render()
 {
-
     framebuffer_draw_rect(&fb, 0, 0, fb.width, fb.height, color);
 }
 
 void View::render()
 {
 }
+
 void Layout::add_child(View *view)
 {
 }
 
-LineLayout::LineLayout(bool is_vertical)
+Layout::Layout()
 {
-    this->is_vertical = is_vertical;
-    // fb.height = 100;
-    // fb.width = 100;
+    list_init_head(&children);
+}
 
-    /* FIXME: this should be done for all classes inheriting layout, but i dont
-     * know how */
-    list_init_head(&this->children);
+LineLayout::LineLayout(bool is_vertical, size_t offest)
+    : is_vertical(is_vertical), offset(offest)
+{
 }
 
 void LineLayout::render()
 {
+    logd("line layout");
 
     size_t p = 0;
     struct list *pos;
@@ -75,14 +80,13 @@ void LineLayout::render()
             (u8 *)fb.buffer + FRAMEBUFFER_OFFSET(fb, child->x, child->y);
 
         child->render();
-        /* FIXME: add offsets here */
         if (!is_vertical)
         {
-            p += child->fb.width;
+            p += child->fb.width + offset;
         }
         else
         {
-            p += child->fb.height;
+            p += child->fb.height + offset;
         }
     }
 }
@@ -90,52 +94,57 @@ void LineLayout::render()
 void LineLayout::add_child(View *child)
 {
 
-    if (child->fb.width > fb.width)
+    if (is_vertical)
     {
-        fb.width = child->fb.width;
+        if (child->fb.width > fb.width)
+        {
+            fb.width = child->fb.width;
+        }
+        fb.height += child->fb.height;
     }
-    if (child->fb.height > fb.height)
+    else
     {
-        fb.height = child->fb.height;
+        if (child->fb.height > fb.height)
+        {
+            fb.height = child->fb.height;
+        }
+        fb.width += child->fb.width;
     }
 
     list_push(&child->list, &children);
 }
 
-/*
-void view_onclick(struct view *view, size_t click_x, size_t click_y,
-                  size_t x_abs, size_t y_abs)
+void View::handle_click(size_t, size_t, size_t, size_t)
 {
-    ASSERT(view->type == VIEW_LAYOUT,
-           "onclick should only get called on a layout, it should proccess the "
-           "click if it is an element");
+}
+
+void Element::onclick()
+{
+}
+
+void Element::handle_click(size_t click_x, size_t click_y, size_t abs_x,
+                           size_t abs_y)
+{
+    onclick();
+}
+
+void Layout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
+                          size_t abs_y)
+{
 
     struct list *pos;
-    list_for_each(pos, &view->layout->children)
+    list_for_each(pos, &children)
     {
-        struct view *child = containerof(pos, struct view, list);
-        if (child->type == VIEW_LAYOUT)
+        View *child = containerof(pos, View, list);
+
+        size_t x_pos = child->x + abs_x;
+        size_t y_pos = child->y + abs_y;
+
+        if (click_x > x_pos && click_x < x_pos + child->fb.width &&
+            click_y > y_pos && click_y < y_pos + child->fb.height)
         {
-            view_onclick(child, click_x, click_y, child->x + x_abs,
-                         child->y + y_abs);
-        }
-        else if (child->type == VIEW_ELEMENT)
-        {
-            size_t x_pos = child->x + x_abs;
-            size_t y_pos = child->y + y_abs;
-            if (click_x > x_pos && click_x < x_pos + child->fb.width &&
-                click_y > y_pos && click_y < y_pos + child->fb.height)
-            {
-                if (child->element->type.on_click != NULL)
-                {
-                    child->element->type.on_click(child, click_x, click_y);
-                }
-            }
-        }
-        else
-        {
-            PANIC("unknown enum type %d", child->type);
+
+            child->handle_click(click_x, click_y, x_pos, y_pos);
         }
     }
 }
-*/

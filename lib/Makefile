@@ -46,6 +46,8 @@ OBJS=\
 	tests/tap.o \
 	tests/tests_lib.o \
 	ui/ui_lib.o \
+	ui/image.o \
+	ui/button.o \
 
 
 OBJS_BIN_NO_SUFFIX = $(foreach obj,$(OBJS),bin/$(obj))

@@ -1,9 +1,12 @@
 #include <cpp/cpp_c_include_start.hpp>
 
-#include "lib/log.h"
 #include "wm_lib.h"
+#include <lib/log.h>
 
 #include <cpp/cpp_c_include_end.hpp>
+
+#include <lib/ui/button.hpp>
+#include <lib/ui/image.hpp>
 #include <lib/ui/ui.hpp>
 #include <stdio.h>
 
@@ -24,15 +27,18 @@ int main()
     View *purple = new RectElement(50, 50, 0xFF00FF);
     View *green = new RectElement(50, 50, 0xFF00);
     View *cyan = new RectElement(50, 50, 0xFFFF);
+    View *red = new RectElement(50, 50, 0xFF0000);
 
-    Layout *horizontal = new LineLayout(false);
-    Layout *vertical = new LineLayout(true);
+    Layout *horizontal = new HorizontalLineLayout(10);
+    Layout *vertical = new VerticalLineLayout(10);
 
-    horizontal->add_child(blue);
+    // horizontal->add_child(blue);
     horizontal->add_child(vertical);
-    horizontal->add_child(green);
+    // horizontal->add_child(green);
+    horizontal->add_child(new ButtonElement(new ImageElement("dog.tga")));
 
     vertical->add_child(purple);
+    // vertical->add_child(new ImageElement("dog.tga"));
     vertical->add_child(cyan);
 
     horizontal->fb = client.fb;
@@ -53,7 +59,7 @@ int main()
             mouse_y += ev->y_change;
             if (ev->buttons.left_click)
             {
-                // view_onclick(horizontal, mouse_x, mouse_y, 0, 0);
+                horizontal->handle_click(mouse_x, mouse_y, 0, 0);
             }
 
             break;

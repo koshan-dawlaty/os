@@ -19,18 +19,29 @@ class View
     struct framebuffer fb;
     struct list list;
 
-    virtual void render();
+    virtual void handle_click(size_t click_x, size_t click_y, size_t abs_x,
+                              size_t abs_y);
+
+    virtual void render() = 0;
 };
 
 class Layout : public View
 {
   public:
     struct list children;
-    virtual void add_child(View *view);
+    virtual void add_child(View *view) = 0;
+    Layout();
+    void handle_click(size_t click_x, size_t click_y, size_t abs_x,
+                      size_t abs_y);
 };
+
 class Element : public View
 {
   public:
+    Element(size_t w, size_t h);
+    void handle_click(size_t click_x, size_t click_y, size_t abs_x,
+                      size_t abs_y);
+    virtual void onclick();
 };
 
 class RectElement : public Element
@@ -44,10 +55,27 @@ class LineLayout : public Layout
 {
   public:
     bool is_vertical;
+    size_t offset;
 
     void render() override;
     void add_child(View *view) override;
-    LineLayout(bool is_vertical);
+    LineLayout(bool is_vertical, size_t offset);
+};
+
+class VerticalLineLayout : public LineLayout
+{
+  public:
+    inline VerticalLineLayout(size_t offset) : LineLayout(true, offset)
+    {
+    }
+};
+
+class HorizontalLineLayout : public LineLayout
+{
+  public:
+    inline HorizontalLineLayout(size_t offset) : LineLayout(false, offset)
+    {
+    }
 };
 
 #endif
