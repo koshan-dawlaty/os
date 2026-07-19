@@ -83,6 +83,14 @@ $(BIN)/%.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -D__is_libc
 
+$(BIN)/%.libk.o$(TEST_SUFFIX): %.cpp
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS) -D__is_libk 
+
+$(BIN)/%.o$(TEST_SUFFIX): %.cpp
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS) -D__is_libc
+
 
 install: install-lib
 

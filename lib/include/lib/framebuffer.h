@@ -46,7 +46,7 @@ static inline void framebuffer_put_pixel(struct framebuffer *f, int color,
 
     size_t location = y * f->pitch + x * f->pixel_width;
 
-    u8 *pixel = f->buffer + location;
+    u8 *pixel = (u8 *)f->buffer + location;
 
     framebuffer_pixel_write(f, pixel, color);
 }
