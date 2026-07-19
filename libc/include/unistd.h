@@ -14,5 +14,6 @@ int chdir(const char *path);
 int close(int fd);
 off_t lseek(int fd, off_t offset, int whence);
 unsigned sleep(unsigned int seconds);
+char *getcwd(char *buf, size_t size);
 
 #endif

@@ -66,6 +66,7 @@ unistd/execv.o \
 unistd/sleep.o \
 unistd/close.o \
 unistd/chdir.o \
+unistd/getcwd.o \
 sched/sched_yield.o \
 dirent/dirent.o \
 init.o \

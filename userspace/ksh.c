@@ -13,11 +13,17 @@
 #include <syscall.h>
 #include <unistd.h>
 
+char current_dir[100];
+
+void print_prompt()
+{
+    printf("%s >", current_dir);
+}
+
 int main()
 {
 
-    printf(
-        " \n"); /* TODO: remove, this needs to be here so the terminal works */
+    getcwd(current_dir, sizeof(current_dir));
 
     /* int term_fd = open("/terminal", 0); */
     /* char *buf = malloc(10); */
@@ -63,6 +69,8 @@ int main()
                 {
                     printf("not enough arguments\n");
                 }
+                getcwd(current_dir, sizeof(current_dir));
+                print_prompt();
             }
             else
             {
@@ -80,6 +88,10 @@ int main()
                     printf("could not execute\nerror:%s", strerror(err));
                     printf("\n");
                 }
+                /* TODO: this should have a way of waiting for the process to
+                 * exit */
+                sleep(2);
+                print_prompt();
             }
             free(input);
             input = malloc(0);
