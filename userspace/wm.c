@@ -993,6 +993,8 @@ void thread1()
 
 int main()
 {
+    clone((ptr_t)thread1);
+    exit(0);
 
     /* char c = getchar(); */
     /* logd("%c", c); */

@@ -33,7 +33,7 @@ void mutex_lock(struct mutex *m)
         /* printf("lock 2, %p\", get_current_task()); */
         struct task *current = get_current_task();
 
-        save_registers(&current->regs);
+        /* save_registers(&current->regs); */
         remove_task_add_queue(current, &m->queue);
     }
 

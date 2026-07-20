@@ -30,6 +30,28 @@ struct registers
     uint32_t eflags;   /* 30 */
     void *fsave_space; /* 34 */
 #elif defined(CONFIG_x86_64)
+    u64 esp;
+    u64 rbx;
+    u64 rbp;
+    u64 r12;
+    u64 r13;
+    u64 r14;
+    u64 r15;
+
+    /* TODO: remove */
+    u64 gs, fs, es, ds;
+    /*  20   28   30   38   40   48   50   58 */
+    u64 edi, esi, ebp, /* esp, */ ebx, edx, ecx, eax;
+    /*  60 */
+    u64 eflags;
+    /* TODO: maybe make this only on usermode tasks */
+    void *fsave_space; /* A8 */
+#endif
+
+} __packed;
+
+struct registers2
+{
 
     /*  0   8   10  18 */
     u64 gs, fs, es, ds;
@@ -39,11 +61,7 @@ struct registers
     u64 eflags;
     /*  68  70  78   80   88   90   98   A0 */
     u64 r8, r9, r10, r11, r12, r13, r14, r15;
-
-    /* TODO: maybe make this only on usermode tasks */
     void *fsave_space; /* A8 */
-#endif
-
 } __packed;
 
 #define FPU_STATE_SIZE 108
@@ -78,6 +96,11 @@ struct task
      * used by the poll implementation with waiting on multiple wait queues
      */
     bool can_sleep;
+
+    /*  only used on x86_64, the inital rdi */
+    u64 inital_arg;
+
+    bool ran_setup;
 };
 
 void switch_tasks();
@@ -120,13 +143,32 @@ extern void switch_tasks_kernel(struct registers *regs, uint32_t ip);
 #define ASM_ATTR __attribute__((noinline))
 
 extern void ASM_ATTR
-    __attribute__((returns_twice)) save_registers(struct registers *regs);
-extern void ASM_ATTR load_registers(struct registers *regs);
+    __attribute__((returns_twice)) save_registers(struct registers2 *regs);
+extern void ASM_ATTR load_registers(struct registers2 *regs);
+
+extern void ASM_ATTR __attribute__((naked))
+switch_to_asm(struct registers *prev, struct registers *current);
+
+extern void ASM_ATTR __attribute__((naked))
+switch_to_asm_arg(struct registers *prev, struct registers *current, ptr_t arg);
+
+static inline void switch_to(struct task *prev, struct task *current)
+{
+    if (current->ran_setup == false)
+    {
+        current->ran_setup = true;
+        switch_to_asm_arg(&prev->regs, &current->regs, current->inital_arg);
+    }
+    else
+    {
+        switch_to_asm(&prev->regs, &current->regs);
+    }
+}
 
 extern void jump_usermode_asm(ptr_t addr, struct registers *regs, ptr_t sp);
 
 void schedule();
-void schedule_impl();
+__attribute__((noinline)) void schedule_impl();
 
 void enable_scheduler();
 void disable_scheduler();

@@ -67,16 +67,22 @@ bool is_scheduler_enabled()
     return scheduler_enabled;
 }
 
-void new_task_usermode_start(int argc, char **argv, ptr_t addr)
+struct new_task_usermode_start_args
+{
+    int argc;
+    char **argv;
+    ptr_t addr;
+};
+void new_task_usermode_start(struct new_task_usermode_start_args *args)
 {
 
     struct registers *temp_regs = malloc(sizeof(struct registers));
     *temp_regs = registers_init_dynamic();
 
     temp_regs->esp = 0xBFFEF000;
-    scheduler_set_regs_argv(argc, argv, temp_regs);
+    scheduler_set_regs_argv(args->argc, args->argv, temp_regs);
 
-    jump_usermode_asm(addr, temp_regs, (ptr_t)temp_regs->esp);
+    jump_usermode_asm(args->addr, temp_regs, (ptr_t)temp_regs->esp);
 }
 
 void user_thread_kernel_start(ptr_t addr)
@@ -163,7 +169,7 @@ struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv)
 
     };
 
-    *(ptr_t *)(out->stack) = (ptr_t)new_task_usermode_start;
+    out->inital_arg = *(ptr_t *)(out->stack) = (ptr_t)new_task_usermode_start;
     /* edx is the third argument first and second are set later in this
      * function
      */
@@ -186,7 +192,15 @@ struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv)
     addr_space_load(&out->addr_space);
     char **args = create_user_args(argc, args_temp);
 
-    scheduler_set_regs_arguments(argc, args, ip, &out->regs);
+    /* stupid */
+    struct new_task_usermode_start_args *args2 =
+        malloc(sizeof(struct new_task_usermode_start_args));
+    args2->addr = ip;
+    args2->argc = argc;
+    args2->argv = argv;
+    out->inital_arg = (ptr_t)args2;
+    out->ran_setup = false;
+    /* scheduler_set_regs_arguments(argc, args, ip, &out->regs); */
 
     load_pgdir(temp);
 
@@ -263,7 +277,10 @@ struct task *user_thread_alloc(ptr_t ip)
     /* edx is the third argument first and second are set later in this
      * function
      */
-    *(ptr_t *)(out->stack + sizeof(ptr_t)) = ip;
+    out->ran_setup = false;
+    logd("%p", ip);
+    out->inital_arg = ip;
+    /* *(ptr_t *)(out->stack + sizeof(ptr_t)) = ip; */
 #ifdef CONFIG_x86_32
     *(ptr *)(out->stack + sizeof(ptr) * 2) = ip;
 #endif
@@ -374,6 +391,7 @@ struct task *new_task(ptr_t ip)
     out->regs.eflags = 1 << 9;
 
     *(ptr_t *)(out->stack) = ip;
+    *(ptr_t *)(out->stack + 8) = ip;
     out->addr_space = (struct addr_space){.dir = NULL, .list_head = NULL};
 
     out->start_addr = (void *)ip;
@@ -389,10 +407,15 @@ struct task *create_kernel_task()
 {
     struct task *out = new_task(0);
     out->regs = registers_init_dynamic();
+    out->ran_setup = true;
 
-    save_registers(&out->regs);
+    /* TODO: this needs to be here, but results in code duplication in
+     * switch_to() and save_registers() */
+    struct registers2 regs;
+    regs.fsave_space = malloc(FPU_STATE_SIZE);
+    save_registers(&regs);
     out->addr_space = (struct addr_space){.dir = &init_pgdir, NULL};
-    out->stack = (void *)out->regs.esp;
+    out->stack = (void *)regs.esp;
     out->start_addr = (void *)0xDEADBEEF;
 
     return out;
@@ -459,7 +482,7 @@ static void remove_task_sched_queue(struct task *task)
     }
 }
 
-static void remove_task_load(struct task *task)
+static void remove_task_load(struct task *old_task)
 {
     struct task *current = SCHED_QUEUE_CURRENT_TASK(scheduler_queue);
     if (current->addr_space.dir != NULL)
@@ -468,7 +491,7 @@ static void remove_task_load(struct task *task)
     }
     set_kernel_stack((ptr_t)current->stack);
 
-    load_registers(&current->regs);
+    switch_to(old_task, get_current_task());
 }
 
 void remove_task_add_queue(struct task *task, struct task_queue *queue)
@@ -487,7 +510,7 @@ void remove_task(struct task *task)
 {
     preempt_disable();
 
-    save_registers(&task->regs);
+    /* save_registers(&task->regs); */
     remove_task_sched_queue(task);
     remove_task_load(task);
 
@@ -552,7 +575,8 @@ void schedule_impl()
 
     struct task_queue_entry *ent = scheduler_queue.current_task;
 
-    save_registers(&current->regs);
+    struct task *prev_task = current;
+    /* save_registers(&current->regs); */
 
     switch_tasks();
 
@@ -574,7 +598,7 @@ void schedule_impl()
 
     /* PIC_sendEOI(0); */
 
-    load_registers(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->regs);
+    switch_to(prev_task, SCHED_QUEUE_CURRENT_TASK(scheduler_queue));
 }
 
 void schedule()

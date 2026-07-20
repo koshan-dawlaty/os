@@ -249,9 +249,24 @@ void t3(void *a)
     logd("writing");
     write_file(f, "abc", 4, 0);
 }
+void t11(void *a)
+{
+    /* while (1) */
+    /* { */
+    schedule();
+    logd("t11");
+    schedule();
+    /* } */
+}
 
 void t1(void *a)
 {
+    /* while (1) */
+    /* { */
+    schedule();
+    logd("t1");
+    schedule();
+    /* } */
 }
 
 extern void scheduler_init();
@@ -290,6 +305,9 @@ void kmain()
 #ifndef CONFIG_PLEASE_DONT_USE_THE_SERIAL_PORT
     create_device("/dev/serial0", serial_cdev_create(0x3F8));
 #endif
+
+    ktask_run(t1, NULL);
+    ktask_run(t11, NULL);
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */

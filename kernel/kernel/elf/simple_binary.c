@@ -27,7 +27,7 @@ struct task *simple_binary_load(u8 *data)
     void *memory = get_free_pages_user((bin_len / PAGE_SIZE) + 1);
     logd("kernel:%p, new task:%p", kernel, memory);
     out->start_addr = memory;
-    out->regs.edx = (ptr_t)memory;
+    /* out->regs.edx = (ptr_t)memory; */
     memcpy(memory, kernel + 9, bin_len);
 
     addr_space_load(current);

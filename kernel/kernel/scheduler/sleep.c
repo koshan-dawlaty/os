@@ -28,7 +28,8 @@ void add_sleep_queue(struct task *task, size_t time)
 
     struct sleep_queue_entry *new = malloc(sizeof(struct sleep_queue_entry));
     new->l = LIST2_INIT();
-    save_registers(&get_current_task()->regs);
+    /* struct task *old = get_current_task(); */
+    /* save_registers(&get_current_task()->regs); */
 
     size_t ticks = time;
 
