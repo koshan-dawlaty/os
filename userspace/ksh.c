@@ -17,7 +17,7 @@ char current_dir[100];
 
 void print_prompt()
 {
-    printf("\n%s > ", current_dir);
+    printf("\n %s > ", current_dir);
 }
 
 int main()
@@ -65,7 +65,6 @@ int main()
                 if (args[1] != NULL)
                 {
                     int retval = chdir(args[1]);
-                    logd("%d", retval);
                     if (retval != 0)
                     {
                         printf("cant cd, err:%s\n", strerror(retval));
