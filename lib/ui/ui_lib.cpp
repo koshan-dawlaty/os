@@ -128,14 +128,14 @@ void View::handle_click(size_t, size_t, size_t, size_t)
 {
 }
 
-void Element::onclick()
+void Element::handle_element_click()
 {
 }
 
 void Element::handle_click(size_t click_x, size_t click_y, size_t abs_x,
                            size_t abs_y)
 {
-    onclick();
+    handle_element_click();
 }
 
 void Layout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
@@ -167,8 +167,3 @@ size_t View::get_height()
 {
     return fb.height;
 }
-
-// size_t Layout::get_height()
-// {
-// 	return fb.
-// }

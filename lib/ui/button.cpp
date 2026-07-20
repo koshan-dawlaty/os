@@ -7,9 +7,9 @@
 
 #include <lib/ui/button.hpp>
 
-void ButtonElement::onclick()
+void ButtonElement::handle_element_click()
 {
-    logd("button clicked");
+    onclick();
 }
 
 void ButtonElement::render()
@@ -25,13 +25,15 @@ void ButtonElement::render()
     child->fb.buffer =
         (u8 *)fb.buffer + FRAMEBUFFER_OFFSET(fb, child->x, child->y);
 
-    logd("x:%d, y:%d", child->x, child->y);
-    logd("w:%d, h:%d", child->fb.width, child->fb.height);
-
     child->render();
 }
 
 ButtonElement::ButtonElement(View *child)
     : Element(child->fb.width + 10, child->fb.height + 10), child(child)
 {
+}
+
+void ButtonElement::set_onclick(void (*onclick)())
+{
+    this->onclick = onclick;
 }

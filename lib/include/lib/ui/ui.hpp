@@ -35,8 +35,6 @@ class Layout : public View
     Layout();
     void handle_click(size_t click_x, size_t click_y, size_t abs_x,
                       size_t abs_y) override;
-    // size_t get_width() override;
-    // size_t get_height() override;
 };
 
 class Element : public View
@@ -45,9 +43,7 @@ class Element : public View
     Element(size_t w, size_t h);
     void handle_click(size_t click_x, size_t click_y, size_t abs_x,
                       size_t abs_y) override;
-    virtual void onclick();
-    // size_t get_width();
-    // size_t get_height();
+    virtual void handle_element_click();
 };
 
 class RectElement : public Element

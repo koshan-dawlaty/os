@@ -8,11 +8,13 @@ class ButtonElement : public Element
   private:
     struct image img;
     View *child;
+    void (*onclick)();
 
   public:
     ButtonElement(View *child);
     void render() override;
-    void onclick() override;
+    void handle_element_click() override;
+    void set_onclick(void (*onclick)());
 };
 
 #endif

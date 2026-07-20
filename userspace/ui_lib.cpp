@@ -32,6 +32,9 @@ int main()
     Layout *horizontal = new HorizontalLineLayout(10);
     Layout *vertical = new VerticalLineLayout(10);
 
+    ButtonElement *button = new ButtonElement(new ImageElement("osdev.tga"));
+    button->set_onclick([]() -> void { logd("osdev button clicked"); });
+
     Layout *child = new HorizontalLineLayout(20);
     child->add_child(new RectElement(100, 100, 0xFF0000));
     child->add_child(new ImageElement("dog.tga"));
@@ -45,6 +48,7 @@ int main()
     vertical->add_child(purple);
     // vertical->add_child(new ImageElement("dog.tga"));
     vertical->add_child(child);
+    vertical->add_child(button);
     vertical->add_child(cyan);
     // horizontal->add_child(new ButtonElement(child));
 
