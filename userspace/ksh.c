@@ -17,13 +17,14 @@ char current_dir[100];
 
 void print_prompt()
 {
-    printf("%s >", current_dir);
+    printf("\n%s > ", current_dir);
 }
 
 int main()
 {
 
     getcwd(current_dir, sizeof(current_dir));
+    print_prompt();
 
     /* int term_fd = open("/terminal", 0); */
     /* char *buf = malloc(10); */
@@ -63,7 +64,12 @@ int main()
             {
                 if (args[1] != NULL)
                 {
-                    chdir(args[1]);
+                    int retval = chdir(args[1]);
+                    logd("%d", retval);
+                    if (retval != 0)
+                    {
+                        printf("cant cd, err:%s\n", strerror(retval));
+                    }
                 }
                 else
                 {

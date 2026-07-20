@@ -1,4 +1,6 @@
+#include "container_of.h"
 #include "ext2.h"
+#include "lib/list.h"
 #include <err_ptr.h>
 #include <errno.h>
 #include <kernel/utils.h>
@@ -156,4 +158,56 @@ done:
     free(buf);
 
     return 0;
+}
+
+/* this could also be done without a linked list, by appending to a string, but
+ * it would be slower, although it would use less memory */
+struct dentry_pathname_list
+{
+    struct dentry *entry;
+    struct list list;
+};
+size_t dentry_get_pathname(struct dentry *entry, char *buf, size_t len)
+{
+    LIST_DEFINE_HEAD(head);
+
+    struct dentry *current = entry;
+    struct dentry *prev = NULL;
+
+    /* FIXME: maybe there should be a better way of checking if something is the
+     * root directory? */
+    while (current != prev)
+    {
+        struct dentry_pathname_list *l =
+            malloc(sizeof(struct dentry_pathname_list));
+        l->list = LIST_INIT();
+        l->entry = current;
+        list_push(&l->list, &head);
+
+        prev = current;
+        current = current->parent;
+    }
+
+    size_t i = 0;
+    struct list *pos;
+    list_for_each(pos, &head)
+    {
+        struct dentry_pathname_list *l =
+            containerof(pos, struct dentry_pathname_list, list);
+        const char *name = l->entry->name;
+
+        size_t copy_len = strlen(name);
+        if (i + strlen(name) >= len)
+        {
+            memcpy(buf + i, name, len - i);
+            break;
+        }
+
+        buf[i] = '/';
+        i++;
+        memcpy(buf + i, name, strlen(name));
+        i += strlen(name);
+    }
+    buf[i] = 0;
+    return i;
 }

@@ -1,6 +1,7 @@
 #ifdef __is_libk
 #include <kernel/userspace.h>
 #include <scheduler.h>
+#include <vfs.h>
 #endif
 
 #include <kernel_syscall.h>
@@ -24,7 +25,7 @@ char *getcwd(char *buf, size_t size)
     {
         name = entry->name;
     }
-    copy_to_user(buf, name, MIN(size, strlen(name)));
+    dentry_get_pathname(entry, buf, size);
     return name;
 #else
     return (char *)(ptr_t)syscall_wrapper_asm(SYS_getcwd, (ptr_t)buf, size, 0,

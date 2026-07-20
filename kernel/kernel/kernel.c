@@ -262,8 +262,16 @@ struct test_array
     size_t num;
     size_t capacity;
 };
+
 void kmain()
 {
+
+    /* struct dentry *entry = lookup_path("/dir/other-dir",
+     * PATHNAME_LOOKUP_FIND); */
+    /* char str[100]; */
+    /* dentry_get_pathname(entry, str, 100); */
+    /* logd("str:%s", str); */
+    /* return; */
 
     scheduler_init();
 

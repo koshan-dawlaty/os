@@ -452,4 +452,6 @@ static inline int inode_write(struct inode *node, const u8 *buf, size_t n,
     return 0;
 }
 
+size_t dentry_get_pathname(struct dentry *entry, char *buf, size_t len);
+
 #endif
