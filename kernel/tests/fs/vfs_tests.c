@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <panic.h>
@@ -274,4 +275,15 @@ TEST(vfs_file_permissions, {
     err = write(read_only, buf, 100);
     ASSERT_EQ(-err, EACCES, "writing to a RDONLY file should not work")
     close(read_only);
+})
+
+TEST(vfs_dentry_get_pathname, {
+    const char *pathname = "/dir/other-dir/file.txt";
+    struct dentry *entry = lookup_path(pathname, PATHNAME_LOOKUP_FIND);
+    ASSERT_NOERR(entry);
+
+    char buf[100];
+    dentry_get_pathname(entry, buf, 100);
+
+    ASSERT_EQ_STR(pathname, buf);
 })

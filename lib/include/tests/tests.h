@@ -1,6 +1,7 @@
 #ifndef TESTS_H
 #define TESTS_H
 
+#include <err_ptr.h>
 #include <lib/utils.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -109,6 +110,11 @@ void add_test(test *);
     if (ptr == NULL)                                                           \
     {                                                                          \
         FAIL_TEST_EXTRA_REASON(ptr, "%s was null", __VA_ARGS__)                \
+    }
+#define ASSERT_NOERR(value, ...)                                               \
+    if (IS_ERR(value))                                                         \
+    {                                                                          \
+        FAIL_TEST_EXTRA_REASON(value, "%s had error", __VA_ARGS__)             \
     }
 
 #define FAIL_TEST(...)                                                         \
