@@ -92,7 +92,7 @@ int main()
                 if (err < 0)
                 {
                     printf("could not execute\nerror:%s", strerror(err));
-                    printf("\n");
+                    /* printf("\n"); */
                 }
                 /* TODO: this should have a way of waiting for the process to
                  * exit */

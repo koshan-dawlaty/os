@@ -41,6 +41,8 @@ void init_vfs()
     rootdir = type.mount(dev);
     rootdir->parent = rootdir;
 
+    rootdir->name = "/";
+
     /* rootdir->inode->sb->type->dentry_functions.append_dentry( */
     /*     rootdir, "abc", rootdir->inode->sb); */
 

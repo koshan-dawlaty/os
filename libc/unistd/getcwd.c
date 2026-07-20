@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #ifdef __is_libk
 #include <kernel/userspace.h>
 #include <scheduler.h>
@@ -16,17 +17,17 @@ char *getcwd(char *buf, size_t size)
 {
 #ifdef __is_libk
     struct dentry *entry = get_current_task()->working_dir;
-    char *name;
     if (entry == NULL)
     {
-        name = "/";
+        copy_to_user(buf, "/", MAX(2, size));
     }
     else
     {
-        name = entry->name;
+        /* FIXME: dentry_get_pathname() should probably copy_to_user(), but it
+         * would be nice to use it for kernel debugging */
+        dentry_get_pathname(entry, buf, size);
     }
-    dentry_get_pathname(entry, buf, size);
-    return name;
+    return buf;
 #else
     return (char *)(ptr_t)syscall_wrapper_asm(SYS_getcwd, (ptr_t)buf, size, 0,
                                               0, 0);

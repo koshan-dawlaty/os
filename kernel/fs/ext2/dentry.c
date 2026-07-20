@@ -161,7 +161,8 @@ done:
 }
 
 /* this could also be done without a linked list, by appending to a string, but
- * it would be slower, although it would use less memory */
+ * it would be slower as it would have to shift the string every new pathname,
+ * although it would use less memory */
 struct dentry_pathname_list
 {
     struct dentry *entry;
@@ -188,6 +189,7 @@ size_t dentry_get_pathname(struct dentry *entry, char *buf, size_t len)
         current = current->parent;
     }
 
+    bool should_include_slash = false;
     size_t i = 0;
     struct list *pos;
     list_for_each(pos, &head)
@@ -203,8 +205,19 @@ size_t dentry_get_pathname(struct dentry *entry, char *buf, size_t len)
             break;
         }
 
-        buf[i] = '/';
-        i++;
+        /* not the first entry being read */
+        if (i != 0)
+        {
+            if (should_include_slash)
+            {
+                buf[i] = '/';
+                i++;
+            }
+            else
+            {
+                should_include_slash = true;
+            }
+        }
         memcpy(buf + i, name, strlen(name));
         i += strlen(name);
     }
