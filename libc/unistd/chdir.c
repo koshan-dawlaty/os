@@ -16,15 +16,16 @@ int chdir(const char *path)
 #ifdef __is_libk
     struct task *current_task = get_current_task();
     struct dentry *dir = lookup_path(path, PATHNAME_LOOKUP_FIND);
-    if (dir->type != DENTRY_DIR && dir->type != DENTRY_MOUNT_POINT)
-    {
-        return -ENOTDIR;
-    }
     /* printf("new dir is:%p\n", dir); */
 
     if (IS_ERR(dir))
     {
         return GET_ERR(dir);
+    }
+
+    if (dir->type != DENTRY_DIR && dir->type != DENTRY_MOUNT_POINT)
+    {
+        return -ENOTDIR;
     }
     /* logd("new dir:%s", dir->name); */
 

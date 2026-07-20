@@ -9,12 +9,12 @@
 
 void ButtonElement::handle_element_click()
 {
-    onclick();
+    onclick(this);
 }
 
 void ButtonElement::render()
 {
-    framebuffer_draw_rect(&fb, 0, 0, fb.width, fb.height, 0xFF);
+    framebuffer_draw_rect(&fb, 0, 0, fb.width, fb.height, color);
 
     child->x = 5;
     child->y = 5;
@@ -33,7 +33,7 @@ ButtonElement::ButtonElement(View *child)
 {
 }
 
-void ButtonElement::set_onclick(void (*onclick)())
+void ButtonElement::set_onclick(void (*onclick)(ButtonElement *view))
 {
     this->onclick = onclick;
 }

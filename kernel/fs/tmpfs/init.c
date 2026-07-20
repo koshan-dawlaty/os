@@ -218,7 +218,8 @@ dentry *tmpfs_mount(struct bdev *dev)
     /* assume that the caller wants to create a new filesystem */
     struct superblock *sb = tmpfs_parse_superblock(dev);
     struct tmpfs_node *node =
-        tmpfs_node_alloc_dir(strdup("."), TMPFS_NODE_DIR, sb);
+        /* this might cause problems with reading a file called "" */
+        tmpfs_node_alloc_dir(strdup(""), TMPFS_NODE_DIR, sb);
     struct inode *root = new_inode(TMPFS_SB(sb)->inode_count, 0, node, sb);
     TMPFS_SB(sb)->inode_count++;
 
@@ -232,7 +233,7 @@ int tmpfs_dentry_remove(dentry *parent, char *name, superblock *sb)
     ASSERT(node->type == TMPFS_NODE_DIR,
            "tmpfs_remove_dentry needs a directory passed as the dentry");
 
-    list2 *pos;
+    struct list2 *pos;
     list1_old_for_each(pos, node->dir_head)
     {
         struct tmpfs_node *current = LIST_ENTRY(pos, struct tmpfs_node, list);

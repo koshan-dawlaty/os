@@ -12,6 +12,7 @@
 
 struct wm_client client;
 struct PSF_font *font;
+size_t i = 0;
 
 int main()
 {
@@ -33,7 +34,14 @@ int main()
     Layout *vertical = new VerticalLineLayout(10);
 
     ButtonElement *button = new ButtonElement(new ImageElement("osdev.tga"));
-    button->set_onclick([]() -> void { logd("osdev button clicked"); });
+    button->set_onclick(
+        [](ButtonElement *view) -> void
+        {
+            logd("osdev button clicked");
+            view->color = 0xFF00FF + (i * 1000);
+            i++;
+            view->render();
+        });
 
     Layout *child = new HorizontalLineLayout(20);
     child->add_child(new RectElement(100, 100, 0xFF0000));

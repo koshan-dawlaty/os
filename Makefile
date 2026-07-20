@@ -34,7 +34,6 @@ export QEMU_COMMAND := qemu-system-$(shell ./build/qemu-arch.sh $(ARCH))
 export QEMU_FLAGS :=  -cdrom build/os.iso \
 -m 256M \
 -machine pc \
--d int \
 -D build/log.txt \
 -boot d  \
 -vga std \
@@ -130,6 +129,7 @@ userspace-headers:
 qemu : $(ISO)
 	rm -f build/qemu.img
 	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
+	# $(QEMU_COMMAND) -monitor stdio $(QEMU_FLAGS)
 	$(QEMU_COMMAND) -serial mon:stdio $(QEMU_FLAGS)
 
 clean:
