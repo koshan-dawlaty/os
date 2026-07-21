@@ -170,6 +170,7 @@ int addr_space_unmap(struct addr_space *a, void *addr, size_t num_pages)
 
 int addr_space_map_current(void *addr, size_t num, int flags)
 {
+    logd("current:%p", current_addr_space);
     /* struct addr_space a = current_addr_space; */
     /* struct task *current = get_current_task(); */
     /* if (current != NULL) */

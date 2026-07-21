@@ -76,8 +76,7 @@ struct new_task_usermode_start_args
 void new_task_usermode_start(struct new_task_usermode_start_args *args)
 {
 
-    struct registers *temp_regs = malloc(sizeof(struct registers));
-    *temp_regs = registers_init_dynamic();
+    struct registers2 *temp_regs = malloc(sizeof(struct registers2));
 
     temp_regs->esp = 0xBFFEF000;
     scheduler_set_regs_argv(args->argc, args->argv, temp_regs);
@@ -87,11 +86,12 @@ void new_task_usermode_start(struct new_task_usermode_start_args *args)
 
 void user_thread_kernel_start(ptr_t addr)
 {
+    logd("USER THREAD STARTING AT:%p", addr);
 
-    struct registers *temp_regs = malloc(sizeof(struct registers));
-    *temp_regs = registers_init_dynamic();
-
+    struct registers2 *temp_regs = malloc(sizeof(struct registers2));
+    logd("regs:%p", temp_regs->esp);
     temp_regs->esp = (ptr_t)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
+    logd("regs:%p", temp_regs->esp);
 
     jump_usermode_asm(addr, temp_regs, (ptr_t)temp_regs->esp);
 }
@@ -159,17 +159,19 @@ struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv)
 
     out->regs = (struct registers){
 
-        .esp = (ptr_t)out->stack,
-        .ebp = (ptr_t)out->stack,
-        .eflags = 1 << 9,
-#ifdef CONFIG_x86_64
-        .edi = (ip),
-#endif
-        .fsave_space = malloc(FPU_STATE_SIZE)
+        /* .esp = (ptr_t)out->stack, */
+        /* .ebp = (ptr_t)out->stack, */
+        /* .eflags = 1 << 9, */
+        /* #ifdef CONFIG_x86_64 */
+        /* .edi = (ip), */
+        /* #endif */
+        /* .fsave_space = malloc(FPU_STATE_SIZE) */
 
     };
+    out->regs.esp = (ptr_t)out->stack;
 
-    out->inital_arg = *(ptr_t *)(out->stack) = (ptr_t)new_task_usermode_start;
+    out->inital_arg = ip;
+    *(ptr_t *)(out->stack) = (ptr_t)new_task_usermode_start;
     /* edx is the third argument first and second are set later in this
      * function
      */
@@ -197,7 +199,7 @@ struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv)
         malloc(sizeof(struct new_task_usermode_start_args));
     args2->addr = ip;
     args2->argc = argc;
-    args2->argv = argv;
+    args2->argv = args;
     out->inital_arg = (ptr_t)args2;
     out->ran_setup = false;
     /* scheduler_set_regs_arguments(argc, args, ip, &out->regs); */
@@ -241,6 +243,7 @@ struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv)
 
 struct task *user_thread_alloc(ptr_t ip)
 {
+    logd("USER THREAD REQUESTED AT:%p", ip);
 
     struct addr_space current_addr_space = get_current_task()->addr_space;
     ASSERT(current_addr_space.dir != NULL,
@@ -252,22 +255,23 @@ struct task *user_thread_alloc(ptr_t ip)
 
     out->start_addr = (void *)ip;
 
-    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x60);
+    out->stack = get_free_pages(2) + ((PAGE_SIZE * 2) - 0x60);
     out->bp = (ptr_t)out->stack;
     out->descriptors = new_fdlist();
 
     out->regs = (struct registers){
 
-        .esp = (ptr_t)out->stack,
-        .ebp = (ptr_t)out->stack,
-        .eflags = 1 << 9,
-#ifdef CONFIG_x86_64
-        .edi = (ip),
-#endif
+        /* .esp = (ptr_t)out->stack, */
+        /* .ebp = (ptr_t)out->stack, */
+        /* .eflags = 1 << 9, */
+        /* #ifdef CONFIG_x86_64 */
+        /* .edi = (ip), */
+        /* #endif */
 
-        .fsave_space = malloc(FPU_STATE_SIZE)
+        /* .fsave_space = malloc(FPU_STATE_SIZE) */
 
     };
+    out->regs.esp = (ptr_t)out->stack;
 
     /* out->working_dir = get_root_dir(); */
     /* NULL is used to signify root dir */
@@ -386,9 +390,9 @@ struct task *new_task(ptr_t ip)
     out->stack = get_free_pages(1) + (PAGE_SIZE - sizeof(ptr_t) * 5);
     out->working_dir = NULL;
 
-    out->regs = registers_init_dynamic();
+    out->regs = (struct registers){};
     out->regs.esp = (ptr_t)out->stack;
-    out->regs.eflags = 1 << 9;
+    /* out->regs.eflags = 1 << 9; */
 
     *(ptr_t *)(out->stack) = ip;
     *(ptr_t *)(out->stack + 8) = ip;
@@ -399,6 +403,7 @@ struct task *new_task(ptr_t ip)
     out->preempt_count = 0;
 
     out->can_sleep = true;
+    out->ran_setup = true;
 
     return out;
 }
@@ -406,7 +411,6 @@ struct task *new_task(ptr_t ip)
 struct task *create_kernel_task()
 {
     struct task *out = new_task(0);
-    out->regs = registers_init_dynamic();
     out->ran_setup = true;
 
     /* TODO: this needs to be here, but results in code duplication in

@@ -21,7 +21,7 @@ export CXX := $(shell ./build/compiler-arch.sh $(ARCH))-g++ --sysroot=$(SYSROOT)
 
 # -fno-optimize-sibling-calls will not generate jmp instructions for save/load registers which will make them not break
 # once printf supports the actual standard format specifiers, -Wno-format can be removed
-export CFLAGS :=  -DMYOS1234 -Werror -O3 \
+export CFLAGS :=  -DMYOS1234 -Werror -O0 \
 -Wno-format	\
 -fno-optimize-sibling-calls \
 -Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -g -g3 -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fno-omit-frame-pointer -Wno-unused-parameter

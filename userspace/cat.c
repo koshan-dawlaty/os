@@ -12,7 +12,8 @@
 
 int main(int argc, char **argv)
 {
-    logd("%d", argc);
+    /* logd("%p", argv); */
+    /* exit(0); */
 
     if (argc <= 1)
     {

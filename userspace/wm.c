@@ -993,8 +993,12 @@ void thread1()
 
 int main()
 {
-    clone((ptr_t)thread1);
-    exit(0);
+    /* int fd = open("/one", O_RDONLY); */
+    /* char buf[100]; */
+    /* read(fd, buf, 100); */
+    /* logd("%s", buf); */
+    /* clone((ptr_t)thread1); */
+    /* exit(0); */
 
     /* char c = getchar(); */
     /* logd("%c", c); */

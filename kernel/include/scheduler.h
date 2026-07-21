@@ -38,14 +38,6 @@ struct registers
     u64 r14;
     u64 r15;
 
-    /* TODO: remove */
-    u64 gs, fs, es, ds;
-    /*  20   28   30   38   40   48   50   58 */
-    u64 edi, esi, ebp, /* esp, */ ebx, edx, ecx, eax;
-    /*  60 */
-    u64 eflags;
-    /* TODO: maybe make this only on usermode tasks */
-    void *fsave_space; /* A8 */
 #endif
 
 } __packed;
@@ -66,9 +58,9 @@ struct registers2
 
 #define FPU_STATE_SIZE 108
 
-static inline struct registers registers_init_dynamic()
+static inline struct registers2 registers_init_dynamic()
 {
-    struct registers out = {0};
+    struct registers2 out = {0};
     out.fsave_space = malloc(FPU_STATE_SIZE);
     return out;
 }
@@ -165,7 +157,7 @@ static inline void switch_to(struct task *prev, struct task *current)
     }
 }
 
-extern void jump_usermode_asm(ptr_t addr, struct registers *regs, ptr_t sp);
+extern void jump_usermode_asm(ptr_t addr, struct registers2 *regs, ptr_t sp);
 
 void schedule();
 __attribute__((noinline)) void schedule_impl();
@@ -178,7 +170,7 @@ struct task *get_current_task();
 void scheduler_set_regs_arguments(int argc, char **argv, ptr_t ip,
                                   struct registers *regs);
 
-void scheduler_set_regs_argv(int argc, char **argv, struct registers *regs);
+void scheduler_set_regs_argv(int argc, char **argv, struct registers2 *regs);
 void scheduler_set_first_arg(void *first_arg, struct registers *regs);
 
 /*
