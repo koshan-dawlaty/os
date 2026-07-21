@@ -255,7 +255,7 @@ struct task *user_thread_alloc(ptr_t ip)
 
     out->start_addr = (void *)ip;
 
-    out->stack = get_free_pages(2) + ((PAGE_SIZE * 2) - 0x60);
+    out->stack = get_free_pages(1) + (PAGE_SIZE - 0x60);
     out->bp = (ptr_t)out->stack;
     out->descriptors = new_fdlist();
 
