@@ -191,7 +191,7 @@ void terminal_render_newline(struct terminal *term)
     terminal_draw_charat(c2, old_x, old_y, term);
 }
 
-void terminal_addchar(char c, struct terminal *term)
+void terminal_addchar_impl(char c, struct terminal *term, bool is_keyboard)
 {
     struct array *line =
         array_get(&term->characters,
@@ -199,6 +199,11 @@ void terminal_addchar(char c, struct terminal *term)
                   sizeof(struct array));
     size_t width = term->operations.get_width();
     size_t height = term->operations.get_height();
+
+    if (!is_keyboard)
+    {
+        term->num_written = 0;
+    }
 
     struct array *a =
         array_get(&term->characters, term->y, sizeof(struct array));
@@ -208,6 +213,14 @@ void terminal_addchar(char c, struct terminal *term)
         terminal_render_newline(term);
         break;
     case '\b':;
+        /* TODO: this is probably going to break if something is printed while
+         * they are typing before a newline, it might be best to rewrite the
+         * terminal to print something and forget about it  */
+        if (is_keyboard && term->num_written <= 0)
+        {
+            break;
+        }
+        term->num_written--;
         if (term->x > 1)
         {
 
@@ -250,6 +263,10 @@ void terminal_addchar(char c, struct terminal *term)
         break;
     default:;
 
+        if (is_keyboard)
+        {
+            term->num_written++;
+        }
         array_insert(a, term->x, &c, 1);
         terminal_set_pos(term, term->x + 1, term->y);
 
@@ -283,11 +300,16 @@ void terminal_addchar(char c, struct terminal *term)
     }
 }
 
+void terminal_addchar(char c, struct terminal *term)
+{
+    terminal_addchar_impl(c, term, true);
+}
+
 void terminal_add(const char *data, size_t len, struct terminal *term)
 {
     for (size_t i = 0; i < len; i++)
     {
-        terminal_addchar(data[i], term);
+        terminal_addchar_impl(data[i], term, false);
     }
 }
 

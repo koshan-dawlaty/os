@@ -86,12 +86,9 @@ void new_task_usermode_start(struct new_task_usermode_start_args *args)
 
 void user_thread_kernel_start(ptr_t addr)
 {
-    logd("USER THREAD STARTING AT:%p", addr);
 
     struct registers2 *temp_regs = malloc(sizeof(struct registers2));
-    logd("regs:%p", temp_regs->esp);
     temp_regs->esp = (ptr_t)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
-    logd("regs:%p", temp_regs->esp);
 
     jump_usermode_asm(addr, temp_regs, (ptr_t)temp_regs->esp);
 }
@@ -243,7 +240,6 @@ struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv)
 
 struct task *user_thread_alloc(ptr_t ip)
 {
-    logd("USER THREAD REQUESTED AT:%p", ip);
 
     struct addr_space current_addr_space = get_current_task()->addr_space;
     ASSERT(current_addr_space.dir != NULL,
