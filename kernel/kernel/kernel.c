@@ -306,8 +306,8 @@ void kmain()
     create_device("/dev/serial0", serial_cdev_create(0x3F8));
 #endif
 
-    ktask_run(t1, NULL);
-    ktask_run(t11, NULL);
+    /* ktask_run(t1, NULL); */
+    /* ktask_run(t11, NULL); */
 
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */

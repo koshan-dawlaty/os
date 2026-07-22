@@ -138,11 +138,11 @@ extern void ASM_ATTR
     __attribute__((returns_twice)) save_registers(struct registers2 *regs);
 extern void ASM_ATTR load_registers(struct registers2 *regs);
 
-extern void ASM_ATTR __attribute__((naked))
-switch_to_asm(struct registers *prev, struct registers *current);
+extern void ASM_ATTR switch_to_asm(struct registers *prev,
+                                   struct registers *current);
 
-extern void ASM_ATTR __attribute__((naked))
-switch_to_asm_arg(struct registers *prev, struct registers *current, ptr_t arg);
+extern void ASM_ATTR switch_to_asm_arg(struct registers *prev,
+                                       struct registers *current, ptr_t arg);
 
 static inline void switch_to(struct task *prev, struct task *current)
 {

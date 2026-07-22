@@ -46,6 +46,7 @@ OBJS=\
 	tests/tap.o \
 	tests/tests_lib.o \
 	ui/ui_lib.o \
+	ui/text.o \
 	ui/image.o \
 	ui/button.o \
 

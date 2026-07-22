@@ -7,6 +7,7 @@
 
 #include <lib/ui/button.hpp>
 #include <lib/ui/image.hpp>
+#include <lib/ui/text.hpp>
 #include <lib/ui/ui.hpp>
 #include <stdio.h>
 
@@ -46,6 +47,7 @@ int main()
     Layout *child = new HorizontalLineLayout(20);
     child->add_child(new RectElement(100, 100, 0xFF0000));
     child->add_child(new ImageElement("dog.tga"));
+    child->add_child(new TextElement("dog.tga", font));
     child->add_child(new RectElement(50, 50, 0xFF00FF));
 
     // horizontal->add_child(blue);
