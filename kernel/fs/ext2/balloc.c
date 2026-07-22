@@ -200,8 +200,7 @@ end:;
 
     if (index + buf_len > size)
     {
-        /* WILL BREAK (maybe ??? ) */
-        node->size_low = index + buf_len;
+        ext2_inode_set_size(node, index + buf_len);
         ext2_update_inode(vfs_node, sb);
     }
 }
@@ -256,8 +255,8 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
     /* ext2_write_inode(parent->inode, (u8 *)new_buf, buf_len, i, sb); */
     ext2_write_inode(parent->inode, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
 
-    /* TODO: bad */
-    ext2_entry->size_low = EXT2_BLOCK_SIZE(sb);
+    /* this should maybe not call udpate_inode? */
+    ext2_inode_set_size(ext2_entry, EXT2_BLOCK_SIZE(sb));
     ext2_update_inode(parent->inode, sb);
 
     /* TODO: cast discards qualifiers */

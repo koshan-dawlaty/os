@@ -105,10 +105,15 @@ ext2_inode_addr find_inode(char *path);
 
 ext2_inode *ext2_get_inode(ext2_inode_addr inode, superblock *sb);
 
-static inline uint64_t ext2_get_inode_size(ext2_inode *node)
+static inline u64 ext2_get_inode_size(ext2_inode *node)
 {
-    /* MAY BREAK */
-    return node->size_low;
+    return node->size_low | ((u64)node->size_high << 32);
+}
+
+static inline void ext2_inode_set_size(struct ext2_inode *inode, u64 size)
+{
+    inode->size_low = size & 0xFFFFFFFF;
+    inode->size_high = (size >> 32);
 }
 
 uint8_t *ext2_read_block(size_t block_number, superblock *sb);
