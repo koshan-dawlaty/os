@@ -139,7 +139,7 @@ struct dentry *ext2_readdir(struct dentry *entry, struct dir_context *context,
 dentry_type ext2_get_dentry_type(ext2_inode *node);
 u16 ext2_get_inode_type(dentry_type type);
 
-struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
+struct dentry *ext2_append_dentry(struct dentry *parent, char *name,
                                   enum dentry_type type, struct superblock *sb);
 
 /* removes a dentry matching name from entry */

@@ -205,7 +205,7 @@ end:;
     }
 }
 
-struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
+struct dentry *ext2_append_dentry(struct dentry *parent, char *name,
                                   enum dentry_type type, superblock *sb)
 {
 
@@ -259,6 +259,5 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
     ext2_inode_set_size(ext2_entry, EXT2_BLOCK_SIZE(sb));
     ext2_update_inode(parent->inode, sb);
 
-    /* TODO: cast discards qualifiers */
-    return new_dentry((char *)name, parent, new_node, type);
+    return new_dentry(name, parent, new_node, type);
 }

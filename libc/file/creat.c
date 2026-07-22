@@ -16,6 +16,7 @@ int creat(const char *path, mode_t mode)
 {
 
 #ifdef __is_libk
+    /* TODO: cast discards qualifiers */
     struct file *f = create_file((char *)path);
     if (IS_ERR(f))
     {

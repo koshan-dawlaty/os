@@ -85,7 +85,7 @@ struct tmpfs_node *tmpfs_node_alloc_dir(const char *name,
     return out;
 }
 
-struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, const char *name,
+struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
                                    enum dentry_type type, struct superblock *sb)
 {
     struct tmpfs_node *parent = TMPFS_NODE(vfs_parent->inode);
@@ -110,10 +110,9 @@ struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, const char *name,
     struct inode *inode_new =
         new_inode(TMPFS_SB(sb)->inode_count++, 0, node, sb);
     TMPFS_SB(sb)->inode_count++;
-    /*TODO: cast discards qualifiers */
     dentry_get(vfs_parent);
     struct dentry *entry_new =
-        new_dentry(strdup((char *)name), vfs_parent, inode_new, type);
+        new_dentry(strdup(name), vfs_parent, inode_new, type);
 
     /* if (parent->dir_head == NULL) */
     /* { */

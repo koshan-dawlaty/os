@@ -181,8 +181,8 @@ dentry *dentry_mount_point_alloc(struct superblock *sb, struct inode *root);
 typedef struct
 {
     dentry *(*read_dir)(dentry *entry, struct dir_context *, superblock *sb);
-    dentry *(*append_dentry)(dentry *parent, const char *name,
-                             enum dentry_type type, superblock *sb);
+    dentry *(*append_dentry)(dentry *parent, char *name, enum dentry_type type,
+                             superblock *sb);
 
     int (*remove_dentry)(dentry *, char *, superblock *);
 } dentry_functions;
