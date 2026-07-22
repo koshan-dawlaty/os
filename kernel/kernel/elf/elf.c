@@ -17,8 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-/* TODO: delete this */
-extern struct pagedir init_pgdir;
 
 void free_elf(elf *elf)
 {

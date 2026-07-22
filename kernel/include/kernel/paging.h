@@ -65,4 +65,7 @@ static inline void *map_physaddr(void *physaddr, size_t num_pages, uint flags)
     return virtual;
 }
 
+/* this might only be needed for x86 */
+extern struct pagedir init_pgdir;
+
 #endif

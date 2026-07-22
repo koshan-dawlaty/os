@@ -7,8 +7,6 @@
 
 void *paging_page_table_addr = 0;
 
-extern struct pagedir init_pgdir;
-
 void flush_tlb_full()
 {
     u64 cr3;
