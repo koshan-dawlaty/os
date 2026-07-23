@@ -84,6 +84,7 @@ BINARIES=\
 	explore$(TEST_SUFFIX) \
 	run$(TEST_SUFFIX) \
 	sokoban$(TEST_SUFFIX) \
+	mkdir$(TEST_SUFFIX) \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -129,6 +130,11 @@ $(BIN)/rm$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/rm.o$(TEST_SUFFIX) $(DEPENDEN
 $(BIN)/touch$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/touch.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+
+$(BIN)/mkdir$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/mkdir.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
+
 
 $(BIN)/wm$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/wm.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
