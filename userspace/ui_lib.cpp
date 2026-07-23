@@ -10,13 +10,33 @@
 #include <lib/ui/text.hpp>
 #include <lib/ui/ui.hpp>
 #include <stdio.h>
+#include <utility>
+
+void test_function(ButtonElement *element)
+{
+    int i = 10;
+
+    auto lambda = [=](ButtonElement *view) mutable -> void
+    {
+        logd("osdev button clicked");
+        view->color = 0xFF00FF + (i * 1000);
+        i++;
+        view->render();
+    };
+    element->set_onclick(lambda);
+}
 
 struct wm_client client;
 struct PSF_font *font;
-size_t i = 0;
 
 int main()
 {
+
+    size_t i = 0;
+    int x = 10;
+    // [x]() -> void { logd("%d", x); }();
+
+    // exit(0);
     client = wm_client_connect(600, 600);
 
     int font_fd = open("/font.psfu", O_RDONLY);
@@ -35,14 +55,17 @@ int main()
     Layout *vertical = new VerticalLineLayout(10);
 
     ButtonElement *button = new ButtonElement(new ImageElement("osdev.tga"));
-    button->set_onclick(
-        [](ButtonElement *view) -> void
-        {
-            logd("osdev button clicked");
-            view->color = 0xFF00FF + (i * 1000);
-            i++;
-            view->render();
-        });
+    test_function(button);
+    // auto lambda = [&](ButtonElement *view) -> void
+    // {
+    //     logd("osdev button clicked");
+    //     view->color = 0xFF00FF + (i * 1000);
+    //     i++;
+    //     view->render();
+    // };
+    // button->set_onclick(lambda);
+
+    // test_function(button);
 
     Layout *child = new HorizontalLineLayout(20);
     child->add_child(new RectElement(100, 100, 0xFF0000));
