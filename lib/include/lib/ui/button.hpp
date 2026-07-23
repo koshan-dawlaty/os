@@ -29,11 +29,7 @@ template <typename R, typename... Args> class function<R(Args...)>
         using T = std::decay_t<F>;
         ptr = new T(f);
         call_lambda = [](void *func, Args... a) -> R
-        {
-            logd("ptr:%p", func);
-            return (*((T *)(func)))(a...);
-        };
-        logd("call_lambda in constructor:%p", call_lambda);
+        { return (*((T *)(func)))(a...); };
     }
 
     inline R operator()(Args... args) const

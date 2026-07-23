@@ -35,6 +35,7 @@ class Layout : public View
     Layout();
     void handle_click(size_t click_x, size_t click_y, size_t abs_x,
                       size_t abs_y) override;
+    void clear_children();
 };
 
 class Element : public View

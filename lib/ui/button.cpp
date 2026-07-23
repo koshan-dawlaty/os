@@ -35,7 +35,5 @@ ButtonElement::ButtonElement(View *child)
 
 void ButtonElement::set_onclick(function<void(ButtonElement *)> o)
 {
-    logd("%p", o);
-    logd("%p", onclick);
     this->onclick = o;
 }

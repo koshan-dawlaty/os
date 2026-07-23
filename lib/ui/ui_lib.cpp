@@ -43,6 +43,12 @@ void Layout::add_child(View *view)
 {
 }
 
+void Layout::clear_children()
+{
+    /* FIXME: free children */
+    list_init_head(&children);
+}
+
 Layout::Layout()
 {
     list_init_head(&children);
@@ -55,7 +61,6 @@ LineLayout::LineLayout(bool is_vertical, size_t offest)
 
 void LineLayout::render()
 {
-    logd("line layout");
 
     size_t p = 0;
     struct list *pos;
