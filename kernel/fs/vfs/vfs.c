@@ -137,7 +137,6 @@ struct file *new_file(struct dentry *entry, int flags)
         out->operations = entry->inode->sb->type->file_operations;
         switch (entry->type)
         {
-        case DENTRY_SOCKET:
         case DENTRY_FILE:
             break;
         case DENTRY_MOUNT_POINT:

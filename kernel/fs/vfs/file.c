@@ -226,9 +226,6 @@ struct file *open_file(const char *path, int flags, int *fd)
     case DENTRY_FILE:
         /* out->operations = fs_file_operations; */
         break;
-    case DENTRY_SOCKET:
-        /* out->operations = socket_operations; */
-        /* out->file_private = dentry->socket; */
 
         break;
 

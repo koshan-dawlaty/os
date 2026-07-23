@@ -36,7 +36,6 @@ int stat(const char *pathname, struct stat *buf)
         buf->mode |= S_IFDIR;
         break;
     case DENTRY_INVALID:
-    case DENTRY_SOCKET:
         logw("unimplemented stat dentry type %d\nfor pathname:%s", ent->type,
              pathname);
         break;

@@ -120,13 +120,6 @@ static size_t parse_component(const char *path, dentry **current_dir,
                                 *current_dir, strdup(component), flags.type,
                                 (*current_dir)->inode->sb);
                 }
-                /* if (flags.type == DENTRY_SOCKET) /1* FIXME: TODO: socket *1/
-                 */
-                /* { */
-                /*     entry = dentry_socket_alloc(strdup(component),
-                 * *current_dir, */
-                /*                                 unix_socket_alloc()); */
-                /* } */
             }
             else
             {
@@ -160,13 +153,6 @@ static size_t parse_component(const char *path, dentry **current_dir,
     else if (entry->type == DENTRY_MOUNT_POINT)
     {
         /* TODO */
-    }
-    else if (entry->type == DENTRY_SOCKET)
-    {
-        if (!final_component)
-        {
-            goto not_dir;
-        }
     }
     else if (entry->type == DENTRY_INVALID)
     {

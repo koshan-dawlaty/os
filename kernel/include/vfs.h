@@ -102,8 +102,6 @@ typedef enum dentry_type
     DENTRY_INVALID,
 
     DENTRY_MOUNT_POINT,
-
-    DENTRY_SOCKET
 } dentry_type;
 
 /*
