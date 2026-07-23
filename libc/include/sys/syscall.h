@@ -46,5 +46,6 @@
 #define SYS_load_simple_binary 123
 
 #define SYS_getcwd 38
+#define SYS_stat 39
 
 #endif

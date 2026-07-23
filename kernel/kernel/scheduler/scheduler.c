@@ -278,7 +278,6 @@ struct task *user_thread_alloc(ptr_t ip)
      * function
      */
     out->ran_setup = false;
-    logd("%p", ip);
     out->inital_arg = ip;
     /* *(ptr_t *)(out->stack + sizeof(ptr_t)) = ip; */
 #ifdef CONFIG_x86_32

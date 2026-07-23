@@ -1,6 +1,5 @@
 #include <cpp/cpp_c_include_start.hpp>
 
-#include "tests/tests.h"
 #include "wm_lib.h"
 #include <assert.h>
 #include <dirent.h>
@@ -17,7 +16,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
+#include <tests/tests.h>
 #include <types.h>
 #include <unistd.h>
 #include <userspace/mouse.h>
@@ -51,20 +52,28 @@ Layout *get_dir_layout(DIR *d)
             return NULL;
         }
 
+        struct stat stat_buf;
+        int retval = stat(e->d_name, &stat_buf);
+
         ButtonElement *button =
             new ButtonElement(new TextElement(e->d_name, font));
         out->add_child(button);
-        button->set_onclick(
-            [=](ButtonElement *) -> void
-            {
-                logd("opening %s", e->d_name);
-                DIR *new_dir = opendir(e->d_name);
-                Layout *new_layout = get_dir_layout(new_dir);
-                closedir(new_dir);
 
-                if (new_layout != NULL)
+        switch (stat_buf.mode & S_IFMT)
+        {
+        case S_IFREG:
+            button->set_onclick([=](ButtonElement *) -> void
+                                { logd("normal file %s", e->d_name); });
+            break;
+        case S_IFDIR:
+            button->set_onclick(
+                [=](ButtonElement *) -> void
                 {
+                    DIR *new_dir = opendir(e->d_name);
+
                     chdir(e->d_name);
+                    auto new_layout = get_dir_layout(new_dir);
+                    closedir(new_dir);
                     root->clear_children();
                     framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
                                           client.fb.height, 0);
@@ -78,12 +87,13 @@ Layout *get_dir_layout(DIR *d)
 
                     root->render();
                     wm_render(client);
-                }
-                else
-                {
-                    logd("not a dir");
-                }
-            });
+                });
+            break;
+        default:
+            button->set_onclick(
+                [=](ButtonElement *) -> void
+                { logd("dont know how to open %d", stat_buf.mode & S_IFMT); });
+        }
 
         // out->add_child(new ButtonElement(new RectElement(10, 10, 0xFF)));
         // out->add_child(new RectElement(10, 10, 0xFF));

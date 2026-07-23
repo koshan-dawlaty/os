@@ -62,6 +62,7 @@ file/read.o \
 file/pread.o \
 sys/mman/mmap.o \
 sys/stat/mkdir.o \
+sys/stat/stat.o \
 unistd/execv.o \
 unistd/sleep.o \
 unistd/close.o \

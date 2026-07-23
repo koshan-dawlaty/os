@@ -210,6 +210,7 @@ struct dentry *lookup_path(const char *path, struct pathname_lookup_flags flags)
         struct task *current_task = get_current_task();
         if (current_task != NULL)
         {
+
             current_dir = current_task->working_dir;
         }
         else
