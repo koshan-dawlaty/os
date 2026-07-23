@@ -44,10 +44,10 @@ read_entry:;
 
     char *name_ptr = (char *)buf + 8;
     u16 total_size = *(u16 *)(buf + 4);
-    if (total_size != 0)
-    {
-        logd("size of:%d", total_size);
-    }
+    /* if (total_size != 0) */
+    /* { */
+    /*     logd("size of:%d", total_size); */
+    /* } */
 
     /* TODO: slightly more efficent way of doing this by checking only the first
      * two characters (dcache does this in dcache_handle_dot) */

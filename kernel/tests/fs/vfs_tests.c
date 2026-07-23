@@ -1,3 +1,4 @@
+#include "dirent.h"
 #include "lib/log.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -263,6 +264,17 @@ TEST(vfs_mkdir, {
     int fd = open("/test1234567/file", 0);
     ASSERT_GE(fd, 0);
     close(fd);
+})
+
+TEST(vfs_mkdir_ls_empty, {
+    mkdir("ls_emtpy_test_dir", 0);
+    int fd;
+    struct file *dir = open_file("ls_emtpy_test_dir", O_DIRECTORY, &fd);
+
+    struct dirent *buf = calloc(2, sizeof(struct dirent));
+    read_dir(dir, buf, 2);
+    ASSERT_EQ_STR(buf[0].d_name, ".");
+    ASSERT_EQ_STR(buf[1].d_name, "..");
 })
 
 TEST(vfs_file_permissions, {
