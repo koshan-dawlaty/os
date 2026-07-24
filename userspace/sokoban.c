@@ -1,14 +1,13 @@
-#include "fcntl.h"
-#include "lib/array.h"
 #include "wm_lib.h"
 #include <compiler.h>
+#include <fcntl.h>
 #include <init.h>
+#include <lib/array.h>
 #include <lib/assert.h>
 #include <lib/framebuffer.h>
 #include <lib/img.h>
 #include <lib/list.h>
 #include <lib/log.h>
-#include <math.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -185,42 +184,52 @@ int player_x = 0, player_y = 0;
 
 size_t game_w = 0, game_h = 0;
 
+bool should_update_wm = false;
 size_t scale = 45;
 double img_scale = 0.75;
 void draw_player(size_t x, size_t y)
 {
     framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
                                player_img);
-    /* framebuffer_draw_rect(&client.fb, x * scale, y * scale, scale, scale, */
-    /*                       0x00FF00); */
+    if (likely(should_update_wm))
+    {
+        wm_render_partial(client,
+                          (struct rect){x * scale, y * scale,
+                                        player_img.header.w * img_scale,
+                                        player_img.header.h * img_scale});
+    }
 }
 
 void draw_tile(size_t x, size_t y)
 {
     enum tile_state state = game[y][x];
+    struct image img;
     switch (state)
     {
     case TILE_WALL:
-        framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
-                                   wall_img);
+        img = wall_img;
         break;
     case TILE_GOAL:
-        framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
-                                   goal_img);
+        img = goal_img;
         break;
     case TILE_BOX:
-        framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
-                                   crate_img);
+        img = crate_img;
         break;
     case TILE_BOX_GOAL:
-        framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
-                                   check_img);
+        img = check_img;
         break;
     case TILE_EMPTY:
-        framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
-                                   floor_img);
-
+        img = floor_img;
         break;
+    }
+
+    framebuffer_draw_img_scale(&client.fb, x * scale, y * scale, img_scale,
+                               img);
+    if (likely(should_update_wm))
+    {
+        wm_render_partial(client, (struct rect){x * scale, y * scale,
+                                                img.header.w * img_scale,
+                                                img.header.h * img_scale});
     }
 }
 
@@ -424,6 +433,7 @@ int main()
     load_level("level2");
 
     wm_render(client);
+    should_update_wm = true;
     bool reading_level = false;
 
     struct array levelname = ARRAY_INIT();
@@ -495,7 +505,6 @@ int main()
             }
             break;
         }
-        wm_render(client);
     }
 
     exit(0);

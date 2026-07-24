@@ -559,7 +559,6 @@ void process_connection()
 
     num_connections++;
     int code;
-    logd("inital recv");
     recv(socket, &code, sizeof(int));
     while (true)
     {
@@ -596,13 +595,13 @@ void process_connection()
         {
             struct rect r = {};
             recv(socket, &r, sizeof(struct rect));
-            logd("%d, %d, %d, %d", r.x, r.y, r.w, r.h);
 
-            for (size_t y = WINDOW_DECORATION_ROWS + r.y;
+            for (size_t y = r.y + WINDOW_DECORATION_ROWS;
                  y < r.h + r.y + WINDOW_DECORATION_ROWS; y++)
             {
                 size_t server_offset = y * WIN_W(w) * 4 + (r.x * 4);
-                size_t client_offset = y * WIN_W(w) * 4 + (r.x * 4);
+                size_t client_offset =
+                    (y - WINDOW_DECORATION_ROWS) * WIN_W(w) * 4 + (r.x * 4);
 
                 memcpy(w->fb.buffer + server_offset, client_buf + client_offset,
                        (r.w) * 4);
@@ -618,7 +617,6 @@ void process_connection()
             {
                 goto disconnect;
             }
-            logd("done");
 
             break;
         }
@@ -1125,8 +1123,8 @@ int main()
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
-    execv("/bin/ui_lib", (char *[]){"ui_lib", NULL});
-    /* execv("/bin/sokoban", (char *[]){"/bin/sokoban", NULL}); */
+    /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
+    execv("/bin/sokoban", (char *[]){"/bin/sokoban", NULL});
     /* execv("/bin/run", (char *[]){"run", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
     /* execv("/bin/flashcards", (char *[]){"flashcards", NULL}); */

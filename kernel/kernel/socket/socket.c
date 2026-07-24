@@ -41,7 +41,6 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
 {
 
     /* logd("recv:%s", sock->buffer.data); */
-    logd("%d bytes in buffer, %d requested", sock->buffer.len, len);
 
     if (WAIT_QUEUE_EMPTY(sock->send_queue))
     {
@@ -84,7 +83,6 @@ int unix_socket_send(struct unix_socket *sock, const void *buf, size_t len)
 
 int unix_socket_close(struct file *f)
 {
-    logd("closing socket");
 
     struct unix_socket *sock = f->file_private;
     sock->is_closing = true;

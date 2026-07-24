@@ -1,6 +1,7 @@
 #include <cpp/cpp_c_include_start.hpp>
 
 #include "lib/framebuffer.h"
+#include "lib/img.h"
 #include "wm_lib.h"
 #include <lib/log.h>
 
@@ -39,14 +40,16 @@ int main()
 
     // exit(0);
     client = wm_client_connect(600, 600);
-    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
-                          0xFF00FF);
+    // struct image img;
+    // image_parse("osdev.tga", &img);
+    // framebuffer_draw_img(&client.fb, 0, 0, img);
+    // wm_render_partial(client, {0, 0, img.header.w, img.header.h});
 
-    // wm_render(client);
-    wm_render_partial(client, {10, 10, 10, 10});
-    wm_render_partial(client, {100, 20, 10, 20});
+    // // wm_render(client);
+    // wm_render_partial(client, {10, 10, 10, 10});
+    // wm_render_partial(client, {100, 20, 10, 20});
 
-    exit(0);
+    // exit(0);
 
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse_fd(font_fd);
