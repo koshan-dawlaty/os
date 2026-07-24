@@ -114,6 +114,7 @@ struct wm_second
 #define WM_RES_RENDER 1
 #define WM_RES_KEY 2
 #define WM_RES_KEY_NONBLOCK 4
+#define WM_RES_RENDER_PARTIAL 5
 
 typedef int wm_res_code;
 
@@ -186,6 +187,7 @@ static inline int connect(int socket)
 }
 
 void wm_render(struct wm_client client);
+void wm_render_partial(struct wm_client client, struct rect rect);
 char wm_get_key(struct wm_client client);
 char wm_get_key_nonblock(struct wm_client client);
 struct wm_client wm_client_connect(size_t height, size_t width);

@@ -496,7 +496,7 @@ int current_client = 1;
 int current_key_socket;
 
 size_t y = 10;
-size_t x = 400;
+size_t x = 10;
 
 size_t num_connections = 0;
 
@@ -533,9 +533,9 @@ void process_connection()
         wm_connection_alloc(socket, client_buf, mem_id);
     conn->client_key_socket = key_socket;
 
-    struct window *w = new_client_window(x, y, win_info.width, win_info.height);
-    /* y += win_info.height - 30; */
-    /* x += 40; */
+    struct window *w = new_client_window(0, 0, win_info.width, win_info.height);
+    /* y += 10; */
+    /* x += 10; */
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
     ent->list = LIST_INIT();
@@ -559,6 +559,7 @@ void process_connection()
 
     num_connections++;
     int code;
+    logd("inital recv");
     recv(socket, &code, sizeof(int));
     while (true)
     {
@@ -589,6 +590,36 @@ void process_connection()
             }
 
             /* draw_window(buffer, w); */
+            break;
+        }
+        case WM_RES_RENDER_PARTIAL:
+        {
+            struct rect r = {};
+            recv(socket, &r, sizeof(struct rect));
+            logd("%d, %d, %d, %d", r.x, r.y, r.w, r.h);
+
+            for (size_t y = WINDOW_DECORATION_ROWS + r.y;
+                 y < r.h + r.y + WINDOW_DECORATION_ROWS; y++)
+            {
+                size_t server_offset = y * WIN_W(w) * 4 + (r.x * 4);
+                size_t client_offset = y * WIN_W(w) * 4 + (r.x * 4);
+
+                memcpy(w->fb.buffer + server_offset, client_buf + client_offset,
+                       (r.w) * 4);
+            }
+
+            r.y += WINDOW_DECORATION_ROWS;
+            update_area_up(r, buffer);
+            update_area_up(WIN_RECT(w), buffer);
+
+            int ack_code = 3;
+            int retval = send(socket, &ack_code, sizeof(int));
+            if (retval == -ENOTSOCK)
+            {
+                goto disconnect;
+            }
+            logd("done");
+
             break;
         }
 
@@ -816,6 +847,7 @@ static void process_mouse(struct mouse_event *ev)
 
         for (pos = prev; pos != &window_queue; pos = pos->prev)
         {
+            /* execv("/bin/term", (char *[]){"term", NULL}); */
 
             struct window_queue_entry *queue_ent =
                 LIST_ENTRY(pos, struct window_queue_entry, list);
@@ -1075,12 +1107,25 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
-    execv("/bin/explore", (char *[]){"explore", NULL});
+
+    /* for (size_t i = 0; i < 10; i++) */
+    /* { */
+    /*     execv("/bin/term", (char *[]){"term", NULL}); */
+    /* } */
+
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    /* execv("/bin/term", (char *[]){"term", NULL}); */
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    /* execv("/bin/term", (char *[]){"term", NULL}); */
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    /* execv("/bin/term", (char *[]){"term", NULL}); */
+
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
-    /* execv("/bin/term", (char *[]){"term", NULL}); */
-    /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
+    execv("/bin/ui_lib", (char *[]){"ui_lib", NULL});
     /* execv("/bin/sokoban", (char *[]){"/bin/sokoban", NULL}); */
     /* execv("/bin/run", (char *[]){"run", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
@@ -1116,7 +1161,6 @@ int main()
 
         clone((ptr_t)(process_connection));
     }
-    /* process_connection(client_sock); */
 
     exit(0);
 }

@@ -41,6 +41,7 @@ int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
 {
 
     /* logd("recv:%s", sock->buffer.data); */
+    logd("%d bytes in buffer, %d requested", sock->buffer.len, len);
 
     if (WAIT_QUEUE_EMPTY(sock->send_queue))
     {

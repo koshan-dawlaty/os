@@ -66,6 +66,32 @@ void wm_render(struct wm_client client)
     }
 }
 
+void wm_render_partial(struct wm_client client, struct rect rect)
+{
+    int render_code = WM_RES_RENDER_PARTIAL;
+    send(client.socket, &render_code, sizeof(int));
+
+    int retval = send(client.socket, &rect, sizeof(struct rect));
+    if (retval == -ENOTSOCK)
+    {
+        logd("AAAA");
+    }
+
+    int ack_code;
+    retval = recv(client.socket, &ack_code, sizeof(int));
+
+    if (retval == -ENOTSOCK)
+    {
+        logd("AAAA");
+    }
+    if (ack_code != 3)
+    {
+        printf("server responded with invalid acknowledgment code:%d\n",
+               ack_code);
+        exit(1);
+    }
+}
+
 char wm_get_key(struct wm_client client)
 {
     /* int key_code = WM_RES_KEY; */

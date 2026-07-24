@@ -13,7 +13,7 @@ struct rect
     int y;
     int w;
     int h;
-};
+} __packed;
 
 #define RECT_INIT(_x, _y, _w, _h)                                              \
     (struct rect)                                                              \
