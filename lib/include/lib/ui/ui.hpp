@@ -1,20 +1,45 @@
 #ifndef UI_H
 #define UI_H
 
+#include "lib/log.h"
 #include <cpp/cpp_c_include_start.hpp>
 
 #include <lib/framebuffer.h>
 #include <lib/img.h>
 #include <lib/list.h>
+#include <lib/rect.h>
 #include <stdlib.h>
 #include <types.h>
 
 #include <cpp/cpp_c_include_end.hpp>
 
-class View
+class Screen
 {
   public:
+    virtual void update_area(struct rect area) = 0;
+};
+
+/*
+ * this class will not do anything when updating an area, this is intended to be
+ * used when you want to render straight to a framebuffer
+ */
+class DefaultScreen : public Screen
+{
+  public:
+    inline void update_area(struct rect area) override
+    {
+    }
+    inline DefaultScreen() {};
+};
+
+class View
+{
+
+  public:
+    size_t abs_x = 0, abs_y = 0;
     size_t x, y;
+
+    Screen *screen = nullptr;
 
     struct framebuffer fb;
     struct list list;
@@ -25,13 +50,21 @@ class View
     virtual void render() = 0;
     size_t get_width();
     size_t get_height();
+
+    inline void redraw()
+    {
+        logd("%d, %d %d, %d", x, y, get_width(), get_height());
+        screen->update_area(
+            {(int)abs_y, (int)abs_y, (int)get_width(), (int)get_height()});
+    }
 };
 
 class Layout : public View
 {
   public:
     struct list children;
-    virtual void add_child(View *view) = 0;
+    virtual void add_child(View *view);
+    virtual void update_child(View *view) = 0;
     Layout();
     void handle_click(size_t click_x, size_t click_y, size_t abs_x,
                       size_t abs_y) override;
@@ -61,7 +94,7 @@ class LineLayout : public Layout
     size_t offset;
 
     void render() override;
-    void add_child(View *view) override;
+    void update_child(View *view) override;
     LineLayout(bool is_vertical, size_t offset);
 
   private:

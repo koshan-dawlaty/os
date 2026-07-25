@@ -39,8 +39,15 @@ void View::render()
 {
 }
 
+void Layout::update_child(View *child)
+{
+    child->screen = screen;
+}
+
 void Layout::add_child(View *view)
 {
+    list_push(&view->list, &children);
+    update_child(view);
 }
 
 void Layout::clear_children()
@@ -78,6 +85,9 @@ void LineLayout::render()
             child->y = p;
         }
 
+        child->abs_x = x + child->x;
+        child->abs_y = y + child->y;
+
         child->fb.pitch = fb.pitch;
         child->fb.depth = fb.depth;
         child->fb.pixel_width = fb.pixel_width;
@@ -96,8 +106,12 @@ void LineLayout::render()
     }
 }
 
-void LineLayout::add_child(View *child)
+void LineLayout::update_child(View *child)
 {
+
+    Layout::update_child(child);
+
+    logd("screens:%p, %p", screen, child->screen);
 
     if (is_vertical)
     {
@@ -125,8 +139,6 @@ void LineLayout::add_child(View *child)
     }
 
     added_first_element = true;
-
-    list_push(&child->list, &children);
 }
 
 void View::handle_click(size_t, size_t, size_t, size_t)
@@ -146,7 +158,6 @@ void Element::handle_click(size_t click_x, size_t click_y, size_t abs_x,
 void Layout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
                           size_t abs_y)
 {
-
     struct list *pos;
     list_for_each(pos, &children)
     {
@@ -158,7 +169,6 @@ void Layout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
         if (click_x > x_pos && click_x < x_pos + child->fb.width &&
             click_y > y_pos && click_y < y_pos + child->fb.height)
         {
-
             child->handle_click(click_x, click_y, x_pos, y_pos);
         }
     }
