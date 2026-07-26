@@ -39,9 +39,20 @@ void View::render()
 {
 }
 
+void View::update_child(View *child)
+{
+}
+
 void Layout::update_child(View *child)
 {
     child->screen = screen;
+    child->parent = this;
+
+    /* this will be redundant in some cases */
+    if (parent != nullptr)
+    {
+        parent->update_child(this);
+    }
 }
 
 void Layout::add_child(View *view)
@@ -109,14 +120,12 @@ void LineLayout::render()
 void LineLayout::update_child(View *child)
 {
 
-    Layout::update_child(child);
-
-    logd("screens:%p, %p", screen, child->screen);
-
+    logd("updating child %d %d", child->get_width(), child->get_height());
     if (is_vertical)
     {
         if (child->fb.width > fb.width)
         {
+            logd("width greater");
             fb.width = child->fb.width;
         }
         fb.height += child->fb.height;
@@ -129,6 +138,7 @@ void LineLayout::update_child(View *child)
     {
         if (child->fb.height > fb.height)
         {
+            logd("width greater");
             fb.height = child->fb.height;
         }
         fb.width += child->fb.width;
@@ -139,6 +149,7 @@ void LineLayout::update_child(View *child)
     }
 
     added_first_element = true;
+    Layout::update_child(child);
 }
 
 void View::handle_click(size_t, size_t, size_t, size_t)

@@ -41,6 +41,8 @@ class View
 
     Screen *screen = nullptr;
 
+    View *parent = nullptr;
+
     struct framebuffer fb;
     struct list list;
 
@@ -50,6 +52,8 @@ class View
     virtual void render() = 0;
     size_t get_width();
     size_t get_height();
+
+    virtual void update_child(View *child);
 
     inline void redraw()
     {
@@ -64,7 +68,7 @@ class Layout : public View
   public:
     struct list children;
     virtual void add_child(View *view);
-    virtual void update_child(View *view) = 0;
+    virtual void update_child(View *view) override;
     Layout();
     void handle_click(size_t click_x, size_t click_y, size_t abs_x,
                       size_t abs_y) override;

@@ -110,7 +110,6 @@ int main()
     // test_function(button);
 
     Layout *child = new HorizontalLineLayout(20);
-    child->add_child(button);
     // child->add_child(new RectElement(100, 100, 0xFF0000));
     // child->add_child(new ImageElement("dog.tga"));
     // child->add_child(new TextElement("dog.tga", font));
@@ -128,7 +127,13 @@ int main()
     vertical->add_child(child);
     // vertical->add_child(button);
     vertical->add_child(cyan);
-    button->screen = child->screen;
+
+    View *dog = new ImageElement("dog.tga");
+    logd("\nadding image\n");
+    child->add_child(dog);
+    logd("image %d, %d", dog->get_width(), dog->get_height());
+
+    // button->screen = child->screen;
 
     // horizontal->add_child(new ButtonElement(child));
 
