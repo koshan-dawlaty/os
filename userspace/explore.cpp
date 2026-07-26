@@ -116,7 +116,7 @@ int main()
     Layout *l = get_dir_layout(opendir("/"));
     root->add_child(l);
     // root->add_child(new ImageElement("dog.tga"));
-    root->fb = client.fb;
+    root->set_fb_parent(client.fb);
     root->render();
 
     size_t mouse_x = 0, mouse_y = 0;

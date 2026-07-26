@@ -42,9 +42,9 @@ class ButtonElement : public Element
 {
   private:
     struct image img;
-    View *child;
 
   public:
+    View *child;
     function<void(ButtonElement *)> onclick;
     u32 color = 0xFF;
     ButtonElement(View *child);

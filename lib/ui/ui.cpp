@@ -99,20 +99,16 @@ void LineLayout::render()
         child->abs_x = x + child->x;
         child->abs_y = y + child->y;
 
-        child->fb.pitch = fb.pitch;
-        child->fb.depth = fb.depth;
-        child->fb.pixel_width = fb.pixel_width;
-        child->fb.buffer =
-            (u8 *)fb.buffer + FRAMEBUFFER_OFFSET(fb, child->x, child->y);
+        child->set_fb_parent(fb);
 
         child->render();
         if (!is_vertical)
         {
-            p += child->fb.width + offset;
+            p += child->get_width() + offset;
         }
         else
         {
-            p += child->fb.height + offset;
+            p += child->get_height() + offset;
         }
     }
 }
@@ -123,12 +119,12 @@ void LineLayout::update_child(View *child)
     logd("updating child %d %d", child->get_width(), child->get_height());
     if (is_vertical)
     {
-        if (child->fb.width > fb.width)
+        if (child->get_width() > fb.width)
         {
             logd("width greater");
-            fb.width = child->fb.width;
+            fb.width = child->get_width();
         }
-        fb.height += child->fb.height;
+        fb.height += child->get_height();
         if (added_first_element)
         {
             fb.height += offset;
@@ -136,12 +132,12 @@ void LineLayout::update_child(View *child)
     }
     else
     {
-        if (child->fb.height > fb.height)
+        if (child->get_height() > fb.height)
         {
             logd("width greater");
-            fb.height = child->fb.height;
+            fb.height = child->get_height();
         }
-        fb.width += child->fb.width;
+        fb.width += child->get_width();
         if (added_first_element)
         {
             fb.width += offset;
@@ -149,6 +145,7 @@ void LineLayout::update_child(View *child)
     }
 
     added_first_element = true;
+
     Layout::update_child(child);
 }
 
@@ -177,8 +174,8 @@ void Layout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
         size_t x_pos = child->x + abs_x;
         size_t y_pos = child->y + abs_y;
 
-        if (click_x > x_pos && click_x < x_pos + child->fb.width &&
-            click_y > y_pos && click_y < y_pos + child->fb.height)
+        if (click_x > x_pos && click_x < x_pos + child->get_width() &&
+            click_y > y_pos && click_y < y_pos + child->get_height())
         {
             child->handle_click(click_x, click_y, x_pos, y_pos);
         }

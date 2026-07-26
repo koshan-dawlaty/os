@@ -19,17 +19,13 @@ void ButtonElement::render()
     child->x = 5;
     child->y = 5;
 
-    child->fb.pitch = fb.pitch;
-    child->fb.depth = fb.depth;
-    child->fb.pixel_width = fb.pixel_width;
-    child->fb.buffer =
-        (u8 *)fb.buffer + FRAMEBUFFER_OFFSET(fb, child->x, child->y);
+    child->set_fb_parent(fb);
 
     child->render();
 }
 
 ButtonElement::ButtonElement(View *child)
-    : Element(child->fb.width + 10, child->fb.height + 10), child(child)
+    : Element(child->get_width() + 10, child->get_height() + 10), child(child)
 {
 }
 

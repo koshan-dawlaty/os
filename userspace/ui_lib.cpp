@@ -13,7 +13,6 @@
 #include <lib/ui/text.hpp>
 #include <lib/ui/ui.hpp>
 #include <stdio.h>
-#include <utility>
 
 class WMScreen : public Screen
 {
@@ -96,6 +95,7 @@ int main()
     horizontal->screen = new WMScreen(client);
     Layout *vertical = new VerticalLineLayout(10);
 
+    // ButtonElement *button = new ButtonElement(new ImageElement("dog.tga"));
     ButtonElement *button = new ButtonElement(new ImageElement("dog.tga"));
     test_function(button);
     // auto lambda = [&](ButtonElement *view) -> void
@@ -111,7 +111,6 @@ int main()
 
     Layout *child = new HorizontalLineLayout(20);
     // child->add_child(new RectElement(100, 100, 0xFF0000));
-    // child->add_child(new ImageElement("dog.tga"));
     // child->add_child(new TextElement("dog.tga", font));
     // child->add_child(new RectElement(50, 50, 0xFF00FF));
 
@@ -128,16 +127,18 @@ int main()
     // vertical->add_child(button);
     vertical->add_child(cyan);
 
-    View *dog = new ImageElement("dog.tga");
-    logd("\nadding image\n");
-    child->add_child(dog);
-    logd("image %d, %d", dog->get_width(), dog->get_height());
+    child->add_child(new ImageElement("dog.tga"));
+
+    // View *dog = new ImageElement("dog.tga");
+    // logd("\nadding image\n");
+    // child->add_child(dog);
+    // logd("image %d, %d", dog->get_width(), dog->get_height());
 
     // button->screen = child->screen;
 
     // horizontal->add_child(new ButtonElement(child));
 
-    horizontal->fb = client.fb;
+    horizontal->set_fb_parent(client.fb);
 
     horizontal->render();
     logd("%p", horizontal->screen);

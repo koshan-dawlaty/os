@@ -1,12 +1,12 @@
 #ifndef UI_H
 #define UI_H
 
-#include "lib/log.h"
 #include <cpp/cpp_c_include_start.hpp>
 
 #include <lib/framebuffer.h>
 #include <lib/img.h>
 #include <lib/list.h>
+#include <lib/log.h>
 #include <lib/rect.h>
 #include <stdlib.h>
 #include <types.h>
@@ -35,15 +35,16 @@ class DefaultScreen : public Screen
 class View
 {
 
+  protected:
+    struct framebuffer fb;
+
   public:
     size_t abs_x = 0, abs_y = 0;
     size_t x, y;
 
     Screen *screen = nullptr;
-
     View *parent = nullptr;
 
-    struct framebuffer fb;
     struct list list;
 
     virtual void handle_click(size_t click_x, size_t click_y, size_t abs_x,
@@ -57,9 +58,23 @@ class View
 
     inline void redraw()
     {
-        logd("%d, %d %d, %d", x, y, get_width(), get_height());
+        // logd("%d, %d %d, %d", x, y, get_width(), get_height());
         screen->update_area(
             {(int)abs_y, (int)abs_y, (int)get_width(), (int)get_height()});
+    }
+
+    /*
+     * makes this View's framebuffer a child of the parent framebuffer, so it
+     * will be rendered using this View's position as an offset into the parent
+     * framebuffer, should be called by Layout::render() to set children of the
+     * layout
+     */
+    inline void set_fb_parent(struct framebuffer parent)
+    {
+        fb.pitch = parent.pitch;
+        fb.depth = parent.depth;
+        fb.pixel_width = parent.pixel_width;
+        fb.buffer = (u8 *)parent.buffer + FRAMEBUFFER_OFFSET(parent, x, y);
     }
 };
 
