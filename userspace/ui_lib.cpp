@@ -148,7 +148,7 @@ int main()
                           0xFF00FF);
 
     size_t mouse_x = 0, mouse_y = 0;
-    while (true)
+    while (wm_is_alive(&client))
     {
         // wm_render(client);
         struct wm_message message;
@@ -167,4 +167,6 @@ int main()
             break;
         }
     }
+
+    exit(0);
 }

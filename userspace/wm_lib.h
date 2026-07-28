@@ -45,6 +45,7 @@ struct wm_client
     int socket;
     int key_socket;
     int mem_id;
+    bool is_alive;
     struct framebuffer fb;
 };
 
@@ -196,5 +197,7 @@ struct wm_client wm_client_connect_focus(size_t height, size_t width);
 struct wm_client wm_client_connect_nonblock(size_t height, size_t width);
 
 int wm_get_message(struct wm_client *client, struct wm_message *message);
+
+bool wm_is_alive(struct wm_client *client);
 
 #endif

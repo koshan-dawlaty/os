@@ -45,7 +45,7 @@ int mutex; /* TODO: maybe have a mutex in the wm_client variable? */
 
 void key_thread()
 {
-    while (1)
+    while (wm_is_alive(&client))
     {
         /* logd("getting key"); */
         /* user_mutex_lock(mutex); */
@@ -94,7 +94,6 @@ void key_thread()
     {
         sched_yield();
     }
-    loge("bad key");
     exit(1);
 }
 

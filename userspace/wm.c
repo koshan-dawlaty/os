@@ -1135,7 +1135,7 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    execv("/bin/term", (char *[]){"term", NULL});
+    /* execv("/bin/term", (char *[]){"term", NULL}); */
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */

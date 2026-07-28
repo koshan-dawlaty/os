@@ -167,6 +167,7 @@ static struct wm_client wm_client_connect_impl(size_t height, size_t width,
         .socket = server_sock,
         .key_socket = key_socket,
         .mem_id = second_message.mem_id,
+        .is_alive = true,
     };
 
     return out;
@@ -187,6 +188,11 @@ struct wm_client wm_client_connect_focus(size_t height, size_t width)
     return wm_client_connect_impl(height, width, false, true);
 }
 
+bool wm_is_alive(struct wm_client *client)
+{
+    return client->is_alive;
+}
+
 int wm_get_message(struct wm_client *client, struct wm_message *message)
 {
     struct wm_message_header header;
@@ -194,12 +200,13 @@ int wm_get_message(struct wm_client *client, struct wm_message *message)
     if ((err = recv(client->key_socket, &header,
                     sizeof(struct wm_message_header))))
     {
+        client->is_alive = false;
         return err;
     }
-    logd("header len:%d", header.len);
     message->message_data = malloc(header.len);
     if ((err = recv(client->key_socket, message->message_data, header.len)))
     {
+        client->is_alive = false;
         return err;
     }
 
@@ -221,6 +228,7 @@ int wm_get_message(struct wm_client *client, struct wm_message *message)
         int ack_code = 123;
         if ((err = send(client->key_socket, &ack_code, sizeof(int))))
         {
+            client->is_alive = false;
             return err;
         }
 

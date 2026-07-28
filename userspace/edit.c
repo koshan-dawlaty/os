@@ -309,7 +309,7 @@ int main(int argc, char **argv)
     wm_render(client);
 
     bool insert_mode = true;
-    while (1)
+    while (wm_is_alive(&client))
     {
         struct wm_message message;
         wm_get_message(&client, &message);

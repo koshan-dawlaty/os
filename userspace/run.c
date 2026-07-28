@@ -64,7 +64,7 @@ int main()
 
     struct array search = ARRAY_INIT();
 
-    while (true)
+    while (wm_is_alive(&client))
     {
         wm_render(client);
         struct wm_message message;
