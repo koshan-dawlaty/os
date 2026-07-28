@@ -1,11 +1,12 @@
-#include "lib/log.h"
 #include <dirent.h>
 #include <err_ptr.h>
 #include <errno.h>
+#include <lib/log.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <types.h>
 
 int main(int argc, char **argv)
 {

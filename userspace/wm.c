@@ -900,73 +900,27 @@ static void process_mouse(struct mouse_event *ev)
 
 static void process_keyboard_char(char c)
 {
-    if (c == '\\')
-    {
-        if (focused != NULL)
-        {
-            close(focused->conn->client_socket);
-            /* close(focused->conn->client_key_socket); */ /* TODO: causes
-                                                              issues */
-        }
-    }
     /* else if (c == 'a' && focused != NULL) */
     /* { */
     /*     resize_window(focused, 10, 0); */
     /* } */
-    else if (c == 'R')
+    if (focused != NULL)
     {
-        execv("/bin/run", (char *const[]){"run", NULL});
-    }
-    else if (c == '\t')
-    {
-        struct list *next = window_queue.next->next;
-        if (focused != NULL)
+        if (focused->nonblock_info.is_nonblock)
         {
-            struct list *next = focused->list.next;
+            focused->nonblock_info.current_key = c;
         }
-        if (next == &window_queue)
+        else
         {
-            next = window_queue.next->next;
-        }
-        struct window_queue_entry *ent =
-            containerof(next, struct window_queue_entry, list);
+            struct wm_connection *conn = focused->conn;
+            current_keyboard_char = c;
 
-        if (ent->win == mouse)
-        {
-            ent = containerof(window_queue.next->next,
-                              struct window_queue_entry, list);
-        }
-        if (ent == background_queue_ent)
-        {
-            ent = containerof(window_queue.next->next,
-                              struct window_queue_entry, list);
-        }
-
-        if (ent->win != mouse && ent != background_queue_ent) /* stupid */
-        {
-            change_focus(ent);
-        }
-    }
-    else
-    {
-        if (focused != NULL)
-        {
-            if (focused->nonblock_info.is_nonblock)
-            {
-                focused->nonblock_info.current_key = c;
-            }
-            else
-            {
-                struct wm_connection *conn = focused->conn;
-                current_keyboard_char = c;
-
-                struct wm_message message = {
-                    .header = WM_MESSAGE_KEY_HEADER,
-                    .message_data = &c,
-                };
-                server_send_message(conn, &message);
-                /* send(conn->client_key_socket, &c, sizeof(char)); */
-            }
+            struct wm_message message = {
+                .header = WM_MESSAGE_KEY_HEADER,
+                .message_data = &c,
+            };
+            server_send_message(conn, &message);
+            /* send(conn->client_key_socket, &c, sizeof(char)); */
         }
     }
 }
@@ -993,7 +947,59 @@ void input_thread()
             }
 
             char c = userspace_keyboard_process_scancode(keyboard, scancode);
-            if (c != 0)
+            /* logd("%d,%d,%p", keyboard->shift_pressed,
+             * keyboard->control_pressed, */
+            /*      c); */
+
+            if (keyboard->control_pressed)
+            {
+                if (c == 'r')
+                {
+                    execv("/bin/run", (char *const[]){"run", NULL});
+                }
+                else if (c == 'q')
+                {
+
+                    if (focused != NULL)
+                    {
+                        close(focused->conn->client_socket);
+                        /* TODO: causes issues */
+                        /* close(focused->conn->client_key_socket); */
+                    }
+                }
+                else if (c == '\t')
+                {
+                    struct list *next = window_queue.next->next;
+                    if (focused != NULL)
+                    {
+                        struct list *next = focused->list.next;
+                    }
+                    if (next == &window_queue)
+                    {
+                        next = window_queue.next->next;
+                    }
+                    struct window_queue_entry *ent =
+                        containerof(next, struct window_queue_entry, list);
+
+                    if (ent->win == mouse)
+                    {
+                        ent = containerof(window_queue.next->next,
+                                          struct window_queue_entry, list);
+                    }
+                    if (ent == background_queue_ent)
+                    {
+                        ent = containerof(window_queue.next->next,
+                                          struct window_queue_entry, list);
+                    }
+
+                    if (ent->win != mouse &&
+                        ent != background_queue_ent) /* stupid */
+                    {
+                        change_focus(ent);
+                    }
+                }
+            }
+            else if (!USERSPACE_KEYBOARD_INVALID_CHAR(c))
             {
                 process_keyboard_char(c);
             }
