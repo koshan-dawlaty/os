@@ -49,6 +49,7 @@ OBJS=\
 	ui/text.o \
 	ui/image.o \
 	ui/button.o \
+	userspace/input/keyboard.o
 
 
 OBJS_BIN_NO_SUFFIX = $(foreach obj,$(OBJS),bin/$(obj))

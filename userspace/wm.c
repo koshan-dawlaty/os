@@ -26,6 +26,7 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <userspace/keyboard.h>
 #include <userspace/mouse.h>
 
 struct wm_connection
@@ -42,6 +43,8 @@ struct wm_connection
 };
 
 struct PSF_font *font;
+
+struct keyboard *keyboard;
 
 struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf,
                                           int mem_id)
@@ -895,7 +898,7 @@ static void process_mouse(struct mouse_event *ev)
     }
 }
 
-static void process_keyboard(char c)
+static void process_keyboard_char(char c)
 {
     if (c == '\\')
     {
@@ -970,8 +973,11 @@ static void process_keyboard(char c)
 
 void input_thread()
 {
+    keyboard = userspace_keyboard_alloc("/dev/keyboard");
     int mouse_fd = open("/dev/mouse", O_RDONLY);
-    int keyboard_fd = 0; /* TODO: make this use the keyboard device instead */
+    int keyboard_fd =
+        keyboard
+            ->keyboard_fd; /* TODO: make this use the keyboard device instead */
     int fds[] = {mouse_fd, keyboard_fd};
     struct mouse_event *ev = malloc(sizeof(struct mouse_event));
     while (true)
@@ -979,14 +985,18 @@ void input_thread()
         int fd = poll(fds, 2);
         if (fd == keyboard_fd)
         {
-            char c;
-            int err = read(0, &c, 1);
+            u8 scancode;
+            int err = read(keyboard_fd, &scancode, 1);
             if (err < 0)
             {
                 PANIC("error reading from keyboard %s", strerror(err));
             }
 
-            process_keyboard(c);
+            char c = userspace_keyboard_process_scancode(keyboard, scancode);
+            if (c != 0)
+            {
+                process_keyboard_char(c);
+            }
         }
         else if (fd == mouse_fd)
         {
@@ -1117,14 +1127,14 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    /* execv("/bin/term", (char *[]){"term", NULL}); */
+    execv("/bin/term", (char *[]){"term", NULL});
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
-    execv("/bin/ui_lib", (char *[]){"ui_lib", NULL});
+    /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
     /* execv("/bin/sokoban", (char *[]){"/bin/sokoban", NULL}); */
     /* execv("/bin/run", (char *[]){"run", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */

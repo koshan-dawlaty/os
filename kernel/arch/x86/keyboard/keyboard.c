@@ -91,47 +91,11 @@ void keyboard_ps2_interrupt()
 
     u8 scancode = inb(0x60);
 
-    /* caps lock to escape */
-    if (scancode == 0x3A)
-    {
-        scancode = 1;
-    }
-    else if (scancode == 0x81)
-    {
-        scancode = 0xBA;
-    }
+    push_keyboard_buffer(scancode);
 
-    if (scancode == 0x2A)
+    if (!WAIT_QUEUE_EMPTY(keyboard_queue))
     {
-        is_shift_pressed = true;
-        return;
-    }
-    else if (scancode == 0xAA)
-    {
-        is_shift_pressed = false;
-        return;
-    }
-
-    if (scancode < 0x81)
-    {
-
-        char c;
-        if (is_shift_pressed)
-        {
-            c = keyboard_map_shift[scancode];
-        }
-        else
-        {
-            c = keyboard_map[scancode];
-        }
-
-        key_available = 1;
-        push_keyboard_buffer(c);
-
-        if (!WAIT_QUEUE_EMPTY(keyboard_queue))
-        {
-            wait_queue_done(&keyboard_queue);
-        }
+        wait_queue_done(&keyboard_queue);
     }
 }
 
