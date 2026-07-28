@@ -16,8 +16,6 @@ int main(int argc, char **argv)
 
     /* exit(0); */
 
-    printf("\n");
-
     const char *path = ".";
     if (argc >= 2)
     {
@@ -44,7 +42,6 @@ int main(int argc, char **argv)
 
         /* printf("%p\n", malloc(10)); */
     }
-    printf("\n\n");
 
     exit(0);
 }

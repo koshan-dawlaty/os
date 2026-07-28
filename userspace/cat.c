@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 
     if (fd == -1)
     {
-        printf("error:%s\n\n", strerror(errno));
+        printf("error:%s", strerror(errno));
         exit(1);
     }
 
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     }
 
     buf[buf_offset + bytes_read] = 0;
-    printf("%s\n", buf);
+    printf("%s", buf);
     close(fd);
 
     while (1)
