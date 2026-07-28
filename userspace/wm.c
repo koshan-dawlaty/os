@@ -708,6 +708,8 @@ disconnect:;
 
     update_area_up(old_area, buffer);
 
+    /* close(conn->client_key_socket); */
+
     while (1)
     {
         sched_yield(); /* need something like task hierarchy for this to work,

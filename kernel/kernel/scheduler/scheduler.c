@@ -290,6 +290,8 @@ struct task *user_thread_alloc(ptr_t ip)
     struct fdlist *parent_fdlist = get_current_task()->descriptors;
     out->descriptors = parent_fdlist;
 
+    out->name = get_current_task()->name;
+
     /* TODO: this should duplicate file descriptors */
     const char *term_path = "/dev/terminal";
     const char *keyboard_path = "/dev/keyboard";
@@ -376,6 +378,7 @@ struct task *new_task_args(ptr_t ip, void *args)
 struct task *new_task(ptr_t ip)
 {
     struct task *out = malloc(sizeof(struct task));
+    out->name = NULL;
     out->preempt_count = 0;
 
     out->descriptors = new_fdlist();

@@ -93,6 +93,8 @@ struct task
     u64 inital_arg;
 
     bool ran_setup;
+
+    const char *name;
 };
 
 void switch_tasks();

@@ -1,10 +1,10 @@
-#include "lib/log.h"
-#include "sys/syscall.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <kernel_syscall.h>
+#include <lib/log.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/syscall.h>
 #include <syscall.h>
 #include <unistd.h>
 #include <utils.h>
@@ -43,6 +43,7 @@ int execv(const char *path, char *const argv[])
         }
 
         struct task *t = load_elf(elf, argc, (char **)argv);
+        t->name = strdup(path);
         add_task(t);
         free_elf(elf);
         /* this the old task from running soon after this is called, it also
