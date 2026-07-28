@@ -554,10 +554,14 @@ void process_connection()
     {
         change_focus(ent);
     }
-
-    if (num_connections < 1)
+    else if (num_connections < 1)
     {
         focused = ent;
+        draw_window_decoration(w, true);
+    }
+    else
+    {
+        draw_window_decoration(w, false);
     }
 
     num_connections++;
@@ -1135,7 +1139,7 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    /* execv("/bin/term", (char *[]){"term", NULL}); */
+    execv("/bin/term", (char *[]){"term", NULL});
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
