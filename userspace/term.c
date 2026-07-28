@@ -50,7 +50,10 @@ void key_thread()
         /* logd("getting key"); */
         /* user_mutex_lock(mutex); */
         struct wm_message message;
-        wm_get_message(&client, &message);
+        if (wm_get_message(&client, &message))
+        {
+            break;
+        }
         switch (message.header.type)
         {
         case WM_MESSAGE_KEY:
@@ -85,6 +88,11 @@ void key_thread()
             /* user_mutex_unlock(mutex); */
         }
         }
+    }
+
+    while (1)
+    {
+        sched_yield();
     }
     loge("bad key");
     exit(1);

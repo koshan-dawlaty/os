@@ -132,7 +132,6 @@ int main()
     }
 done:
 
-    /* TODO: exit() does not call the close operation on sockets */
     close(client.socket);
     close(client.key_socket);
 

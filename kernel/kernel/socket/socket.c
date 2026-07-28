@@ -40,8 +40,6 @@ struct unix_socket *unix_socket_alloc()
 int unix_socket_recv(struct unix_socket *sock, void *buf, size_t len)
 {
 
-    /* logd("recv:%s", sock->buffer.data); */
-
     if (WAIT_QUEUE_EMPTY(sock->send_queue))
     {
         wait_queue_wait(&sock->recv_queue);
@@ -201,14 +199,17 @@ int unix_socket_connect(struct dentry *entry)
     struct unix_socket *socket = entry->inode->fs_private;
 
     struct file *new_sock = unix_socket_create();
+    file_get(new_sock);
 
     struct task *current = get_current_task();
     int fd = fdlist_add(current->descriptors, new_sock);
     struct task *other_task = socket->connection.task;
     int other_fd = fdlist_add(other_task->descriptors, new_sock);
+
     mutex_lock(&socket->connection.lock);
     socket->connection.current_connection = other_fd;
     mutex_unlock(&socket->connection.lock);
+
     array_push(&socket->connection.buffer, &other_fd, sizeof(int));
     if (!WAIT_QUEUE_EMPTY(socket->connection.accept_queue))
     {

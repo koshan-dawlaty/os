@@ -708,7 +708,7 @@ disconnect:;
 
     update_area_up(old_area, buffer);
 
-    /* close(conn->client_key_socket); */
+    close(conn->client_key_socket);
 
     while (1)
     {

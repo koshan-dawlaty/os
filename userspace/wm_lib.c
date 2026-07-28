@@ -187,12 +187,21 @@ struct wm_client wm_client_connect_focus(size_t height, size_t width)
     return wm_client_connect_impl(height, width, false, true);
 }
 
-void wm_get_message(struct wm_client *client, struct wm_message *message)
+int wm_get_message(struct wm_client *client, struct wm_message *message)
 {
     struct wm_message_header header;
-    recv(client->key_socket, &header, sizeof(struct wm_message_header));
+    int err;
+    if ((err = recv(client->key_socket, &header,
+                    sizeof(struct wm_message_header))))
+    {
+        return err;
+    }
+    logd("header len:%d", header.len);
     message->message_data = malloc(header.len);
-    recv(client->key_socket, message->message_data, header.len);
+    if ((err = recv(client->key_socket, message->message_data, header.len)))
+    {
+        return err;
+    }
 
     message->header = header;
     if (message->header.type == WM_MESSAGE_RESIZE)
@@ -210,9 +219,14 @@ void wm_get_message(struct wm_client *client, struct wm_message *message)
         client->fb.pitch = resize->new_w * 4;
 
         int ack_code = 123;
-        send(client->key_socket, &ack_code, sizeof(int));
+        if ((err = send(client->key_socket, &ack_code, sizeof(int))))
+        {
+            return err;
+        }
 
         /* wm_render(*client); */
     }
     /* logd("got data:%s, %d", message->message_data, header.len); */
+
+    return 0;
 }
