@@ -147,7 +147,6 @@ int main()
     framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
                           0xFF00FF);
 
-    size_t mouse_x = 0, mouse_y = 0;
     while (wm_is_alive(&client))
     {
         // wm_render(client);
@@ -157,11 +156,9 @@ int main()
         {
         case WM_MESSAGE_MOUSE:;
             struct mouse_event *ev = (struct mouse_event *)message.message_data;
-            mouse_x += ev->x_change;
-            mouse_y += ev->y_change;
             if (ev->buttons.left_click)
             {
-                horizontal->handle_click(mouse_x, mouse_y, 0, 0);
+                horizontal->handle_click(ev->x_change, ev->y_change, 0, 0);
             }
 
             break;

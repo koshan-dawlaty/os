@@ -119,7 +119,6 @@ int main()
     root->set_fb_parent(client.fb);
     root->render();
 
-    size_t mouse_x = 0, mouse_y = 0;
     while (true)
     {
         wm_render(client);
@@ -129,8 +128,7 @@ int main()
         {
         case WM_MESSAGE_MOUSE:;
             struct mouse_event *ev = (struct mouse_event *)message.message_data;
-            mouse_x += ev->x_change;
-            mouse_y += ev->y_change;
+            size_t mouse_x = ev->x_change, mouse_y = ev->y_change;
             if (ev->buttons.left_click)
             {
                 logd("%d, %d", mouse_x, mouse_y);

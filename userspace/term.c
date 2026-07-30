@@ -34,8 +34,6 @@ int execv_stdio(const char *path, char *const argv[], int in, int out)
                                out, 0);
 }
 
-size_t mouse_x = 0;
-size_t mouse_y = 0;
 size_t x = 0, y = 0;
 struct PSF_font *font;
 struct wm_client client;
@@ -76,12 +74,12 @@ void key_thread()
         case WM_MESSAGE_MOUSE:
         {
             struct mouse_event *ev = message.message_data;
-            mouse_x += ev->x_change;
-            mouse_y += ev->y_change;
-            /* logd("mouse at %d %d", mouse_x, mouse_y); */
-            /* client_draw_string(client, font, "this is the mouse", mouse_x, */
-            /*                    mouse_y); */
-            /* client_draw_pixel(client, mouse_x, mouse_y, 0xFF00FF); */
+            logd("mouse at %d %d", ev->x_change, ev->y_change);
+            /* client_draw_string(client, font, "this is the mouse",
+             * ev->x_change, */
+            /*                    ev->y_change); */
+            /* client_draw_pixel(client, ev->x_change, ev->y_change, 0xFF00FF);
+             */
 
             /* user_mutex_lock(mutex); */
             /* wm_render(client); */

@@ -44,3 +44,12 @@ TEST(array_macro_basic, {
     }
     ASSERT_EQ(array.num, 0);
 })
+
+TEST(array_macro_append_v, {
+    struct test_array array = {0};
+    array_macro_append_v(array, 123, 456, 789, 0);
+    ASSERT_EQ(array.items[0], 123);
+    ASSERT_EQ(array.items[1], 456);
+    ASSERT_EQ(array.items[2], 789);
+    ASSERT_EQ(array.items[3], 0);
+})

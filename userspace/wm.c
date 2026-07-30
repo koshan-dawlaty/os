@@ -37,8 +37,6 @@ struct wm_connection
 
     int shared_mem_id;
 
-    bool updated_mouse;
-
     void *buffer;
 };
 
@@ -52,7 +50,6 @@ struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf,
     struct wm_connection *conn = malloc(sizeof(struct wm_connection));
 
     conn->client_socket = client_socket;
-    conn->updated_mouse = false;
     conn->input_socket = socket_create();
     conn->buffer = client_buf;
     conn->shared_mem_id = mem_id;
@@ -803,25 +800,16 @@ static void process_mouse(struct mouse_event *ev)
     if (focused != NULL)
     {
 
-        struct mouse_event ev2 = *ev;
-        if (!focused->conn->updated_mouse)
-        {
-
-            int change_x = WIN_X(mouse_queue_ent->win) - WIN_X(focused->win);
-            int change_y = WIN_Y(mouse_queue_ent->win) - WIN_Y(focused->win);
-            /* logd("change_x:%d, %d", change_x, change_y); */
-            ev2.x_change += change_x;
-            ev2.y_change += change_y;
-
-            focused->conn->updated_mouse = true;
-        }
+        int change_x = WIN_X(mouse_queue_ent->win) - WIN_X(focused->win);
+        int change_y = WIN_Y(mouse_queue_ent->win) - WIN_Y(focused->win);
 
         struct wm_message message = {
 
             .header = WM_MESSAGE_MOUSE_HEADER,
+            /* FIXME: the member names in struct mouse_event do not convey that
+               these are absolute positions */
             .message_data =
-                &ev2, /* this is fine as server_send_message should not do
-                       anything with this other than send it to the kernel */
+                &(struct mouse_event){change_x, change_y, ev->buttons},
         };
         server_send_message(focused->conn, &message);
     }
@@ -1134,12 +1122,12 @@ int main()
     /*     execv("/bin/term", (char *[]){"term", NULL}); */
     /* } */
 
-    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    execv("/bin/explore", (char *[]){"explore", NULL});
     /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    execv("/bin/term", (char *[]){"term", NULL});
+    /* execv("/bin/term", (char *[]){"term", NULL}); */
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
