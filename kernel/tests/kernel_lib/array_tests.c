@@ -29,7 +29,7 @@ TEST(array_macro_basic, {
     struct test_array array = {0};
     for (size_t i = 0; i < 10; i++)
     {
-        array_macro_append(array, i);
+        array_macro_append(&array, i);
     }
     ASSERT_EQ(array.num, 10, "%d != %d", array.num, 10);
     for (size_t i = 0; i < array.num; i++)
@@ -39,7 +39,7 @@ TEST(array_macro_basic, {
 
     for (int i = 9; i >= 0; i--)
     {
-        int num = array_macro_remove_end(array);
+        int num = array_macro_remove_end(&array);
         ASSERT_EQ(num, i);
     }
     ASSERT_EQ(array.num, 0);
@@ -47,7 +47,7 @@ TEST(array_macro_basic, {
 
 TEST(array_macro_append_v, {
     struct test_array array = {0};
-    array_macro_append_v(array, 123, 456, 789, 0);
+    array_macro_append_v(&array, 123, 456, 789, 0);
     ASSERT_EQ(array.items[0], 123);
     ASSERT_EQ(array.items[1], 456);
     ASSERT_EQ(array.items[2], 789);
