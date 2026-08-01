@@ -7,6 +7,9 @@
 #include <sys/syscall.h>
 #include <vfs.h>
 
+/* FIXME: stupid */
+extern void user_thread_kernel_start(ptr_t addr);
+
 struct task *simple_binary_load(u8 *data)
 {
     if (data[0] != 'T' || data[1] != 'E' || data[2] != 'S' || data[3] != 'T' ||
@@ -27,8 +30,11 @@ struct task *simple_binary_load(u8 *data)
     void *memory = get_free_pages_user((bin_len / PAGE_SIZE) + 1);
     logd("kernel:%p, new task:%p", kernel, memory);
     out->start_addr = memory;
+    out->inital_arg = (ptr_t)memory;
+    out->ran_setup = false;
     /* out->regs.edx = (ptr_t)memory; */
     memcpy(memory, kernel + 9, bin_len);
+    *((ptr_t *)(out->stack)) = (ptr_t)user_thread_kernel_start;
 
     addr_space_load(current);
     create_userspace_stack(&out->addr_space);

@@ -180,10 +180,10 @@ $(BIN)/sokoban$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/sokoban.o$(TEST_SUFFIX) $
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
-COMPILER_OBJS=\
-$(BIN)/c_compiler/interpreter.o$(TEST_SUFFIX) $(BIN)/c_compiler/tests.o$(TEST_SUFFIX) 
 # COMPILER_OBJS=\
-# $(BIN)/c_compiler/codegen_x86_64.o$(TEST_SUFFIX)
+# $(BIN)/c_compiler/interpreter.o$(TEST_SUFFIX) $(BIN)/c_compiler/tests.o$(TEST_SUFFIX) 
+COMPILER_OBJS=\
+$(BIN)/c_compiler/codegen_x86_64.o$(TEST_SUFFIX)
 
 $(BIN)/compiler$(TEST_SUFFIX) : $(OBJS_START_BIN) $(COMPILER_OBJS)  $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)

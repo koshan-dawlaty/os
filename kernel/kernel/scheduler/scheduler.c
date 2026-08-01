@@ -88,8 +88,10 @@ void user_thread_kernel_start(ptr_t addr)
 {
 
     struct registers2 *temp_regs = malloc(sizeof(struct registers2));
+    /* might be stupid */
     temp_regs->esp = (ptr_t)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
 
+    logd("%p, %p", temp_regs->esp, addr);
     jump_usermode_asm(addr, temp_regs, (ptr_t)temp_regs->esp);
 }
 
