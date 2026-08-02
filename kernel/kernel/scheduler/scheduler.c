@@ -444,7 +444,11 @@ static void remove_task_sched_queue(struct task *task)
 
     if ((ptr_t)task->start_addr == 0xDEADBEEF)
     {
-        PANIC("attempt to remove initial task");
+        /* this not panicking might cause problems, but when nothing else is
+         * running (so only the init task), and an interrupt happens that will
+         * lock a mutex or wait on a queue, the initial task would be removed */
+        /* PANIC("attempt to remove initial task"); */
+        return;
     }
 
     irq_state_t state = irq_save_disable();

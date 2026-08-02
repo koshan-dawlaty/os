@@ -120,7 +120,7 @@ int main()
     root->set_fb_parent(client.fb);
     root->render();
     root->redraw();
-    wm_render(client);
+    // wm_render(client);
 
     while (true)
     {

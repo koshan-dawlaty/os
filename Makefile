@@ -39,6 +39,7 @@ export QEMU_FLAGS :=  -cdrom build/os.iso \
 -vga std \
 -display default,show-cursor=on \
 -drive file=build/qemu.img,format=raw,if=ide,index=0 \
+--enable-kvm \
 
 # -netdev tap,id=net0,ifname=tap0,script=no,downscript=no \
 # -device e1000,netdev=net0

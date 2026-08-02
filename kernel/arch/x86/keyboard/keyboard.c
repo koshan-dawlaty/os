@@ -2,6 +2,7 @@
 #include "kernel/interrupts.h"
 #include "keyboard_map.h"
 #include "lib/log.h"
+#include "scheduler.h"
 #include "spinlock.h"
 #include "vfs.h"
 #include "wait_queue.h"
