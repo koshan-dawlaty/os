@@ -114,14 +114,16 @@ int main()
 
     root = new HorizontalLineLayout(10);
     Layout *l = get_dir_layout(opendir("/"));
+    root->screen = new WMScreen(client);
     root->add_child(l);
     // root->add_child(new ImageElement("dog.tga"));
     root->set_fb_parent(client.fb);
     root->render();
+    root->redraw();
+    wm_render(client);
 
     while (true)
     {
-        wm_render(client);
         struct wm_message message;
         wm_get_message(&client, &message);
         switch (message.header.type)

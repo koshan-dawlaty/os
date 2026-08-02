@@ -14,21 +14,6 @@
 #include <lib/ui/ui.hpp>
 #include <stdio.h>
 
-class WMScreen : public Screen
-{
-  private:
-    struct wm_client client;
-
-  public:
-    inline WMScreen(struct wm_client client) : client(client)
-    {
-    }
-    inline void update_area(struct rect area) override
-    {
-        wm_render_partial(client, area);
-    };
-};
-
 void test_function(ButtonElement *element)
 {
     int i = 10;
@@ -123,8 +108,8 @@ int main()
 
     vertical->add_child(purple);
     // vertical->add_child(new ImageElement("osdev.tga"));
-    vertical->add_child(child);
-    // vertical->add_child(button);
+    // vertical->add_child(child);
+    vertical->add_child(button);
     vertical->add_child(cyan);
 
     child->add_child(new ImageElement("dog.tga"));

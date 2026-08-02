@@ -41,6 +41,7 @@ OBJS=\
 	term.o \
 	framebuffer.o \
 	log.o \
+	wm_lib.o \
 	rect.o \
 	assert.o \
 	tests/tap.o \

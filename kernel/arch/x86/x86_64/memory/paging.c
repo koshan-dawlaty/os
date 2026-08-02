@@ -1,6 +1,7 @@
 #include <kernel/paging.h>
 #include <kernel/utils.h>
 #include <lib/log.h>
+#include <memory/x86_paging.h>
 #include <spinlock.h>
 #include <string.h>
 #include <types.h>
@@ -98,7 +99,8 @@ void unmap_page(void *virtualaddr)
     pt[pt_index] = 0;
     spinlock_unlock(&paging_spinlock);
 
-    flush_tlb_full();
+    invlpg((void *)virtual);
+    /* flush_tlb_full(); */
 }
 
 void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
@@ -123,6 +125,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
         void *page = get_free_phys_page();
 
         void *pg_virtual = get_virtual_addr(page);
+
         bzero(pg_virtual, PAGE_SIZE);
 
         pml4[pml4_index] = (u64)page | 0x3 | flags;
@@ -151,6 +154,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
     {
         void *page = get_free_phys_page();
         void *pg_virtual = get_virtual_addr(page);
+
         bzero(pg_virtual, PAGE_SIZE);
         pdt[pdt_index] = (u64)page | 0x3 | flags;
     }
@@ -160,7 +164,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
     pt[pt_index] = physical | 0x3 | flags;
     spinlock_unlock(&paging_spinlock);
 
-    flush_tlb_full();
+    invlpg((void *)virtual);
 }
 
 void *get_physaddr(void *virtualaddr)
@@ -212,6 +216,6 @@ void *get_physaddr(void *virtualaddr)
         return NULL;
     }
 
-    flush_tlb_full();
+    /* flush_tlb_full(); */
     return (void *)((pt_entry & ~0xfff) + ((u64)virtualaddr & 0xfff));
 }

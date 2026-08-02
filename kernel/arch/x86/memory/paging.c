@@ -63,7 +63,7 @@ bool initalized = false;
 void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 {
     write_pagedir(current_pagedir, physaddr, virtualaddr, flags);
-    flush_tlb_full();
+    /* flush_tlb_full(); */
 }
 
 struct pagedir *new_pagedir()
@@ -91,7 +91,7 @@ void load_pgdir(struct pagedir *d)
     __asm__ volatile("mov %0, %%cr3" : : "r"(d->pgdir));
 
     // probably useless
-    flush_tlb_full();
+    /* flush_tlb_full(); */
 
     current_pagedir = d;
 }

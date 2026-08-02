@@ -147,7 +147,7 @@ void free_pages_bitmap(void *addr, size_t amount, struct memory_zone *z)
         void *physaddr = get_physaddr(ptr);
         free_phys_pages(physaddr, 1);
         /* TODO: FIXME: this seemed to be causing issues with the tests */
-        /* unmap_page(ptr); */
+        unmap_page(ptr);
     }
     spinlock_unlock(&z->lock);
 }

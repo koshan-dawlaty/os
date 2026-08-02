@@ -3,6 +3,7 @@
 
 #include <cpp/cpp_c_include_start.hpp>
 
+#include "wm_lib.h"
 #include <lib/framebuffer.h>
 #include <lib/img.h>
 #include <lib/list.h>
@@ -30,6 +31,21 @@ class DefaultScreen : public Screen
     {
     }
     inline DefaultScreen() {};
+};
+
+class WMScreen : public Screen
+{
+  private:
+    struct wm_client client;
+
+  public:
+    inline WMScreen(struct wm_client client) : client(client)
+    {
+    }
+    inline void update_area(struct rect area) override
+    {
+        wm_render_partial(client, area);
+    };
 };
 
 class View
