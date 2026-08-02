@@ -8,8 +8,8 @@
 # gdb -ex "set \$flags=$QEMU_FLAGS" -x debug.gdb
 #
 
-USER_EXECUTABLE="build/fs-root/bin/wm"
-USER_EXECUTABLE2="build/fs-root/bin/run"
+USER_EXECUTABLE="build/fs-root/bin/compiler"
+USER_EXECUTABLE2="build/fs-root/bin/compiler"
 
 KERNEL_ADDR=objdump -h isodir/boot/os.kernel | grep \ .text\  | awk '{print $4}'
 USERSPACE_ADDR=objdump -h $USER_EXECUTABLE | grep \ .text\  | awk '{print $4}'
@@ -30,7 +30,7 @@ gdb \
 	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
 	-ex "target remote | $QEMU_COMMAND -S -gdb stdio -serial pipe:$SERIAL_PIPE $(echo $QEMU_FLAGS | tr -d "\n")" \
-	-ex ""
+	-x build/codegen_debug.gdb
 
 # cat $SERIAL_PIPE.out
 
