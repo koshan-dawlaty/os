@@ -24,7 +24,7 @@ struct task *simple_binary_load(u8 *data)
     copy_from_user(kernel, data, bin_len + 9);
     struct addr_space *current = get_current_addr_space();
 
-    struct task *out = new_task_user(0, 0xBFFEF000, 0, 0);
+    struct task *out = user_task_alloc(0, 0xBFFEF000, 0, 0);
     addr_space_load(&out->addr_space);
     logd("before gfp_user");
     void *memory = get_free_pages_user((bin_len / PAGE_SIZE) + 1);

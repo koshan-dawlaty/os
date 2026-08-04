@@ -38,7 +38,7 @@ elf *parse_elf(int fd)
 struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
-    struct task *t = new_task_user(elf->entry_point, 0xBFFEF000, argc, argv);
+    struct task *t = user_task_alloc(elf->entry_point, 0xBFFEF000, argc, argv);
 
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {

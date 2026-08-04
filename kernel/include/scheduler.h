@@ -73,7 +73,6 @@ struct task
 
     void *stack;
     struct registers regs;
-    ptr_t bp;
     struct dentry *working_dir;
     struct fdlist *descriptors;
 
@@ -113,9 +112,9 @@ void remove_task_queue(struct task **queue, struct task *task);
 /*
  * initializes the page directory as a free page
  */
-struct task *new_task(ptr_t ip);
+struct task *task_alloc(ptr_t ip);
 
-struct task *new_task_user(ptr_t ip, ptr_t sp, int argc, char **argv);
+struct task *user_task_alloc(ptr_t ip, ptr_t sp, int argc, char **argv);
 struct task *user_thread_alloc(ptr_t ip);
 
 /*
@@ -180,7 +179,7 @@ void scheduler_set_first_arg(void *first_arg, struct registers *regs);
  */
 void add_sleep_queue(struct task *task, size_t time);
 
-struct task *new_task_args(ptr_t ip, void *args);
+struct task *task_args_alloc(ptr_t ip, void *args);
 
 void ktask_run(void (*task)(void *), void *args);
 /* TODO: make this a good api */
