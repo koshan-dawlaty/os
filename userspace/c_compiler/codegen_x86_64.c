@@ -5,6 +5,7 @@
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/utils.h>
+#include <math.h>
 #include <sys/syscall.h>
 #include <syscall.h>
 #include <utils.h>
@@ -43,20 +44,14 @@ struct codegen_value *codegen_value_alloc(enum codegen_value_type type,
     out->value = value;
     return out;
 }
+u8 get_modrm_bytes(u8 mod, u8 rm)
+{
+    return 0b11000000 | (mod & 0b111) << 3 | (rm & 0b111);
+}
 
 u8 get_modrm(struct codegen_value *reg, struct codegen_value *rm)
 {
-    u8 out = 0b11000000;
-
-    out |= (reg->reg & 0b111);
-    /* if (rm->type == CODEGEN_VALUE_REGISTER) */
-    /* { */
-    /*     out |= (rm->reg & 0b111) << 3; */
-    /* } */
-
-    /* logd("got this mod/rm:%p", out); */
-
-    return out;
+    return get_modrm_bytes(0, reg->reg);
 }
 
 /* FIXME: the name should represent that this does not work for every opcode */
@@ -65,6 +60,26 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
 {
     /* FIXME: this should use prefixes */
     array_macro_append_v(code, opcode, get_modrm(dest, src));
+    if (src->type == CODEGEN_VALUE_IMMEDIATE)
+    {
+        logd("appending:%d", src->value);
+        array_macro_append_v(code, src->value, 0, 0, 0);
+    }
+}
+
+void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
+                  struct codegen_value *src)
+{
+    if (src->type == CODEGEN_VALUE_IMMEDIATE)
+    {
+        generate_opcode(code, 0xc7, dest, src);
+    }
+}
+
+void generate_ax_opcode(struct bytecode_array *code, u8 opcode,
+                        struct codegen_value *src)
+{
+    array_macro_append_v(code, opcode, get_modrm_bytes(0b100, src->reg));
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         logd("appending:%d", src->value);
@@ -86,6 +101,54 @@ void generate_add(struct bytecode_array *code, struct codegen_value *src,
     }
 }
 
+struct codegen_value immediate_temp_reg = {CODEGEN_VALUE_REGISTER, 1};
+
+struct codegen_value *generate_mul(struct bytecode_array *code,
+                                   struct codegen_value *src,
+                                   struct codegen_value *dest)
+{
+
+    logd("%d", src->type);
+    if (src->type == CODEGEN_VALUE_IMMEDIATE)
+    {
+        logd("immediate multiply");
+        generate_mov(code, &immediate_temp_reg, src);
+        generate_ax_opcode(code, 0xF7, &immediate_temp_reg);
+    }
+    else
+    {
+        generate_opcode(code, 0xF7, src, dest);
+    }
+
+    /* ax */
+    return codegen_value_alloc(CODEGEN_VALUE_REGISTER, 0);
+}
+
+struct codegen_value *generate_operator(struct bytecode_array *code,
+                                        struct codegen_value *dest,
+                                        struct codegen_value *lhs,
+                                        struct codegen_value *rhs,
+                                        enum token_type operator_type)
+{
+    switch (operator_type)
+    {
+    case TOKEN_PLUS:
+        generate_add(code, lhs, dest);
+        generate_add(code, rhs, dest);
+        break;
+    case TOKEN_STAR:
+        generate_mov(code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
+                     lhs);
+        return generate_mul(code, rhs, dest);
+        break;
+    default:
+        PANIC("invalid operator type from ast:%s",
+              token_type_str(operator_type));
+    }
+
+    return NULL;
+}
+
 struct codegen_value *generate_expr(struct bytecode_array *code,
                                     struct ast_expr *expr,
                                     struct codegen_value *dest)
@@ -100,6 +163,7 @@ struct codegen_value *generate_expr(struct bytecode_array *code,
         }
         else
         {
+            logd("immediate %d", expr->value.literal.integer);
             return codegen_value_alloc(CODEGEN_VALUE_IMMEDIATE,
                                        expr->value.literal.integer);
         }
@@ -110,17 +174,18 @@ struct codegen_value *generate_expr(struct bytecode_array *code,
         struct codegen_value *lhs = generate_expr(code, expr->lhs, dest);
         struct codegen_value *rhs = generate_expr(code, expr->rhs, dest);
 
-        if (lhs != NULL)
+        struct codegen_value *retval = NULL;
+
+        if (lhs != NULL && rhs != NULL)
         {
-            generate_add(code, dest, lhs);
+            generate_operator(code, dest, lhs, rhs, expr->operator);
         }
 
-        if (rhs != NULL)
-        {
-            generate_add(code, dest, rhs);
-        }
-
-        return NULL;
+        /*
+         * FIXME: this is kind of weird, it might be a good idea to split this
+         * into multiple functions (similar to parsing expressions for the ast)
+         */
+        return retval;
         break;
     case AST_EXPRESSION_UNARY_OPERATOR:
         PANIC("");
@@ -153,7 +218,8 @@ int main()
     const char *program = MACRO_STR(
         // clang-format off
 		
-		1 + 2  + 3
+		/* (1 + ((2 + 3) + (4 + 5))) + 6 */
+		2 * 3
 
         // clang-format on
     );
@@ -167,7 +233,7 @@ int main()
     struct ast_expr *expr = ast_parse_expression(&parser, &err);
 
     struct bytecode_array code = {0};
-    struct codegen_value dest = {CODEGEN_VALUE_REGISTER, 0};
+    struct codegen_value dest = {CODEGEN_VALUE_REGISTER, 2};
     generate_expr(&code, expr, &dest);
 
     array_macro_append_v(&code, 0xc3);
