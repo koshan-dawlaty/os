@@ -112,31 +112,39 @@ int main()
     font = font_parse_fd(font_fd);
     client = wm_client_connect(600, 600);
 
-    root = new HorizontalLineLayout(10);
-    Layout *l = get_dir_layout(opendir("/"));
-    root->screen = new WMScreen(client);
-    root->add_child(l);
-    // root->add_child(new ImageElement("dog.tga"));
-    root->set_fb_parent(client.fb);
-    root->render();
-    root->redraw();
-    // wm_render(client);
+    // root = new HorizontalLineLayout(10);
+    // Layout *l = get_dir_layout(opendir("/"));
+    // root->screen = new WMScreen(client);
+    // root->add_child(l);
+    // // root->add_child(new ImageElement("dog.tga"));
+    // root->set_fb_parent(client.fb);
+    // root->render();
+    // root->redraw();
+    logd("rendering");
+    wm_render(client);
+    logd("done rendering");
 
     while (true)
     {
         struct wm_message message;
+        logd("getting message");
         wm_get_message(&client, &message);
         switch (message.header.type)
         {
-        case WM_MESSAGE_MOUSE:;
+        case WM_MESSAGE_MOUSE:
+        {
             struct mouse_event *ev = (struct mouse_event *)message.message_data;
             size_t mouse_x = ev->x_change, mouse_y = ev->y_change;
             if (ev->buttons.left_click)
             {
                 logd("%d, %d", mouse_x, mouse_y);
                 logd("click");
-                root->handle_click(mouse_x, mouse_y, 0, 0);
+                // root->handle_click(mouse_x, mouse_y, 0, 0);
             }
+
+            break;
+        }
+        case WM_MESSAGE_KEY:;
 
             break;
         }

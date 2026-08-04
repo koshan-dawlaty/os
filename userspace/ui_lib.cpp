@@ -132,11 +132,12 @@ int main()
     framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
                           0xFF00FF);
 
-    while (wm_is_alive(&client))
+    while (true)
     {
         // wm_render(client);
         struct wm_message message;
         wm_get_message(&client, &message);
+
         switch (message.header.type)
         {
         case WM_MESSAGE_MOUSE:;
@@ -149,6 +150,5 @@ int main()
             break;
         }
     }
-
     exit(0);
 }

@@ -66,6 +66,7 @@ void key_thread()
             write(pipe_write, &c, 1);
             /* printf("%c ", c); */
             terminal_addchar(c, &term);
+
             user_mutex_lock(mutex);
             wm_render(client);
             user_mutex_unlock(mutex);
@@ -95,8 +96,8 @@ void key_thread()
     exit(1);
 }
 
-u32 bg_color = 0x4b3973;
-u32 cursor_color = 0x9f1ec9;
+u32 bg_color = 0;
+u32 cursor_color = 0xFFFFFF;
 
 void wm_terminal_draw_char_at(char character, size_t x, size_t y,
                               bool is_cursor)
@@ -117,6 +118,11 @@ void wm_terminal_draw_char_at(char character, size_t x, size_t y,
     }
     client_draw_char(client, font, character, x * font->header.width,
                      y * font->header.height);
+
+    /* wm_render_partial( */
+    /*     client, (struct rect){x * font->header.width, y *
+     * font->header.height, */
+    /*                           font->header.width, font->header.height}); */
 }
 
 size_t wm_terminal_get_width()

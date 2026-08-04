@@ -88,12 +88,15 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
     /* printf("start:%p\n", a->list_head); */
     struct pagedir *prev_dir = get_current_pagedir();
     load_pgdir(a->dir);
+
+    /* this will allocate contagious physical pages, but it is faster with a
+     * bitmap allocate than individually allocating */
+    void *phys = get_free_phys_pages(num_pages);
+
+    /* printf("physaddr:%p\n", phys); */
     for (size_t i = 0; i < num_pages; i++)
     {
-        void *phys = get_free_phys_page();
-
-        /* printf("physaddr:%p\n", phys); */
-        write_pagedir(a->dir, phys, addr + (i * PAGE_SIZE),
+        write_pagedir(a->dir, phys + (i * PAGE_SIZE), addr + (i * PAGE_SIZE),
                       PAGING_PRESENT | PAGING_WRITEABLE | flags);
     }
 

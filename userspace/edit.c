@@ -287,8 +287,6 @@ int main(int argc, char **argv)
     size_t x = 0, y = 0;
     client = wm_client_connect(h, w);
 
-    wm_render(client);
-
     /* struct editor_buffer buffer = {0, 0, .top_line = 0, */
     /*                                .num_lines = */
     /*                                    client.fb.height /
@@ -316,7 +314,8 @@ int main(int argc, char **argv)
 
         switch (message.header.type)
         {
-        case WM_MESSAGE_KEY:;
+        case WM_MESSAGE_KEY:
+        {
 
             char c = *(char *)message.message_data;
             if (insert_mode)
@@ -392,6 +391,7 @@ int main(int argc, char **argv)
                 wm_render(client);
             }
             break;
+        }
         default:;
         }
     }

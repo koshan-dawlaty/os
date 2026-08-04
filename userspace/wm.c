@@ -597,10 +597,11 @@ void process_connection()
         }
         case WM_RES_RENDER_PARTIAL:
         {
+            logd("partial update");
             struct rect r = {};
             recv(socket, &r, sizeof(struct rect));
 
-            logd("%d", r.x);
+            /* logd("%d", r.x); */
             for (size_t y = r.y + WINDOW_DECORATION_ROWS;
                  y < r.h + r.y + WINDOW_DECORATION_ROWS; y++)
             {
@@ -614,7 +615,7 @@ void process_connection()
 
             r.y += WINDOW_DECORATION_ROWS;
             update_area_up(r, buffer);
-            update_area_up(WIN_RECT(w), buffer);
+            /* update_area_up(WIN_RECT(w), buffer); */
 
             int ack_code = 3;
             int retval = send(socket, &ack_code, sizeof(int));
@@ -1122,7 +1123,7 @@ int main()
     /*     execv("/bin/term", (char *[]){"term", NULL}); */
     /* } */
 
-    execv("/bin/explore", (char *[]){"explore", NULL});
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
@@ -1134,7 +1135,7 @@ int main()
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
-    /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
+    execv("/bin/ui_lib", (char *[]){"ui_lib", NULL});
     /* execv("/bin/sokoban", (char *[]){"/bin/sokoban", NULL}); */
     /* execv("/bin/run", (char *[]){"run", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
