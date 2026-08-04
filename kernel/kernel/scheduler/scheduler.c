@@ -144,6 +144,40 @@ static void fdlist_copy_device(struct fdlist *dest, struct fdlist *src,
     }
 }
 
+/*
+ * copies the inital file descriptors from the current task to @new_task
+ */
+static void copy_init_file_descriptors(struct task *new_task)
+{
+    /* TODO: maybe have a function to index into the fdlist, like dup2() */
+    /* TODO: maybe make stdin/out not readable/writeable in the kernel */
+
+    const char *term_path = "/dev/terminal";
+    const char *serial_path = "/dev/serial0";
+    const char *keyboard_path = "/dev/keyboard";
+    struct task *current_task = get_current_task();
+
+    /* check if the current task is not the inital kernel task, as if it
+     * is the fdlist is invalid */
+    if (current_task->start_addr != (void *)0xDEADBEEF)
+    {
+        struct fdlist *current_fds = current_task->descriptors;
+        struct fdlist *out_fds = new_task->descriptors;
+
+        fdlist_copy_device(out_fds, current_fds, 0, keyboard_path);
+        fdlist_copy_device(out_fds, current_fds, 1, term_path);
+        fdlist_copy_device(out_fds, current_fds, 2, term_path);
+        fdlist_copy_device(out_fds, current_fds, 3, serial_path);
+    }
+    else
+    {
+        fdlist_set(new_task->descriptors, 0, open_device(keyboard_path));
+        fdlist_set(new_task->descriptors, 1, open_device(term_path));
+        fdlist_set(new_task->descriptors, 2, open_device(term_path));
+        fdlist_set(new_task->descriptors, 3, open_device(serial_path));
+    }
+}
+
 struct task *user_task_alloc(ptr_t ip, ptr_t sp, int argc, char **argv)
 {
     struct task *out = task_alloc(ip);
@@ -182,37 +216,9 @@ struct task *user_task_alloc(ptr_t ip, ptr_t sp, int argc, char **argv)
 
     load_pgdir(temp);
 
-    const char *term_path = "/dev/terminal";
-    const char *serial_path = "/dev/serial0";
-    const char *keyboard_path = "/dev/keyboard";
-    /* TODO: maybe have a function to index into the fdlist, like dup2()
-     */
-    /* TODO: maybe make stdin/out not readable/writeable in the kernel
-     */
+    out->working_dir = get_current_task()->working_dir;
 
-    struct task *current_task = get_current_task();
-
-    /* check if the current task is not the inital kernel task, as if it
-     * is the fdlist is invalid */
-    if (current_task->start_addr != (void *)0xDEADBEEF)
-    {
-        struct fdlist *current_fds = current_task->descriptors;
-        struct fdlist *out_fds = out->descriptors;
-
-        fdlist_copy_device(out_fds, current_fds, 0, keyboard_path);
-        fdlist_copy_device(out_fds, current_fds, 1, term_path);
-        fdlist_copy_device(out_fds, current_fds, 2, term_path);
-        fdlist_copy_device(out_fds, current_fds, 3, serial_path);
-    }
-    else
-    {
-        fdlist_set(out->descriptors, 0, open_device(keyboard_path));
-        fdlist_set(out->descriptors, 1, open_device(term_path));
-        fdlist_set(out->descriptors, 2, open_device(term_path));
-        fdlist_set(out->descriptors, 3, open_device(serial_path));
-    }
-
-    out->working_dir = current_task->working_dir;
+    copy_init_file_descriptors(out);
 
     return out;
 }
@@ -244,27 +250,7 @@ struct task *user_thread_alloc(ptr_t ip)
     out->name = get_current_task()->name;
 
     /* TODO: this should duplicate file descriptors */
-    const char *term_path = "/dev/terminal";
-    const char *keyboard_path = "/dev/keyboard";
-    const char *serial_path = "/dev/serial0";
-
-    if (get_current_task()->start_addr != (void *)0xDEADBEEF)
-    {
-        struct fdlist *current_fds = get_current_task()->descriptors;
-        struct fdlist *out_fds = out->descriptors;
-
-        fdlist_copy_device(out_fds, current_fds, 0, keyboard_path);
-        fdlist_copy_device(out_fds, current_fds, 1, term_path);
-        fdlist_copy_device(out_fds, current_fds, 2, term_path);
-        fdlist_copy_device(out_fds, current_fds, 3, serial_path);
-    }
-    else
-    {
-        fdlist_set(out->descriptors, 0, open_device(keyboard_path));
-        fdlist_set(out->descriptors, 1, open_device(term_path));
-        fdlist_set(out->descriptors, 2, open_device(term_path));
-        fdlist_set(out->descriptors, 3, open_device(serial_path));
-    }
+    copy_init_file_descriptors(out);
 
     return out;
 }
