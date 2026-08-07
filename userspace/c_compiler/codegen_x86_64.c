@@ -13,8 +13,6 @@
 extern int syscall_wrapper_asm(ptr_t ax, ptr_t bx, ptr_t cx, ptr_t dx, ptr_t si,
                                ptr_t di);
 
-#define PREFIX_64 (0x48)
-
 struct bytecode_array
 {
     u8 *items;
@@ -36,6 +34,9 @@ struct codegen_value
         u8 reg;
     };
 };
+
+#define REG_IS_EXTENDED(reg) (reg & 0b1000)
+
 struct codegen_value *codegen_value_alloc(enum codegen_value_type type,
                                           u64 value)
 {
@@ -44,9 +45,12 @@ struct codegen_value *codegen_value_alloc(enum codegen_value_type type,
     out->value = value;
     return out;
 }
+
+#define BYTE_AS_RM(byte) (byte & 0b111)
+
 u8 get_modrm_bytes(u8 mod, u8 rm)
 {
-    return 0b11000000 | (mod & 0b111) << 3 | (rm & 0b111);
+    return 0b11000000 | (mod & 0b111) << 3 | BYTE_AS_RM(rm);
 }
 
 u8 get_modrm(struct codegen_value *reg, struct codegen_value *rm)
@@ -54,15 +58,59 @@ u8 get_modrm(struct codegen_value *reg, struct codegen_value *rm)
     return get_modrm_bytes(0, reg->reg);
 }
 
-/* FIXME: the name should represent that this does not work for every opcode */
+/* a value for rex that will never be valid */
+#define INVALID_REX 0
+
+#define REX_PATTERN 0b01000000
+
+static u8 get_rex(struct codegen_value *mod_reg, struct codegen_value *rm_reg)
+{
+    u8 out = REX_PATTERN;
+
+    if (REG_IS_EXTENDED(mod_reg->reg))
+    {
+        out |= 0b1;
+    }
+    if (REG_IS_EXTENDED(rm_reg->reg))
+    {
+        out |= 0b100;
+    }
+
+    /* dont encode the rex pattern if it is not needed */
+    return out == REX_PATTERN ? INVALID_REX : out;
+}
+
+void generate_opcode_bytes(struct bytecode_array *code, u8 rex, u8 opcode,
+                           u8 mod)
+{
+    if (rex != INVALID_REX)
+    {
+        array_macro_append_v(code, rex);
+    }
+    array_macro_append_v(code, opcode, mod);
+}
+
+/* FIXME: the name should represent that this does not work for every opcode
+ */
 void generate_opcode(struct bytecode_array *code, u8 opcode,
                      struct codegen_value *dest, struct codegen_value *src)
 {
     /* FIXME: this should use prefixes */
-    array_macro_append_v(code, opcode, get_modrm(dest, src));
+    generate_opcode_bytes(code, get_rex(dest, src), opcode,
+                          get_modrm(dest, src));
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
-        logd("appending:%d", src->value);
+        array_macro_append_v(code, src->value, 0, 0, 0);
+    }
+}
+
+void generate_opcode_modrm(struct bytecode_array *code, u8 opcode, u8 modrm,
+                           struct codegen_value *dest,
+                           struct codegen_value *src)
+{
+    generate_opcode_bytes(code, get_rex(dest, src), opcode, modrm);
+    if (src->type == CODEGEN_VALUE_IMMEDIATE)
+    {
         array_macro_append_v(code, src->value, 0, 0, 0);
     }
 }
@@ -70,11 +118,10 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
 void generate_opcode_mod(struct bytecode_array *code, u8 opcode, u8 mod,
                          struct codegen_value *dest, struct codegen_value *src)
 {
-    /* FIXME: this should use prefixes */
-    array_macro_append_v(code, opcode, get_modrm_bytes(mod, src->reg));
+    generate_opcode_bytes(code, get_rex(dest, src), opcode,
+                          get_modrm_bytes(mod, src->reg));
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
-        logd("appending:%d", src->value);
         array_macro_append_v(code, src->value, 0, 0, 0);
     }
 }
@@ -100,6 +147,21 @@ void generate_ax_opcode(struct bytecode_array *code, u8 opcode,
     {
         logd("appending:%d", src->value);
         array_macro_append_v(code, src->value, 0, 0, 0);
+    }
+}
+
+void generate_sub(struct bytecode_array *code, struct codegen_value *dest,
+                  struct codegen_value *src)
+{
+    if (src->type == CODEGEN_VALUE_IMMEDIATE)
+    {
+        logd("sub on:%d", dest->reg);
+        generate_opcode_modrm(code, 0x81, 0b11101000 | BYTE_AS_RM(dest->reg),
+                              dest, src);
+    }
+    else
+    {
+        generate_opcode_mod(code, 0x29, src->reg, src, dest);
     }
 }
 
@@ -159,6 +221,16 @@ struct codegen_value *generate_operator(struct bytecode_array *code,
             logd("adding:%d", rhs->value);
             generate_add(code, dest, rhs);
         }
+        break;
+    case TOKEN_MINUS:
+
+        if (lhs == NULL)
+        {
+            lhs = dest;
+        }
+        generate_mov(code, &immediate_temp_reg, lhs);
+        generate_sub(code, &immediate_temp_reg, rhs);
+        return &immediate_temp_reg;
         break;
     case TOKEN_STAR:
         if (lhs == NULL)
@@ -223,6 +295,7 @@ void run_code(u8 *bytecode, size_t len)
 {
 
     int retval = ((int (*)())bytecode)();
+
     logd("%d", retval);
 
     return;
@@ -246,7 +319,8 @@ int main()
 		
 		/* (1 + ((2 + 3) + (4 + 5))) + 6 */
 			/* 1 + 2 + 3 */
-		 (1 + 2) * 3
+
+		1 + 2 * 3 - 4
 
         // clang-format on
     );
@@ -260,7 +334,7 @@ int main()
     struct ast_expr *expr = ast_parse_expression(&parser, &err);
 
     struct bytecode_array code = {0};
-    struct codegen_value dest = {CODEGEN_VALUE_REGISTER, 2};
+    struct codegen_value dest = {CODEGEN_VALUE_REGISTER, 0b010};
 
     generate_mov(&code, &dest,
                  &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 0});
