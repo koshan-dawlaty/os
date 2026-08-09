@@ -1,3 +1,4 @@
+#include "err_ptr.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <kernel_syscall.h>
@@ -43,6 +44,10 @@ int execv(const char *path, char *const argv[])
         }
 
         struct task *t = load_elf(elf, argc, (char **)argv);
+        if (IS_ERR(t))
+        {
+            return GET_ERR(t);
+        }
         t->name = strdup(path);
         add_task(t);
         free_elf(elf);
@@ -94,6 +99,10 @@ int execv_stdio(const char *path, char *const argv[], int stdin, int stdout)
             argc++;
         }
         struct task *t = load_elf(elf, argc, (char **)argv);
+        if (IS_ERR(t))
+        {
+            return GET_ERR(t);
+        }
 
         /* TODO: this does not free what was in the array, make a scheduler
          * function that takes stdin and stdout as arguments  */

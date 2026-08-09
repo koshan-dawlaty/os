@@ -83,6 +83,11 @@ int addr_space_map(struct addr_space *a, void *addr, size_t num_pages,
                    int flags)
 {
 
+    if ((ptr_t)addr < 4096)
+    {
+        return -EFAULT;
+    }
+
     irq_state_t state = irq_save_disable();
     /* logd("mapping:%p, a:%p c:%p", addr, a->dir, current_addr_space->dir); */
     /* printf("start:%p\n", a->list_head); */

@@ -331,13 +331,22 @@ void kmain()
     /* struct task *simple_binary = simple_binary_load(binary_test); */
     /* add_task(simple_binary); */
 
+    const char *init_program;
+    char *init_program_args[] = {"", NULL};
+
 #ifdef TESTS
     execv("/bin/compiler.test", (char *[]){"compiler", NULL});
+    init_program = "/bin/compiler.test";
 #else
-    execv("/bin/compiler", (char *[]){"compiler", NULL});
+    init_program = "/bin/compiler";
     /* execv("/bin/wm", (char *[]){"wm", NULL}); */
     /* execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
 #endif
+    int err = execv(init_program, init_program_args);
+    if (err)
+    {
+        PANIC("init program execv err:%s", strerror(err));
+    }
 
     enable_scheduler();
     irq_enable();

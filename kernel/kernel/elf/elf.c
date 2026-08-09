@@ -1,3 +1,4 @@
+#include "err_ptr.h"
 #include "fcntl.h"
 #include "gdt.h"
 #include "kernel/addr_space.h"
@@ -38,6 +39,8 @@ elf *parse_elf(int fd)
 struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
+    int err;
+
     struct task *t = user_task_alloc(elf->entry_point, 0xBFFEF000, argc, argv);
 
     for (size_t j = 0; j < elf->program_headers_len; j++)
@@ -56,9 +59,14 @@ struct task *load_elf(elf *elf, int argc, char **argv)
                  i += PAGE_SIZE)
             {
 
-                addr_space_map(&t->addr_space,
-                               (void *)(header->virtual_addr + i), 1,
-                               PAGING_PRESENT | PAGING_USER | PAGING_PRESENT);
+                err = addr_space_map(
+                    &t->addr_space, (void *)(header->virtual_addr + i), 1,
+                    PAGING_PRESENT | PAGING_USER | PAGING_PRESENT);
+                if (IS_ERR(err))
+                {
+                    logw("addr_space_map failed when loading elf");
+                    return ERR_PTR(err);
+                }
 
                 /*
 write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),

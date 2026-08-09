@@ -30,7 +30,7 @@ gdb \
 	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
 	-ex "target remote | $QEMU_COMMAND -S -gdb stdio -serial pipe:$SERIAL_PIPE $(echo $QEMU_FLAGS | tr -d "\n")" \
-	-x build/codegen_debug.gdb
+	# -x build/codegen_debug.gdb
 
 # cat $SERIAL_PIPE.out
 

@@ -140,10 +140,10 @@ void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
     }
 }
 
-void generate_ax_opcode(struct bytecode_array *code, u8 opcode,
+void generate_ax_opcode(struct bytecode_array *code, u8 opcode, u8 mod,
                         struct codegen_value *src)
 {
-    array_macro_append_v(code, opcode, get_modrm_bytes(0b100, src->reg));
+    array_macro_append_v(code, opcode, get_modrm_bytes(mod, src->reg));
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         logd("appending:%d", src->value);
@@ -188,16 +188,21 @@ struct codegen_value *generate_mul(struct bytecode_array *code,
                                    struct codegen_value *dest)
 {
 
-    logd("%d", src->type);
+    logd("type:%d", src->type);
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         logd("immediate multiply");
         generate_mov(code, &immediate_temp_reg, src);
-        generate_ax_opcode(code, 0xF7, &immediate_temp_reg);
+        generate_ax_opcode(code, 0xF7, 0b100, &immediate_temp_reg);
+    }
+    else if (src->type == CODEGEN_VALUE_REGISTER)
+    {
+        generate_mov(code, &immediate_temp_reg, src);
+        generate_ax_opcode(code, 0xF7, 0b100, &immediate_temp_reg);
     }
     else
     {
-        generate_opcode(code, 0xF7, src, dest);
+        UNREACHABLE("unknown type:%d", src->type);
     }
 
     /* ax */
@@ -224,7 +229,7 @@ struct codegen_value *generate_operator(struct bytecode_array *code,
             logd("adding:%d", rhs->value);
             generate_add(code, dest, rhs);
         }
-        break;
+        return dest;
     case TOKEN_MINUS:
 
         if (lhs == NULL)
@@ -248,8 +253,6 @@ struct codegen_value *generate_operator(struct bytecode_array *code,
         PANIC("invalid operator type from ast:%s",
               token_type_str(operator_type));
     }
-
-    return NULL;
 }
 
 struct codegen_value *generate_expr(struct bytecode_array *code,
@@ -328,13 +331,11 @@ int main()
         // clang-format on
     );
 
-    /*
-program = " 3 + 5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9"
-          "+ 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2"
-          "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8"
-          "+ 10 * (2 + 3 * (4 + 5)) - 7 * 8 + 9"
-          "- 11 + 2 * 3 * (4 + 5) - 6 * (7 + 8)";
-                      */
+    program = " 3 + 5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9";
+    /* "+ 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2" */
+    /* "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8" */
+    /* "+ 10 * (2 + 3 * (4 + 5)) - 7 * 8 + 9" */
+    /* "- 11 + 2 * 3 * (4 + 5) - 6 * (7 + 8)"; */
 
     tokenizer_parse_tokens(program, &tokens);
 
