@@ -55,7 +55,7 @@ u8 get_modrm_bytes(u8 mod, u8 rm)
 
 u8 get_modrm(struct codegen_value *reg, struct codegen_value *rm)
 {
-    return get_modrm_bytes(0, reg->reg);
+    return get_modrm_bytes(rm->reg, reg->reg);
 }
 
 /* a value for rex that will never be valid */
@@ -95,6 +95,7 @@ void generate_opcode_bytes(struct bytecode_array *code, u8 rex, u8 opcode,
 void generate_opcode(struct bytecode_array *code, u8 opcode,
                      struct codegen_value *dest, struct codegen_value *src)
 {
+
     /* FIXME: this should use prefixes */
     generate_opcode_bytes(code, get_rex(dest, src), opcode,
                           get_modrm(dest, src));
@@ -119,7 +120,7 @@ void generate_opcode_mod(struct bytecode_array *code, u8 opcode, u8 mod,
                          struct codegen_value *dest, struct codegen_value *src)
 {
     generate_opcode_bytes(code, get_rex(dest, src), opcode,
-                          get_modrm_bytes(mod, src->reg));
+                          get_modrm_bytes(mod, dest->reg));
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         array_macro_append_v(code, src->value, 0, 0, 0);
@@ -131,11 +132,11 @@ void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
 {
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
-        generate_opcode(code, 0xc7, dest, src);
+        generate_opcode_mod(code, 0xc7, 0, dest, src);
     }
     else
     {
-        generate_opcode_mod(code, 0x8B, dest->reg, dest, src);
+        generate_opcode(code, 0x89, dest, src);
     }
 }
 
@@ -170,11 +171,13 @@ void generate_add(struct bytecode_array *code, struct codegen_value *dest,
 {
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
-        generate_opcode(code, 0x81, dest, src);
+        logd("adding to %d", dest->reg);
+        generate_opcode_mod(code, 0x81, 0, dest, src);
     }
     else
     {
-        generate_opcode_mod(code, 1, src->reg, src, dest);
+        generate_opcode_bytes(code, get_rex(src, dest), 1,
+                              get_modrm(src, dest));
     }
 }
 
@@ -320,10 +323,19 @@ int main()
 		/* (1 + ((2 + 3) + (4 + 5))) + 6 */
 			/* 1 + 2 + 3 */
 
-		1 + 2 * 3 - 4
+	1 + 1
 
         // clang-format on
     );
+
+    /*
+program = " 3 + 5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9"
+          "+ 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2"
+          "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8"
+          "+ 10 * (2 + 3 * (4 + 5)) - 7 * 8 + 9"
+          "- 11 + 2 * 3 * (4 + 5) - 6 * (7 + 8)";
+                      */
+
     tokenizer_parse_tokens(program, &tokens);
 
     LIST_DEFINE_HEAD(top_statements_head);
@@ -334,7 +346,7 @@ int main()
     struct ast_expr *expr = ast_parse_expression(&parser, &err);
 
     struct bytecode_array code = {0};
-    struct codegen_value dest = {CODEGEN_VALUE_REGISTER, 0b010};
+    struct codegen_value dest = {CODEGEN_VALUE_REGISTER, 11};
 
     generate_mov(&code, &dest,
                  &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 0});
@@ -348,6 +360,14 @@ int main()
     generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
                  &dest);
     array_macro_append_v(&code, 0xc3);
+
+    /* code = (struct bytecode_array){0}; */
+    /* generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER,
+     * 0b1001}, */
+    /*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 1}); */
+    /* generate_add(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER,
+     * 0b1000}, */
+    /*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 1}); */
 
     log_multiline_start(&LOG_DEBUG);
     for (size_t i = 0; i < code.num; i++)
