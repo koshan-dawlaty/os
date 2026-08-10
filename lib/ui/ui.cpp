@@ -69,6 +69,8 @@ void Layout::clear_children()
 
 Layout::Layout()
 {
+    fb.width = 0;
+    fb.height = 0;
     list_init_head(&children);
 }
 
@@ -121,7 +123,6 @@ void LineLayout::update_child(View *child)
     {
         if (child->get_width() > fb.width)
         {
-            logd("width greater");
             fb.width = child->get_width();
         }
         fb.height += child->get_height();
@@ -134,7 +135,6 @@ void LineLayout::update_child(View *child)
     {
         if (child->get_height() > fb.height)
         {
-            logd("width greater");
             fb.height = child->get_height();
         }
         fb.width += child->get_width();

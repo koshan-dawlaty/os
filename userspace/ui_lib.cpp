@@ -78,6 +78,7 @@ int main()
     horizontal->x = 0;
     horizontal->y = 0;
     horizontal->screen = new WMScreen(client);
+    horizontal->fb = client.fb;
     Layout *vertical = new VerticalLineLayout(10);
 
     // ButtonElement *button = new ButtonElement(new ImageElement("dog.tga"));
@@ -95,11 +96,14 @@ int main()
     // test_function(button);
 
     Layout *child = new HorizontalLineLayout(20);
-    // child->add_child(new RectElement(100, 100, 0xFF0000));
+    child->add_child(new RectElement(100, 100, 0xFF0000));
+    child->add_child(new ImageElement("dog.tga"));
+
     // child->add_child(new TextElement("dog.tga", font));
     // child->add_child(new RectElement(50, 50, 0xFF00FF));
 
     // logd("%p", client.fb.buffer);
+    //
 
     horizontal->add_child(blue);
     horizontal->add_child(vertical);
@@ -108,23 +112,27 @@ int main()
 
     vertical->add_child(purple);
     // vertical->add_child(new ImageElement("osdev.tga"));
-    // vertical->add_child(child);
-    vertical->add_child(button);
+    vertical->add_child(child);
+    // vertical->add_child(button);
     vertical->add_child(cyan);
 
-    child->add_child(new ImageElement("dog.tga"));
+    // horizontal->add_child(vertical);
 
-    // View *dog = new ImageElement("dog.tga");
-    // logd("\nadding image\n");
-    // child->add_child(dog);
-    // logd("image %d, %d", dog->get_width(), dog->get_height());
+    //     child->add_child(new ImageElement("dog.tga"));
 
-    // button->screen = child->screen;
+    //     // View *dog = new ImageElement("dog.tga");
+    //     // logd("\nadding image\n");
+    //     // child->add_child(dog);
+    //     // logd("image %d, %d", dog->get_width(), dog->get_height());
 
-    // horizontal->add_child(new ButtonElement(child));
+    //     // button->screen = child->screen;
 
-    horizontal->set_fb_parent(client.fb);
+    //     // horizontal->add_child(new ButtonElement(child));
 
+    //     horizontal->set_fb_parent(client.fb);
+    //
+
+    horizontal->fb = client.fb;
     horizontal->render();
     logd("%p", horizontal->screen);
     horizontal->redraw();
