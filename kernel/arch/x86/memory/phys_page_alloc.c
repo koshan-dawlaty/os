@@ -17,6 +17,9 @@ struct region_bitmap
     u8 *bitmap_virtual;
 };
 
+/* x86-64 only, address that maps all physical addresses  */
+#define DIRECT_MAP_x64 0xffffc00000000000
+
 #define REGION_BITMAP_FREE 0
 #define REGION_BITMAP_USED 1
 
@@ -165,7 +168,10 @@ have_page:;
     void *bitmap_base = BITMAP_BASE(region);
 
     void *addr = (void *)((consecutive_start * PAGE_SIZE) + bitmap_base);
-    /* logd("ret:%p, %p i:%d", addr, bitmap_base, i); */
+
+#if defined(CONFIG_x86_64) && defined(CONFIG_CLEAR_PAGES)
+    memset(addr + DIRECT_MAP_x64, 'b', PAGE_SIZE * num);
+#endif
     return addr;
 }
 
