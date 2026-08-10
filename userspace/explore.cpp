@@ -86,7 +86,8 @@ Layout *get_dir_layout(DIR *d)
                     // root->add_child(testbutton);
 
                     root->render();
-                    wm_render(client);
+                    root->redraw();
+                    // wm_render(client);
                 });
             break;
         default:
@@ -111,6 +112,8 @@ int main()
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse_fd(font_fd);
     client = wm_client_connect(600, 600);
+    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
+                          0);
 
     root = new HorizontalLineLayout(10);
     Layout *l = get_dir_layout(opendir("/"));
@@ -120,10 +123,7 @@ int main()
 
     root->fb = client.fb;
     root->render();
-    // root->redraw();
-    logd("rendering");
-    wm_render(client);
-    logd("done rendering");
+    root->redraw();
 
     while (true)
     {

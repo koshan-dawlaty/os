@@ -597,9 +597,9 @@ void process_connection()
         }
         case WM_RES_RENDER_PARTIAL:
         {
-            logd("partial update");
             struct rect r = {};
             recv(socket, &r, sizeof(struct rect));
+            logd("partial update on %d, %d", r.w, r.h);
 
             /* logd("%d", r.x); */
             for (size_t y = r.y + WINDOW_DECORATION_ROWS;
