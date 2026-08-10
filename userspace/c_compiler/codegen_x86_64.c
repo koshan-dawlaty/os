@@ -1,3 +1,5 @@
+#include "unistd.h"
+#include <complex.h>
 #include <init.h>
 #include <lib/array.h>
 #include <lib/assert.h>
@@ -5,7 +7,6 @@
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/utils.h>
-#include <math.h>
 #include <sys/syscall.h>
 #include <syscall.h>
 #include <utils.h>
@@ -162,7 +163,7 @@ void generate_sub(struct bytecode_array *code, struct codegen_value *dest,
     }
     else
     {
-        generate_opcode_mod(code, 0x29, src->reg, src, dest);
+        generate_opcode_modrm(code, 0x29, get_modrm(dest, src), dest, src);
     }
 }
 
@@ -176,12 +177,24 @@ void generate_add(struct bytecode_array *code, struct codegen_value *dest,
     }
     else
     {
-        generate_opcode_bytes(code, get_rex(src, dest), 1,
+        generate_opcode_bytes(code, get_rex(src, dest), 3,
                               get_modrm(src, dest));
     }
 }
 
+void generate_neg(struct bytecode_array *code, struct codegen_value *dest)
+{
+    ASSERT(dest->type == CODEGEN_VALUE_REGISTER, "cant negate not a register");
+    /* TODO: maybe have a function that takes one argument for a value instead
+     * of passing eax */
+    generate_opcode_mod(
+        code, 0xF7, 0b011, dest,
+        &(struct codegen_value){.type = CODEGEN_VALUE_REGISTER, 0});
+}
+
 struct codegen_value immediate_temp_reg = {CODEGEN_VALUE_REGISTER, 1};
+/* used when immediate_temp_reg is the operand */
+struct codegen_value immediate_temp_reg2 = {CODEGEN_VALUE_REGISTER, 3};
 
 struct codegen_value *generate_mul(struct bytecode_array *code,
                                    struct codegen_value *src,
@@ -230,15 +243,38 @@ struct codegen_value *generate_operator(struct bytecode_array *code,
             generate_add(code, dest, rhs);
         }
         return dest;
+        break;
     case TOKEN_MINUS:
 
         if (lhs == NULL)
         {
             lhs = dest;
         }
-        generate_mov(code, &immediate_temp_reg, lhs);
-        generate_sub(code, &immediate_temp_reg, rhs);
-        return &immediate_temp_reg;
+        struct codegen_value *temp_reg;
+        /* FIXME: maybe dont pointer compare, we could copy in the future */
+        if (rhs == &immediate_temp_reg)
+        {
+            temp_reg = &immediate_temp_reg2;
+        }
+        else
+        {
+            temp_reg = &immediate_temp_reg;
+        }
+
+        if (lhs->type == CODEGEN_VALUE_IMMEDIATE)
+        {
+            generate_mov(code, temp_reg, lhs);
+            generate_mov(code, &immediate_temp_reg2, rhs);
+            generate_neg(code, temp_reg);
+            generate_add(code, &immediate_temp_reg, &immediate_temp_reg2);
+        }
+        else
+        {
+            generate_mov(code, temp_reg, lhs);
+            generate_sub(code, temp_reg, rhs);
+        }
+        /* generate_opcode_bytes(code, 0, 06, 0); */
+        return temp_reg;
         break;
     case TOKEN_STAR:
         if (lhs == NULL)
@@ -326,12 +362,15 @@ int main()
 		/* (1 + ((2 + 3) + (4 + 5))) + 6 */
 			/* 1 + 2 + 3 */
 
-	1 + 1
-
         // clang-format on
     );
 
-    program = " 3 + 5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9";
+    /* program = " 3 + 5 * 2 - (4 * 2) "; */
+    /* program = " (3 + 5 * 2) - (7 - 2 * 6)"; */
+
+    program = " (3 - 5 * 2) ";
+    /* program = " (3 - 5 * 2) - (2 - 1) "; */
+
     /* "+ 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2" */
     /* "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8" */
     /* "+ 10 * (2 + 3 * (4 + 5)) - 7 * 8 + 9" */
@@ -347,7 +386,7 @@ int main()
     struct ast_expr *expr = ast_parse_expression(&parser, &err);
 
     struct bytecode_array code = {0};
-    struct codegen_value dest = {CODEGEN_VALUE_REGISTER, 11};
+    struct codegen_value dest = {CODEGEN_VALUE_REGISTER, 0b1000};
 
     generate_mov(&code, &dest,
                  &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 0});
