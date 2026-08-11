@@ -31,7 +31,7 @@ class Screen
     }
     inline size_t get_height()
     {
-        return fb->width;
+        return fb->height;
     }
 };
 
@@ -104,7 +104,7 @@ class View
      */
     inline void set_fb_parent(struct framebuffer parent)
     {
-        logd("setting with parent fb as %d %d", parent.width, parent.height);
+        // logd("setting with parent fb as %d %d", parent.width, parent.height);
 
         fb.pitch = parent.pitch;
         fb.depth = parent.depth;

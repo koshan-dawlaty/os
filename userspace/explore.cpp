@@ -117,7 +117,8 @@ int main()
 
     root = new HorizontalLineLayout(10);
     Layout *l = get_dir_layout(opendir("/"));
-    root->screen = new WMScreen(client);
+    root->screen = new WMScreen(&client);
+    root->fb = client.fb;
     root->add_child(l);
     // root->add_child(new ImageElement("dog.tga"));
 

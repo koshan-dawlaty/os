@@ -117,6 +117,7 @@ void LineLayout::render()
         child->abs_y = y + child->y;
 
         child->set_fb_parent(fb);
+        child->screen = screen;
 
         clamp_child_dimensions(child);
 

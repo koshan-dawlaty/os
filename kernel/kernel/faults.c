@@ -44,8 +44,9 @@ void page_fault(void *addr, void *ip, struct page_fault_flags flags)
         printf("user page fault at addr:%p\n", addr);
         print_page_fault_flags(flags);
         printf("\n");
-        while (1)
+        while (true)
         {
+            irq_disable();
             irq_wait();
         }
 

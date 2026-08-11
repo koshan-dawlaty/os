@@ -15,11 +15,17 @@ void ButtonElement::handle_element_click()
 void ButtonElement::render()
 {
     framebuffer_draw_rect(&fb, 0, 0, fb.width, fb.height, color);
+    logd("button screen:%p", screen);
 
     child->x = 5;
     child->y = 5;
 
+    child->abs_x = x + child->x;
+    child->abs_y = y + child->y;
+
     child->set_fb_parent(fb);
+    update_child(child);
+    clamp_child_dimensions(child);
 
     child->render();
 }

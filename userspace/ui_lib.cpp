@@ -98,7 +98,7 @@ int main()
     Layout *child = new HorizontalLineLayout(20);
     // child->add_child(new RectElement(100, 100, 0xFF0000));
     child->add_child(new ImageElement("dog.tga"));
-    child->add_child(new RectElement(10, 1000, 0xFF));
+    child->add_child(new RectElement(1000, 1000, 0xFF));
 
     // child->add_child(new TextElement("dog.tga", font));
     // child->add_child(new RectElement(50, 50, 0xFF00FF));

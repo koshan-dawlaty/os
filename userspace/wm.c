@@ -599,7 +599,20 @@ void process_connection()
         {
             struct rect r = {};
             recv(socket, &r, sizeof(struct rect));
-            logd("partial update on %d, %d", r.w, r.h);
+
+            if (r.x > WIN_W(w) || r.y > WIN_H(w))
+            {
+                break;
+            }
+
+            if (WIN_W(w) < r.x + r.w)
+            {
+                r.w = WIN_W(w) - r.x;
+            }
+            if (WIN_H(w) - WINDOW_DECORATION_ROWS < r.y + r.h)
+            {
+                r.h = (WIN_H(w) - WINDOW_DECORATION_ROWS) - r.y;
+            }
 
             /* logd("%d", r.x); */
             for (size_t y = r.y + WINDOW_DECORATION_ROWS;
@@ -1131,11 +1144,11 @@ int main()
     /* execv("/bin/term", (char *[]){"term", NULL}); */
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    execv("/bin/explore", (char *[]){"explore", NULL});
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
-    execv("/bin/ui_lib", (char *[]){"ui_lib", NULL});
+    /* execv("/bin/ui_lib", (char *[]){"ui_lib", NULL}); */
     /* execv("/bin/sokoban", (char *[]){"/bin/sokoban", NULL}); */
     /* execv("/bin/run", (char *[]){"run", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */

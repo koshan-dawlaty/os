@@ -1,9 +1,9 @@
 #ifndef UI_BUTTON_HPP
 #define UI_BUTTON_HPP
 
-#include "lib/log.h"
 #include <cpp/cpp_c_include_start.hpp>
 
+#include <lib/log.h>
 #include <string.h>
 
 #include <cpp/cpp_c_include_end.hpp>
