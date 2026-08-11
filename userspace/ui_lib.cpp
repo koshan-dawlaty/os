@@ -77,7 +77,7 @@ int main()
     Layout *horizontal = new HorizontalLineLayout(10);
     horizontal->x = 0;
     horizontal->y = 0;
-    horizontal->screen = new WMScreen(client);
+    horizontal->screen = new WMScreen(&client);
     horizontal->fb = client.fb;
     Layout *vertical = new VerticalLineLayout(10);
 
@@ -96,8 +96,9 @@ int main()
     // test_function(button);
 
     Layout *child = new HorizontalLineLayout(20);
-    child->add_child(new RectElement(100, 100, 0xFF0000));
+    // child->add_child(new RectElement(100, 100, 0xFF0000));
     child->add_child(new ImageElement("dog.tga"));
+    child->add_child(new RectElement(10, 1000, 0xFF));
 
     // child->add_child(new TextElement("dog.tga", font));
     // child->add_child(new RectElement(50, 50, 0xFF00FF));
@@ -105,16 +106,23 @@ int main()
     // logd("%p", client.fb.buffer);
     //
 
-    horizontal->add_child(blue);
+    // horizontal->add_child(new RectElement(10, 700, 0xFF));
+    // horizontal->add_child(new RectElement(10, 700, 0xFF));
+    // horizontal->add_child(blue);
     horizontal->add_child(vertical);
-    // // horizontal->add_child(child);
-    horizontal->add_child(green);
+    horizontal->add_child(new RectElement(10, 10, 0xFF00FF));
 
-    vertical->add_child(purple);
-    // vertical->add_child(new ImageElement("osdev.tga"));
     vertical->add_child(child);
-    // vertical->add_child(button);
-    vertical->add_child(cyan);
+    vertical->add_child(new RectElement(10, 10, 0xFFFF00));
+
+    // // // horizontal->add_child(child);
+    // horizontal->add_child(green);
+
+    // vertical->add_child(purple);
+    // // vertical->add_child(new ImageElement("osdev.tga"));
+    // vertical->add_child(child);
+    // // vertical->add_child(button);
+    // vertical->add_child(cyan);
 
     // horizontal->add_child(vertical);
 
@@ -134,11 +142,7 @@ int main()
 
     horizontal->fb = client.fb;
     horizontal->render();
-    logd("%p", horizontal->screen);
     horizontal->redraw();
-
-    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
-                          0xFF00FF);
 
     while (true)
     {

@@ -9,6 +9,7 @@
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/rect.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <types.h>
 
@@ -16,8 +17,22 @@
 
 class Screen
 {
+  protected:
+    struct framebuffer *fb;
+
   public:
+    inline Screen(struct framebuffer *fb) : fb(fb)
+    {
+    }
     virtual void update_area(struct rect area) = 0;
+    inline size_t get_width()
+    {
+        return fb->width;
+    }
+    inline size_t get_height()
+    {
+        return fb->width;
+    }
 };
 
 /*
@@ -26,25 +41,28 @@ class Screen
  */
 class DefaultScreen : public Screen
 {
+
   public:
     inline void update_area(struct rect area) override
     {
     }
-    inline DefaultScreen() {};
+
+    inline DefaultScreen(struct framebuffer *fb) : Screen(fb) {};
 };
 
 class WMScreen : public Screen
 {
   private:
-    struct wm_client client;
+    struct wm_client *client;
 
   public:
-    inline WMScreen(struct wm_client client) : client(client)
+    inline WMScreen(struct wm_client *client)
+        : client(client), Screen(&client->fb)
     {
     }
     inline void update_area(struct rect area) override
     {
-        wm_render_partial(client, area);
+        wm_render_partial(*client, area);
     };
 };
 
@@ -67,6 +85,7 @@ class View
     virtual void render() = 0;
     size_t get_width();
     size_t get_height();
+    void clamp_child_dimensions(View *child);
 
     virtual void update_child(View *child);
 
@@ -85,6 +104,8 @@ class View
      */
     inline void set_fb_parent(struct framebuffer parent)
     {
+        logd("setting with parent fb as %d %d", parent.width, parent.height);
+
         fb.pitch = parent.pitch;
         fb.depth = parent.depth;
         fb.pixel_width = parent.pixel_width;

@@ -43,10 +43,25 @@ void View::update_child(View *child)
 {
 }
 
+void View::clamp_child_dimensions(View *child)
+{
+    if (child->fb.width + child->abs_x > screen->get_width())
+    {
+        child->fb.width = screen->get_width();
+    }
+    if (child->fb.height + child->abs_y > screen->get_height())
+    {
+        child->fb.height = screen->get_height() - child->abs_y;
+    }
+}
+
 void Layout::update_child(View *child)
 {
     child->screen = screen;
     child->parent = this;
+
+    logd("%p, %p", screen, this);
+    View::update_child(child);
 
     /* this will be redundant in some cases */
     if (parent != nullptr)
@@ -102,6 +117,8 @@ void LineLayout::render()
         child->abs_y = y + child->y;
 
         child->set_fb_parent(fb);
+
+        clamp_child_dimensions(child);
 
         child->render();
         if (!is_vertical)
