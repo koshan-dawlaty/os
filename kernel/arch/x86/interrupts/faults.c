@@ -122,7 +122,7 @@ const u8 idt_fault_flags = 0x8F;
 #define FAULT_IDT_ENTRY(function)                                              \
     (IDT_entry)                                                                \
     {                                                                          \
-        (ptr) function, 8, idt_fault_flags                                     \
+        (ptr_t) function, 8, idt_fault_flags                                   \
     }
 #elif defined(CONFIG_x86_64)
 #define FAULT_IDT_ENTRY(function)                                              \
@@ -139,7 +139,7 @@ void init_faults()
 
     add_idt_entry(FAULT_IDT_ENTRY(gpf_handler), 0x0D);
 
-    /* add_idt_entry((IDT_entry){(ptr)coprocesser_segment_overrun, 8,
+    /* add_idt_entry((IDT_entry){(ptr_t)coprocesser_segment_overrun, 8,
      * idt_fault_flags, 0}, 9); */
 
     add_idt_entry(FAULT_IDT_ENTRY(invalid_opcode), 0x06);

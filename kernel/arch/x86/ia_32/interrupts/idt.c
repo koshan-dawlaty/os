@@ -90,7 +90,7 @@ void init_idt()
 
     add_idt_entry(
         (IDT_entry){
-            .offset = (ptr)ps2_int_handler_12,
+            .offset = (ptr_t)ps2_int_handler_12,
             .segment_selector = 8,
             .flags = 0x8E,
         },

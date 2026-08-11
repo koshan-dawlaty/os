@@ -27,7 +27,7 @@ CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
-CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings  -mcmodel=small
+CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings  # -mcmodel=small
 # this gets rid of moddi3 and simliar functions
 CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib -Tlinker.ld
 
@@ -56,13 +56,12 @@ OBJS_END=\
 
 endif
 
-
 # this is kinda bad
 OBJS_START_BIN = $(foreach obj,$(OBJS_START),bin/$(obj))
 OBJS_END_BIN = $(foreach obj,$(OBJS_END),bin/$(obj))
 
 START_OBJ=\
-		  $(BIN)/start.o$(TEST_SUFFIX)
+		  $(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/start.o$(TEST_SUFFIX)
 
 BINARIES=\
 	flashcards$(TEST_SUFFIX) \

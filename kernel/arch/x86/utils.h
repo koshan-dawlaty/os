@@ -88,9 +88,9 @@ static inline void restore_eflags(ptr_t flags)
 }
 #elif defined(CONFIG_x86_32)
 
-static inline ptr save_eflags(void)
+static inline ptr_t save_eflags(void)
 {
-    ptr flags;
+    ptr_t flags;
     __asm__ volatile("pushf\n\t"
                      "pop %0"
                      : "=r"(flags)
@@ -98,7 +98,7 @@ static inline ptr save_eflags(void)
                      : "memory");
     return flags;
 }
-static inline void restore_eflags(ptr flags)
+static inline void restore_eflags(ptr_t flags)
 {
     __asm__ volatile("push %0\n\t"
                      "popf"

@@ -217,3 +217,21 @@ load_registers:
 	# popf
 
 	ret
+
+
+# void switch_to(struct registers * prev, struct registers * current)
+.section .text
+.global switch_to_asm
+.type switch_to_asm @function
+switch_to_asm:
+
+	ret
+
+# void switch_to_arg(struct registers * prev, struct registers * current, ptr_t arg)
+.section .text
+.global switch_to_asm_arg
+.type switch_to_asm_arg @function
+switch_to_asm_arg:
+
+	ret
+

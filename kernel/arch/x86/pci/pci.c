@@ -56,12 +56,10 @@ void parse_device(uint8_t bus, uint8_t dev, uint8_t func)
 
     if (vendor == 0x8086 && device == 0x100E)
     {
-        u32 bar0 = pci_read_config_word(bus, dev, func, 0x10);
-        struct e1000 *e = e1000_alloc(bar0);
-        u32 word = pci_read_config_word(bus, dev, func, 4);
-        word |= (1 << 2);
-        pci_write_config(bus, dev, func, 4, word);
-        e1000_init(e);
+        /* u32 bar0 = pci_read_config_word(bus, dev, func, 0x10); */
+        /* u32 word = pci_read_config_word(bus, dev, func, 4); */
+        /* word |= (1 << 2); */
+        /* pci_write_config(bus, dev, func, 4, word); */
         /* e1000_send(e, "abc", 4); */
     }
 

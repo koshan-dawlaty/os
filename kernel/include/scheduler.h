@@ -45,6 +45,7 @@ struct registers
 struct registers2
 {
 
+#ifdef CONFIG_x86_64
     /*  0   8   10  18 */
     u64 gs, fs, es, ds;
     /*  20   28   30   38   40   48   50   58 */
@@ -54,6 +55,10 @@ struct registers2
     /*  68  70  78   80   88   90   98   A0 */
     u64 r8, r9, r10, r11, r12, r13, r14, r15;
     void *fsave_space; /* A8 */
+#elif defined(CONFIG_x86_32)
+    ptr_t esp;
+    void *fsave_space;
+#endif
 } __packed;
 
 #define FPU_STATE_SIZE 108

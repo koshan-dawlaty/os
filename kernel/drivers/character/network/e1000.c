@@ -129,15 +129,14 @@ void e1000_rxinit(struct e1000 *dev)
     for (int i = 0; i < E1000_NUM_RX_DESC; i++)
     {
         dev->rx_descs[i] = (struct e1000_rx_desc *)((uint8_t *)descs + i * 16);
-        dev->rx_descs[i]->addr = (uint64_t)(uint8_t *)(dma_malloc(8192 + 16));
+        dev->rx_descs[i]->addr = (ptr_t)(uint8_t *)(dma_malloc(8192 + 16));
         dev->rx_descs[i]->status = 0;
     }
 
-    e1000_write_command(dev, REG_TXDESCLO, (uint32_t)((uint64_t)ptr >> 32));
-    e1000_write_command(dev, REG_TXDESCHI,
-                        (uint32_t)((uint64_t)ptr & 0xFFFFFFFF));
+    e1000_write_command(dev, REG_TXDESCLO, (uint32_t)((ptr_t)ptr >> 32));
+    e1000_write_command(dev, REG_TXDESCHI, (uint32_t)((ptr_t)ptr & 0xFFFFFFFF));
 
-    e1000_write_command(dev, REG_RXDESCLO, (uint64_t)ptr);
+    e1000_write_command(dev, REG_RXDESCLO, (ptr_t)ptr);
     e1000_write_command(dev, REG_RXDESCHI, 0);
 
     e1000_write_command(dev, REG_RXDESCLEN, E1000_NUM_RX_DESC * 16);
@@ -168,9 +167,8 @@ void e1000_txinit(struct e1000 *dev)
     }
     asm volatile("" ::: "memory");
 
-    e1000_write_command(dev, REG_TXDESCHI, (uint32_t)((uint64_t)ptr >> 32));
-    e1000_write_command(dev, REG_TXDESCLO,
-                        (uint32_t)((uint64_t)ptr & 0xFFFFFFFF));
+    e1000_write_command(dev, REG_TXDESCHI, (uint32_t)((ptr_t)ptr >> 32));
+    e1000_write_command(dev, REG_TXDESCLO, (uint32_t)((ptr_t)ptr & 0xFFFFFFFF));
 
     // now setup total length of descriptors
     e1000_write_command(dev, REG_TXDESCLEN, E1000_NUM_TX_DESC * 16);
