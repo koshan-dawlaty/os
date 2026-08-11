@@ -15,7 +15,6 @@ void ButtonElement::handle_element_click()
 void ButtonElement::render()
 {
     framebuffer_draw_rect(&fb, 0, 0, fb.width, fb.height, color);
-    logd("button screen:%p", screen);
 
     child->x = 5;
     child->y = 5;

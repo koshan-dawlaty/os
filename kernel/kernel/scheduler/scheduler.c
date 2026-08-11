@@ -91,7 +91,6 @@ void user_thread_kernel_start(ptr_t addr)
     /* might be stupid */
     temp_regs->esp = (ptr_t)kmalloc(PAGE_SIZE, KMALLOC_USER) + PAGE_SIZE - 0xC;
 
-    logd("%p, %p", temp_regs->esp, addr);
     jump_usermode_asm(addr, temp_regs, (ptr_t)temp_regs->esp);
 }
 
@@ -188,7 +187,6 @@ struct task *user_task_alloc(ptr_t ip, ptr_t sp, int argc, char **argv)
 
     out->addr_space = addr_space_alloc();
 
-    out->inital_arg = ip;
     out->ran_setup = false;
     out->regs.esp = (ptr_t)out->stack;
 

@@ -338,8 +338,9 @@ void kmain()
     execv("/bin/compiler.test", (char *[]){"compiler", NULL});
     init_program = "/bin/compiler.test";
 #else
-    init_program = "/bin/compiler";
+    /* init_program = "/bin/compiler"; */
     init_program = "/bin/wm";
+    /* init_program = "/bin/ls"; */
     /* execv("/bin/wm", (char *[]){"wm", NULL}); */
     /* execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
 #endif

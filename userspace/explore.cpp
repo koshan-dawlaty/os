@@ -34,22 +34,22 @@ struct wm_client client;
 struct PSF_font *font;
 
 Layout *root;
+Layout *entries_layout;
 
-Layout *get_dir_layout(DIR *d)
+void get_dir_layout(DIR *d)
 {
-    VerticalLineLayout *out = new VerticalLineLayout(0);
 
     struct dirent *e = readdir(d);
     if (errno != 0)
     {
-        return NULL;
+        return;
     }
 
     while (e != NULL)
     {
         if (errno != 0)
         {
-            return NULL;
+            return;
         }
 
         struct stat stat_buf;
@@ -57,7 +57,7 @@ Layout *get_dir_layout(DIR *d)
 
         ButtonElement *button =
             new ButtonElement(new TextElement(e->d_name, font));
-        out->add_child(button);
+        entries_layout->add_child(button);
 
         switch (stat_buf.mode & S_IFMT)
         {
@@ -72,12 +72,12 @@ Layout *get_dir_layout(DIR *d)
                     DIR *new_dir = opendir(e->d_name);
 
                     chdir(e->d_name);
-                    auto new_layout = get_dir_layout(new_dir);
+                    get_dir_layout(new_dir);
                     closedir(new_dir);
-                    root->clear_children();
+                    entries_layout->clear_children();
                     framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
                                           client.fb.height, 0);
-                    root->add_child(new_layout);
+
                     // ButtonElement *testbutton =
                     //     new ButtonElement(new RectElement(100, 100,
                     //     0xFF00FF));
@@ -104,7 +104,6 @@ Layout *get_dir_layout(DIR *d)
 
         /* printf("%p\n", malloc(10)); */
     }
-    return out;
 }
 
 int main()
@@ -116,10 +115,19 @@ int main()
                           0);
 
     root = new HorizontalLineLayout(10);
-    Layout *l = get_dir_layout(opendir("/"));
+
+    ButtonElement *go_to_root =
+        new ButtonElement(new TextElement("go to root", font));
+    go_to_root->set_onclick([](ButtonElement *element) -> void
+                            { get_dir_layout(opendir("/")); });
+    root->add_child(go_to_root);
+
+    entries_layout = new VerticalLineLayout(0);
+    get_dir_layout(opendir("/"));
     root->screen = new WMScreen(&client);
     root->fb = client.fb;
-    root->add_child(l);
+    root->add_child(entries_layout);
+
     // root->add_child(new ImageElement("dog.tga"));
 
     root->fb = client.fb;
