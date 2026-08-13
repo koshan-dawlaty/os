@@ -60,7 +60,6 @@ void Layout::update_child(View *child)
     child->screen = screen;
     child->parent = this;
 
-    logd("%p, %p", screen, this);
     View::update_child(child);
 
     /* this will be redundant in some cases */
@@ -82,7 +81,7 @@ void Layout::clear_children()
     list_init_head(&children);
 }
 
-Layout::Layout()
+Layout::Layout() : View()
 {
     fb.width = 0;
     fb.height = 0;
@@ -90,7 +89,7 @@ Layout::Layout()
 }
 
 LineLayout::LineLayout(bool is_vertical, size_t offest)
-    : is_vertical(is_vertical), offset(offest)
+    : is_vertical(is_vertical), offset(offest), Layout()
 {
 }
 
@@ -136,7 +135,6 @@ void LineLayout::render()
 void LineLayout::update_child(View *child)
 {
 
-    logd("updating child %d %d", child->get_width(), child->get_height());
     if (is_vertical)
     {
         if (child->get_width() > fb.width)
@@ -188,6 +186,7 @@ void Layout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
     list_for_each(pos, &children)
     {
         View *child = containerof(pos, View, list);
+        logd("child:%p", child);
 
         size_t x_pos = child->x + abs_x;
         size_t y_pos = child->y + abs_y;

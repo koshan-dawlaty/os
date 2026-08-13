@@ -72,7 +72,7 @@ class View
   public:
     struct framebuffer fb;
     size_t abs_x = 0, abs_y = 0;
-    size_t x, y;
+    size_t x = 0, y = 0;
 
     Screen *screen = nullptr;
     View *parent = nullptr;

@@ -36,6 +36,8 @@ struct PSF_font *font;
 Layout *root;
 Layout *entries_layout;
 
+void set_dir(DIR *d);
+
 void get_dir_layout(DIR *d)
 {
 
@@ -72,22 +74,8 @@ void get_dir_layout(DIR *d)
                     DIR *new_dir = opendir(e->d_name);
 
                     chdir(e->d_name);
-                    get_dir_layout(new_dir);
+                    set_dir(new_dir);
                     closedir(new_dir);
-                    entries_layout->clear_children();
-                    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-                                          client.fb.height, 0);
-
-                    // ButtonElement *testbutton =
-                    //     new ButtonElement(new RectElement(100, 100,
-                    //     0xFF00FF));
-                    // testbutton->set_onclick([](ButtonElement *) -> void
-                    //                         { logd("test button"); });
-                    // root->add_child(testbutton);
-
-                    root->render();
-                    root->redraw();
-                    // wm_render(client);
                 });
             break;
         default:
@@ -106,6 +94,31 @@ void get_dir_layout(DIR *d)
     }
 }
 
+void set_dir(DIR *d)
+{
+
+    entries_layout->clear_children();
+    get_dir_layout(d);
+
+    /* TODO: this is stupid, but right now it needs to be done,
+     * as the new entries could be smaller than the old ones,
+     * and the current system wont clear the screen where the
+     * removed entries were  */
+    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
+                          0);
+
+    // ButtonElement *testbutton =
+    //     new ButtonElement(new RectElement(100, 100,
+    //     0xFF00FF));
+    // testbutton->set_onclick([](ButtonElement *) -> void
+    //                         { logd("test button"); });
+    // root->add_child(testbutton);
+
+    root->render();
+    root->redraw();
+    // wm_render(client);
+}
+
 int main()
 {
     int font_fd = open("/font.psfu", O_RDONLY);
@@ -115,22 +128,28 @@ int main()
                           0);
 
     root = new HorizontalLineLayout(10);
+    root->screen = new WMScreen(&client);
+    root->fb = client.fb;
 
     ButtonElement *go_to_root =
         new ButtonElement(new TextElement("go to root", font));
-    go_to_root->set_onclick([](ButtonElement *element) -> void
-                            { get_dir_layout(opendir("/")); });
+    go_to_root->set_onclick(
+        [](ButtonElement *element) -> void
+        {
+            chdir("/");
+            DIR *d = opendir("/");
+
+            set_dir(d);
+            closedir(d);
+        });
     root->add_child(go_to_root);
 
     entries_layout = new VerticalLineLayout(0);
     get_dir_layout(opendir("/"));
-    root->screen = new WMScreen(&client);
-    root->fb = client.fb;
     root->add_child(entries_layout);
 
     // root->add_child(new ImageElement("dog.tga"));
 
-    root->fb = client.fb;
     root->render();
     root->redraw();
 
@@ -146,6 +165,7 @@ int main()
             size_t mouse_x = ev->x_change, mouse_y = ev->y_change;
             if (ev->buttons.left_click)
             {
+                logd("click");
                 root->handle_click(mouse_x, mouse_y, 0, 0);
             }
 
