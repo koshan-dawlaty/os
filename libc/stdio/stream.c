@@ -76,12 +76,20 @@ size_t fread(void *restrict buf, size_t size, size_t number, FILE *restrict f)
 
     size_t offset = 0;
     size_t readsize = read(fd, buf, size);
+    if (readsize != size)
+    {
+        return readsize / number;
+    }
     offset += size;
 
     while (readsize >= size && (offset / size) < number)
     {
 
         readsize = read(fd, buf + offset, size);
+        if (readsize != size)
+        {
+            return offset / number;
+        }
         offset += readsize;
     }
 

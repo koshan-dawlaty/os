@@ -22,12 +22,14 @@ int stat(const char *pathname, struct stat *buf)
     }
 
     buf->mode = 0;
+    buf->st_size = -1;
 
     switch (ent->type)
     {
         /* FIXME: this wont work for devices, as they are DENTRY_FILE */
     case DENTRY_FILE:
 
+        buf->st_size = ent->inode->size;
         buf->mode |= S_IFREG;
         break;
     case DENTRY_DIR:

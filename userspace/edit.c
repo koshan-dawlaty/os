@@ -1,4 +1,5 @@
 #include "container_of.h"
+#include "errno.h"
 #include "lib/array.h"
 #include "lib/font.h"
 #include "lib/list.h"
@@ -15,6 +16,8 @@
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <types.h>
 #include <unistd.h>
@@ -247,6 +250,36 @@ void set_filename(struct editor_buffer *buffer)
     buffer->file = fopen(name, "c");
 }
 
+void insert_char(char c, struct editor_buffer *buffer)
+{
+    if (c == '\b')
+    {
+        editor_buffer_delete_cursor(buffer);
+
+        framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                              client.fb.height, 0);
+        editor_buffer_redraw(buffer, &client.fb, 0, 0);
+        wm_render(client);
+    }
+    else if (c == '\n')
+    {
+        editor_buffer_insert_newline_cursor(buffer);
+        framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                              client.fb.height, 0);
+        editor_buffer_redraw(buffer, &client.fb, 0, 0);
+        wm_render(client);
+    }
+    else
+    {
+        editor_buffer_insert_cursor(buffer, c);
+
+        framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                              client.fb.height, 0);
+        editor_buffer_redraw(buffer, &client.fb, 0, 0);
+        wm_render(client);
+    }
+}
+
 void write_to_file(struct editor_buffer *buffer)
 {
 
@@ -294,12 +327,38 @@ int main(int argc, char **argv)
     struct editor_buffer buffer = {0, 0, .top_line = 0, .file = NULL,
                                    .num_lines =
                                        client.fb.height / font->header.height};
+
     list_init_head(&buffer.rows_head);
     struct editor_row *row = editor_row_alloc();
     list_push(&row->list, &buffer.rows_head);
     buffer.current_row = row;
-
-    array_push(&row->characters, "abc", 3);
+    /* array_push(&row->characters, "abc", 3); */
+    if (argc > 1)
+    {
+        buffer.file = fopen(argv[1], "c");
+        if (buffer.file != NULL)
+        {
+            size_t read_size = 10;
+            char *buf = malloc(read_size);
+            bzero(buf, read_size);
+            size_t bytes_read = 0;
+            while ((bytes_read = fread(buf, read_size, 1, buffer.file)) ==
+                   read_size)
+            {
+                for (size_t i = 0; i < read_size; i++)
+                {
+                    insert_char(buf[i], &buffer);
+                }
+            }
+            logd("read:%d bytes", bytes_read);
+            for (size_t i = 0; i < bytes_read; i++)
+            {
+                logd("%c", buf[i]);
+                insert_char(buf[i], &buffer);
+            }
+            free(buf);
+        }
+    }
 
     framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
                           0);
@@ -324,32 +383,7 @@ int main(int argc, char **argv)
                 {
                     insert_mode = false;
                 }
-                else if (c == '\b')
-                {
-                    editor_buffer_delete_cursor(&buffer);
-
-                    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-                                          client.fb.height, 0);
-                    editor_buffer_redraw(&buffer, &client.fb, 0, 0);
-                    wm_render(client);
-                }
-                else if (c == '\n')
-                {
-                    editor_buffer_insert_newline_cursor(&buffer);
-                    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-                                          client.fb.height, 0);
-                    editor_buffer_redraw(&buffer, &client.fb, 0, 0);
-                    wm_render(client);
-                }
-                else
-                {
-                    editor_buffer_insert_cursor(&buffer, c);
-
-                    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-                                          client.fb.height, 0);
-                    editor_buffer_redraw(&buffer, &client.fb, 0, 0);
-                    wm_render(client);
-                }
+                insert_char(c, &buffer);
             }
             else
             {

@@ -75,7 +75,7 @@ void key_thread()
         case WM_MESSAGE_MOUSE:
         {
             struct mouse_event *ev = message.message_data;
-            logd("mouse at %d %d", ev->x_change, ev->y_change);
+
             /* client_draw_string(client, font, "this is the mouse",
              * ev->x_change, */
             /*                    ev->y_change); */
