@@ -9,24 +9,33 @@
 #include <lib/ui/image.hpp>
 #include <lib/ui/ui.hpp>
 
-ImageElement::ImageElement(struct image img)
-    : Element(img.header.w, img.header.h)
+ImageElement::ImageElement(struct image img, double scale)
+    : Element(img.header.w, img.header.h), img(img), scale(scale)
 {
-    this->img = img;
 }
 
-ImageElement::ImageElement(const char *pathname)
+ImageElement::ImageElement(struct image img) : ImageElement(img, 1)
+
+{
+}
+
+ImageElement::ImageElement(const char *pathname, double scale)
     : ImageElement(
           [pathname]()
           {
               struct image img;
               image_parse(pathname, &img);
               return img;
-          }())
+          }(),
+          scale)
+{
+}
+
+ImageElement::ImageElement(const char *pathname) : ImageElement(pathname, 1)
 {
 }
 
 void ImageElement::render()
 {
-    framebuffer_draw_img(&fb, 0, 0, img);
+    framebuffer_draw_img_scale(&fb, 0, 0, scale, img);
 }

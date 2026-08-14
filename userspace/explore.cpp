@@ -132,7 +132,8 @@ int main()
     root->fb = client.fb;
 
     ButtonElement *go_to_root =
-        new ButtonElement(new TextElement("go to root", font));
+        // new ButtonElement(new TextElement("go to root", font));
+        new ButtonElement(new ImageElement("/images/house.tga", 1));
     go_to_root->set_onclick(
         [](ButtonElement *element) -> void
         {
@@ -146,7 +147,6 @@ int main()
 
     entries_layout = new ScrollLayout(0, 10);
     // entries_layout = new VerticalLineLayout(0);
-    logd("layout:%p", entries_layout);
     get_dir_layout(opendir("/"));
     root->add_child(entries_layout);
 

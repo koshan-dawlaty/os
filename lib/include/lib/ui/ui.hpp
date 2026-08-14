@@ -182,8 +182,8 @@ class ScrollLayout : public LineLayout
         View **items;
         size_t capacity;
         size_t num;
-    } all_elements = {0};
-    size_t scroll_offset;
+    } all_elements = {0, 0, 0};
+    size_t scroll_offset = 0;
 
   public:
     void extracted(View *&child);

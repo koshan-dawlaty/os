@@ -224,17 +224,18 @@ void ScrollLayout::clear_children()
 {
     LineLayout::clear_children();
 
-    /* TODO: free views that are in array */
-    free(all_elements.items);
-    all_elements = {0};
+    list_init_head(&children);
+    all_elements = {0, 0, 0};
+    scroll_offset = max_elements;
 }
 
 void ScrollLayout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
                                 size_t abs_y)
 {
-    LineLayout::handle_click(click_x, click_y, abs_x, abs_y);
 
     scroll_offset++;
+    // logd("offset:%d, num:%d, max:%d", scroll_offset, all_elements.num,
+    //      max_elements);
     if (scroll_offset > all_elements.num - 1)
     {
         scroll_offset = all_elements.num - 1;
@@ -248,4 +249,6 @@ void ScrollLayout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
     View *new_end = all_elements.items[scroll_offset];
     /* add new item at the bottom */
     list_push_end(&new_end->list, &children);
+
+    LineLayout::handle_click(click_x, click_y, abs_x, abs_y);
 }
