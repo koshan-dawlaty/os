@@ -165,7 +165,8 @@ void LineLayout::update_child(View *child)
     Layout::update_child(child);
 }
 
-void View::handle_click(size_t, size_t, size_t, size_t)
+void View::handle_mouse_action(size_t, size_t, size_t, size_t,
+                               struct mouse_buttons buttons)
 {
 }
 
@@ -173,14 +174,17 @@ void Element::handle_element_click()
 {
 }
 
-void Element::handle_click(size_t click_x, size_t click_y, size_t abs_x,
-                           size_t abs_y)
+void Element::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+                                  size_t abs_y, struct mouse_buttons buttons)
 {
-    handle_element_click();
+    if (buttons.left_click)
+    {
+        handle_element_click();
+    }
 }
 
-void Layout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
-                          size_t abs_y)
+void Layout::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+                                 size_t abs_y, struct mouse_buttons buttons)
 {
     struct list *pos;
     list_for_each(pos, &children)
@@ -193,7 +197,7 @@ void Layout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
         if (click_x > x_pos && click_x < x_pos + child->get_width() &&
             click_y > y_pos && click_y < y_pos + child->get_height())
         {
-            child->handle_click(click_x, click_y, x_pos, y_pos);
+            child->handle_mouse_action(click_x, click_y, x_pos, y_pos, buttons);
         }
     }
 }
@@ -228,11 +232,23 @@ void ScrollLayout::clear_children()
     all_elements = {0, 0, 0};
     scroll_offset = max_elements;
 }
-
-void ScrollLayout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
-                                size_t abs_y)
+void ScrollLayout::scroll_up()
 {
+    if (scroll_offset <= max_elements)
+    {
+        return;
+    }
+    scroll_offset--;
 
+    /* remove the item at the top */
+    list_pop_end(&children);
+    View *new_end = all_elements.items[scroll_offset - max_elements];
+    /* add new item at the bottom */
+    list_push(&new_end->list, &children);
+}
+
+void ScrollLayout::scroll_down()
+{
     scroll_offset++;
     // logd("offset:%d, num:%d, max:%d", scroll_offset, all_elements.num,
     //      max_elements);
@@ -249,6 +265,21 @@ void ScrollLayout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
     View *new_end = all_elements.items[scroll_offset];
     /* add new item at the bottom */
     list_push_end(&new_end->list, &children);
+}
 
-    LineLayout::handle_click(click_x, click_y, abs_x, abs_y);
+void ScrollLayout::handle_mouse_action(size_t click_x, size_t click_y,
+                                       size_t abs_x, size_t abs_y,
+                                       struct mouse_buttons buttons)
+{
+
+    if (buttons.left_click)
+    {
+        scroll_down();
+    }
+    else if (buttons.right_click)
+    {
+        scroll_up();
+    }
+
+    LineLayout::handle_mouse_action(click_x, click_y, abs_x, abs_y, buttons);
 }

@@ -156,7 +156,8 @@ int main()
             struct mouse_event *ev = (struct mouse_event *)message.message_data;
             if (ev->buttons.left_click)
             {
-                horizontal->handle_click(ev->x_change, ev->y_change, 0, 0);
+                horizontal->handle_mouse_action(ev->x_change, ev->y_change, 0,
+                                                0, ev->buttons);
             }
 
             break;

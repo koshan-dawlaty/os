@@ -4,6 +4,7 @@
 #include <cpp/cpp_c_include_start.hpp>
 
 #include "lib/assert.h"
+#include "userspace/mouse.h"
 #include "wm_lib.h"
 #include <lib/framebuffer.h>
 #include <lib/img.h>
@@ -80,8 +81,9 @@ class View
 
     struct list list;
 
-    virtual void handle_click(size_t click_x, size_t click_y, size_t abs_x,
-                              size_t abs_y);
+    virtual void handle_mouse_action(size_t click_x, size_t click_y,
+                                     size_t abs_x, size_t abs_y,
+                                     struct mouse_buttons buttons);
 
     virtual void render() = 0;
     size_t get_width();
@@ -121,8 +123,9 @@ class Layout : public View
     virtual void add_child(View *view);
     virtual void update_child(View *view) override;
     Layout();
-    void handle_click(size_t click_x, size_t click_y, size_t abs_x,
-                      size_t abs_y) override;
+    void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+                             size_t abs_y,
+                             struct mouse_buttons buttons) override;
     virtual void clear_children();
 };
 
@@ -130,8 +133,9 @@ class Element : public View
 {
   public:
     Element(size_t w, size_t h);
-    void handle_click(size_t click_x, size_t click_y, size_t abs_x,
-                      size_t abs_y) override;
+    void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+                             size_t abs_y,
+                             struct mouse_buttons buttons) override;
     virtual void handle_element_click();
 };
 
@@ -185,11 +189,15 @@ class ScrollLayout : public LineLayout
     } all_elements = {0, 0, 0};
     size_t scroll_offset = 0;
 
+    void scroll_up();
+    void scroll_down();
+
   public:
     void extracted(View *&child);
     void add_child(View *child) override;
-    void handle_click(size_t click_x, size_t click_y, size_t abs_x,
-                      size_t abs_y) override;
+    void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+                             size_t abs_y,
+                             struct mouse_buttons buttons) override;
 
     void clear_children() override;
 
