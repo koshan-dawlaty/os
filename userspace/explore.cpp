@@ -64,8 +64,15 @@ void get_dir_layout(DIR *d)
         switch (stat_buf.mode & S_IFMT)
         {
         case S_IFREG:
-            button->set_onclick([=](ButtonElement *) -> void
-                                { logd("normal file %s", e->d_name); });
+            button->set_onclick(
+                [=](ButtonElement *) -> void
+                {
+                    logd("normal file %s", e->d_name);
+
+                    char *args[] = {"edit", e->d_name, NULL};
+
+                    execv("/bin/edit", args);
+                });
             break;
         case S_IFDIR:
             button->set_onclick(

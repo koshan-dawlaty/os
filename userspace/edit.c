@@ -259,7 +259,6 @@ void insert_char(char c, struct editor_buffer *buffer)
         framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
                               client.fb.height, 0);
         editor_buffer_redraw(buffer, &client.fb, 0, 0);
-        wm_render(client);
     }
     else if (c == '\n')
     {
@@ -267,7 +266,6 @@ void insert_char(char c, struct editor_buffer *buffer)
         framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
                               client.fb.height, 0);
         editor_buffer_redraw(buffer, &client.fb, 0, 0);
-        wm_render(client);
     }
     else
     {
@@ -276,7 +274,6 @@ void insert_char(char c, struct editor_buffer *buffer)
         framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
                               client.fb.height, 0);
         editor_buffer_redraw(buffer, &client.fb, 0, 0);
-        wm_render(client);
     }
 }
 
@@ -300,6 +297,51 @@ void write_to_file(struct editor_buffer *buffer)
         }
         char newline = '\n';
         fwrite(&newline, 1, 1, buffer->file);
+    }
+}
+
+void handle_args(int argc, char **argv, struct editor_buffer *buffer)
+{
+    if (argc > 1)
+    {
+        buffer->file = fopen(argv[1], "c");
+        if (buffer->file != NULL)
+        {
+            size_t read_size = 10;
+            char *buf = malloc(read_size);
+            bzero(buf, read_size);
+            size_t bytes_read = 0;
+            bool is_first_read = true;
+            do
+            {
+                bytes_read = fread(buf, read_size, 1, buffer->file);
+                if (is_first_read)
+                {
+                    /* TODO: maybe put this check in another file? */
+                    if ((buf[0] == 0x7F && buf[1] == 'E' && buf[2] == 'L' &&
+                         buf[3] == 'F') ||
+                        /* this is for the tga image format, it will probably
+                           cause issues in the future */
+                        (buf[0] == 0 && buf[1] == 0))
+                    {
+                        logw("tried to open file %s that has invalid type",
+                             argv[1]);
+                        /* this would result in the binary being overwritten if
+                         * the file is written to, which is maybe what the user
+                         * wants */
+                        goto free_buffer;
+                    }
+                    is_first_read = false;
+                }
+                for (size_t i = 0; i < bytes_read; i++)
+                {
+                    insert_char(buf[i], buffer);
+                }
+            } while (bytes_read == read_size);
+            wm_render(client);
+        free_buffer:
+            free(buf);
+        }
     }
 }
 
@@ -332,33 +374,8 @@ int main(int argc, char **argv)
     struct editor_row *row = editor_row_alloc();
     list_push(&row->list, &buffer.rows_head);
     buffer.current_row = row;
+    handle_args(argc, argv, &buffer);
     /* array_push(&row->characters, "abc", 3); */
-    if (argc > 1)
-    {
-        buffer.file = fopen(argv[1], "c");
-        if (buffer.file != NULL)
-        {
-            size_t read_size = 10;
-            char *buf = malloc(read_size);
-            bzero(buf, read_size);
-            size_t bytes_read = 0;
-            while ((bytes_read = fread(buf, read_size, 1, buffer.file)) ==
-                   read_size)
-            {
-                for (size_t i = 0; i < read_size; i++)
-                {
-                    insert_char(buf[i], &buffer);
-                }
-            }
-            logd("read:%d bytes", bytes_read);
-            for (size_t i = 0; i < bytes_read; i++)
-            {
-                logd("%c", buf[i]);
-                insert_char(buf[i], &buffer);
-            }
-            free(buf);
-        }
-    }
 
     framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
                           0);
@@ -384,6 +401,7 @@ int main(int argc, char **argv)
                     insert_mode = false;
                 }
                 insert_char(c, &buffer);
+                wm_render(client);
             }
             else
             {
