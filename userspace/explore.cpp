@@ -144,7 +144,9 @@ int main()
         });
     root->add_child(go_to_root);
 
-    entries_layout = new VerticalLineLayout(0);
+    entries_layout = new ScrollLayout(0, 10);
+    // entries_layout = new VerticalLineLayout(0);
+    logd("layout:%p", entries_layout);
     get_dir_layout(opendir("/"));
     root->add_child(entries_layout);
 
@@ -165,8 +167,15 @@ int main()
             size_t mouse_x = ev->x_change, mouse_y = ev->y_change;
             if (ev->buttons.left_click)
             {
-                logd("click");
                 root->handle_click(mouse_x, mouse_y, 0, 0);
+                framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                                      client.fb.height, 0);
+                /* TODO: we should not do this, instead everything that needs to
+                 * cause an update (as of right now scroll layout and any button
+                 * lambdas) should do it itself and clear the relevant part of
+                 * the screen */
+                root->render();
+                root->redraw();
             }
 
             break;

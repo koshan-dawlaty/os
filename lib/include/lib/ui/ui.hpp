@@ -3,6 +3,7 @@
 
 #include <cpp/cpp_c_include_start.hpp>
 
+#include "lib/assert.h"
 #include "wm_lib.h"
 #include <lib/framebuffer.h>
 #include <lib/img.h>
@@ -122,7 +123,7 @@ class Layout : public View
     Layout();
     void handle_click(size_t click_x, size_t click_y, size_t abs_x,
                       size_t abs_y) override;
-    void clear_children();
+    virtual void clear_children();
 };
 
 class Element : public View
@@ -167,6 +168,40 @@ class HorizontalLineLayout : public LineLayout
 {
   public:
     inline HorizontalLineLayout(size_t offset) : LineLayout(false, offset)
+    {
+    }
+};
+
+class ScrollLayout : public LineLayout
+{
+  private:
+    size_t max_elements;
+
+    struct
+    {
+        View **items;
+        size_t capacity;
+        size_t num;
+    } all_elements = {0};
+    size_t scroll_offset;
+
+  public:
+    void extracted(View *&child);
+    void add_child(View *child) override;
+    void handle_click(size_t click_x, size_t click_y, size_t abs_x,
+                      size_t abs_y) override;
+
+    void clear_children() override;
+
+    /* debugging */
+    inline void render() override
+    {
+        LineLayout::render();
+    }
+
+    inline ScrollLayout(size_t offset, size_t max_elements)
+        : LineLayout(true, offset), max_elements(max_elements),
+          scroll_offset(max_elements)
     {
     }
 };

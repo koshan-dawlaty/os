@@ -105,9 +105,9 @@ u8 array_pop_middle(struct array *array, size_t offset);
             {                                                                  \
                 (array)->capacity *= 2;                                        \
             }                                                                  \
-            (array)->items =                                                   \
-                realloc((array)->items,                                        \
-                        (array)->capacity * sizeof(*((array)->items)));        \
+            (array)->items = (typeof(*array.items))realloc(                    \
+                (array)->items,                                                \
+                (array)->capacity * sizeof(*((array)->items)));                \
         }                                                                      \
         (array)->items[(array)->num] = item;                                   \
         (array)->num++;                                                        \

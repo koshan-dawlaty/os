@@ -186,7 +186,6 @@ void Layout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
     list_for_each(pos, &children)
     {
         View *child = containerof(pos, View, list);
-        logd("child:%p", child);
 
         size_t x_pos = child->x + abs_x;
         size_t y_pos = child->y + abs_y;
@@ -206,4 +205,47 @@ size_t View::get_width()
 size_t View::get_height()
 {
     return fb.height;
+}
+
+void ScrollLayout::add_child(View *child)
+{
+    /* this would push child into this elements children, which we dont want */
+    // LineLayout::add_child(child);
+    update_child(child);
+    array_macro_append(&all_elements, child);
+
+    if (all_elements.num <= max_elements)
+    {
+        list_push_end(&child->list, &children);
+    }
+}
+
+void ScrollLayout::clear_children()
+{
+    LineLayout::clear_children();
+
+    /* TODO: free views that are in array */
+    free(all_elements.items);
+    all_elements = {0};
+}
+
+void ScrollLayout::handle_click(size_t click_x, size_t click_y, size_t abs_x,
+                                size_t abs_y)
+{
+    LineLayout::handle_click(click_x, click_y, abs_x, abs_y);
+
+    scroll_offset++;
+    if (scroll_offset > all_elements.num - 1)
+    {
+        scroll_offset = all_elements.num - 1;
+        /* dont want to re-add elements that have already been added, so return
+         */
+        return;
+    }
+
+    /* remove the item at the top */
+    list_pop(&children);
+    View *new_end = all_elements.items[scroll_offset];
+    /* add new item at the bottom */
+    list_push_end(&new_end->list, &children);
 }
