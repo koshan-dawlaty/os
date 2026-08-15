@@ -53,6 +53,11 @@ void get_dir_layout(DIR *d)
         {
             return;
         }
+        if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
+        {
+            e = readdir(d);
+            continue;
+        }
 
         struct stat stat_buf;
         int retval = stat(e->d_name, &stat_buf);
