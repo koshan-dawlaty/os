@@ -140,7 +140,7 @@ int main()
 
     ButtonElement *go_to_root =
         // new ButtonElement(new TextElement("go to root", font));
-        new ButtonElement(new ImageElement("/images/house.tga", 1));
+        new ButtonElement(new ImageElement("/images/house.tga"));
     go_to_root->set_onclick(
         [](ButtonElement *element) -> void
         {
@@ -152,7 +152,7 @@ int main()
         });
 
     ButtonElement *go_up_dir =
-        new ButtonElement(new ImageElement("/images/back_arrow.tga", 2));
+        new ButtonElement(new ImageElement("/images/back_arrow.tga"));
     go_up_dir->set_onclick(
         [](ButtonElement *element) -> void
         {
