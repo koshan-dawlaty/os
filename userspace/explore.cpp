@@ -177,7 +177,8 @@ int main()
     // root->add_child(new ImageElement("dog.tga"));
 
     root->render();
-    root->redraw();
+    // root->redraw();
+    wm_render(client);
 
     while (true)
     {
@@ -193,14 +194,15 @@ int main()
                 ev->buttons.middle_click)
             {
                 root->handle_mouse_action(mouse_x, mouse_y, 0, 0, ev->buttons);
-                framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-                                      client.fb.height, 0);
+                // framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                //                       client.fb.height, 0);
                 /* TODO: we should not do this, instead everything that needs to
                  * cause an update (as of right now scroll layout and any button
                  * lambdas) should do it itself and clear the relevant part of
                  * the screen */
-                root->render();
-                root->redraw();
+                // root->render();
+                // root->redraw();
+                // wm_render(client);
             }
 
             break;

@@ -613,6 +613,11 @@ void process_connection()
             {
                 r.h = (WIN_H(w) - WINDOW_DECORATION_ROWS) - r.y;
             }
+            /* logd("%d, %d %d, %d", r.x, r.y, r.w, r.h); */
+
+            // framebuffer_draw_rect(buffer, r.x + WIN_X(w), r.y + WIN_Y(w),
+            // r.w,
+            //                      r.h, 0xFFFF00);
 
             /* logd("%d", r.x); */
             for (size_t y = r.y + WINDOW_DECORATION_ROWS;
@@ -624,10 +629,13 @@ void process_connection()
 
                 memcpy(w->fb.buffer + server_offset, client_buf + client_offset,
                        (r.w) * 4);
+                /* memset(w->fb.buffer + server_offset, 0xFF, (r.w) * 4); */
             }
 
             r.y += WINDOW_DECORATION_ROWS;
-            update_area_up(r, buffer);
+            struct rect update_area = {r.x + WIN_X(w), r.y + WIN_Y(w), r.w,
+                                       r.h};
+            update_area_up(update_area, buffer);
             /* update_area_up(WIN_RECT(w), buffer); */
 
             int ack_code = 3;

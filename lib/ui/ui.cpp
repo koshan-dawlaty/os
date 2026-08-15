@@ -282,4 +282,10 @@ void ScrollLayout::handle_mouse_action(size_t click_x, size_t click_y,
     }
 
     LineLayout::handle_mouse_action(click_x, click_y, abs_x, abs_y, buttons);
+    framebuffer_draw_rect(&fb, 0, 0, fb.width, fb.height, 0);
+
+    render();
+    redraw();
+    // struct rect r = {0, 0, (int)screen->get_width(),
+    // (int)screen->get_height()}; screen->update_area(r);
 }

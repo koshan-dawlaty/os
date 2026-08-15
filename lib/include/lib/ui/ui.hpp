@@ -92,11 +92,10 @@ class View
 
     virtual void update_child(View *child);
 
-    inline void redraw()
+    virtual inline void redraw()
     {
-        // logd("%d, %d %d, %d", x, y, get_width(), get_height());
         screen->update_area(
-            {(int)abs_y, (int)abs_y, (int)get_width(), (int)get_height()});
+            {(int)abs_x, (int)abs_y, (int)get_width(), (int)get_height()});
     }
 
     /*
