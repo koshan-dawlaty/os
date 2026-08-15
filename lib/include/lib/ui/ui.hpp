@@ -83,7 +83,7 @@ class View
 
     virtual void handle_mouse_action(size_t click_x, size_t click_y,
                                      size_t abs_x, size_t abs_y,
-                                     struct mouse_buttons buttons);
+                                     struct mouse_event *ev);
 
     virtual void render() = 0;
     size_t get_width();
@@ -123,8 +123,7 @@ class Layout : public View
     virtual void update_child(View *view) override;
     Layout();
     void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
-                             size_t abs_y,
-                             struct mouse_buttons buttons) override;
+                             size_t abs_y, struct mouse_event *ev) override;
     virtual void clear_children();
 };
 
@@ -133,8 +132,7 @@ class Element : public View
   public:
     Element(size_t w, size_t h);
     void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
-                             size_t abs_y,
-                             struct mouse_buttons buttons) override;
+                             size_t abs_y, struct mouse_event *ev) override;
     virtual void handle_element_click();
 };
 
@@ -195,8 +193,7 @@ class ScrollLayout : public LineLayout
     void extracted(View *&child);
     void add_child(View *child) override;
     void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
-                             size_t abs_y,
-                             struct mouse_buttons buttons) override;
+                             size_t abs_y, struct mouse_event *ev) override;
 
     void clear_children() override;
 

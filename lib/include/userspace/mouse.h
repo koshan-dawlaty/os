@@ -22,6 +22,7 @@ struct mouse_event
     int x_change;
     int y_change;
     struct mouse_buttons buttons;
+    int scroll;
 
 } __packed;
 

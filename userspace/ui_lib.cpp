@@ -157,7 +157,7 @@ int main()
             if (ev->buttons.left_click)
             {
                 horizontal->handle_mouse_action(ev->x_change, ev->y_change, 0,
-                                                0, ev->buttons);
+                                                0, ev);
             }
 
             break;

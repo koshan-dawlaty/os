@@ -166,7 +166,7 @@ void LineLayout::update_child(View *child)
 }
 
 void View::handle_mouse_action(size_t, size_t, size_t, size_t,
-                               struct mouse_buttons buttons)
+                               struct mouse_event *ev)
 {
 }
 
@@ -175,16 +175,16 @@ void Element::handle_element_click()
 }
 
 void Element::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
-                                  size_t abs_y, struct mouse_buttons buttons)
+                                  size_t abs_y, struct mouse_event *ev)
 {
-    if (buttons.left_click)
+    if (ev->buttons.left_click)
     {
         handle_element_click();
     }
 }
 
 void Layout::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
-                                 size_t abs_y, struct mouse_buttons buttons)
+                                 size_t abs_y, struct mouse_event *ev)
 {
     struct list *pos;
     list_for_each(pos, &children)
@@ -197,7 +197,7 @@ void Layout::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
         if (click_x > x_pos && click_x < x_pos + child->get_width() &&
             click_y > y_pos && click_y < y_pos + child->get_height())
         {
-            child->handle_mouse_action(click_x, click_y, x_pos, y_pos, buttons);
+            child->handle_mouse_action(click_x, click_y, x_pos, y_pos, ev);
         }
     }
 }
@@ -269,19 +269,19 @@ void ScrollLayout::scroll_down()
 
 void ScrollLayout::handle_mouse_action(size_t click_x, size_t click_y,
                                        size_t abs_x, size_t abs_y,
-                                       struct mouse_buttons buttons)
+                                       struct mouse_event *ev)
 {
 
-    if (buttons.left_click)
+    if (ev->scroll < 0)
     {
         scroll_down();
     }
-    else if (buttons.right_click)
+    else if (ev->scroll > 0)
     {
         scroll_up();
     }
 
-    LineLayout::handle_mouse_action(click_x, click_y, abs_x, abs_y, buttons);
+    LineLayout::handle_mouse_action(click_x, click_y, abs_x, abs_y, ev);
     framebuffer_draw_rect(&fb, 0, 0, fb.width, fb.height, 0);
 
     render();

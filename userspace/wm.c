@@ -830,8 +830,8 @@ static void process_mouse(struct mouse_event *ev)
             .header = WM_MESSAGE_MOUSE_HEADER,
             /* FIXME: the member names in struct mouse_event do not convey that
                these are absolute positions */
-            .message_data =
-                &(struct mouse_event){change_x, change_y, ev->buttons},
+            .message_data = &(struct mouse_event){change_x, change_y,
+                                                  ev->buttons, ev->scroll},
         };
         server_send_message(focused->conn, &message);
     }

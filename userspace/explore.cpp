@@ -191,9 +191,9 @@ int main()
             struct mouse_event *ev = (struct mouse_event *)message.message_data;
             size_t mouse_x = ev->x_change, mouse_y = ev->y_change;
             if (ev->buttons.left_click || ev->buttons.right_click ||
-                ev->buttons.middle_click)
+                ev->buttons.middle_click || ev->scroll != 0)
             {
-                root->handle_mouse_action(mouse_x, mouse_y, 0, 0, ev->buttons);
+                root->handle_mouse_action(mouse_x, mouse_y, 0, 0, ev);
                 // framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
                 //                       client.fb.height, 0);
                 /* TODO: we should not do this, instead everything that needs to
