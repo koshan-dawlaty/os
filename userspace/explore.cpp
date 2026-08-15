@@ -134,7 +134,7 @@ int main()
     framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
                           0);
 
-    root = new HorizontalLineLayout(10);
+    root = new VerticalLineLayout(10);
     root->screen = new WMScreen(&client);
     root->fb = client.fb;
 
@@ -150,12 +150,29 @@ int main()
             set_dir(d);
             closedir(d);
         });
-    root->add_child(go_to_root);
+
+    ButtonElement *go_up_dir =
+        new ButtonElement(new ImageElement("/images/back_arrow.tga", 2));
+    go_up_dir->set_onclick(
+        [](ButtonElement *element) -> void
+        {
+            chdir("..");
+            DIR *d = opendir(".");
+
+            set_dir(d);
+            closedir(d);
+        });
+
+    Layout *top_bar = new HorizontalLineLayout(5);
+    top_bar->add_child(go_to_root);
+    top_bar->add_child(go_up_dir);
 
     entries_layout = new ScrollLayout(0, 10);
     // entries_layout = new VerticalLineLayout(0);
     get_dir_layout(opendir("/"));
     root->add_child(entries_layout);
+
+    root->add_child(top_bar);
 
     // root->add_child(new ImageElement("dog.tga"));
 

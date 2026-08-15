@@ -10,7 +10,10 @@
 #include <lib/ui/ui.hpp>
 
 ImageElement::ImageElement(struct image img, double scale)
-    : Element(img.header.w, img.header.h), img(img), scale(scale)
+    /* FIXME: maybe have a version of image_parse that will load the image into
+       memory with a certain scale */
+    : Element(img.header.w * scale, img.header.h * scale), img(img),
+      scale(scale)
 {
 }
 

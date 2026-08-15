@@ -400,8 +400,11 @@ int main(int argc, char **argv)
                 {
                     insert_mode = false;
                 }
-                insert_char(c, &buffer);
-                wm_render(client);
+                else
+                {
+                    insert_char(c, &buffer);
+                    wm_render(client);
+                }
             }
             else
             {

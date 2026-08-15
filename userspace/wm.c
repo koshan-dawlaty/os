@@ -1144,8 +1144,8 @@ int main()
     /* execv("/bin/term", (char *[]){"term", NULL}); */
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    execv("/bin/edit", (char *[]){"edit", "one", NULL});
+    execv("/bin/explore", (char *[]){"explore", NULL});
+    /* execv("/bin/edit", (char *[]){"edit", "one", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
