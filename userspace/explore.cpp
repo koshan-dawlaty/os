@@ -1,5 +1,6 @@
 #include <cpp/cpp_c_include_start.hpp>
 
+#include "lib/img.h"
 #include "wm_lib.h"
 #include <assert.h>
 #include <dirent.h>
@@ -36,6 +37,10 @@ struct PSF_font *font;
 Layout *root;
 Layout *entries_layout;
 
+struct image folder_img;
+struct image unknown_img;
+struct image file_img;
+
 void set_dir(DIR *d);
 
 void get_dir_layout(DIR *d)
@@ -62,8 +67,24 @@ void get_dir_layout(DIR *d)
         struct stat stat_buf;
         int retval = stat(e->d_name, &stat_buf);
 
-        ButtonElement *button =
-            new ButtonElement(new TextElement(e->d_name, font));
+        View *entry_image;
+        switch (stat_buf.mode & S_IFMT)
+        {
+        case S_IFREG:
+            entry_image = new ImageElement(file_img);
+            break;
+        case S_IFDIR:
+            entry_image = new ImageElement(folder_img);
+            break;
+        default:
+            entry_image = new ImageElement(unknown_img);
+        };
+
+        Layout *button_content = new HorizontalLineLayout(10);
+        button_content->add_child(new TextElement(e->d_name, font));
+        button_content->add_child(entry_image);
+
+        ButtonElement *button = new ButtonElement(button_content);
         entries_layout->add_child(button);
 
         switch (stat_buf.mode & S_IFMT)
@@ -142,6 +163,10 @@ int main()
     root = new VerticalLineLayout(10);
     root->screen = new WMScreen(&client);
     root->fb = client.fb;
+
+    image_parse("/images/folder.tga", &folder_img);
+    image_parse("/images/file.tga", &file_img);
+    image_parse("/images/question.tga", &unknown_img);
 
     ButtonElement *go_to_root =
         // new ButtonElement(new TextElement("go to root", font));

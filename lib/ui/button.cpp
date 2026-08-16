@@ -1,3 +1,4 @@
+#include "lib/ui/ui.hpp"
 #include <cpp/cpp_c_include_start.hpp>
 
 #include <lib/framebuffer.h>
@@ -23,7 +24,7 @@ void ButtonElement::render()
     child->abs_y = y + child->y;
 
     child->set_fb_parent(fb);
-    update_child(child);
+    child->screen = screen;
     clamp_child_dimensions(child);
 
     child->render();
