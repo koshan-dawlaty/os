@@ -36,12 +36,23 @@ struct PSF_font *font;
 
 Layout *root;
 Layout *entries_layout;
+Layout *pathname_layout;
 
 struct image folder_img;
 struct image unknown_img;
 struct image file_img;
 
+char current_dir[100];
+
 void set_dir(DIR *d);
+
+void change_dir(const char *path)
+{
+    chdir(path);
+    getcwd(current_dir, sizeof(current_dir));
+    pathname_layout->clear_children();
+    pathname_layout->add_child(new TextElement(current_dir, font));
+}
 
 void get_dir_layout(DIR *d)
 {
@@ -94,9 +105,7 @@ void get_dir_layout(DIR *d)
                 [=](ButtonElement *) -> void
                 {
                     logd("normal file %s", e->d_name);
-
                     char *args[] = {"edit", e->d_name, NULL};
-
                     execv("/bin/edit", args);
                 });
             break;
@@ -106,7 +115,7 @@ void get_dir_layout(DIR *d)
                 {
                     DIR *new_dir = opendir(e->d_name);
 
-                    chdir(e->d_name);
+                    change_dir(e->d_name);
                     set_dir(new_dir);
                     closedir(new_dir);
                 });
@@ -159,6 +168,7 @@ int main()
     client = wm_client_connect(600, 600);
     framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
                           0);
+    pathname_layout = new HorizontalLineLayout(0);
 
     root = new VerticalLineLayout(10);
     root->screen = new WMScreen(&client);
@@ -168,13 +178,16 @@ int main()
     image_parse("/images/file.tga", &file_img);
     image_parse("/images/question.tga", &unknown_img);
 
+    const char *start_path = "/";
+
+    change_dir(start_path);
     ButtonElement *go_to_root =
         // new ButtonElement(new TextElement("go to root", font));
         new ButtonElement(new ImageElement("/images/house.tga"));
     go_to_root->set_onclick(
         [](ButtonElement *element) -> void
         {
-            chdir("/");
+            change_dir("/");
             DIR *d = opendir("/");
 
             set_dir(d);
@@ -186,7 +199,7 @@ int main()
     go_up_dir->set_onclick(
         [](ButtonElement *element) -> void
         {
-            chdir("..");
+            change_dir("..");
             DIR *d = opendir(".");
 
             set_dir(d);
@@ -199,10 +212,11 @@ int main()
 
     entries_layout = new ScrollLayout(0, 10);
     // entries_layout = new VerticalLineLayout(0);
-    get_dir_layout(opendir("/"));
+    get_dir_layout(opendir(start_path));
     root->add_child(entries_layout);
 
     root->add_child(top_bar);
+    root->add_child(pathname_layout);
 
     // root->add_child(new ImageElement("dog.tga"));
 
