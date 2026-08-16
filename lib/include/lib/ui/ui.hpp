@@ -79,6 +79,8 @@ class View
     Screen *screen = nullptr;
     View *parent = nullptr;
 
+    virtual ~View();
+
     struct list list;
 
     virtual void handle_mouse_action(size_t click_x, size_t click_y,
@@ -122,6 +124,7 @@ class Layout : public View
     virtual void add_child(View *view);
     virtual void update_child(View *view) override;
     Layout();
+    virtual ~Layout();
     void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                              size_t abs_y, struct mouse_event *ev) override;
     virtual void clear_children();
@@ -152,6 +155,8 @@ class LineLayout : public Layout
     void render() override;
     void update_child(View *view) override;
     LineLayout(bool is_vertical, size_t offset);
+
+    ~LineLayout();
 
   private:
     bool added_first_element = false;

@@ -43,6 +43,10 @@ void View::update_child(View *child)
 {
 }
 
+View::~View()
+{
+}
+
 void View::clamp_child_dimensions(View *child)
 {
     if (child->fb.width + child->abs_x > screen->get_width())
@@ -77,7 +81,18 @@ void Layout::add_child(View *view)
 
 void Layout::clear_children()
 {
-    /* FIXME: free children */
+    struct list *pos;
+    View *prev = NULL;
+    list_for_each(pos, &children)
+    {
+        if (prev != NULL)
+        {
+            delete prev;
+        }
+        prev = containerof(pos, View, list);
+    }
+    delete prev;
+
     list_init_head(&children);
 }
 
@@ -88,9 +103,31 @@ Layout::Layout() : View()
     list_init_head(&children);
 }
 
+Layout::~Layout()
+{
+
+    View::~View();
+    struct list *pos;
+    View *prev = NULL;
+    list_for_each(pos, &children)
+    {
+        if (prev != NULL)
+        {
+            delete prev;
+        }
+        prev = containerof(pos, View, list);
+    }
+    delete prev;
+}
+
 LineLayout::LineLayout(bool is_vertical, size_t offest)
     : is_vertical(is_vertical), offset(offest), Layout()
 {
+}
+
+LineLayout::~LineLayout()
+{
+    Layout::~Layout();
 }
 
 void LineLayout::render()
@@ -228,7 +265,7 @@ void ScrollLayout::clear_children()
 {
     LineLayout::clear_children();
 
-    list_init_head(&children);
+    // list_init_head(&children);
     all_elements = {0, 0, 0};
     scroll_offset = max_elements;
 }

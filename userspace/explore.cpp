@@ -1,7 +1,7 @@
 #include <cpp/cpp_c_include_start.hpp>
 
-#include "lib/img.h"
-#include "wm_lib.h"
+#include <lib/list.h>
+
 #include <assert.h>
 #include <dirent.h>
 #include <errno.h>
@@ -11,6 +11,7 @@
 #include <lib/assert.h>
 #include <lib/font.h>
 #include <lib/framebuffer.h>
+#include <lib/img.h>
 #include <lib/list.h>
 #include <lib/log.h>
 #include <sched.h>
@@ -23,6 +24,7 @@
 #include <types.h>
 #include <unistd.h>
 #include <userspace/mouse.h>
+#include <wm_lib.h>
 
 #include <cpp/cpp_c_include_end.hpp>
 
@@ -158,6 +160,7 @@ void set_dir(DIR *d)
 
     root->render();
     root->redraw();
+    logd("done rendering");
     // wm_render(client);
 }
 
@@ -211,6 +214,7 @@ int main()
     top_bar->add_child(go_up_dir);
 
     entries_layout = new ScrollLayout(0, 10);
+    // entries_layout = new VerticalLineLayout(0);
     // entries_layout = new VerticalLineLayout(0);
     get_dir_layout(opendir(start_path));
     root->add_child(entries_layout);
