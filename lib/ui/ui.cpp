@@ -221,33 +221,34 @@ void LineLayout::update_child(View *child)
     Layout::update_child(child);
 }
 
-void View::handle_mouse_action(size_t, size_t, size_t, size_t,
+bool View::handle_mouse_action(size_t, size_t, size_t, size_t,
                                struct mouse_event *ev)
 {
+    return false;
 }
 
 void Element::handle_element_click()
 {
 }
 
-void Element::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+bool Element::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                                   size_t abs_y, struct mouse_event *ev)
 {
     if (ev->buttons.left_click)
     {
         handle_element_click();
+        return true;
     }
+    return false;
 }
 
-void Layout::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+bool Layout::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                                  size_t abs_y, struct mouse_event *ev)
 {
-    struct list *head = &children;
-    struct list *pos = head->next, *prev = head->next;
+    struct list *pos;
 
-    while (pos != head)
+    list_for_each(pos, &children)
     {
-        logd("%p", pos);
         View *child = containerof(pos, View, list);
 
         size_t x_pos = child->x + abs_x;
@@ -256,13 +257,13 @@ void Layout::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
         if (click_x > x_pos && click_x < x_pos + child->get_width() &&
             click_y > y_pos && click_y < y_pos + child->get_height())
         {
-            child->handle_mouse_action(click_x, click_y, x_pos, y_pos, ev);
+            if (child->handle_mouse_action(click_x, click_y, x_pos, y_pos, ev))
+            {
+                return true;
+            }
         }
-        logd("looped");
-        prev = pos;
-        pos = pos->next;
     }
-    logd("done looping");
+    return false;
 }
 
 size_t View::get_width()
@@ -330,7 +331,7 @@ void ScrollLayout::scroll_down()
     list_push_end(&new_end->list, &children);
 }
 
-void ScrollLayout::handle_mouse_action(size_t click_x, size_t click_y,
+bool ScrollLayout::handle_mouse_action(size_t click_x, size_t click_y,
                                        size_t abs_x, size_t abs_y,
                                        struct mouse_event *ev)
 {
@@ -344,11 +345,14 @@ void ScrollLayout::handle_mouse_action(size_t click_x, size_t click_y,
         scroll_up();
     }
 
-    LineLayout::handle_mouse_action(click_x, click_y, abs_x, abs_y, ev);
+    bool retval =
+        LineLayout::handle_mouse_action(click_x, click_y, abs_x, abs_y, ev);
     framebuffer_draw_rect(&fb, 0, 0, fb.width, fb.height, 0);
 
     render();
     redraw();
+
+    return retval;
     // struct rect r = {0, 0, (int)screen->get_width(),
     // (int)screen->get_height()}; screen->update_area(r);
 }

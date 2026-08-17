@@ -3,9 +3,8 @@
 
 #include <cpp/cpp_c_include_start.hpp>
 
-#include "lib/assert.h"
-#include "userspace/mouse.h"
 #include "wm_lib.h"
+#include <lib/assert.h>
 #include <lib/framebuffer.h>
 #include <lib/img.h>
 #include <lib/list.h>
@@ -14,8 +13,11 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <types.h>
+#include <userspace/mouse.h>
 
 #include <cpp/cpp_c_include_end.hpp>
+
+#include <cpp/function.hpp>
 
 class Screen
 {
@@ -83,9 +85,16 @@ class View
 
     struct list list;
 
-    virtual void handle_mouse_action(size_t click_x, size_t click_y,
+    /* returns true if the click was handled */
+    virtual bool handle_mouse_action(size_t click_x, size_t click_y,
                                      size_t abs_x, size_t abs_y,
                                      struct mouse_event *ev);
+
+    inline void handle_mouse_action_root(size_t click_x, size_t click_y,
+                                         struct mouse_event *ev)
+    {
+        handle_mouse_action(click_x, click_y, 0, 0, ev);
+    }
 
     virtual void render() = 0;
     size_t get_width();
@@ -125,7 +134,7 @@ class Layout : public View
     virtual void update_child(View *view) override;
     Layout();
     virtual ~Layout();
-    void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+    bool handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                              size_t abs_y, struct mouse_event *ev) override;
     virtual void clear_children();
 };
@@ -135,7 +144,7 @@ class Element : public View
   public:
     Element(size_t w, size_t h);
     ~Element();
-    void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+    bool handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                              size_t abs_y, struct mouse_event *ev) override;
     virtual void handle_element_click();
 };
@@ -198,7 +207,7 @@ class ScrollLayout : public LineLayout
   public:
     void extracted(View *&child);
     void add_child(View *child) override;
-    void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+    bool handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                              size_t abs_y, struct mouse_event *ev) override;
 
     void clear_children() override;

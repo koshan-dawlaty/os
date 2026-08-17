@@ -166,6 +166,7 @@ void set_dir(DIR *d)
 
 int main()
 {
+
     int font_fd = open("/font.psfu", O_RDONLY);
     font = font_parse_fd(font_fd);
     client = wm_client_connect(600, 600);
@@ -220,8 +221,8 @@ int main()
     get_dir_layout(opendir(start_path));
     root->add_child(entries_layout);
 
-    // root->add_child(top_bar);
-    // root->add_child(pathname_layout);
+    root->add_child(top_bar);
+    root->add_child(pathname_layout);
 
     // root->add_child(new ImageElement("dog.tga"));
 
