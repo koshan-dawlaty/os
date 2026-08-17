@@ -134,6 +134,7 @@ class Element : public View
 {
   public:
     Element(size_t w, size_t h);
+    ~Element();
     void handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                              size_t abs_y, struct mouse_event *ev) override;
     virtual void handle_element_click();

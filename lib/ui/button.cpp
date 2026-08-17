@@ -39,3 +39,8 @@ void ButtonElement::set_onclick(function<void(ButtonElement *)> o)
 {
     this->onclick = o;
 }
+
+ButtonElement::~ButtonElement()
+{
+    Element::~Element();
+}

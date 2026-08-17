@@ -25,6 +25,11 @@ Element::Element(size_t w, size_t h) : View()
     fb.width = w;
 }
 
+Element::~Element()
+{
+    View::~View();
+}
+
 RectElement::RectElement(size_t w, size_t h, u32 color)
     : Element(w, h), color(color)
 {
@@ -45,6 +50,11 @@ void View::update_child(View *child)
 
 View::~View()
 {
+    /* it might not be in a list */
+    if (list.next != NULL && list.prev != NULL)
+    {
+        list_remove(&list);
+    }
 }
 
 void View::clamp_child_dimensions(View *child)
@@ -81,6 +91,9 @@ void Layout::add_child(View *view)
 
 void Layout::clear_children()
 {
+    // fb.width = 0;
+    // fb.height = 0;
+
     struct list *pos;
     View *prev = NULL;
     list_for_each(pos, &children)
@@ -91,7 +104,10 @@ void Layout::clear_children()
         }
         prev = containerof(pos, View, list);
     }
-    delete prev;
+    if (prev != NULL)
+    {
+        delete prev;
+    }
 
     list_init_head(&children);
 }
@@ -117,7 +133,10 @@ Layout::~Layout()
         }
         prev = containerof(pos, View, list);
     }
-    delete prev;
+    if (prev != NULL)
+    {
+        delete prev;
+    }
 }
 
 LineLayout::LineLayout(bool is_vertical, size_t offest)
@@ -223,9 +242,12 @@ void Element::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
 void Layout::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                                  size_t abs_y, struct mouse_event *ev)
 {
-    struct list *pos;
-    list_for_each(pos, &children)
+    struct list *head = &children;
+    struct list *pos = head->next, *prev = head->next;
+
+    while (pos != head)
     {
+        logd("%p", pos);
         View *child = containerof(pos, View, list);
 
         size_t x_pos = child->x + abs_x;
@@ -236,7 +258,11 @@ void Layout::handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
         {
             child->handle_mouse_action(click_x, click_y, x_pos, y_pos, ev);
         }
+        logd("looped");
+        prev = pos;
+        pos = pos->next;
     }
+    logd("done looping");
 }
 
 size_t View::get_width()

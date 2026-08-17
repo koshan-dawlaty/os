@@ -23,4 +23,5 @@ void TextElement::render()
 TextElement::~TextElement()
 {
     free(str);
+    Element::~Element();
 }

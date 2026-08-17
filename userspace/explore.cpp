@@ -181,6 +181,7 @@ int main()
     image_parse("/images/file.tga", &file_img);
     image_parse("/images/question.tga", &unknown_img);
 
+    // const char *start_path = "/";
     const char *start_path = "/";
 
     change_dir(start_path);
@@ -219,8 +220,8 @@ int main()
     get_dir_layout(opendir(start_path));
     root->add_child(entries_layout);
 
-    root->add_child(top_bar);
-    root->add_child(pathname_layout);
+    // root->add_child(top_bar);
+    // root->add_child(pathname_layout);
 
     // root->add_child(new ImageElement("dog.tga"));
 

@@ -48,6 +48,7 @@ class ButtonElement : public Element
     function<void(ButtonElement *)> onclick;
     u32 color = 0xFF;
     ButtonElement(View *child);
+    ~ButtonElement();
     void render() override;
     void handle_element_click() override;
     void set_onclick(function<void(ButtonElement *)>);

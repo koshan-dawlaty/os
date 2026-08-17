@@ -95,5 +95,8 @@ void list_add_before(struct list *new, struct list *other);
 
 #define list_for_each(pos, head)                                               \
     for (pos = (head)->next; pos != (head); pos = pos->next)
+#define list_for_each_safe(pos, prev, head)                                    \
+    for (pos = (head)->next, prev = (head)->next; prev->next != (head);        \
+         pos = prev->next, prev = prev->next)
 
 #endif
