@@ -40,19 +40,17 @@ struct inode *ext2_inode_alloc(struct superblock *sb, u16 type)
                 {
                     ext2_node->size_low = EXT2_BLOCK_SIZE(sb);
                     ext2_node->direct_blocks[0] = ext2_block_alloc(sb);
-                    /* create a dentry that has no name, this is because we dont
-                     * want '.' and '..' directories because they are handled by
-                     * dcache */
                     size_t dentry_len = 12;
                     u8 *dentry = malloc(dentry_len);
                     ((u32 *)dentry)[0] = node->number;
                     ((u16 *)dentry)[2] = EXT2_BLOCK_SIZE(sb);
                     dentry[6] = 1;
                     dentry[7] = 0;
-                    /* TODO: this dentry will not have a name, this might cause
-                     * problems */
-                    memset(dentry + 8, 0, 4);
-                    /* dentry[8] = ' '; */
+                    /* FIXME: this creates a dentry that has the name '.', this
+                     * is because the vfs will ignore this, however this should
+                     * probably not be done */
+                    memset(dentry + 9, 0, 3);
+                    dentry[8] = '.';
 
                     ext2_write_inode(node, dentry, dentry_len, 0, sb);
                     free(dentry);
