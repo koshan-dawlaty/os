@@ -100,6 +100,7 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
     /* FIXME: this should use prefixes */
     generate_opcode_bytes(code, get_rex(dest, src), opcode,
                           get_modrm(dest, src));
+
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         array_macro_append_v(code, src->value, 0, 0, 0);

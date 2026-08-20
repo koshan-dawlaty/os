@@ -387,6 +387,7 @@ int main(int argc, char **argv)
     {
         struct wm_message message;
         wm_get_message(&client, &message);
+        continue;
 
         switch (message.header.type)
         {

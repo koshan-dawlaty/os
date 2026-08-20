@@ -71,7 +71,7 @@ struct wm_message_header
 struct wm_message_resize
 {
     size_t new_w, new_h;
-};
+} __packed;
 #define WM_MESSAGE_RESIZE_HEADER                                               \
     ((struct wm_message_header){.type = WM_MESSAGE_RESIZE,                     \
                                 .len = sizeof(struct wm_message_resize)})

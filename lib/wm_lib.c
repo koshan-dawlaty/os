@@ -216,14 +216,19 @@ int wm_get_message(struct wm_client *client, struct wm_message *message)
 
         struct wm_message_resize *resize = message->message_data;
         void *new_buf;
+        goto send;
 
         shared_mem_get(client->mem_id, &new_buf);
 
-        framebuffer_resize(&client->fb, resize->new_w, resize->new_h, new_buf);
         client->fb.buffer = new_buf;
+        /* framebuffer_resize(&client->fb, resize->new_w, resize->new_h,
+         * new_buf); */
+
         client->fb.width = resize->new_w;
         client->fb.height = resize->new_h;
         client->fb.pitch = resize->new_w * 4;
+
+    send:;
 
         int ack_code = 123;
         if ((err = send(client->key_socket, &ack_code, sizeof(int))))

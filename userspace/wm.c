@@ -742,6 +742,48 @@ disconnect:;
     exit(1);
 }
 
+void framebuffer_resize2(struct framebuffer *fb, size_t new_width,
+                         size_t new_height, void *new_buffer)
+{
+    size_t new_pitch = new_width * 4, old_pitch = fb->width * 4;
+    size_t copy_size = MIN(new_width, fb->width) * 4;
+    size_t min_height = MIN(new_height, fb->height - WINDOW_DECORATION_ROWS);
+
+    logd("resizing2 to h:%d w:%d", new_height, new_width);
+    logd("min height:%d", min_height, fb->height);
+
+    logd("new_buffer:%p, old:%p", new_buffer, fb->buffer);
+    logd("height:%d", min_height);
+
+    /* memset(new_buffer + new_pitch * WINDOW_DECORATION_ROWS, 0xFF, copy_size);
+     */
+    /* return; */
+
+    for (size_t y = 0; y < min_height; y++)
+    {
+
+        size_t new_offset = y * new_pitch;
+        size_t old_offset = y * fb->pitch;
+
+        u8 *dest = new_buffer + new_offset;
+        u8 *src =
+            fb->buffer + old_offset + (fb->pitch * WINDOW_DECORATION_ROWS);
+
+        /* memset(new_buffer + new_offset, 0xFF, copy_size); */
+
+        /* logd("new offset:%d old_offset:%d, copy_size:%d", new_offset,
+     old_offset, copy_size); */
+
+        /* for (size_t i = copy_size; i > 0; i--) */
+        /* { */
+        /*     dest[i] = src[i]; */
+        /* } */
+        memcpy(new_buffer + (new_pitch * WINDOW_DECORATION_ROWS) + new_offset,
+               fb->buffer + (fb->pitch * WINDOW_DECORATION_ROWS) + old_offset,
+               copy_size);
+    }
+}
+
 static int resize_window(struct window_queue_entry *ent, int width_diff,
                          int height_diff)
 {
@@ -772,28 +814,16 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     logd("new addr is %p", new_addr);
     server_send_message(ent->conn, &message);
 
-    int ack_code;
-    recv(ent->conn->client_key_socket, &ack_code, sizeof(int));
-
-    if (ack_code != 123)
-    {
-        /* FIXME: shouldn't panic, but instead disconnect from client */
-        PANIC("client sent invalid ack code %d", ack_code);
-
-        return -EINVAL;
-    }
+    framebuffer_resize2(&ent->win->fb, new_width, new_height, new_addr);
+    ent->win->fb.buffer = new_addr;
+    ent->win->fb.height = new_height + WINDOW_DECORATION_ROWS;
+    ent->win->fb.width = new_width;
+    ent->win->fb.pitch = new_width * 4;
 
     /* for (size_t i = 0; i < 100; i++) */
     /* { */
     /*     sched_yield(); */
     /* } */
-
-    ent->win->fb.buffer = new_addr;
-    framebuffer_resize(&ent->win->fb, new_width, new_height,
-                       ent->win->fb.buffer);
-    ent->win->fb.height = new_height + WINDOW_DECORATION_ROWS;
-    ent->win->fb.width = new_width;
-    ent->win->fb.pitch = new_width * 4;
 
     /* framebuffer_draw_rect(&ent->win->fb, 0, 0, ent->win->fb.width, */
     /*                       ent->win->fb.height, 0xFF); */
@@ -804,11 +834,21 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
             .x = WIN_X(ent->win),
             .y = WIN_Y(ent->win),
 
-            .w = new_width,
-            .h = new_height + WINDOW_DECORATION_ROWS,
+            .w = MAX(old_width, new_width),
+            .h = MAX(old_height, new_height) + WINDOW_DECORATION_ROWS,
 
         },
         buffer);
+
+    int ack_code;
+    recv(ent->conn->client_key_socket, &ack_code, sizeof(int));
+    if (ack_code != 123)
+    {
+        /* FIXME: shouldn't panic, but instead disconnect from client */
+        PANIC("client sent invalid ack code %d", ack_code);
+
+        return -EINVAL;
+    }
 
     logd("not in resize_window");
 
@@ -916,10 +956,11 @@ static void process_mouse(struct mouse_event *ev)
 
 static void process_keyboard_char(char c)
 {
-    /* else if (c == 'a' && focused != NULL) */
-    /* { */
-    /*     resize_window(focused, 10, 0); */
-    /* } */
+    if (c == 'a' && focused != NULL)
+    {
+        /* resize_window(focused, 10, 0); */
+        resize_window(focused, 0, 10);
+    }
     if (focused != NULL)
     {
         if (focused->nonblock_info.is_nonblock)
@@ -1152,8 +1193,8 @@ int main()
     /* execv("/bin/term", (char *[]){"term", NULL}); */
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    execv("/bin/explore", (char *[]){"explore", NULL});
-    /* execv("/bin/edit", (char *[]){"edit", "one", NULL}); */
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    execv("/bin/edit", (char *[]){"edit", "one", NULL});
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
