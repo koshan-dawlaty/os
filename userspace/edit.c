@@ -387,7 +387,20 @@ int main(int argc, char **argv)
     {
         struct wm_message message;
         wm_get_message(&client, &message);
-        continue;
+        if (message.header.type == WM_MESSAGE_RESIZE)
+        {
+
+            logd("%d, %d, %d", client.fb.width, client.fb.height,
+                 client.fb.pitch);
+            framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                                  client.fb.height, 0);
+            logd("height:%d", client.fb.height);
+            editor_buffer_redraw(&buffer, &client.fb, 0, 0);
+            wm_render(client);
+            continue;
+        }
+
+        /* continue; */
 
         switch (message.header.type)
         {

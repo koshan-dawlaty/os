@@ -216,7 +216,6 @@ int wm_get_message(struct wm_client *client, struct wm_message *message)
 
         struct wm_message_resize *resize = message->message_data;
         void *new_buf;
-        goto send;
 
         shared_mem_get(client->mem_id, &new_buf);
 
@@ -228,15 +227,10 @@ int wm_get_message(struct wm_client *client, struct wm_message *message)
         client->fb.height = resize->new_h;
         client->fb.pitch = resize->new_w * 4;
 
-    send:;
-
         int ack_code = 123;
-        if ((err = send(client->key_socket, &ack_code, sizeof(int))))
-        {
-            client->is_alive = false;
-            return err;
-        }
-
+        logd("sending ack");
+        send(client->key_socket, &ack_code, sizeof(int));
+        logd("sent ack");
         /* wm_render(*client); */
     }
     /* logd("got data:%s, %d", message->message_data, header.len); */

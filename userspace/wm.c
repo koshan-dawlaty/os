@@ -571,6 +571,7 @@ void process_connection()
         {
         case WM_RES_RENDER:
         {
+            logd("rendering, %d, %d", WIN_W(w), WIN_H(w));
 
             for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_ROWS); y++)
             {
@@ -578,9 +579,11 @@ void process_connection()
                     (y + WINDOW_DECORATION_ROWS) * WIN_W(w) * 4;
                 size_t client_offset = y * WIN_W(w) * 4;
 
-                memcpy(w->fb.buffer + server_offset, client_buf + client_offset,
-                       WIN_W(w) * 4);
+                memcpy(w->fb.buffer + server_offset,
+                       conn->buffer + client_offset, WIN_W(w) * 4);
+                /* logd("%d", y); */
             }
+            logd("done copying");
 
             update_area_up(WIN_RECT(w), buffer);
             /* draw_window(buffer, ent->win); */
@@ -627,8 +630,8 @@ void process_connection()
                 size_t client_offset =
                     (y - WINDOW_DECORATION_ROWS) * WIN_W(w) * 4 + (r.x * 4);
 
-                memcpy(w->fb.buffer + server_offset, client_buf + client_offset,
-                       (r.w) * 4);
+                memcpy(w->fb.buffer + server_offset,
+                       conn->buffer + client_offset, (r.w) * 4);
                 /* memset(w->fb.buffer + server_offset, 0xFF, (r.w) * 4); */
             }
 
@@ -809,13 +812,16 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     shared_mem_resize(ent->conn->shared_mem_id, new_size, &new_addr);
     if (new_addr == NULL)
     {
-        new_addr = ent->win->fb.buffer;
+        new_addr = ent->conn->buffer;
     }
     logd("new addr is %p", new_addr);
     server_send_message(ent->conn, &message);
 
-    framebuffer_resize2(&ent->win->fb, new_width, new_height, new_addr);
-    ent->win->fb.buffer = new_addr;
+    framebuffer_resize(ent->win->fb.width, ent->win->fb.height, new_width,
+                       new_height, ent->conn->buffer, new_addr);
+    ent->conn->buffer = new_addr;
+    /* ent->win->fb.buffer = new_addr; */
+    ent->win->fb.buffer = realloc(ent->win->fb.buffer, new_size);
     ent->win->fb.height = new_height + WINDOW_DECORATION_ROWS;
     ent->win->fb.width = new_width;
     ent->win->fb.pitch = new_width * 4;
@@ -824,6 +830,18 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     /* { */
     /*     sched_yield(); */
     /* } */
+
+    logd("waiting for answer");
+    int ack_code;
+    recv(ent->conn->client_key_socket, &ack_code, sizeof(int));
+    if (ack_code != 123)
+    {
+        /* FIXME: shouldn't panic, but instead disconnect from client */
+        PANIC("client sent invalid ack code %d", ack_code);
+
+        return -EINVAL;
+    }
+    logd("got answer");
 
     /* framebuffer_draw_rect(&ent->win->fb, 0, 0, ent->win->fb.width, */
     /*                       ent->win->fb.height, 0xFF); */
@@ -840,22 +858,15 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
         },
         buffer);
 
-    int ack_code;
-    recv(ent->conn->client_key_socket, &ack_code, sizeof(int));
-    if (ack_code != 123)
-    {
-        /* FIXME: shouldn't panic, but instead disconnect from client */
-        PANIC("client sent invalid ack code %d", ack_code);
-
-        return -EINVAL;
-    }
-
     logd("not in resize_window");
 
     return 0;
 }
 
 int drag_count = 0;
+bool right_click_is_held = false;
+int x_resize_start;
+int y_resize_start;
 
 static void process_mouse(struct mouse_event *ev)
 {
@@ -877,6 +888,18 @@ static void process_mouse(struct mouse_event *ev)
     }
 
     move_window(mouse_queue_ent, ev->x_change, ev->y_change, buffer);
+
+    if (right_click_is_held && !ev->buttons.right_click && focused != NULL)
+    {
+        resize_window(focused, mouse->x - x_resize_start,
+                      mouse->y - y_resize_start);
+    }
+    else if (!right_click_is_held && ev->buttons.right_click)
+    {
+        x_resize_start = mouse->x;
+        y_resize_start = mouse->y;
+    }
+    right_click_is_held = ev->buttons.right_click;
 
     if (ev->buttons.left_click)
     {
@@ -956,13 +979,25 @@ static void process_mouse(struct mouse_event *ev)
 
 static void process_keyboard_char(char c)
 {
-    if (c == 'a' && focused != NULL)
-    {
-        /* resize_window(focused, 10, 0); */
-        resize_window(focused, 0, 10);
-    }
     if (focused != NULL)
     {
+        switch (c)
+        {
+        case 'h':
+            resize_window(focused, 10, 10);
+            break;
+        case 'l':
+            resize_window(focused, 10, 0);
+            break;
+        case 'j':
+            resize_window(focused, 0, 10);
+            break;
+        case 'k':
+            resize_window(focused, 0, -10);
+            break;
+        default:;
+        }
+
         if (focused->nonblock_info.is_nonblock)
         {
             focused->nonblock_info.current_key = c;
@@ -1195,6 +1230,7 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     execv("/bin/edit", (char *[]){"edit", "one", NULL});
+    /* execv("/bin/sokoban", (char *[]){"", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
