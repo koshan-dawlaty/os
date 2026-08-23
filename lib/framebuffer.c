@@ -103,15 +103,8 @@ void framebuffer_resize(size_t old_width, size_t old_height, size_t new_width,
     size_t copy_size = MIN(new_width, old_width) * 4;
     size_t min_height = MIN(new_height, old_height);
 
-    logd("resizing to h:%d w:%d", new_height, new_width);
-
-    logd("new_buffer:%p, old:%p", new_buffer, old_buffer);
-    logd("height:%d", min_height);
-
     for (size_t y = 0; y < min_height; y++)
     {
-
-        /* logd("in resize y is:%d", y); */
 
         size_t new_offset = y * new_pitch;
         size_t old_offset = y * old_pitch;

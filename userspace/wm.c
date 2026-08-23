@@ -571,7 +571,6 @@ void process_connection()
         {
         case WM_RES_RENDER:
         {
-            logd("rendering, %d, %d", WIN_W(w), WIN_H(w));
 
             for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_ROWS); y++)
             {
@@ -583,7 +582,6 @@ void process_connection()
                        conn->buffer + client_offset, WIN_W(w) * 4);
                 /* logd("%d", y); */
             }
-            logd("done copying");
 
             update_area_up(WIN_RECT(w), buffer);
             /* draw_window(buffer, ent->win); */
@@ -817,7 +815,8 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     logd("new addr is %p", new_addr);
     server_send_message(ent->conn, &message);
 
-    framebuffer_resize(ent->win->fb.width, ent->win->fb.height, new_width,
+    framebuffer_resize(ent->win->fb.width,
+                       ent->win->fb.height - WINDOW_DECORATION_ROWS, new_width,
                        new_height, ent->conn->buffer, new_addr);
     ent->conn->buffer = new_addr;
     /* ent->win->fb.buffer = new_addr; */
@@ -983,18 +982,18 @@ static void process_keyboard_char(char c)
     {
         switch (c)
         {
-        case 'h':
-            resize_window(focused, 10, 10);
-            break;
-        case 'l':
-            resize_window(focused, 10, 0);
-            break;
-        case 'j':
-            resize_window(focused, 0, 10);
-            break;
-        case 'k':
-            resize_window(focused, 0, -10);
-            break;
+        /* case 'h': */
+        /*     resize_window(focused, 10, 10); */
+        /*     break; */
+        /* case 'l': */
+        /*     resize_window(focused, 0, 100); */
+        /*     break; */
+        /* case 'j': */
+        /*     resize_window(focused, 0, 10); */
+        /*     break; */
+        /* case 'k': */
+        /*     resize_window(focused, 0, -10); */
+        /*     break; */
         default:;
         }
 
