@@ -260,6 +260,9 @@ int main()
         case WM_MESSAGE_KEY:;
 
             break;
+        case WM_MESSAGE_RESIZE:;
+            root->fb = client.fb;
+            break;
         }
     }
 

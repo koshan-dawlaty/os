@@ -394,13 +394,13 @@ int main(int argc, char **argv)
         {
         case WM_MESSAGE_RESIZE:
         {
-            framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-                                  client.fb.height, 0);
+            /* framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, */
+            /*                       client.fb.height, 0); */
 
             buffer.num_lines = client.fb.height / font->header.height;
 
-            editor_buffer_redraw(&buffer, &client.fb, 0, 0);
-            wm_render(client);
+            /* editor_buffer_redraw(&buffer, &client.fb, 0, 0); */
+            /* wm_render(client); */
             break;
         }
         case WM_MESSAGE_KEY:
