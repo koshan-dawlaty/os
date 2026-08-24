@@ -571,7 +571,6 @@ void process_connection()
         {
         case WM_RES_RENDER:
         {
-            logd("rendering");
 
             for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_ROWS); y++)
             {
@@ -1200,9 +1199,9 @@ int main()
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    execv("/bin/edit", (char *[]){"edit", "one", NULL});
+    /* execv("/bin/edit", (char *[]){"edit", "one", NULL}); */
     /* execv("/bin/sokoban", (char *[]){"", NULL}); */
-    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    execv("/bin/explore", (char *[]){"explore", NULL});
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */

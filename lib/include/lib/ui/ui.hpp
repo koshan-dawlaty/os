@@ -191,8 +191,6 @@ class HorizontalLineLayout : public LineLayout
 class ScrollLayout : public LineLayout
 {
   private:
-    size_t max_elements;
-
     struct
     {
         View **items;
@@ -210,6 +208,8 @@ class ScrollLayout : public LineLayout
     bool handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                              size_t abs_y, struct mouse_event *ev) override;
 
+    size_t max_elements;
+    void set_max_elements(size_t max);
     void clear_children() override;
 
     /* debugging */

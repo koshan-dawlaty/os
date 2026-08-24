@@ -356,3 +356,29 @@ bool ScrollLayout::handle_mouse_action(size_t click_x, size_t click_y,
     // struct rect r = {0, 0, (int)screen->get_width(),
     // (int)screen->get_height()}; screen->update_area(r);
 }
+
+void ScrollLayout::set_max_elements(size_t new_max)
+{
+    if (new_max > max_elements)
+    {
+        for (size_t i = 0; i < new_max - max_elements; i++)
+        {
+            list_push_end(&all_elements.items[scroll_offset + i]->list,
+                          &children);
+        }
+        scroll_offset += new_max - max_elements;
+        render();
+        redraw();
+    }
+    else if (new_max < max_elements)
+    {
+        for (size_t i = 0; i < max_elements - new_max; i++)
+        {
+            list_pop_end(&children);
+        }
+        scroll_offset -= max_elements - new_max;
+        render();
+        redraw();
+    }
+    max_elements = new_max;
+}
