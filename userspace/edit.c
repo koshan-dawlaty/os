@@ -311,28 +311,9 @@ void handle_args(int argc, char **argv, struct editor_buffer *buffer)
             char *buf = malloc(read_size);
             bzero(buf, read_size);
             size_t bytes_read = 0;
-            bool is_first_read = true;
             do
             {
                 bytes_read = fread(buf, read_size, 1, buffer->file);
-                if (is_first_read)
-                {
-                    /* TODO: maybe put this check in another file? */
-                    if ((buf[0] == 0x7F && buf[1] == 'E' && buf[2] == 'L' &&
-                         buf[3] == 'F') ||
-                        /* this is for the tga image format, it will probably
-                           cause issues in the future */
-                        (buf[0] == 0 && buf[1] == 0))
-                    {
-                        logw("tried to open file %s that has invalid type",
-                             argv[1]);
-                        /* this would result in the binary being overwritten if
-                         * the file is written to, which is maybe what the user
-                         * wants */
-                        goto free_buffer;
-                    }
-                    is_first_read = false;
-                }
                 for (size_t i = 0; i < bytes_read; i++)
                 {
                     insert_char(buf[i], buffer);

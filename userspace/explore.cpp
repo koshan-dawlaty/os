@@ -106,9 +106,9 @@ void get_dir_layout(DIR *d)
             button->set_onclick(
                 [=](ButtonElement *) -> void
                 {
-                    logd("normal file %s", e->d_name);
-                    char *args[] = {"edit", e->d_name, NULL};
-                    execv("/bin/edit", args);
+                    logi("normal file %s", e->d_name);
+                    char *args[] = {"opener", e->d_name, NULL};
+                    execv("/bin/opener", args);
                 });
             break;
         case S_IFDIR:
