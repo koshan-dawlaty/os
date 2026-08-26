@@ -556,6 +556,31 @@ void server_send_message(struct wm_connection *conn, struct wm_message *message)
     send(conn->client_key_socket, message->message_data, message->header.len);
 }
 
+static void window_render_from_buffer(struct window_queue_entry *ent)
+{
+    struct window *w = ent->win;
+    for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_TOP_HEIGHT -
+                            WINDOW_DECORATION_BOTTOM_HEIGHT);
+         y++)
+    {
+        size_t server_offset =
+            (y + WINDOW_DECORATION_TOP_HEIGHT) * WIN_W(w) * 4 +
+            (WINDOW_DECORATION_LEFT_WIDTH * 4);
+        size_t client_offset = y *
+                               (WIN_W(w) - WINDOW_DECORATION_LEFT_WIDTH -
+                                WINDOW_DECORATION_RIGHT_WIDTH) *
+                               4;
+
+        memcpy(w->fb.buffer + server_offset, ent->conn->buffer + client_offset,
+               (WIN_W(w) - WINDOW_DECORATION_RIGHT_WIDTH -
+                WINDOW_DECORATION_LEFT_WIDTH) *
+                   4);
+        /* logd("%d", y); */
+    }
+
+    update_area_up(WIN_RECT(w), buffer);
+}
+
 void process_connection()
 {
     int socket;
@@ -619,28 +644,8 @@ void process_connection()
         case WM_RES_RENDER:
         {
 
-            for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_TOP_HEIGHT -
-                                    WINDOW_DECORATION_BOTTOM_HEIGHT);
-                 y++)
-            {
-                size_t server_offset =
-                    (y + WINDOW_DECORATION_TOP_HEIGHT) * WIN_W(w) * 4 +
-                    (WINDOW_DECORATION_LEFT_WIDTH * 4);
-                size_t client_offset =
-                    y *
-                    (WIN_W(w) - WINDOW_DECORATION_LEFT_WIDTH -
-                     WINDOW_DECORATION_RIGHT_WIDTH) *
-                    4;
+            window_render_from_buffer(ent);
 
-                memcpy(w->fb.buffer + server_offset,
-                       conn->buffer + client_offset,
-                       (WIN_W(w) - WINDOW_DECORATION_RIGHT_WIDTH -
-                        WINDOW_DECORATION_LEFT_WIDTH) *
-                           4);
-                /* logd("%d", y); */
-            }
-
-            update_area_up(WIN_RECT(w), buffer);
             /* draw_window(buffer, ent->win); */
 
             int ack_code = 3;
@@ -806,25 +811,42 @@ disconnect:;
     exit(1);
 }
 
+static size_t win_get_buffer_width(struct window *win)
+{
+    /* breaks for things like the mouse */
+    return win->fb.width - WINDOW_DECORATION_LEFT_WIDTH -
+           WINDOW_DECORATION_RIGHT_WIDTH;
+}
+
+static size_t win_get_buffer_height(struct window *win)
+{
+    /* breaks for things like the mouse */
+    return win->fb.height - WINDOW_DECORATION_BOTTOM_HEIGHT -
+           WINDOW_DECORATION_TOP_HEIGHT;
+}
+
 static int resize_window(struct window_queue_entry *ent, int width_diff,
                          int height_diff)
 {
     logd("%d", width_diff);
-    size_t old_height = WIN_H(ent->win) - WINDOW_DECORATION_TOP_HEIGHT;
+    size_t old_height = WIN_H(ent->win);
     size_t old_width = WIN_W(ent->win);
 
     size_t new_height = old_height + height_diff;
     size_t new_width = old_width + width_diff;
 
-    size_t old_size =
-        old_width * (old_height + WINDOW_DECORATION_TOP_HEIGHT) * 4;
-    size_t new_size =
-        new_width * (new_height + WINDOW_DECORATION_TOP_HEIGHT) * 4;
+    size_t old_size = old_width * (old_height) * 4;
+    size_t new_size = new_width * (new_height) * 4;
+
+    size_t new_buffer_width = new_width - WINDOW_DECORATION_LEFT_WIDTH -
+                              WINDOW_DECORATION_RIGHT_WIDTH;
+    size_t new_buffer_height = new_height - WINDOW_DECORATION_TOP_HEIGHT -
+                               WINDOW_DECORATION_BOTTOM_HEIGHT;
 
     logd("old w:%d h:%d new w:%d h:%d", old_width, old_height, new_width,
          new_height);
 
-    struct wm_message_resize resize = {new_width, new_height};
+    struct wm_message_resize resize = {new_buffer_width, new_buffer_height};
     struct wm_message message = {
         WM_MESSAGE_RESIZE_HEADER,
         .message_data = &resize,
@@ -838,14 +860,15 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     logd("new addr is %p", new_addr);
     server_send_message(ent->conn, &message);
 
-    framebuffer_resize(ent->win->fb.width,
-                       ent->win->fb.height - WINDOW_DECORATION_TOP_HEIGHT,
-                       new_width, new_height, ent->conn->buffer, new_addr);
+    framebuffer_resize(win_get_buffer_width(ent->win),
+                       win_get_buffer_height(ent->win), new_buffer_width,
+                       new_buffer_height, ent->conn->buffer, new_addr);
 
     ent->conn->buffer = new_addr;
     /* ent->win->fb.buffer = new_addr; */
-    ent->win->fb.buffer = realloc(ent->win->fb.buffer, new_size);
-    ent->win->fb.height = new_height + WINDOW_DECORATION_TOP_HEIGHT;
+    ent->win->fb.buffer =
+        realloc(ent->win->fb.buffer, new_height * new_width * 4);
+    ent->win->fb.height = new_height;
     ent->win->fb.width = new_width;
     ent->win->fb.pitch = new_width * 4;
 
@@ -866,17 +889,7 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     }
     logd("got answer");
 
-    for (size_t y = 0; y < (WIN_H(ent->win) - WINDOW_DECORATION_TOP_HEIGHT);
-         y++)
-    {
-        size_t server_offset =
-            (y + WINDOW_DECORATION_TOP_HEIGHT) * WIN_W(ent->win) * 4;
-        size_t client_offset = y * WIN_W(ent->win) * 4;
-
-        memcpy(ent->win->fb.buffer + server_offset,
-               ent->conn->buffer + client_offset, WIN_W(ent->win) * 4);
-        /* logd("%d", y); */
-    }
+    window_render_from_buffer(ent);
 
     /* framebuffer_draw_rect(&ent->win->fb, 0, 0, ent->win->fb.width, */
     /*                       ent->win->fb.height, 0xFF); */
@@ -888,7 +901,7 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
             .y = WIN_Y(ent->win),
 
             .w = MAX(old_width, new_width),
-            .h = MAX(old_height, new_height) + WINDOW_DECORATION_TOP_HEIGHT,
+            .h = MAX(old_height, new_height),
 
         },
         buffer);
@@ -1023,10 +1036,10 @@ static void process_keyboard_char(char c)
         /* case 'h': */
         /*     resize_window(focused, 10, 10); */
         /*     break; */
-        /* case 'l': */
-        /*     resize_window(focused, 100, 0); */
-        /*     return; */
-        /*     break; */
+        case 'l':
+            /* resize_window(focused, -100, 0); */
+            /* return; */
+            break;
         /* case 'j': */
         /*     resize_window(focused, 0, 10); */
         /*     break; */

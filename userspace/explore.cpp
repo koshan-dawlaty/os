@@ -258,12 +258,14 @@ int main()
             break;
         case WM_MESSAGE_RESIZE:;
             root->fb = client.fb;
-            entries_layout->set_max_elements(entries_layout->max_elements + 1);
+            // entries_layout->set_max_elements(entries_layout->max_elements +
+            // 1);
+
             root->render();
             root->redraw();
             // framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
             //                       client.fb.height, 0);
-            wm_render(client);
+            // wm_render(client);
 
             break;
         }
