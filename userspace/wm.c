@@ -338,11 +338,11 @@ static void draw_window_decoration(struct window *win, bool focused)
     u32 color;
     if (focused)
     {
-        color = 0x3933e8;
+        color = 0x0054ff;
     }
     else
     {
-        color = 0x28249e;
+        color = 0x2a4170;
     }
     framebuffer_draw_rect(&win->fb, WINDOW_DECORATION_LEFT_WIDTH, 0,
                           win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
@@ -379,7 +379,8 @@ static void draw_window_decoration(struct window *win, bool focused)
     /*     framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y); */
     /*     x++; */
     /* } */
-    update_area_up(RECT_INIT(WINDOW_DECORATION_LEFT_WIDTH, 0,
+    update_area_up(RECT_INIT(WIN_X(win) + WINDOW_DECORATION_LEFT_WIDTH,
+                             WIN_Y(win),
                              win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
                                  WINDOW_DECORATION_LEFT_WIDTH,
                              WINDOW_DECORATION_TOP_HEIGHT),
@@ -387,20 +388,24 @@ static void draw_window_decoration(struct window *win, bool focused)
     update_area_up(RECT_INIT(WIN_X(win), WIN_Y(win),
                              WINDOW_DECORATION_LEFT_WIDTH, win->fb.height),
                    buffer);
+
     update_area_up(
         RECT_INIT(WIN_X(win) + win->fb.width + WINDOW_DECORATION_LEFT_WIDTH,
                   WIN_Y(win), WINDOW_DECORATION_RIGHT_WIDTH, win->fb.height),
         buffer);
+
     update_area_up(
         RECT_INIT(WIN_X(win) + win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH,
                   WIN_Y(win), WINDOW_DECORATION_RIGHT_WIDTH, win->fb.height),
         buffer);
-    update_area_up(RECT_INIT(WINDOW_DECORATION_LEFT_WIDTH,
-                             win->fb.height - WINDOW_DECORATION_BOTTOM_HEIGHT,
-                             win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
-                                 WINDOW_DECORATION_LEFT_WIDTH,
-                             WINDOW_DECORATION_BOTTOM_HEIGHT),
-                   buffer);
+
+    update_area_up(
+        RECT_INIT(WIN_X(win) + WINDOW_DECORATION_LEFT_WIDTH,
+                  WIN_Y(win) + win->fb.height - WINDOW_DECORATION_BOTTOM_HEIGHT,
+                  win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
+                      WINDOW_DECORATION_LEFT_WIDTH,
+                  WINDOW_DECORATION_BOTTOM_HEIGHT),
+        buffer);
 }
 
 struct window_queue_entry *focused = NULL;
