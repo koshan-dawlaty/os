@@ -658,7 +658,7 @@ void process_connection()
             size_t real_h = WIN_H(w) - WINDOW_DECORATION_TOP_HEIGHT -
                             WINDOW_DECORATION_BOTTOM_HEIGHT;
 
-            if (r.x > real_w || r.y > WIN_H(w))
+            if (r.x > real_w || r.y > real_h)
             {
                 break;
             }
@@ -678,24 +678,22 @@ void process_connection()
             //                      r.h, 0xFFFF00);
 
             /* logd("%d", r.x); */
-            for (size_t y = r.y + WINDOW_DECORATION_TOP_HEIGHT;
-                 y < r.h + r.y + WINDOW_DECORATION_TOP_HEIGHT; y++)
+            for (size_t y = r.y; y < r.h + r.y; y++)
             {
                 size_t server_offset =
-                    y * WIN_W(w) * 4 +
+                    ((y + WINDOW_DECORATION_TOP_HEIGHT) * WIN_W(w) * 4) +
                     ((r.x + WINDOW_DECORATION_LEFT_WIDTH) * 4);
-                size_t client_offset =
-                    (y - WINDOW_DECORATION_TOP_HEIGHT) * WIN_W(w) * 4 +
-                    (r.x * 4);
+                size_t client_offset = (y * real_w * 4) + (r.x * 4);
 
                 memcpy(w->fb.buffer + server_offset,
                        conn->buffer + client_offset, (r.w) * 4);
                 /* memset(w->fb.buffer + server_offset, 0xFF, (r.w) * 4); */
             }
 
-            r.y += WINDOW_DECORATION_TOP_HEIGHT;
-            struct rect update_area = {r.x + WIN_X(w), r.y + WIN_Y(w), r.w,
-                                       r.h};
+            /* r.y += WINDOW_DECORATION_TOP_HEIGHT; */
+            struct rect update_area = {
+                r.x + WIN_X(w) + WINDOW_DECORATION_LEFT_WIDTH,
+                r.y + WIN_Y(w) + WINDOW_DECORATION_TOP_HEIGHT, r.w, r.h};
             update_area_up(update_area, buffer);
             /* update_area_up(WIN_RECT(w), buffer); */
 
@@ -1256,8 +1254,8 @@ int main()
     /* } */
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    execv("/bin/term", (char *[]){"term", NULL});
-    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    /* execv("/bin/term", (char *[]){"term", NULL}); */
+    execv("/bin/explore", (char *[]){"explore", NULL});
     /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
