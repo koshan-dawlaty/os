@@ -326,43 +326,81 @@ void move_window_step(struct window_queue_entry *ent, int x, int y,
     }
 }
 
-#define WINDOW_DECORATION_ROWS 14
-/* #define WINDOW_CLOSE_WIDTH 15 */
+#define WINDOW_DECORATION_TOP_HEIGHT 14
+#define WINDOW_DECORATION_BOTTOM_HEIGHT 4
+#define WINDOW_DECORATION_LEFT_WIDTH 4
+#define WINDOW_DECORATION_RIGHT_WIDTH 4
 #define WINDOW_CLOSE_WIDTH 20
 #define WINDOW_CLOSE_OFFSET 1
 
 static void draw_window_decoration(struct window *win, bool focused)
 {
+    u32 color;
     if (focused)
     {
-        framebuffer_draw_rect(&win->fb, 0, 0, win->fb.width,
-                              WINDOW_DECORATION_ROWS, 0x3933e8);
+        color = 0x3933e8;
     }
     else
     {
-        framebuffer_draw_rect(&win->fb, 0, 0, win->fb.width,
-                              WINDOW_DECORATION_ROWS, 0x28249e);
+        color = 0x28249e;
     }
+    framebuffer_draw_rect(&win->fb, WINDOW_DECORATION_LEFT_WIDTH, 0,
+                          win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
+                              WINDOW_DECORATION_LEFT_WIDTH,
+                          WINDOW_DECORATION_TOP_HEIGHT, color);
+    framebuffer_draw_rect(&win->fb, 0, 0, WINDOW_DECORATION_LEFT_WIDTH,
+                          win->fb.height, color);
 
-    framebuffer_draw_char(&win->fb, font, 'X', WINDOW_CLOSE_OFFSET, 0);
+    framebuffer_draw_rect(&win->fb,
+                          win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH, 0,
+                          WINDOW_DECORATION_RIGHT_WIDTH, win->fb.height, color);
+
+    framebuffer_draw_rect(&win->fb, WINDOW_DECORATION_LEFT_WIDTH,
+                          win->fb.height - WINDOW_DECORATION_BOTTOM_HEIGHT,
+                          win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
+                              WINDOW_DECORATION_LEFT_WIDTH,
+                          WINDOW_DECORATION_BOTTOM_HEIGHT, color);
+
+    framebuffer_draw_char(&win->fb, font, 'X',
+                          WINDOW_CLOSE_OFFSET + WINDOW_DECORATION_LEFT_WIDTH,
+                          0);
 
     /* draw 'x' pattern for closing a window */
     /* for (size_t y = 0, x = 0; */
-    /*      y < WINDOW_DECORATION_ROWS && x < WINDOW_CLOSE_WIDTH; y++) */
+    /*      y < WINDOW_DECORATION_TOP_HEIGHT && x < WINDOW_CLOSE_WIDTH; y++) */
     /* { */
     /*     framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y); */
     /*     x++; */
     /* } */
 
-    /* for (size_t y = WINDOW_DECORATION_ROWS, x = 0; */
+    /* for (size_t y = WINDOW_DECORATION_TOP_HEIGHT, x = 0; */
     /*      y >= 0 && x < WINDOW_CLOSE_WIDTH + 1; y--) */
     /* { */
     /*     framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y); */
     /*     x++; */
     /* } */
+    update_area_up(RECT_INIT(WINDOW_DECORATION_LEFT_WIDTH, 0,
+                             win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
+                                 WINDOW_DECORATION_LEFT_WIDTH,
+                             WINDOW_DECORATION_TOP_HEIGHT),
+                   buffer);
+    update_area_up(RECT_INIT(WIN_X(win), WIN_Y(win),
+                             WINDOW_DECORATION_LEFT_WIDTH, win->fb.height),
+                   buffer);
     update_area_up(
-        RECT_INIT(WIN_X(win), WIN_Y(win), WIN_W(win), WINDOW_DECORATION_ROWS),
+        RECT_INIT(WIN_X(win) + win->fb.width + WINDOW_DECORATION_LEFT_WIDTH,
+                  WIN_Y(win), WINDOW_DECORATION_RIGHT_WIDTH, win->fb.height),
         buffer);
+    update_area_up(
+        RECT_INIT(WIN_X(win) + win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH,
+                  WIN_Y(win), WINDOW_DECORATION_RIGHT_WIDTH, win->fb.height),
+        buffer);
+    update_area_up(RECT_INIT(WINDOW_DECORATION_LEFT_WIDTH,
+                             win->fb.height - WINDOW_DECORATION_BOTTOM_HEIGHT,
+                             win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
+                                 WINDOW_DECORATION_LEFT_WIDTH,
+                             WINDOW_DECORATION_BOTTOM_HEIGHT),
+                   buffer);
 }
 
 struct window_queue_entry *focused = NULL;
@@ -415,10 +453,14 @@ struct window *new_client_window(size_t x, size_t y, size_t w, size_t h)
     out->y = y;
 
     /* allocate extra space for decorations */
-    size_t height = h + WINDOW_DECORATION_ROWS;
+    size_t height =
+        h + WINDOW_DECORATION_TOP_HEIGHT + WINDOW_DECORATION_BOTTOM_HEIGHT;
+    size_t width =
+        w + WINDOW_DECORATION_LEFT_WIDTH + WINDOW_DECORATION_RIGHT_WIDTH;
     /* the shared memory buffer could be used here, but the way it works
      * now, it will break window decorations */
-    out->fb = FRAMEBUFFER_INIT(w, height, w * 4, 32, 4, malloc(w * height * 4));
+    out->fb = FRAMEBUFFER_INIT(width, height, width * 4, 32, 4,
+                               malloc(width * height * 4));
 
     return out;
 }
@@ -572,14 +614,24 @@ void process_connection()
         case WM_RES_RENDER:
         {
 
-            for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_ROWS); y++)
+            for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_TOP_HEIGHT -
+                                    WINDOW_DECORATION_BOTTOM_HEIGHT);
+                 y++)
             {
                 size_t server_offset =
-                    (y + WINDOW_DECORATION_ROWS) * WIN_W(w) * 4;
-                size_t client_offset = y * WIN_W(w) * 4;
+                    (y + WINDOW_DECORATION_TOP_HEIGHT) * WIN_W(w) * 4 +
+                    (WINDOW_DECORATION_LEFT_WIDTH * 4);
+                size_t client_offset =
+                    y *
+                    (WIN_W(w) - WINDOW_DECORATION_LEFT_WIDTH -
+                     WINDOW_DECORATION_RIGHT_WIDTH) *
+                    4;
 
                 memcpy(w->fb.buffer + server_offset,
-                       conn->buffer + client_offset, WIN_W(w) * 4);
+                       conn->buffer + client_offset,
+                       (WIN_W(w) - WINDOW_DECORATION_RIGHT_WIDTH -
+                        WINDOW_DECORATION_LEFT_WIDTH) *
+                           4);
                 /* logd("%d", y); */
             }
 
@@ -601,18 +653,23 @@ void process_connection()
             struct rect r = {};
             recv(socket, &r, sizeof(struct rect));
 
-            if (r.x > WIN_W(w) || r.y > WIN_H(w))
+            size_t real_w = WIN_W(w) - WINDOW_DECORATION_LEFT_WIDTH -
+                            WINDOW_DECORATION_RIGHT_WIDTH;
+            size_t real_h = WIN_H(w) - WINDOW_DECORATION_TOP_HEIGHT -
+                            WINDOW_DECORATION_BOTTOM_HEIGHT;
+
+            if (r.x > real_w || r.y > WIN_H(w))
             {
                 break;
             }
 
-            if (WIN_W(w) < r.x + r.w)
+            if (real_w < r.x + r.w)
             {
-                r.w = WIN_W(w) - r.x;
+                r.w = real_w - r.x;
             }
-            if (WIN_H(w) - WINDOW_DECORATION_ROWS < r.y + r.h)
+            if (real_h < r.y + r.h)
             {
-                r.h = (WIN_H(w) - WINDOW_DECORATION_ROWS) - r.y;
+                r.h = real_h - r.y;
             }
             /* logd("%d, %d %d, %d", r.x, r.y, r.w, r.h); */
 
@@ -621,19 +678,22 @@ void process_connection()
             //                      r.h, 0xFFFF00);
 
             /* logd("%d", r.x); */
-            for (size_t y = r.y + WINDOW_DECORATION_ROWS;
-                 y < r.h + r.y + WINDOW_DECORATION_ROWS; y++)
+            for (size_t y = r.y + WINDOW_DECORATION_TOP_HEIGHT;
+                 y < r.h + r.y + WINDOW_DECORATION_TOP_HEIGHT; y++)
             {
-                size_t server_offset = y * WIN_W(w) * 4 + (r.x * 4);
+                size_t server_offset =
+                    y * WIN_W(w) * 4 +
+                    ((r.x + WINDOW_DECORATION_LEFT_WIDTH) * 4);
                 size_t client_offset =
-                    (y - WINDOW_DECORATION_ROWS) * WIN_W(w) * 4 + (r.x * 4);
+                    (y - WINDOW_DECORATION_TOP_HEIGHT) * WIN_W(w) * 4 +
+                    (r.x * 4);
 
                 memcpy(w->fb.buffer + server_offset,
                        conn->buffer + client_offset, (r.w) * 4);
                 /* memset(w->fb.buffer + server_offset, 0xFF, (r.w) * 4); */
             }
 
-            r.y += WINDOW_DECORATION_ROWS;
+            r.y += WINDOW_DECORATION_TOP_HEIGHT;
             struct rect update_area = {r.x + WIN_X(w), r.y + WIN_Y(w), r.w,
                                        r.h};
             update_area_up(update_area, buffer);
@@ -747,14 +807,16 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
                          int height_diff)
 {
     logd("%d", width_diff);
-    size_t old_height = WIN_H(ent->win) - WINDOW_DECORATION_ROWS;
+    size_t old_height = WIN_H(ent->win) - WINDOW_DECORATION_TOP_HEIGHT;
     size_t old_width = WIN_W(ent->win);
 
     size_t new_height = old_height + height_diff;
     size_t new_width = old_width + width_diff;
 
-    size_t old_size = old_width * (old_height + WINDOW_DECORATION_ROWS) * 4;
-    size_t new_size = new_width * (new_height + WINDOW_DECORATION_ROWS) * 4;
+    size_t old_size =
+        old_width * (old_height + WINDOW_DECORATION_TOP_HEIGHT) * 4;
+    size_t new_size =
+        new_width * (new_height + WINDOW_DECORATION_TOP_HEIGHT) * 4;
 
     logd("old w:%d h:%d new w:%d h:%d", old_width, old_height, new_width,
          new_height);
@@ -774,13 +836,13 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     server_send_message(ent->conn, &message);
 
     framebuffer_resize(ent->win->fb.width,
-                       ent->win->fb.height - WINDOW_DECORATION_ROWS, new_width,
-                       new_height, ent->conn->buffer, new_addr);
+                       ent->win->fb.height - WINDOW_DECORATION_TOP_HEIGHT,
+                       new_width, new_height, ent->conn->buffer, new_addr);
 
     ent->conn->buffer = new_addr;
     /* ent->win->fb.buffer = new_addr; */
     ent->win->fb.buffer = realloc(ent->win->fb.buffer, new_size);
-    ent->win->fb.height = new_height + WINDOW_DECORATION_ROWS;
+    ent->win->fb.height = new_height + WINDOW_DECORATION_TOP_HEIGHT;
     ent->win->fb.width = new_width;
     ent->win->fb.pitch = new_width * 4;
 
@@ -801,10 +863,11 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     }
     logd("got answer");
 
-    for (size_t y = 0; y < (WIN_H(ent->win) - WINDOW_DECORATION_ROWS); y++)
+    for (size_t y = 0; y < (WIN_H(ent->win) - WINDOW_DECORATION_TOP_HEIGHT);
+         y++)
     {
         size_t server_offset =
-            (y + WINDOW_DECORATION_ROWS) * WIN_W(ent->win) * 4;
+            (y + WINDOW_DECORATION_TOP_HEIGHT) * WIN_W(ent->win) * 4;
         size_t client_offset = y * WIN_W(ent->win) * 4;
 
         memcpy(ent->win->fb.buffer + server_offset,
@@ -822,7 +885,7 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
             .y = WIN_Y(ent->win),
 
             .w = MAX(old_width, new_width),
-            .h = MAX(old_height, new_height) + WINDOW_DECORATION_ROWS,
+            .h = MAX(old_height, new_height) + WINDOW_DECORATION_TOP_HEIGHT,
 
         },
         buffer);
@@ -928,9 +991,11 @@ static void process_mouse(struct mouse_event *ev)
             struct window *win = new_focus->win;
 
             if (WIN_X(mouse) > WIN_X(win) &&
-                WIN_X(mouse) < WIN_X(win) + WINDOW_CLOSE_WIDTH &&
+                WIN_X(mouse) < WIN_X(win) + WINDOW_CLOSE_WIDTH +
+                                   WINDOW_DECORATION_LEFT_WIDTH +
+                                   WINDOW_CLOSE_OFFSET &&
                 WIN_Y(mouse) > WIN_Y(win) &&
-                WIN_Y(mouse) < WIN_Y(win) + WINDOW_DECORATION_ROWS)
+                WIN_Y(mouse) < WIN_Y(win) + WINDOW_DECORATION_TOP_HEIGHT)
             {
                 close(new_focus->conn->client_socket);
             }
@@ -1191,7 +1256,7 @@ int main()
     /* } */
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
-    /* execv("/bin/term", (char *[]){"term", NULL}); */
+    execv("/bin/term", (char *[]){"term", NULL});
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
@@ -1201,7 +1266,7 @@ int main()
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", "one", NULL}); */
     /* execv("/bin/sokoban", (char *[]){"", NULL}); */
-    execv("/bin/explore", (char *[]){"explore", NULL});
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
     /* execv("/bin/edit", (char *[]){"edit", NULL}); */
