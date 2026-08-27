@@ -1,4 +1,3 @@
-#include "unistd.h"
 #include <complex.h>
 #include <init.h>
 #include <lib/array.h>
@@ -8,7 +7,7 @@
 #include <lib/log.h>
 #include <lib/utils.h>
 #include <sys/syscall.h>
-#include <syscall.h>
+#include <unistd.h>
 #include <utils.h>
 
 extern int syscall_wrapper_asm(ptr_t ax, ptr_t bx, ptr_t cx, ptr_t dx, ptr_t si,
@@ -28,6 +27,7 @@ struct codegen_value
         CODEGEN_VALUE_REGISTER,
         CODEGEN_VALUE_MEMORY,
         CODEGEN_VALUE_IMMEDIATE,
+        CODEGEN_VALUE_STACK,
     } type;
     union
     {
@@ -54,6 +54,18 @@ u8 get_modrm_bytes(u8 mod, u8 rm)
     return 0b11000000 | (mod & 0b111) << 3 | BYTE_AS_RM(rm);
 }
 
+u8 get_modrm_rm(u8 mod, struct codegen_value *rm)
+{
+    if (rm->type == CODEGEN_VALUE_STACK)
+    {
+        return 0b01000000 | BYTE_AS_RM(0b100) | mod;
+    }
+    else
+    {
+        return 0b11000000 | (mod & 0b111) << 3 | BYTE_AS_RM(rm->reg);
+    }
+}
+
 u8 get_modrm(struct codegen_value *reg, struct codegen_value *rm)
 {
     return get_modrm_bytes(rm->reg, reg->reg);
@@ -61,6 +73,7 @@ u8 get_modrm(struct codegen_value *reg, struct codegen_value *rm)
 
 /* a value for rex that will never be valid */
 #define INVALID_REX 0
+#define INVALID_SIB 0x20
 
 #define REX_PATTERN 0b01000000
 
@@ -68,11 +81,12 @@ static u8 get_rex(struct codegen_value *mod_reg, struct codegen_value *rm_reg)
 {
     u8 out = REX_PATTERN;
 
-    if (REG_IS_EXTENDED(mod_reg->reg))
+    if (mod_reg->type == CODEGEN_VALUE_REGISTER &&
+        REG_IS_EXTENDED(mod_reg->reg))
     {
         out |= 0b1;
     }
-    if (REG_IS_EXTENDED(rm_reg->reg))
+    if (rm_reg->type == CODEGEN_VALUE_REGISTER && REG_IS_EXTENDED(rm_reg->reg))
     {
         out |= 0b100;
     }
@@ -91,6 +105,16 @@ void generate_opcode_bytes(struct bytecode_array *code, u8 rex, u8 opcode,
     array_macro_append_v(code, opcode, mod);
 }
 
+/* memory should be the rm value in the modrm byte */
+void generate_sib_byte(struct bytecode_array *code,
+                       struct codegen_value *memory)
+{
+    if (memory->type == CODEGEN_VALUE_STACK)
+    {
+        array_macro_append_v(code, 0b00100100, memory->value);
+    }
+}
+
 /* FIXME: the name should represent that this does not work for every opcode
  */
 void generate_opcode(struct bytecode_array *code, u8 opcode,
@@ -101,6 +125,7 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
     generate_opcode_bytes(code, get_rex(dest, src), opcode,
                           get_modrm(dest, src));
 
+    generate_sib_byte(code, dest);
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         array_macro_append_v(code, src->value, 0, 0, 0);
@@ -112,6 +137,8 @@ void generate_opcode_modrm(struct bytecode_array *code, u8 opcode, u8 modrm,
                            struct codegen_value *src)
 {
     generate_opcode_bytes(code, get_rex(dest, src), opcode, modrm);
+
+    generate_sib_byte(code, dest);
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         array_macro_append_v(code, src->value, 0, 0, 0);
@@ -122,7 +149,9 @@ void generate_opcode_mod(struct bytecode_array *code, u8 opcode, u8 mod,
                          struct codegen_value *dest, struct codegen_value *src)
 {
     generate_opcode_bytes(code, get_rex(dest, src), opcode,
-                          get_modrm_bytes(mod, dest->reg));
+                          get_modrm_rm(mod, dest));
+
+    generate_sib_byte(code, dest);
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         array_macro_append_v(code, src->value, 0, 0, 0);
@@ -159,7 +188,7 @@ void generate_sub(struct bytecode_array *code, struct codegen_value *dest,
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         logd("sub on:%d", dest->reg);
-        generate_opcode_modrm(code, 0x81, 0b11101000 | BYTE_AS_RM(dest->reg),
+        generate_opcode_modrm(code, 0x81, 0b01101000 | BYTE_AS_RM(dest->reg),
                               dest, src);
     }
     else
@@ -402,10 +431,11 @@ int main()
                  &dest);
     array_macro_append_v(&code, 0xc3);
 
-    /* code = (struct bytecode_array){0}; */
-    /* generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER,
-     * 0b1001}, */
-    /*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 1}); */
+    code = (struct bytecode_array){0};
+    generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_STACK, 123},
+                 &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 1});
+    array_macro_append_v(&code, 0xc3);
+
     /* generate_add(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER,
      * 0b1000}, */
     /*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 1}); */
