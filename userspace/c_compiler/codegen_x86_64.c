@@ -81,20 +81,18 @@ u8 get_modrm(struct codegen_value *reg, struct codegen_value *rm)
 
 /* a value for rex that will never be valid */
 #define INVALID_REX 0
-#define INVALID_SIB 0x20
 
 #define REX_PATTERN 0b01000000
 
-static u8 get_rex(struct codegen_value *mod_reg, struct codegen_value *rm_reg)
+static u8 get_rex(struct codegen_value *reg, struct codegen_value *rm)
 {
     u8 out = REX_PATTERN;
 
-    if (mod_reg->type == CODEGEN_VALUE_REGISTER &&
-        REG_IS_EXTENDED(mod_reg->reg))
+    if (rm->type == CODEGEN_VALUE_REGISTER && REG_IS_EXTENDED(rm->reg))
     {
         out |= 0b1;
     }
-    if (rm_reg->type == CODEGEN_VALUE_REGISTER && REG_IS_EXTENDED(rm_reg->reg))
+    if (reg->type == CODEGEN_VALUE_REGISTER && REG_IS_EXTENDED(reg->reg))
     {
         out |= 0b100;
     }
@@ -138,22 +136,22 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
                         /* struct codegen_value *temp = dest; */
                         /* dest = src; */
                         /* src = temp; */
-        rm = dest;
-        reg = src;
+        rm = src;
+        reg = dest;
     }
     else
     {
         logd("not setting direction bit");
         opcode &= ~0b10;
-        rm = src;
-        reg = dest;
+        rm = dest;
+        reg = src;
     }
 
     logd("opcode:%p", opcode);
 
     logd("%d", dest->type);
 
-    generate_opcode_bytes(code, get_rex(dest, src), opcode, get_modrm(reg, rm));
+    generate_opcode_bytes(code, get_rex(reg, rm), opcode, get_modrm(reg, rm));
 
     generate_sib_byte(code, rm);
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
@@ -178,8 +176,11 @@ void generate_opcode_modrm(struct bytecode_array *code, u8 opcode, u8 modrm,
 void generate_opcode_mod(struct bytecode_array *code, u8 opcode, u8 mod,
                          struct codegen_value *dest, struct codegen_value *src)
 {
-    generate_opcode_bytes(code, get_rex(dest, src), opcode,
-                          get_modrm_rm(mod, dest));
+    generate_opcode_bytes(
+        code,
+        get_rex(&(struct codegen_value){.type = CODEGEN_VALUE_IMMEDIATE, 0},
+                src),
+        opcode, get_modrm_rm(mod, dest));
 
     generate_sib_byte(code, dest);
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
@@ -191,6 +192,7 @@ void generate_opcode_mod(struct bytecode_array *code, u8 opcode, u8 mod,
 void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
                   struct codegen_value *src)
 {
+    logd("mov:%d, %d,%d", dest->value, src->value, src->type);
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         generate_opcode_mod(code, 0xc7, 0, dest, src);
@@ -218,7 +220,7 @@ void generate_sub(struct bytecode_array *code, struct codegen_value *dest,
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         logd("sub on:%d", dest->reg);
-        generate_opcode_modrm(code, 0x81, 0b01101000 | BYTE_AS_RM(dest->reg),
+        generate_opcode_modrm(code, 0x81, 0b11101000 | BYTE_AS_RM(dest->reg),
                               dest, src);
     }
     else
@@ -261,7 +263,7 @@ struct codegen_value *generate_mul(struct bytecode_array *code,
                                    struct codegen_value *dest)
 {
 
-    logd("type:%d", src->type);
+    logd("multiply: type:%d", src->type);
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         logd("immediate multiply");
@@ -304,12 +306,7 @@ struct codegen_value *generate_operator(struct bytecode_array *code,
         }
         return dest;
         break;
-    case TOKEN_MINUS:
-
-        if (lhs == NULL)
-        {
-            lhs = dest;
-        }
+    case TOKEN_MINUS:;
         struct codegen_value *temp_reg;
         /* FIXME: maybe dont pointer compare, we could copy in the future */
         if (rhs == &immediate_temp_reg)
@@ -333,10 +330,10 @@ struct codegen_value *generate_operator(struct bytecode_array *code,
             generate_mov(code, temp_reg, lhs);
             generate_sub(code, temp_reg, rhs);
         }
-        /* generate_opcode_bytes(code, 0, 06, 0); */
-        return temp_reg;
+        return &immediate_temp_reg;
         break;
     case TOKEN_STAR:
+        logd("star");
         if (lhs == NULL)
         {
             lhs = dest;
@@ -369,6 +366,7 @@ struct codegen_value *generate_expr(struct bytecode_array *code,
             return codegen_value_alloc(CODEGEN_VALUE_IMMEDIATE,
                                        expr->value.literal.integer);
         }
+        break;
     case AST_EXPRESSION_CALL:
         break;
     case AST_EXPRESSION_OPERATOR:;
@@ -428,7 +426,7 @@ int main()
     /* program = " 3 + 5 * 2 - (4 * 2) "; */
     /* program = " (3 + 5 * 2) - (7 - 2 * 6)"; */
 
-    program = " (3 - 5 * 2) ";
+    program = "3 - 5 * 2";
     /* program = " (3 - 5 * 2) - (2 - 1) "; */
 
     /* "+ 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2" */
@@ -448,29 +446,19 @@ int main()
     struct bytecode_array code = {0};
     struct codegen_value dest = {CODEGEN_VALUE_REGISTER, 0b1000};
 
-    /*
-generate_mov(&code, &dest,
-             &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 0});
+    generate_mov(&code, &dest,
+                 &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 0});
 
-struct codegen_value *result = generate_expr(&code, expr, &dest);
-if (result != NULL)
-{
-    generate_mov(&code, &dest, result);
-}
+    struct codegen_value *result = generate_expr(&code, expr, &dest);
+    logd("value, type: %d, %d", result->value, result->type);
+    if (result != NULL)
+    {
+        logd("final mov");
+        generate_mov(&code, &dest, result);
+    }
 
-generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
-             &dest);
-array_macro_append_v(&code, 0xc3);
-    */
-
-    code = (struct bytecode_array){0};
-    /* generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER,
-     * 0b001}, */
-    /*              &(struct codegen_value){CODEGEN_VALUE_STACK, 0xAB}); */
-    generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0b001},
-                 &(struct codegen_value){CODEGEN_VALUE_STACK, 0x32});
-    // generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_STACK, 0x32},
-    //              &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0b001});
+    generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
+                 &dest);
     array_macro_append_v(&code, 0xc3);
 
     /* generate_add(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER,
