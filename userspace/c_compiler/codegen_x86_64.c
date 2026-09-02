@@ -125,6 +125,7 @@ void generate_sib_byte(struct bytecode_array *code,
              code->stack_offset - memory->value);
         array_macro_append_v(code, 0b00100100,
                              code->stack_offset - memory->value);
+        /* memory->value - code->stack_offset); */
     }
 }
 
@@ -240,14 +241,27 @@ void generate_add(struct bytecode_array *code, struct codegen_value *dest,
 {
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
-        logd("adding to %d", dest->reg);
         generate_opcode_mod(code, 0x81, 0, dest, src);
     }
     else
     {
-        generate_opcode_bytes(code, get_rex(src, dest), 3,
-                              get_modrm(src, dest));
+        generate_opcode(code, 3, dest, src);
     }
+}
+
+struct codegen_value *raise_sp(struct bytecode_array *code)
+{
+    code->stack_offset += 8;
+    generate_sub(code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0b100},
+                 &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 8});
+    return codegen_value_alloc(CODEGEN_VALUE_STACK, code->stack_offset);
+}
+struct codegen_value *lower_sp(struct bytecode_array *code)
+{
+    code->stack_offset -= 8;
+    generate_add(code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0b100},
+                 &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 8});
+    return codegen_value_alloc(CODEGEN_VALUE_STACK, code->stack_offset);
 }
 
 void generate_pop(struct bytecode_array *code, struct codegen_value *value)
@@ -334,32 +348,37 @@ struct codegen_value *generate_operator(struct bytecode_array *code,
                                         struct codegen_value *rhs,
                                         enum token_type operator_type)
 {
+
+    struct codegen_value *retval;
     switch (operator_type)
     {
-    case TOKEN_PLUS:
+    case TOKEN_PLUS:;
+        struct codegen_value *stack = raise_sp(code);
+        generate_mov(code, stack,
+                     codegen_value_alloc(CODEGEN_VALUE_IMMEDIATE, 0));
         if (lhs != NULL)
         {
             logd("adding:%d", lhs->value);
-            generate_add(code, dest, lhs);
+            generate_add(code, stack, lhs);
         }
 
         if (rhs != NULL)
         {
             logd("adding:%d", rhs->value);
-            generate_add(code, dest, rhs);
+            generate_add(code, stack, rhs);
         }
-        return dest;
+
+        retval = stack;
         break;
     case TOKEN_MINUS:;
         struct codegen_value *temp_reg = &immediate_temp_reg;
-        /* FIXME: maybe dont pointer compare, we could copy in the future */
 
         if (lhs->type == CODEGEN_VALUE_IMMEDIATE &&
             rhs->type == CODEGEN_VALUE_IMMEDIATE)
         {
             generate_mov(code, temp_reg, lhs);
             generate_sub(code, temp_reg, rhs);
-            return temp_reg;
+            retval = generate_push(code, temp_reg);
         }
         else if (lhs->type == CODEGEN_VALUE_IMMEDIATE)
         {
@@ -367,14 +386,14 @@ struct codegen_value *generate_operator(struct bytecode_array *code,
             generate_mov(code, &immediate_temp_reg2, rhs);
             generate_neg(code, &immediate_temp_reg2);
             generate_add(code, &immediate_temp_reg, &immediate_temp_reg2);
-            return &immediate_temp_reg2;
+            retval = generate_push(code, &immediate_temp_reg2);
         }
         else
         {
             generate_mov(code, temp_reg, lhs);
             generate_sub(code, temp_reg, rhs);
+            retval = generate_push(code, temp_reg);
         }
-        return &immediate_temp_reg;
         break;
     case TOKEN_STAR:
         logd("star");
@@ -385,13 +404,22 @@ struct codegen_value *generate_operator(struct bytecode_array *code,
         generate_mov(code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
                      lhs);
         struct codegen_value *value = generate_mul(code, rhs, dest);
-        return generate_push(code, value);
+        retval = generate_push(code, value);
         break;
 
     default:
         PANIC("invalid operator type from ast:%s",
               token_type_str(operator_type));
     }
+    /* if (lhs->type == CODEGEN_VALUE_STACK) */
+    /* { */
+    /*     lower_sp(code); */
+    /* } */
+    /* if (rhs->type == CODEGEN_VALUE_STACK) */
+    /* { */
+    /*     lower_sp(code); */
+    /* } */
+    return retval;
 }
 
 struct codegen_value *generate_expr(struct bytecode_array *code,
@@ -474,9 +502,12 @@ int main()
 
     /* program = "3 - 5 * 2"; */
     /* program = " (3 - 5 * 2) - (2 - 1)"; */
-    program = " 3 * 2 - 5 * 2 ";
+    /* program = " 3 * 2 - 5 * 2 "; */
+    /* program = " 3 * 2 + 1 + 1 "; */
 
-    /* "+ 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2" */
+    /* program = "2 + 3 * 4 - 6 * 2 + 5 * 5 "; */
+    program = "2 + 3 * 4 - 6 * 2 + 5";
+    /* program = "2 + 3 * 4 - 6 * 7 + 5 * 5 "; */
     /* "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8" */
     /* "+ 10 * (2 + 3 * (4 + 5)) - 7 * 8 + 9" */
     /* "- 11 + 2 * 3 * (4 + 5) - 6 * (7 + 8)"; */
@@ -500,8 +531,12 @@ int main()
     logd("value, type: %d, %d", result->value, result->type);
     if (result != NULL)
     {
-        logd("final mov");
         generate_mov(&code, &dest, result);
+
+        if (result->type == CODEGEN_VALUE_STACK)
+        {
+            lower_sp(&code);
+        }
     }
 
     generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
