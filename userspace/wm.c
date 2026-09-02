@@ -828,7 +828,6 @@ static size_t win_get_buffer_height(struct window *win)
 static int resize_window(struct window_queue_entry *ent, int width_diff,
                          int height_diff)
 {
-    logd("%d", width_diff);
     size_t old_height = WIN_H(ent->win);
     size_t old_width = WIN_W(ent->win);
 
@@ -843,9 +842,6 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     size_t new_buffer_height = new_height - WINDOW_DECORATION_TOP_HEIGHT -
                                WINDOW_DECORATION_BOTTOM_HEIGHT;
 
-    logd("old w:%d h:%d new w:%d h:%d", old_width, old_height, new_width,
-         new_height);
-
     struct wm_message_resize resize = {new_buffer_width, new_buffer_height};
     struct wm_message message = {
         WM_MESSAGE_RESIZE_HEADER,
@@ -857,7 +853,6 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     {
         new_addr = ent->conn->buffer;
     }
-    logd("new addr is %p", new_addr);
     server_send_message(ent->conn, &message);
 
     framebuffer_resize(win_get_buffer_width(ent->win),
@@ -877,7 +872,6 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     /*     sched_yield(); */
     /* } */
 
-    logd("waiting for answer");
     int ack_code;
     recv(ent->conn->client_key_socket, &ack_code, sizeof(int));
     if (ack_code != 123)
@@ -887,7 +881,6 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
 
         return -EINVAL;
     }
-    logd("got answer");
 
     window_render_from_buffer(ent);
 

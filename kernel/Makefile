@@ -90,6 +90,7 @@ kernel/graphics/graphics.o \
 kernel/multiboot.o \
 kernel/socket/socket.o \
 kernel/faults.o \
+kernel/timer.o \
 lib/binary_tree.o \
 lib/lru.o \
 lib/rc.o \

@@ -254,7 +254,8 @@ int main()
         }
         case WM_MESSAGE_KEY:;
 
-            entries_layout->set_max_elements(entries_layout->max_elements + 1);
+            // entries_layout->set_max_elements(entries_layout->max_elements +
+            // 1);
             break;
         case WM_MESSAGE_RESIZE:;
             root->fb = client.fb;
