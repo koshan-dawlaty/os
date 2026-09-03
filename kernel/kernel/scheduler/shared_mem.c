@@ -88,7 +88,6 @@ int shared_mem_get(int id, void **p)
 
 void shared_mem_resize_timeout(struct timer_callback_data *data)
 {
-    logd("timeout");
     struct shared_memory_entry *ent =
         containerof(data, struct shared_memory_entry, callback_data);
     /* TODO: resize page to be len bytes, not resize_len */
@@ -102,7 +101,6 @@ int shared_mem_resize(int id, size_t new_size, void **new_addr)
 
     size_t old_size = ent->len;
 
-    logd("new:%p old:%p", new_size, old_size);
     if (new_size > old_size)
     {
 
@@ -113,13 +111,10 @@ int shared_mem_resize(int id, size_t new_size, void **new_addr)
             size_t actual_len =
                 (new_size / (PAGE_SIZE * 100) + 1) * (PAGE_SIZE * 100);
             size_t num_pages = ((actual_len) / PAGE_SIZE) + 3;
-            logd("actual_len:%d new_size:%d, old_size:%d", actual_len, new_size,
-                 old_size);
             ent->resize_len = actual_len;
             shared_memory_offset += (num_pages + PAGE_SIZE) * PAGE_SIZE;
             void *physical = get_free_phys_pages(num_pages);
 
-            logd("here");
             for (size_t i = 0; i < num_pages; i++)
             {
                 map_page(physical + (PAGE_SIZE * i), memory + (PAGE_SIZE * i),
@@ -132,7 +127,7 @@ int shared_mem_resize(int id, size_t new_size, void **new_addr)
 
             size_t num_old_pages = (old_size / PAGE_SIZE) + 3;
 
-            memcpy(memory, ent->creator_addr, old_size);
+            /* memcpy(memory, ent->creator_addr, old_size); */
             free_phys_pages(ent->mem, num_old_pages);
 
             ent->creator_addr = memory;

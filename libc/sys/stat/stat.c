@@ -28,7 +28,6 @@ int stat(const char *pathname, struct stat *buf)
     {
         /* FIXME: this wont work for devices, as they are DENTRY_FILE */
     case DENTRY_FILE:
-
         buf->st_size = ent->inode->size;
         buf->mode |= S_IFREG;
         break;

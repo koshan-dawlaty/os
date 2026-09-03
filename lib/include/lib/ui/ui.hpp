@@ -101,6 +101,8 @@ class View
     size_t get_height();
     void clamp_child_dimensions(View *child);
 
+    virtual void on_key(char c);
+
     virtual void update_child(View *child);
 
     virtual inline void redraw()
@@ -137,6 +139,7 @@ class Layout : public View
     bool handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                              size_t abs_y, struct mouse_event *ev) override;
     virtual void clear_children();
+    void on_key(char c) override;
 };
 
 class Element : public View

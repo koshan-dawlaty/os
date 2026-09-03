@@ -1,5 +1,7 @@
+#include "lib/ui/text_input.hpp"
 #include <cpp/cpp_c_include_start.hpp>
 
+#include <cstddef>
 #include <lib/list.h>
 
 #include <assert.h>
@@ -178,6 +180,8 @@ int main()
     root->screen = new WMScreen(&client);
     root->fb = client.fb;
 
+    Layout *overlay_layout = NULL;
+
     image_parse("/images/folder.tga", &folder_img);
     image_parse("/images/file.tga", &file_img);
     image_parse("/images/question.tga", &unknown_img);
@@ -211,9 +215,43 @@ int main()
             closedir(d);
         });
 
+    ButtonElement *create_file =
+        new ButtonElement(new ImageElement("/images/question.tga"));
+    create_file->set_onclick(
+        [&](ButtonElement *element) -> void
+        {
+            overlay_layout = new VerticalLineLayout(0);
+            overlay_layout->screen = root->screen;
+            overlay_layout->fb = client.fb;
+
+            TextInputElement *input = new TextInputElement("", font);
+            input->set_on_submit(
+                [&](TextInputElement *, char *str) -> void
+                {
+                    creat(str, 0);
+
+                    /* TODO: should probably have a way to partially update the
+                     * layout with a new dirent */
+                    DIR *d = opendir(".");
+                    set_dir(d);
+                    closedir(d);
+
+                    /* TODO: we cant delete this here, because it will delete
+                     * the lambda we are in, there might be a way to do this
+                     * with the template class and a type of smart pointer */
+                    // delete overlay_layout;
+                    overlay_layout = NULL;
+                });
+            overlay_layout->add_child(input);
+
+            overlay_layout->render();
+            overlay_layout->redraw();
+        });
+
     Layout *top_bar = new HorizontalLineLayout(5);
     top_bar->add_child(go_to_root);
     top_bar->add_child(go_up_dir);
+    top_bar->add_child(create_file);
 
     entries_layout = new ScrollLayout(0, 10);
     // entries_layout = new VerticalLineLayout(0);
@@ -252,18 +290,35 @@ int main()
 
             break;
         }
-        case WM_MESSAGE_KEY:;
+        case WM_MESSAGE_KEY:
+        {
+            char c = *(char *)message.message_data;
+            root->on_key(c);
+            if (overlay_layout != NULL)
+            {
+                overlay_layout->on_key(c);
+            }
 
             // entries_layout->set_max_elements(entries_layout->max_elements +
             // 1);
             break;
+        }
         case WM_MESSAGE_RESIZE:;
             root->fb = client.fb;
             // entries_layout->set_max_elements(entries_layout->max_elements +
             // 1);
+            //
 
             root->render();
             root->redraw();
+
+            /* there should probably be a way to do this with the ui library */
+            if (overlay_layout != NULL)
+            {
+                overlay_layout->render();
+                overlay_layout->redraw();
+            }
+
             // framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
             //                       client.fb.height, 0);
             // wm_render(client);

@@ -40,6 +40,10 @@ void RectElement::render()
     framebuffer_draw_rect(&fb, 0, 0, fb.width, fb.height, color);
 }
 
+void View::on_key(char c)
+{
+}
+
 void View::render()
 {
 }
@@ -87,6 +91,16 @@ void Layout::add_child(View *view)
 {
     list_push(&view->list, &children);
     update_child(view);
+}
+
+void Layout::on_key(char c)
+{
+    struct list *pos;
+    list_for_each(pos, &children)
+    {
+        View *v = containerof(pos, View, list);
+        v->on_key(c);
+    }
 }
 
 void Layout::clear_children()
