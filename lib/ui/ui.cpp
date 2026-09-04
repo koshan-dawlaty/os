@@ -19,6 +19,45 @@
 
 #include <lib/ui/ui.hpp>
 
+void WMScreen::input_loop(View *root)
+{
+    while (true)
+    {
+        struct wm_message message;
+        wm_get_message(client, &message);
+        switch (message.header.type)
+        {
+        case WM_MESSAGE_MOUSE:
+        {
+            struct mouse_event *ev = (struct mouse_event *)message.message_data;
+            size_t mouse_x = ev->x_change, mouse_y = ev->y_change;
+
+            if (ev->buttons.left_click || ev->buttons.right_click ||
+                ev->buttons.middle_click || ev->scroll != 0)
+            {
+                root->handle_mouse_action(mouse_x, mouse_y, 0, 0, ev);
+            }
+
+            break;
+        }
+        case WM_MESSAGE_KEY:
+        {
+            char c = *(char *)message.message_data;
+            root->on_key(c);
+
+            break;
+        }
+        case WM_MESSAGE_RESIZE:;
+            root->fb = client->fb;
+
+            root->render();
+            root->redraw();
+
+            break;
+        }
+    }
+}
+
 Element::Element(size_t w, size_t h) : View()
 {
     fb.height = h;

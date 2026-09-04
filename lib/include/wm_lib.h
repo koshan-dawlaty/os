@@ -195,6 +195,7 @@ struct wm_client wm_client_connect(size_t height, size_t width);
 /* makes this window in focus after connecting */
 struct wm_client wm_client_connect_focus(size_t height, size_t width);
 struct wm_client wm_client_connect_nonblock(size_t height, size_t width);
+void wm_client_close(struct wm_client *client);
 
 int wm_get_message(struct wm_client *client, struct wm_message *message);
 

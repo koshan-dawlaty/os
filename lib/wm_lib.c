@@ -48,7 +48,7 @@ void wm_render(struct wm_client client)
     int retval = send(client.socket, &render_code, sizeof(int));
     if (retval == -ENOTSOCK)
     {
-        logd("AAAA");
+        loge("not sock");
     }
 
     int ack_code;
@@ -56,7 +56,7 @@ void wm_render(struct wm_client client)
 
     if (retval == -ENOTSOCK)
     {
-        logd("AAAA");
+        loge("not sock");
     }
     if (ack_code != 3)
     {
@@ -74,7 +74,7 @@ void wm_render_partial(struct wm_client client, struct rect rect)
     int retval = send(client.socket, &rect, sizeof(struct rect));
     if (retval == -ENOTSOCK)
     {
-        logd("AAAA");
+        loge("not sock");
     }
 
     int ack_code;
@@ -82,7 +82,7 @@ void wm_render_partial(struct wm_client client, struct rect rect)
 
     if (retval == -ENOTSOCK)
     {
-        logd("AAAA");
+        loge("not sock");
     }
     if (ack_code != 3)
     {
@@ -228,12 +228,15 @@ int wm_get_message(struct wm_client *client, struct wm_message *message)
         client->fb.pitch = resize->new_w * 4;
 
         int ack_code = 123;
-        logd("sending ack");
         send(client->key_socket, &ack_code, sizeof(int));
-        logd("sent ack");
         /* wm_render(*client); */
     }
     /* logd("got data:%s, %d", message->message_data, header.len); */
 
     return 0;
+}
+
+void wm_client_close(struct wm_client *client)
+{
+    close(client->socket);
 }

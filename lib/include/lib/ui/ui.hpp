@@ -19,6 +19,8 @@
 
 #include <cpp/function.hpp>
 
+class View;
+
 class Screen
 {
   protected:
@@ -37,6 +39,8 @@ class Screen
     {
         return fb->height;
     }
+
+    virtual void input_loop(View *root) = 0;
 };
 
 /*
@@ -50,6 +54,9 @@ class DefaultScreen : public Screen
     inline void update_area(struct rect area) override
     {
     }
+    inline void input_loop(View *root) override
+    {
+    }
 
     inline DefaultScreen(struct framebuffer *fb) : Screen(fb) {};
 };
@@ -60,6 +67,8 @@ class WMScreen : public Screen
     struct wm_client *client;
 
   public:
+    void input_loop(View *root) override;
+
     inline WMScreen(struct wm_client *client)
         : client(client), Screen(&client->fb)
     {

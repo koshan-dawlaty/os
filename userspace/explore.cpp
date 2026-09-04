@@ -1,4 +1,5 @@
 #include "lib/ui/text_input.hpp"
+#include "wm_lib.h"
 #include <cpp/cpp_c_include_start.hpp>
 
 #include <cstddef>
@@ -166,6 +167,44 @@ void set_dir(DIR *d)
     // wm_render(client);
 }
 
+#define CREATE_FILE_MESSAGE "filename:"
+
+void dialog_thread()
+{
+    struct wm_client dialog_window =
+        wm_client_connect(font->header.height * 2,
+                          font->header.width * strlen(CREATE_FILE_MESSAGE));
+
+    Layout *dialog_root = new VerticalLineLayout(0);
+    dialog_root->screen = new WMScreen(&dialog_window);
+    dialog_root->fb = dialog_window.fb;
+
+    TextInputElement *input = new TextInputElement("", font);
+    input->set_on_submit(
+        [&](TextInputElement *, char *str) -> void
+        {
+            creat(str, 0);
+
+            /* TODO: should probably have a way to partially update the
+             * layout with a new dirent */
+            DIR *d = opendir(".");
+            set_dir(d);
+            closedir(d);
+
+            wm_client_close(&dialog_window);
+        });
+    dialog_root->add_child(input);
+    dialog_root->add_child(new TextElement(CREATE_FILE_MESSAGE, font));
+
+    framebuffer_draw_rect(&dialog_root->fb, 0, 0, dialog_window.fb.width,
+                          dialog_root->fb.height, 0);
+
+    dialog_root->render();
+    dialog_root->redraw();
+
+    dialog_root->screen->input_loop(dialog_root);
+}
+
 int main()
 {
 
@@ -179,8 +218,6 @@ int main()
     root = new VerticalLineLayout(10);
     root->screen = new WMScreen(&client);
     root->fb = client.fb;
-
-    Layout *overlay_layout = NULL;
 
     image_parse("/images/folder.tga", &folder_img);
     image_parse("/images/file.tga", &file_img);
@@ -216,37 +253,9 @@ int main()
         });
 
     ButtonElement *create_file =
-        new ButtonElement(new ImageElement("/images/question.tga"));
-    create_file->set_onclick(
-        [&](ButtonElement *element) -> void
-        {
-            overlay_layout = new VerticalLineLayout(0);
-            overlay_layout->screen = root->screen;
-            overlay_layout->fb = client.fb;
-
-            TextInputElement *input = new TextInputElement("", font);
-            input->set_on_submit(
-                [&](TextInputElement *, char *str) -> void
-                {
-                    creat(str, 0);
-
-                    /* TODO: should probably have a way to partially update the
-                     * layout with a new dirent */
-                    DIR *d = opendir(".");
-                    set_dir(d);
-                    closedir(d);
-
-                    /* TODO: we cant delete this here, because it will delete
-                     * the lambda we are in, there might be a way to do this
-                     * with the template class and a type of smart pointer */
-                    // delete overlay_layout;
-                    overlay_layout = NULL;
-                });
-            overlay_layout->add_child(input);
-
-            overlay_layout->render();
-            overlay_layout->redraw();
-        });
+        new ButtonElement(new ImageElement("/images/plus.tga"));
+    create_file->set_onclick([&](ButtonElement *element) -> void
+                             { clone((ptr_t)dialog_thread); });
 
     Layout *top_bar = new HorizontalLineLayout(5);
     top_bar->add_child(go_to_root);
@@ -267,65 +276,7 @@ int main()
     root->render();
     root->redraw();
 
-    while (true)
-    {
-        struct wm_message message;
-        wm_get_message(&client, &message);
-        switch (message.header.type)
-        {
-        case WM_MESSAGE_MOUSE:
-        {
-            struct mouse_event *ev = (struct mouse_event *)message.message_data;
-            size_t mouse_x = ev->x_change, mouse_y = ev->y_change;
-            // framebuffer_put_pixel(&client.fb, 0xFF00FF, mouse_x, mouse_y);
-            // wm_render(client);
-
-            if (ev->buttons.left_click || ev->buttons.right_click ||
-                ev->buttons.middle_click || ev->scroll != 0)
-            {
-                root->handle_mouse_action(mouse_x, mouse_y, 0, 0, ev);
-                // framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-                //                       client.fb.height, 0);
-            }
-
-            break;
-        }
-        case WM_MESSAGE_KEY:
-        {
-            char c = *(char *)message.message_data;
-            root->on_key(c);
-            if (overlay_layout != NULL)
-            {
-                overlay_layout->on_key(c);
-            }
-
-            // entries_layout->set_max_elements(entries_layout->max_elements +
-            // 1);
-            break;
-        }
-        case WM_MESSAGE_RESIZE:;
-            root->fb = client.fb;
-            // entries_layout->set_max_elements(entries_layout->max_elements +
-            // 1);
-            //
-
-            root->render();
-            root->redraw();
-
-            /* there should probably be a way to do this with the ui library */
-            if (overlay_layout != NULL)
-            {
-                overlay_layout->render();
-                overlay_layout->redraw();
-            }
-
-            // framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-            //                       client.fb.height, 0);
-            // wm_render(client);
-
-            break;
-        }
-    }
+    root->screen->input_loop(root);
 
     exit(0);
 }
