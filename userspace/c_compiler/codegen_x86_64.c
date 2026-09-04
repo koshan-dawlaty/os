@@ -129,12 +129,23 @@ void generate_sib_byte(struct bytecode_array *code,
     }
 }
 
-/* FIXME: the name should represent that this does not work for every opcode
- */
+struct codegen_value immediate_temp_reg = {CODEGEN_VALUE_REGISTER, 1};
+struct codegen_value immediate_temp_reg2 = {CODEGEN_VALUE_REGISTER, 3};
+struct codegen_value stack_stack_temp_reg = {CODEGEN_VALUE_REGISTER, 0b110};
+
+void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
+                  struct codegen_value *src);
+
 void generate_opcode(struct bytecode_array *code, u8 opcode,
                      struct codegen_value *dest, struct codegen_value *src)
 {
     logd("%d, %d", dest->type, src->type);
+    if (src->type == CODEGEN_VALUE_STACK && dest->type == CODEGEN_VALUE_STACK)
+    {
+        /* this might end up being annoying to debug because of recursion */
+        generate_mov(code, &stack_stack_temp_reg, src);
+        src = &stack_stack_temp_reg;
+    }
 
     struct codegen_value *reg, *rm;
     if (dest->type == CODEGEN_VALUE_REGISTER)
@@ -239,6 +250,12 @@ void generate_sub(struct bytecode_array *code, struct codegen_value *dest,
 void generate_add(struct bytecode_array *code, struct codegen_value *dest,
                   struct codegen_value *src)
 {
+    /* if (src->type == CODEGEN_VALUE_STACK && dest->type ==
+     * CODEGEN_VALUE_STACK) */
+    /* { */
+    /*     generate_mov(code, &immediate_temp_reg, src); */
+    /*     src = &immediate_temp_reg; */
+    /* } */
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         generate_opcode_mod(code, 0x81, 0, dest, src);
@@ -311,10 +328,6 @@ void generate_neg(struct bytecode_array *code, struct codegen_value *dest)
         code, 0xF7, 0b011, dest,
         &(struct codegen_value){.type = CODEGEN_VALUE_REGISTER, 0});
 }
-
-struct codegen_value immediate_temp_reg = {CODEGEN_VALUE_REGISTER, 1};
-/* used when immediate_temp_reg is the operand */
-struct codegen_value immediate_temp_reg2 = {CODEGEN_VALUE_REGISTER, 3};
 
 struct codegen_value *generate_mul(struct bytecode_array *code,
                                    struct codegen_value *src,
@@ -505,10 +518,14 @@ int main()
     /* program = " 3 * 2 - 5 * 2 "; */
     /* program = " 3 * 2 + 1 + 1 "; */
 
+    program = "2 + 3 * 4 - 6 * 7 + 5 * 5 "
+              "- 9 * 3 + 5 + 7 * 2 - 4 ";
     /* program = "2 + 3 * 4 - 6 * 2 + 5 * 5 "; */
-    program = "2 + 3 * 4 - 6 * 2 + 5";
-    /* program = "2 + 3 * 4 - 6 * 7 + 5 * 5 "; */
-    /* "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8" */
+    /* program = "2 + 3 * 4 - 6 * 2 + 5"; */
+
+    // program = "2 + 3 * 4 - 6 * 7 + 5 * 5 "
+    //            "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8";
+
     /* "+ 10 * (2 + 3 * (4 + 5)) - 7 * 8 + 9" */
     /* "- 11 + 2 * 3 * (4 + 5) - 6 * (7 + 8)"; */
 
@@ -532,31 +549,35 @@ int main()
     if (result != NULL)
     {
         generate_mov(&code, &dest, result);
-
-        if (result->type == CODEGEN_VALUE_STACK)
-        {
-            lower_sp(&code);
-        }
     }
 
     generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
                  &dest);
+
+    /* reset stack offset */
+    generate_add(
+        &code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0b100},
+        &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, code.stack_offset});
+
     array_macro_append_v(&code, 0xc3);
 
     /* code = (struct bytecode_array){0, 0, 0}; */
 
     /* struct codegen_value *stack = generate_push( */
-    /*     &code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0}); */
+    /*     &code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0});
+     */
     /* /1* generate_mov(&code, stack, *1/ */
-    /* /1*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 0x12});
-     * *1/ */
+    /* /1*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE,
+     * 0x12}); *1/ */
     /* generate_sub(&code, stack, */
-    /*              &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0b110}); */
+    /*              &(struct codegen_value){CODEGEN_VALUE_REGISTER,
+     * 0b110}); */
     /* array_macro_append_v(&code, 0xc3); */
 
-    /* generate_add(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER,
-     * 0b1000}, */
-    /*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 1}); */
+    /* generate_add(&code, &(struct
+     * codegen_value){CODEGEN_VALUE_REGISTER, 0b1000}, */
+    /*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE,
+     * 1}); */
 
     log_multiline_start(&LOG_DEBUG);
     for (size_t i = 0; i < code.num; i++)
