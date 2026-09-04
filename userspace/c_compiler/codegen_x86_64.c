@@ -225,12 +225,8 @@ void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
 void generate_ax_opcode(struct bytecode_array *code, u8 opcode, u8 mod,
                         struct codegen_value *src)
 {
-    array_macro_append_v(code, opcode, get_modrm_bytes(mod, src->reg));
-    if (src->type == CODEGEN_VALUE_IMMEDIATE)
-    {
-        logd("appending:%d", src->value);
-        array_macro_append_v(code, src->value, 0, 0, 0);
-    }
+    generate_opcode_mod(code, opcode, mod, src,
+                        &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0});
 }
 
 void generate_sub(struct bytecode_array *code, struct codegen_value *dest,
@@ -334,23 +330,8 @@ struct codegen_value *generate_mul(struct bytecode_array *code,
                                    struct codegen_value *dest)
 {
 
-    logd("multiply: type:%d", src->type);
-    if (src->type == CODEGEN_VALUE_IMMEDIATE)
-    {
-        logd("immediate multiply");
-        generate_mov(code, &immediate_temp_reg, src);
-        generate_ax_opcode(code, 0xF7, 0b100, &immediate_temp_reg);
-    }
-    else if (src->type == CODEGEN_VALUE_REGISTER)
-    {
-        generate_mov(code, &immediate_temp_reg, src);
-        generate_ax_opcode(code, 0xF7, 0b100, &immediate_temp_reg);
-    }
-    else
-    {
-        UNREACHABLE("unknown type:%d", src->type);
-    }
-
+    generate_mov(code, &immediate_temp_reg, src);
+    generate_ax_opcode(code, 0xF7, 0b100, &immediate_temp_reg);
     /* ax */
     return codegen_value_alloc(CODEGEN_VALUE_REGISTER, 0);
 }
@@ -399,7 +380,7 @@ struct codegen_value *generate_operator(struct bytecode_array *code,
             generate_mov(code, &immediate_temp_reg2, rhs);
             generate_neg(code, &immediate_temp_reg2);
             generate_add(code, &immediate_temp_reg, &immediate_temp_reg2);
-            retval = generate_push(code, &immediate_temp_reg2);
+            retval = generate_push(code, &immediate_temp_reg);
         }
         else
         {
@@ -518,8 +499,8 @@ int main()
     /* program = " 3 * 2 - 5 * 2 "; */
     /* program = " 3 * 2 + 1 + 1 "; */
 
-    program = "2 + 3 * 4 - 6 * 7 + 5 * 5 "
-              "- 9 * 3 + 5 + 7 * 2 - 4 ";
+    /* program = "2 + 3 * 4 - 6 * 7 + 5 * 5 " */
+    /*           "- 9 * 3 + 5 + 7 * 2 - 4 "; */
     /* program = "2 + 3 * 4 - 6 * 2 + 5 * 5 "; */
     /* program = "2 + 3 * 4 - 6 * 2 + 5"; */
 
@@ -528,6 +509,17 @@ int main()
 
     /* "+ 10 * (2 + 3 * (4 + 5)) - 7 * 8 + 9" */
     /* "- 11 + 2 * 3 * (4 + 5) - 6 * (7 + 8)"; */
+
+    // program = " 3 + 5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9"
+    //            "+ 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2"
+    //            "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8"
+    //            "+ 10 * (2 + 3 * (4 + 5)) - 7 * 8 + 9"
+    //            "- 11 + 2 * 3 * (4 + 5) - 6 * (7 + 8)";
+	
+    program = "  5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9"
+              "+ 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2"
+              "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8"
+              "+ 10 * (2 + 3 * (4 + 5)) ";
 
     tokenizer_parse_tokens(program, &tokens);
 
@@ -554,6 +546,7 @@ int main()
     generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
                  &dest);
 
+    logd("final stack offset:%d", code.stack_offset);
     /* reset stack offset */
     generate_add(
         &code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0b100},
