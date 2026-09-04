@@ -616,21 +616,28 @@ void process_connection()
     ent->nonblock_info.is_nonblock = win_info.is_nonblock;
     ent->nonblock_info.current_key = 0;
 
-    user_mutex_lock(window_queue_mutex);
-    list_add_after(&ent->list, window_queue.next);
-    user_mutex_unlock(window_queue_mutex);
     if (win_info.auto_foucs)
     {
+        user_mutex_lock(window_queue_mutex);
+        list_push(&ent->list, &window_queue);
+        user_mutex_unlock(window_queue_mutex);
+
         change_focus(ent);
-    }
-    else if (num_connections < 1)
-    {
-        focused = ent;
-        draw_window_decoration(w, true);
     }
     else
     {
-        draw_window_decoration(w, false);
+        user_mutex_lock(window_queue_mutex);
+        list_add_after(&ent->list, window_queue.next);
+        user_mutex_unlock(window_queue_mutex);
+        if (num_connections < 1)
+        {
+            focused = ent;
+            draw_window_decoration(w, true);
+        }
+        else
+        {
+            draw_window_decoration(w, false);
+        }
     }
 
     num_connections++;

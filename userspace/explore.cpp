@@ -171,9 +171,9 @@ void set_dir(DIR *d)
 
 void dialog_thread()
 {
-    struct wm_client dialog_window =
-        wm_client_connect(font->header.height * 2,
-                          font->header.width * strlen(CREATE_FILE_MESSAGE));
+    struct wm_client dialog_window = wm_client_connect_focus(
+        font->header.height * 2,
+        font->header.width * strlen(CREATE_FILE_MESSAGE));
 
     Layout *dialog_root = new VerticalLineLayout(0);
     dialog_root->screen = new WMScreen(&dialog_window);
