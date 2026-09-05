@@ -8,4 +8,9 @@ _start:
 	call init_libc
 	pop %rsi
 	pop %rdi
+
 	call main
+
+	mov %eax, %edi
+	call exit
+	hlt

@@ -278,5 +278,4 @@ int main()
 
     root->screen->input_loop(root);
 
-    exit(0);
 }

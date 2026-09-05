@@ -447,5 +447,4 @@ int main(int argc, char **argv)
 
     close(client.socket);
 
-    exit(0);
 }

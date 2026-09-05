@@ -12,9 +12,6 @@
 
 int main(int argc, char **argv)
 {
-    /* logd("%p", argv); */
-    /* exit(0); */
-
     if (argc <= 1)
     {
         printf("need more arguments\n");
@@ -23,19 +20,12 @@ int main(int argc, char **argv)
 
     int fd = open(argv[1], O_RDONLY);
 
-    /* printf("FD IS:%d\n", fd); */
 
     if (fd == -1)
     {
         printf("error:%s", strerror(errno));
         exit(1);
     }
-
-    /* char *buf2 = malloc(100); */
-    /* read(fd, buf2, 100); */
-    /* printf("%s", buf2); */
-
-    /* exit(1); */
 
     size_t read_size = 10;
     size_t buf_len = read_size;
@@ -58,11 +48,4 @@ int main(int argc, char **argv)
     buf[buf_offset + bytes_read] = 0;
     printf("%s", buf);
     close(fd);
-
-    while (1)
-    {
-        sched_yield();
-    }
-
-    exit(0);
 }

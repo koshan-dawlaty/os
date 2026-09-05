@@ -42,6 +42,4 @@ int main(int argc, char **argv)
 
         /* printf("%p\n", malloc(10)); */
     }
-
-    exit(0);
 }

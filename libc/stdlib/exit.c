@@ -13,6 +13,7 @@
 void exit(int status)
 {
 #ifdef __is_libk
+	logi("process exited with code %d", status);
     struct task *t = get_current_task();
 
     /* printf("exit addr_space:%p\n", &t->addr_space); */
