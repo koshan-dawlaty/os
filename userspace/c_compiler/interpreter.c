@@ -591,7 +591,7 @@ int eval_program(struct list *top_statements_head)
     return val->value;
 }
 
-/* TODO: put in lib/ or make gcc do it in _start */
+/* TODO: put in lib/ or make gcc do it in _start, also in codegen_x86_64.c */
 extern void (*__ctors_start[])(void);
 extern void (*__ctors_end[])(void);
 void call_constructors(void)

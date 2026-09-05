@@ -136,6 +136,8 @@ void run_all_tests()
 
     size_t failed_indexes_len = 0;
 
+    logd("%d", tests_size);
+
     char *tap_header = tap_get_header(tests_size);
     test_output_str(tap_header, strlen(tap_header));
     free(tap_header);

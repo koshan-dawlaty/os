@@ -1,3 +1,4 @@
+#include "codegen.h"
 #include <complex.h>
 #include <init.h>
 #include <lib/array.h>
@@ -7,6 +8,7 @@
 #include <lib/log.h>
 #include <lib/utils.h>
 #include <sys/syscall.h>
+#include <tests/tests.h>
 #include <unistd.h>
 #include <utils.h>
 
@@ -459,14 +461,14 @@ struct codegen_value *generate_expr(struct bytecode_array *code,
     }
 }
 
-void run_code(u8 *bytecode, size_t len)
+int run_code(u8 *bytecode, size_t len)
 {
 
     int retval = ((int (*)())bytecode)();
 
     logd("%d", retval);
 
-    return;
+    return retval;
 
     u8 *binary_test = malloc(9 + sizeof(bytecode));
     binary_test[0] = 'T';
@@ -479,8 +481,52 @@ void run_code(u8 *bytecode, size_t len)
     syscall_wrapper_asm(SYS_load_simple_binary, (ptr_t)binary_test, 0, 0, 0, 0);
 }
 
+int generate_and_run_expr(struct ast_expr *expr)
+{
+
+    struct bytecode_array code = {0};
+    struct codegen_value dest = {CODEGEN_VALUE_REGISTER, 0b1000};
+
+    generate_mov(&code, &dest,
+                 &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 0});
+
+    struct codegen_value *result = generate_expr(&code, expr, &dest);
+    if (result != NULL)
+    {
+        generate_mov(&code, &dest, result);
+    }
+
+    generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
+                 &dest);
+
+    /* reset stack offset */
+    generate_add(
+        &code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0b100},
+        &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, code.stack_offset});
+
+    array_macro_append_v(&code, 0xc3);
+
+    int retval = run_code(code.items, code.num);
+
+    free(code.items);
+
+    return retval;
+}
+
+extern void (*__ctors_start[])(void);
+extern void (*__ctors_end[])(void);
+void call_constructors(void)
+{
+    for (void (**ctor)(void) = __ctors_start; ctor < __ctors_end; ++ctor)
+    {
+        (*ctor)();
+    }
+}
+
 int main()
 {
+    call_constructors();
+
     LIST_DEFINE_HEAD(tokens);
     const char *program = MACRO_STR(
         // clang-format off
@@ -490,6 +536,10 @@ int main()
 
         // clang-format on
     );
+
+#ifdef TESTS
+    run_tests();
+#endif
 
     /* program = " 3 + 5 * 2 - (4 * 2) "; */
     /* program = " (3 + 5 * 2) - (7 - 2 * 6)"; */
