@@ -1,7 +1,8 @@
 b run_code
 c
 s
-si
+ni
 si
 si
 layout asm
+layout regs

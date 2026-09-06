@@ -201,7 +201,7 @@ $(BIN)/%.o$(TEST_SUFFIX): %.S
 
 $(BIN)/%.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -DTESTS #  stupid
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) # -DTESTS #  stupid
 
 $(BIN)/%.o$(TEST_SUFFIX): %.cpp
 	mkdir -p $(BIN)/$(dir $<)

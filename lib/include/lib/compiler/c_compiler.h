@@ -248,8 +248,8 @@ struct ast_statement
         /* type is declare */
         struct
         {
-
-            struct ast_expr *init_value; /* can be null */
+            /* can be null, for things like int x; */
+            struct ast_expr *init_value;
             struct ast_type *declared_type;
             char *varname;
         };

@@ -20,7 +20,7 @@ SERIAL_PIPE=$(mktemp /tmp/QEMU_SERIAL_PIPE_XXXXXXX)
 mkfifo "${SERIAL_PIPE}.in"
 mkfifo "${SERIAL_PIPE}.out"
 
-# -v is for vertial -b is for above current, -d is to keep old focus
+# -v is for vertical -b is for above current, -d is to keep old focus
 tmux split-window -h -d -t "$TMUX_PANE" "cat $SERIAL_PIPE.out"
 
 gdb \
