@@ -184,13 +184,12 @@ $(BIN)/opener$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/opener.o$(TEST_SUFFIX)  $(
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
-# COMPILER_OBJS=\
-# $(BIN)/c_compiler/interpreter.o$(TEST_SUFFIX) $(BIN)/c_compiler/tests.o$(TEST_SUFFIX) 
-COMPILER_OBJS=\
-$(BIN)/c_compiler/codegen_x86_64.o$(TEST_SUFFIX) \
-$(BIN)/c_compiler/codegen_tests.o$(TEST_SUFFIX)
 
-$(BIN)/compiler$(TEST_SUFFIX) : $(OBJS_START_BIN) $(COMPILER_OBJS)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+$(BIN)/compiler$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/compiler.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000   -DTESTS
+
+$(BIN)/interpreter$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/interpreter.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000   -DTESTS
 

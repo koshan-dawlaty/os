@@ -33,7 +33,9 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 
 OBJS=\
-	compiler/c_compiler.o \
+	compiler/ast.o \
+	compiler/interpreter.o \
+	compiler/codegen_x86_64.o \
 	list.o \
 	font.o \
 	img.o \
@@ -44,14 +46,16 @@ OBJS=\
 	wm_lib.o \
 	rect.o \
 	assert.o \
-	tests/tap.o \
-	tests/tests_lib.o \
+	tests_lib/tap.o \
+	tests_lib/tests_lib.o \
 	ui/ui.o \
 	ui/text_input.o \
 	ui/text.o \
 	ui/image.o \
 	ui/button.o \
-	userspace/input/keyboard.o
+	userspace/input/keyboard.o \
+	tests/compiler_tests.o \
+	tests/interpreter_tests.o \
 
 
 OBJS_BIN_NO_SUFFIX = $(foreach obj,$(OBJS),bin/$(obj))

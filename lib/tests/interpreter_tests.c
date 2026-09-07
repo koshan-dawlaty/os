@@ -2,7 +2,8 @@
 #include <init.h>
 #include <lib/array.h>
 #include <lib/assert.h>
-#include <lib/compiler/c_compiler.h>
+#include <lib/compiler/ast.h>
+#include <lib/compiler/interpreter.h>
 #include <lib/font.h>
 #include <lib/list.h>
 #include <lib/log.h>

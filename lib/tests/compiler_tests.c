@@ -1,6 +1,6 @@
-#include "codegen.h"
 #include <lib/assert.h>
-#include <lib/compiler/c_compiler.h>
+#include <lib/compiler/ast.h>
+#include <lib/compiler/codegen.h>
 #include <lib/list.h>
 #include <lib/log.h>
 #include <tests/tests.h>
@@ -15,7 +15,11 @@ struct test_result *test_codegen_expr(const char *program, int expected)
     struct ast_error *err;
     struct ast_expr *expr = ast_parse_expression(&parser, &err);
     LIST_DEFINE_HEAD(top_statements_head);
-    int got = generate_and_run_expr(expr);
+    struct bytecode_array code = {0};
+    list_init_head(&code.current_scope_vars);
+    generate_expr(&code, expr);
+
+    int got = run_code(code.items, code.num);
     ASSERT_EQ(got, expected, ", %s (%d) != %d", program, expected, got);
 
     TEST_OK();

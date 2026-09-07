@@ -1,10 +1,10 @@
-#include "codegen.h"
-#include "container_of.h"
 #include <complex.h>
+#include <container_of.h>
 #include <init.h>
 #include <lib/array.h>
 #include <lib/assert.h>
-#include <lib/compiler/c_compiler.h>
+#include <lib/compiler/ast.h>
+#include <lib/compiler/codegen.h>
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/utils.h>
@@ -15,19 +15,6 @@
 
 extern int syscall_wrapper_asm(ptr_t ax, ptr_t bx, ptr_t cx, ptr_t dx, ptr_t si,
                                ptr_t di);
-
-struct bytecode_array
-{
-    u8 *items;
-    size_t capacity;
-    size_t num;
-
-    /* offset from the stack pointer since entering the function */
-    size_t stack_offset;
-
-    /* list of struct variables in current scope */
-    struct list current_scope_vars;
-};
 
 struct codegen_value
 {
@@ -317,8 +304,9 @@ void generate_set_conditional(struct bytecode_array *code, u8 opcode,
      * and generate_opcode_mod() does not support that, the opcode probably
      * can't be appended to the array before this, because the rex prefix could
      * exist for @dest */
-    ASSERT(!REG_IS_EXTENDED(dest->reg),
-           "2 byte opcodes not really implemented");
+    ASSERT(
+        !(dest->type == CODEGEN_VALUE_REGISTER && REG_IS_EXTENDED(dest->reg)),
+        "2 byte opcodes not really implemented");
 
     array_macro_append_v(code, 0x0F);
 
@@ -431,7 +419,8 @@ void variable_free(struct variable *var)
     free(var);
 }
 
-struct variable *variable_lookup(struct bytecode_array *code, const char *name)
+struct variable *codegen_variable_lookup(struct bytecode_array *code,
+                                         const char *name)
 {
     struct list *pos;
     list_for_each(pos, &code->current_scope_vars)
@@ -545,7 +534,8 @@ struct codegen_value *generate_expr_impl(struct bytecode_array *code,
     case AST_EXPRESSION_VALUE:
         if (expr->value.is_var)
         {
-            struct variable *var = variable_lookup(code, expr->value.varname);
+            struct variable *var =
+                codegen_variable_lookup(code, expr->value.varname);
             NOT_NULL(var, "variable not found %s", expr->value.varname);
             return var->value;
         }
@@ -696,119 +686,4 @@ int run_code(u8 *bytecode, size_t len)
     *(u32 *)(binary_test + 5) = sizeof(bytecode);
     memcpy(binary_test + 9, bytecode, len);
     syscall_wrapper_asm(SYS_load_simple_binary, (ptr_t)binary_test, 0, 0, 0, 0);
-}
-
-int generate_and_run_expr(struct ast_expr *expr)
-{
-
-    struct bytecode_array code = {0};
-
-    struct codegen_value *result = generate_expr(&code, expr);
-    generate_mov(&code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
-                 result);
-
-    /* reset stack offset */
-    generate_add(
-        &code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0b100},
-        &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, code.stack_offset});
-
-    array_macro_append_v(&code, 0xc3);
-
-    int retval = run_code(code.items, code.num);
-
-    free(code.items);
-
-    return retval;
-}
-
-extern void (*__ctors_start[])(void);
-extern void (*__ctors_end[])(void);
-void call_constructors(void)
-{
-    for (void (**ctor)(void) = __ctors_start; ctor < __ctors_end; ++ctor)
-    {
-        (*ctor)();
-    }
-}
-
-int main()
-{
-    call_constructors();
-
-    LIST_DEFINE_HEAD(tokens);
-    const char *program = MACRO_STR(
-        // clang-format off
-
-	int main() {
-		int x = 10;
-		if (x == 0) {
-			return 123;
-		}
-
-		return 0;
-	}
-
-        // clang-format on
-    );
-
-#ifdef TESTS
-    run_tests();
-#endif
-
-    tokenizer_parse_tokens(program, &tokens);
-
-    LIST_DEFINE_HEAD(top_statements_head);
-
-    struct ast_parser parser = {&tokens,
-                                .current = TOKEN_LIST_GET(tokens.next)};
-    struct ast_error *err = ast_parse(&tokens, &top_statements_head);
-    if (err != NULL)
-    {
-        static char buf[100];
-        ast_error_to_string(err, buf, 100);
-        PANIC("error:%s", buf);
-    }
-
-    struct bytecode_array code = {0};
-    list_init_head(&code.current_scope_vars);
-
-    struct ast_top_statement *function =
-        containerof(top_statements_head.next, struct ast_top_statement, list);
-    ASSERT(function->type == AST_TOP_STATEMENT_FUNC,
-           "not implemented for not function");
-    generate_function(&code, function);
-
-    /* code = (struct bytecode_array){0, 0, 0}; */
-
-    /* struct codegen_value *stack = generate_push( */
-    /*     &code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0});
-     */
-    /* /1* generate_mov(&code, stack, *1/ */
-    /* /1*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE,
-     * 0x12}); *1/ */
-    /* generate_sub(&code, stack, */
-    /*              &(struct codegen_value){CODEGEN_VALUE_REGISTER,
-     * 0b110}); */
-    /* array_macro_append_v(&code, 0xc3); */
-
-    /* generate_add(&code, &(struct
-     * codegen_value){CODEGEN_VALUE_REGISTER, 0b1000}, */
-    /*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE,
-     * 1}); */
-
-    log_multiline_start(&LOG_DEBUG);
-    for (size_t i = 0; i < code.num; i++)
-    {
-        if (code.items[i] < 16)
-        {
-            logd("0%p ", code.items[i]);
-        }
-        else
-        {
-            logd("%p ", code.items[i]);
-        }
-    }
-    log_multiline_end(&LOG_DEBUG);
-
-    run_code(code.items, code.num);
 }
