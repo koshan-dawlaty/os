@@ -51,8 +51,7 @@ void unmap_page(void *virtualaddr)
     u64 pdt_index = (virtual >> 21) & 0x1FF;
     u64 pt_index = (virtual >> 12) & 0x1FF;
 
-    /* TODO: bad */
-    u64 *pml4 = (void *)get_current_pagedir();
+    u64 *pml4 = (void *)get_current_pagedir()->pgdir_virtual;
     u64 pml4_entry = pml4[pml4_index];
 
     if ((pml4_entry & 1) == 0)
@@ -65,9 +64,7 @@ void unmap_page(void *virtualaddr)
         return;
     }
 
-    /* TODO: math might be wrong */
     u64 *pdpt_physical = (void *)(((pml4[pml4_index]) & ~0xFFF));
-    // u64 *pdpt_physical = (void *)(pml4[pml4_index]);
     u64 *pdpt = get_virtual_addr(pdpt_physical);
     u64 pdpt_entry = pdpt[pdpt_index];
 

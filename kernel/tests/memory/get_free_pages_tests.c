@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* #error "these tests seem to cause a page fault" */
+
 TEST(get_free_pages_test_basic, {
     int *one = get_free_pages(1);
     int *two = get_free_pages(1);

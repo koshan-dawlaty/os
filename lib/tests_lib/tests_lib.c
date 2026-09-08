@@ -135,10 +135,6 @@ extern struct test __stop_test_vars;
 
 void tests_run_input(struct test_input *input)
 {
-    for (size_t i = 0; i < TESTS_LEN; i++)
-    {
-        logd("%s", TESTS_ARRAY[i].name);
-    }
 
     char *tap_header = tap_get_header(TESTS_LEN);
     test_output_str(tap_header, strlen(tap_header));

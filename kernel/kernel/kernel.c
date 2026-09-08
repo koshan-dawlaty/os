@@ -224,7 +224,7 @@ void kernel_init()
     IRQ_OFF({
         register_interrupt_handler(0x80, syscall_handler_asm,
                                    (int_handler_flags){.is_user = true});
-    })
+    });
 
 #ifdef TESTS
     struct test_input input = {
