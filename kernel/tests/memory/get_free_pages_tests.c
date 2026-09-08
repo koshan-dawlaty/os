@@ -1,4 +1,5 @@
 #include "kernel/paging.h"
+#include "lib/log.h"
 #include "tests/tests.h"
 #include <memory/get_free_pages.h>
 #include <stdio.h>

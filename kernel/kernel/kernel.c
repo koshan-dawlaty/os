@@ -227,7 +227,16 @@ void kernel_init()
     })
 
 #ifdef TESTS
-    run_tests();
+    struct test_input input = {
+        {0},
+        TEST_INPUT_ONLY,
+        /* TEST_INPUT_EXCLUDE, */
+    };
+
+    array_macro_append(&input.test_patterns, "*");
+
+    tests_run_input(&input);
+    /* run_tests(); */
 #else
     /* symbol_table_parse(); /1* seems to break with tests *1/ */
 #endif
@@ -335,8 +344,7 @@ void kmain()
     char *init_program_args[] = {"", NULL};
 
 #ifdef TESTS
-    execv("/bin/codegen_tests.test", (char *[]){"compiler", NULL});
-    init_program = "/bin/compiler.test";
+    execv("/bin/codegen_tests.test", (char *[]){"", NULL});
 #else
     /* init_program = "/bin/compiler"; */
     init_program = "/bin/codegen_tests";
@@ -344,12 +352,12 @@ void kmain()
     /* init_program = "/bin/ls"; */
     /* execv("/bin/wm", (char *[]){"wm", NULL}); */
     /* execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
-#endif
     int err = execv(init_program, init_program_args);
     if (err)
     {
         PANIC("init program execv err:%s", strerror(err));
     }
+#endif
 
     enable_scheduler();
     irq_enable();

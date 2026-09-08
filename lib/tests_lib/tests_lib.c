@@ -13,7 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define TEST_OUTPUT_SERIAL_PORT 0x3F8
+#define TEST_OUTPUT_SERIAL_PORT 0x2F8
 
 #ifdef TESTS_EXTRA_TESTS
 /* defined in test.sh */
@@ -200,6 +200,58 @@ void run_all_tests_only()
         }
     }
 
+    test_output('\n');
+    test_output(4);
+}
+
+/* returns true if @testname matches @pattern */
+bool test_pattern_matches(const char *pattern, const char *testname)
+{
+    size_t i = 0;
+    while (pattern[i] != 0 && testname[i] != 0 &&
+           (testname[i] == pattern[i] || pattern[i] == '*'))
+    {
+        if (pattern[i] == '*')
+        {
+            /* at this point, every character has been in the pattern, so seeing
+             * a star here, meaning match until end, would mean that it matched
+             */
+            return true;
+        }
+        i++;
+    }
+    return pattern[i] == testname[i];
+}
+
+void tests_run_input(struct test_input *input)
+{
+    char *tap_header = tap_get_header(tests_size);
+    test_output_str(tap_header, strlen(tap_header));
+    free(tap_header);
+
+    for (size_t i = 0; i < tests_size; i++)
+    {
+        for (size_t j = 0; j < input->test_patterns.num; j++)
+        {
+
+            bool matched = test_pattern_matches(input->test_patterns.items[j],
+                                                tests[i]->name);
+            if ((matched && input->test_input_type == TEST_INPUT_ONLY) ||
+                (!matched && input->test_input_type == TEST_INPUT_EXCLUDE))
+            {
+                test_result *result = run_test(tests[i]);
+
+                char *tap = tap_format_test_result(tests[i], result, i);
+                test_output_str(tap, strlen(tap));
+
+                free(result);
+
+                free(tap);
+            }
+        }
+    }
+
+    /* end of input */
     test_output('\n');
     test_output(4);
 }

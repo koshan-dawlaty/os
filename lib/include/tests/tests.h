@@ -10,6 +10,24 @@
 
 void run_tests();
 
+struct test_input
+{
+    struct
+    {
+        char **items;
+        size_t num;
+        size_t capacity;
+    } test_patterns;
+
+    enum
+    {
+        /* only run the tests in test_patterns */
+        TEST_INPUT_ONLY,
+        /* run all the tests but the ones in test_patterns */
+        TEST_INPUT_EXCLUDE,
+    } test_input_type;
+};
+
 typedef struct test_result
 {
     bool failed;
@@ -145,5 +163,7 @@ void add_test(test *);
         body TEST_OK()                                                         \
                                                                                \
     } TEST_CONSTRUCTOR(name)
+
+void tests_run_input(struct test_input *input);
 
 #endif

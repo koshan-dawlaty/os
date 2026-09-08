@@ -1,7 +1,7 @@
 #ifndef KERNEL_LOG_H
 #define KERNEL_LOG_H
 
-#if defined(CONFIG_LOG) && !defined(TESTS)
+#if defined(CONFIG_LOG)
 #define SHOULD_LOG
 #endif
 

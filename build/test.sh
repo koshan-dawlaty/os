@@ -66,21 +66,21 @@ mkfifo "${SERIAL_PIPE}.out"
 
 
 
-gdb \
-	-ex "source pretty-print.py" \
-	-ex "set print pretty" \
-	-ex "add-symbol-file build/isodir/boot/os.kernel.test $KERNEL_ADDR" \
-	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
-	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
-	-ex "target remote | $QEMU_COMMAND -S -gdb stdio $(echo $QEMU_FLAGS | tr -d "\n")" \
-	-ex ""
+# gdb \
+# 	-ex "source pretty-print.py" \
+# 	-ex "set print pretty" \
+# 	-ex "add-symbol-file build/isodir/boot/os.kernel.test $KERNEL_ADDR" \
+# 	-ex "add-symbol-file $USER_EXECUTABLE $USERSPACE_ADDR" \
+# 	-ex "add-symbol-file $USER_EXECUTABLE2 $USERSPACE_ADDR2" \
+# 	-ex "target remote | $QEMU_COMMAND -S -gdb stdio $(echo "$QEMU_FLAGS -drive file=$IMAGE_FILE,format=raw,if=ide,index=0,cache=unsafe" | tr -d "\n")" \
+# 	-ex ""
 
 
 
 # redirect stderr to stop message when qemu is killed
-# $QEMU_COMMAND -monitor stdio $QEMU_FLAGS -display none -serial pipe:$SERIAL_PIPE  2>/dev/null &  
-$QEMU_COMMAND -monitor stdio $QEMU_FLAGS -serial pipe:$SERIAL_PIPE  -drive file=$IMAGE_FILE,format=raw,if=ide,index=0,cache=unsafe 2>/dev/null &  
+$QEMU_COMMAND $QEMU_FLAGS -serial stdio -serial pipe:$SERIAL_PIPE  -drive file=$IMAGE_FILE,format=raw,if=ide,index=0,cache=unsafe 2>/dev/null &  
 QEMU_PID=$!
+
 
 
 # tmux split-window -v -b -d -t "$TMUX_PANE" "cat $SERIAL_PIPE.out"
