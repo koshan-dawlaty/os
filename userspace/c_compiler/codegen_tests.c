@@ -2,7 +2,9 @@
  */
 
 /* this is a test executable, so always run tests */
+#ifndef TESTS
 #define TESTS
+#endif
 
 #include <lib/assert.h>
 #include <lib/compiler/ast.h>
@@ -23,7 +25,10 @@ struct test_result *test_codegen_expr(const char *program, int expected)
     LIST_DEFINE_HEAD(top_statements_head);
     struct bytecode_array code = {0};
     list_init_head(&code.current_scope_vars);
-    generate_expr(&code, expr);
+    struct codegen_value *expr_value = generate_expr(&code, expr);
+
+    generate_mov(&code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0),
+                 expr_value);
     generate_return(&code);
 
     int got = run_code(code.items, code.num);

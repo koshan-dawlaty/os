@@ -11,14 +11,11 @@ int main()
         // clang-format off
 
 	int main() {
-		int x = 10;
-		int y = 10;
-		if (x == y) {
-			y = y + 4;
-		}
-		x = 123;
-
-		return y + x;
+		return 
+                    5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9
+                  + 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2
+                  - 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8
+                  + 10 * (2 + 3 * (4 + 5));
 	}
 
         // clang-format on
