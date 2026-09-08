@@ -200,7 +200,7 @@ struct task *user_task_alloc(ptr_t ip, ptr_t sp, int argc, char **argv)
 
     /* TODO: this calls load_pgdir alot */
     struct pagedir *temp = get_current_pagedir();
-    addr_space_load(&out->addr_space);
+    addr_space_load(out->addr_space);
     char **args = create_user_args(argc, args_temp);
 
     /* stupid */
@@ -224,8 +224,8 @@ struct task *user_task_alloc(ptr_t ip, ptr_t sp, int argc, char **argv)
 struct task *user_thread_alloc(ptr_t ip)
 {
 
-    struct addr_space current_addr_space = get_current_task()->addr_space;
-    ASSERT(current_addr_space.dir != NULL,
+    struct addr_space *current_addr_space = get_current_task()->addr_space;
+    ASSERT(current_addr_space->dir != NULL,
            "null pagedir for current task, this might be because a kernel "
            "thread called this");
 
@@ -241,7 +241,7 @@ struct task *user_thread_alloc(ptr_t ip)
 
     out->addr_space = current_addr_space;
 
-    addr_space_load(&out->addr_space);
+    addr_space_load(out->addr_space);
     struct fdlist *parent_fdlist = get_current_task()->descriptors;
     out->descriptors = parent_fdlist;
 
@@ -312,7 +312,8 @@ struct task *task_alloc(ptr_t ip)
 
     *(ptr_t *)(out->stack) = ip;
     *(ptr_t *)(out->stack + 8) = ip;
-    out->addr_space = (struct addr_space){.dir = NULL, .list_head = NULL};
+    out->addr_space = addr_space_alloc_dir(NULL);
+    list_init_head(&out->addr_space->list_head);
 
     out->start_addr = (void *)ip;
     out->list = LIST_INIT();
@@ -334,7 +335,7 @@ struct task *create_kernel_task()
     struct registers2 regs;
     regs.fsave_space = malloc(FPU_STATE_SIZE);
     save_registers(&regs);
-    out->addr_space = (struct addr_space){.dir = &init_pgdir, NULL};
+    out->addr_space = addr_space_alloc_dir(&init_pgdir);
     out->stack = (void *)regs.esp;
     out->start_addr = (void *)0xDEADBEEF;
 
@@ -405,9 +406,9 @@ static void remove_task_sched_queue(struct task *task)
 static void remove_task_load(struct task *old_task)
 {
     struct task *current = SCHED_QUEUE_CURRENT_TASK(scheduler_queue);
-    if (current->addr_space.dir != NULL)
+    if (current->addr_space->dir != NULL)
     {
-        addr_space_load(&current->addr_space);
+        addr_space_load(current->addr_space);
     }
     set_kernel_stack((ptr_t)current->stack);
 
@@ -502,9 +503,9 @@ void schedule_impl()
         return;
     }
     current = SCHED_QUEUE_CURRENT_TASK(scheduler_queue);
-    if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space.dir != NULL)
+    if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space->dir != NULL)
     {
-        addr_space_load(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
+        addr_space_load(SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
     }
     set_kernel_stack((ptr_t)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
 

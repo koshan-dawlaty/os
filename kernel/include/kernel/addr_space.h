@@ -8,18 +8,19 @@ struct addr_space_page
 {
     void *addr;
     size_t num_pages;
-    struct list1_old list;
+    struct list list;
 };
 
 /* wrapper for struct pagedir that keeps track of pages */
 struct addr_space
 {
     struct pagedir *dir;
-    struct list1_old *list_head;
+    struct list list_head;
 };
 
-struct addr_space addr_space_alloc();
-void addr_space_free(struct addr_space a);
+struct addr_space *addr_space_alloc();
+struct addr_space *addr_space_alloc_dir(struct pagedir *dir);
+void addr_space_free(struct addr_space *a);
 
 struct addr_space *get_current_addr_space();
 

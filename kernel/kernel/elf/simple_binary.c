@@ -25,7 +25,7 @@ struct task *simple_binary_load(u8 *data)
     struct addr_space *current = get_current_addr_space();
 
     struct task *out = user_task_alloc(0, 0xBFFEF000, 0, 0);
-    addr_space_load(&out->addr_space);
+    addr_space_load(out->addr_space);
     logd("before gfp_user");
     void *memory = get_free_pages_user((bin_len / PAGE_SIZE) + 1);
     logd("kernel:%p, new task:%p", kernel, memory);
@@ -37,7 +37,7 @@ struct task *simple_binary_load(u8 *data)
     *((ptr_t *)(out->stack)) = (ptr_t)user_thread_kernel_start;
 
     addr_space_load(current);
-    create_userspace_stack(&out->addr_space);
+    create_userspace_stack(out->addr_space);
 
     return out;
 }

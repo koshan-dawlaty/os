@@ -77,7 +77,7 @@ struct task
 {
     struct list list;
 
-    struct addr_space addr_space;
+    struct addr_space *addr_space;
 
     void *stack;
     struct registers regs;

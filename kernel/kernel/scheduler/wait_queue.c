@@ -45,9 +45,9 @@ void wait_queue_wait(struct wait_queue *queue)
 
     /* print_tasks(); */
 
-    if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space.dir != NULL)
+    if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space->dir != NULL)
     {
-        addr_space_load(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
+        addr_space_load(SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
     }
     set_kernel_stack((ptr_t)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
 
