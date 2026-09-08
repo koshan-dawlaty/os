@@ -8,35 +8,7 @@ fi
 
 
 
-
-if [[  $# -ge 1  ]] && [[ $1 == "debug"  ]] ; then
-	CFLAGS="${CFLAGS} -DTEST_DEBUG"
-fi
-
-if [[  $# -ge 1  ]] && [[ $1 == "only"  ]] ; then
-	
-
-CFLAGS="${CFLAGS} -DTESTS_ONLY"
-
-
-fi
-
-args_list=( $@ )
-TEST_EXTRA_TESTS=( ${args_list[@]:1} )
-TESTS_EXCLUDE=true
-TESTS_EXTRA_TESTS_CFLAGS="-DTESTS_EXTRA_TESTS=\""
-
-for item in "${TEST_EXTRA_TESTS[@]}"; do
-	echo "Processing: $item"
-	TESTS_EXTRA_TESTS_CFLAGS+="\\\"$item\\\", "
-
-done
-TESTS_EXTRA_TESTS_CFLAGS+="\""
-
-echo $TESTS_EXTRA_TESTS_CFLAGS
-
-
-CFLAGS="${CFLAGS} -DTESTS $TESTS_EXTRA_TESTS_CFLAGS "
+CFLAGS="${CFLAGS} -DTESTS "
 
 ISO="build/os.iso"
 

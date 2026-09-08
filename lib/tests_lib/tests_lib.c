@@ -1,29 +1,19 @@
-#include "kernel/tty.h"
-#include "lib/assert.h"
-#include "lib/log.h"
-#include "serial.h"
 #include "tap.h"
-#include "tests/tests.h"
 #include <extension.h>
 #include <fcntl.h>
+#include <kernel/tty.h>
+#include <lib/assert.h>
+#include <lib/log.h>
+#include <serial.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tests/tests.h>
 #include <unistd.h>
 
 #define TEST_OUTPUT_SERIAL_PORT 0x2F8
-
-#ifdef TESTS_EXTRA_TESTS
-/* defined in test.sh */
-const char *extra_tests[] = {TESTS_EXTRA_TESTS};
-#else
-const char *extra_tests[] = {};
-#endif
-
-test **tests = NULL;
-size_t tests_size = 0;
 
 static int failed = 0;
 
@@ -113,95 +103,9 @@ test *new_test(char *name, callback func)
     return out;
 }
 
-void add_test(test *t)
+struct test_result *test_run(struct test *test)
 {
-    tests_size++;
-    tests = realloc(tests, tests_size * sizeof(test));
-    tests[tests_size - 1] = t;
-}
-
-test_result *run_test(test *test)
-{
-    test_result *result = test->func();
-
-    return result;
-}
-
-void run_all_tests()
-{
-    /* printf("running tests\n"); */
-
-    int *failed_indexes = malloc(sizeof(size_t) * tests_size);
-    test_result **results = malloc(sizeof(test_result) * tests_size);
-
-    size_t failed_indexes_len = 0;
-
-    char *tap_header = tap_get_header(tests_size);
-    test_output_str(tap_header, strlen(tap_header));
-    free(tap_header);
-
-    for (size_t i = 0; i < tests_size; i++)
-    {
-
-        printf("running: %s\n", tests[i]->name);
-        test_result *result = run_test(tests[i]);
-
-        if (result->failed)
-        {
-            failed_indexes[failed_indexes_len] = i;
-            failed_indexes_len++;
-        }
-
-        char *tap = tap_format_test_result(tests[i], result, i);
-        test_output_str(tap, strlen(tap));
-
-        free(tap);
-
-        results[i] = result;
-    }
-
-    free(failed_indexes);
-
-    for (size_t i = 0; i < tests_size; i++)
-    {
-        free(results[i]);
-    }
-
-    /* end of input */
-    test_output('\n');
-    test_output(4);
-}
-
-/* runs all of the tests matching names in extra_tests */
-void run_all_tests_only()
-{
-    const size_t num_extra = sizeof(extra_tests) / sizeof(const char *);
-
-    char *tap_header = tap_get_header(num_extra);
-    test_output_str(tap_header, strlen(tap_header));
-    free(tap_header);
-
-    for (size_t i = 0; i < num_extra; i++)
-    {
-        const char *name = extra_tests[i];
-        for (size_t j = 0; j < tests_size; j++)
-        {
-            test *t = tests[j];
-
-            if (!strcmp(t->name, name))
-            {
-                printf("running:%s\n", t->name);
-                test_result *r = run_test(t);
-                char *tap = tap_format_test_result(tests[j], r, i);
-                test_output_str(tap, strlen(tap));
-
-                free(tap);
-            }
-        }
-    }
-
-    test_output('\n');
-    test_output(4);
+    return test->func();
 }
 
 /* returns true if @testname matches @pattern */
@@ -223,25 +127,37 @@ bool test_pattern_matches(const char *pattern, const char *testname)
     return pattern[i] == testname[i];
 }
 
+extern struct test __start_test_vars;
+extern struct test __stop_test_vars;
+
+#define TESTS_LEN (&__stop_test_vars - &__start_test_vars)
+#define TESTS_ARRAY (&__start_test_vars)
+
 void tests_run_input(struct test_input *input)
 {
-    char *tap_header = tap_get_header(tests_size);
+    for (size_t i = 0; i < TESTS_LEN; i++)
+    {
+        logd("%s", TESTS_ARRAY[i].name);
+    }
+
+    char *tap_header = tap_get_header(TESTS_LEN);
     test_output_str(tap_header, strlen(tap_header));
     free(tap_header);
 
-    for (size_t i = 0; i < tests_size; i++)
+    for (size_t i = 0; i < TESTS_LEN; i++)
     {
+        struct test current_test = TESTS_ARRAY[i];
         for (size_t j = 0; j < input->test_patterns.num; j++)
         {
 
             bool matched = test_pattern_matches(input->test_patterns.items[j],
-                                                tests[i]->name);
+                                                current_test.name);
             if ((matched && input->test_input_type == TEST_INPUT_ONLY) ||
                 (!matched && input->test_input_type == TEST_INPUT_EXCLUDE))
             {
-                test_result *result = run_test(tests[i]);
+                test_result *result = test_run(&current_test);
 
-                char *tap = tap_format_test_result(tests[i], result, i);
+                char *tap = tap_format_test_result(&current_test, result, i);
                 test_output_str(tap, strlen(tap));
 
                 free(result);
@@ -254,14 +170,4 @@ void tests_run_input(struct test_input *input)
     /* end of input */
     test_output('\n');
     test_output(4);
-}
-
-void run_tests()
-{
-    test_init_output();
-#ifdef TESTS_ONLY
-    run_all_tests_only();
-#else
-    run_all_tests();
-#endif
 }

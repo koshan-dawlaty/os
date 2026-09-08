@@ -5,9 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct test_result *a()
-{
-
+TEST(get_free_pages_test_basic, {
     int *one = get_free_pages(1);
     int *two = get_free_pages(1);
     int *three = get_free_pages(1);
@@ -25,13 +23,9 @@ struct test_result *a()
     free_pages(one, 1);
     free_pages(two, 1);
     free_pages(three, 1);
-    TEST_OK();
-}
+})
 
-TEST(get_free_pages_test_basic, { return a(); })
-
-test_result *get_free_pages_test_multiple_test()
-{
+TEST(get_free_pages_test_multiple, {
     int amount = 10;
     int size = 1;
     int **ptrs = malloc(amount * sizeof(void *));
@@ -52,10 +46,4 @@ test_result *get_free_pages_test_multiple_test()
         free_pages(ptrs[i], size);
     }
     return new_test_result(0, "");
-}
-__attribute__((constructor)) void
-get_free_pages_test_multiple_test_constructor()
-{
-    add_test(new_test("get_free_pages_test_multiple",
-                      get_free_pages_test_multiple_test));
-}
+})

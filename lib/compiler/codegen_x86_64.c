@@ -648,7 +648,6 @@ void generate_function(struct bytecode_array *code,
                        struct ast_top_statement *function)
 {
     generate_block(code, &function->function->block);
-
     /* generate_return(code); */
 }
 

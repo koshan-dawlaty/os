@@ -11,11 +11,15 @@ int main()
         // clang-format off
 
 	int main() {
-		return 
-                    5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9
-                  + 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2
-                  - 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8
-                  + 10 * (2 + 3 * (4 + 5));
+		int x = 20;
+		int y = 10;
+		int z = x - y * 2;
+
+		if (z == 0) {
+			return 1;
+		}
+
+		return 0;
 	}
 
         // clang-format on

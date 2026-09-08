@@ -49,18 +49,16 @@ TEST_CODEGEN_EXPR(test_codegen_expr3,
                   "+ 10 * (2 + 3 * (4 + 5)) ",
                   346);
 
-extern void (*__ctors_start[])(void);
-extern void (*__ctors_end[])(void);
-void call_constructors(void)
-{
-    for (void (**ctor)(void) = __ctors_start; ctor < __ctors_end; ++ctor)
-    {
-        (*ctor)();
-    }
-}
-
 int main()
 {
-    call_constructors();
-    run_tests();
+
+    struct test_input input = {
+        {0},
+        TEST_INPUT_ONLY,
+        /* TEST_INPUT_EXCLUDE, */
+    };
+
+    array_macro_append(&input.test_patterns, "*");
+
+    tests_run_input(&input);
 }

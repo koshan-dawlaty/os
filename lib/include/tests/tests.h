@@ -1,14 +1,13 @@
 #ifndef TESTS_H
 #define TESTS_H
 
+#include <compiler.h>
 #include <err_ptr.h>
 #include <lib/utils.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 #include <types.h>
-
-void run_tests();
 
 struct test_input
 {
@@ -46,7 +45,7 @@ test_result *get_failed_test(intmax_t, ...);
 
 typedef test_result *(*callback)();
 
-typedef struct
+typedef struct test
 {
     callback func;
     char *name;
@@ -54,7 +53,7 @@ typedef struct
 test_result *new_test_result(bool failed, char *message);
 
 test *new_test(char *name, callback);
-void add_test(test *);
+void tests_run_input(struct test_input *input);
 
 /* used for getting string literal / varargs from format output */
 /* https://stackoverflow.com/questions/77894576/achieve-the-opposite-of-va-opt-in-variadic-preprocessor-function-like-macros*/
@@ -146,24 +145,14 @@ void add_test(test *);
  */
 #define TEST_OK() return new_test_result(false, "");
 
-#ifdef TESTS
-#define TEST_CONSTRUCTOR(name)                                                 \
-                                                                               \
-    __attribute__((constructor)) void name##_test_constructor()                \
-    {                                                                          \
-        add_test(new_test(#name, name##_test));                                \
-    }
-#else
-#define TEST_CONSTRUCTOR(name)
-#endif
-
 #define TEST(name, body, ...)                                                  \
-    test_result *name##_test(){                                                \
+    test_result *name##_test()                                                 \
+    {                                                                          \
                                                                                \
         body TEST_OK()                                                         \
+    }                                                                          \
                                                                                \
-    } TEST_CONSTRUCTOR(name)
-
-void tests_run_input(struct test_input *input);
+    struct test name##_test_var __section("test_vars") = {name##_test,         \
+                                                          MACRO_STR(name)};
 
 #endif
