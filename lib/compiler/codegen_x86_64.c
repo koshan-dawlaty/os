@@ -16,22 +16,6 @@
 extern int syscall_wrapper_asm(ptr_t ax, ptr_t bx, ptr_t cx, ptr_t dx, ptr_t si,
                                ptr_t di);
 
-struct codegen_value
-{
-    enum codegen_value_type
-    {
-        CODEGEN_VALUE_REGISTER,
-        CODEGEN_VALUE_MEMORY,
-        CODEGEN_VALUE_IMMEDIATE,
-        CODEGEN_VALUE_STACK,
-    } type;
-    union
-    {
-        u64 value;
-        u8 reg;
-    };
-};
-
 /* true if the type can be used in the r/m field in the modrm byte */
 #define CODEGEN_TYPE_IS_RM(type)                                               \
     (type == CODEGEN_VALUE_REGISTER || type == CODEGEN_VALUE_STACK ||          \

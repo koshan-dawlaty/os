@@ -38,7 +38,6 @@ export QEMU_FLAGS :=  -cdrom build/os.iso \
 -boot d  \
 -vga std \
 -display default,show-cursor=on \
--drive file=build/qemu.img,format=raw,if=ide,index=0 \
 # --enable-kvm \
 
 # -netdev tap,id=net0,ifname=tap0,script=no,downscript=no \
@@ -46,6 +45,13 @@ export QEMU_FLAGS :=  -cdrom build/os.iso \
 # -netdev user,id=net0 \
 # -device e1000,netdev=net0 \
 # -smp 1 \
+
+
+
+
+export QEMU_DRIVE=\
+-drive file=build/qemu.img,format=raw,if=ide,index=0 
+
 
 ifdef NODISPLAY
 	QEMU_FLAGS += -display none
@@ -131,7 +137,7 @@ qemu : $(ISO)
 	rm -f build/qemu.img
 	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
 	# $(QEMU_COMMAND) -monitor stdio $(QEMU_FLAGS)
-	$(QEMU_COMMAND) -serial mon:stdio $(QEMU_FLAGS)
+	$(QEMU_COMMAND) -serial mon:stdio $(QEMU_FLAGS) $(QEMU_DRIVE)
 
 clean:
 	$(RM) -r $(SYSROOT)

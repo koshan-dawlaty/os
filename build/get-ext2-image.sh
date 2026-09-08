@@ -12,7 +12,6 @@ fi
 
 
 if [[ $file_name == /* ]]; then
-
 	echo "script get ext2 image cannot run on root dir"
 	exit 1
 fi
