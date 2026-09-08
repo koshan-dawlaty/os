@@ -23,5 +23,6 @@ struct codegen_value *generate_expr(struct bytecode_array *code,
                                     struct ast_expr *expr);
 
 int run_code(u8 *bytecode, size_t len);
+void generate_return(struct bytecode_array *code);
 
 #endif

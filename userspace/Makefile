@@ -77,6 +77,8 @@ BINARIES=\
 	ls$(TEST_SUFFIX) \
 	wm$(TEST_SUFFIX) \
 	compiler$(TEST_SUFFIX) \
+	interpreter$(TEST_SUFFIX) \
+	codegen_tests$(TEST_SUFFIX) \
 	ui_lib$(TEST_SUFFIX) \
 	tron$(TEST_SUFFIX) \
 	render_test$(TEST_SUFFIX) \
@@ -190,6 +192,10 @@ $(BIN)/compiler$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/compiler.o$(
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000   -DTESTS
 
 $(BIN)/interpreter$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/interpreter.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000   -DTESTS
+
+$(BIN)/codegen_tests$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/codegen_tests.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000   -DTESTS
 

@@ -335,10 +335,11 @@ void kmain()
     char *init_program_args[] = {"", NULL};
 
 #ifdef TESTS
-    execv("/bin/compiler.test", (char *[]){"compiler", NULL});
+    execv("/bin/codegen_tests.test", (char *[]){"compiler", NULL});
     init_program = "/bin/compiler.test";
 #else
-    init_program = "/bin/compiler";
+    /* init_program = "/bin/compiler"; */
+    init_program = "/bin/codegen_tests";
     /* init_program = "/bin/wm"; */
     /* init_program = "/bin/ls"; */
     /* execv("/bin/wm", (char *[]){"wm", NULL}); */

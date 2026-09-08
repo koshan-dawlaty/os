@@ -54,7 +54,6 @@ OBJS=\
 	ui/image.o \
 	ui/button.o \
 	userspace/input/keyboard.o \
-	tests/compiler_tests.o \
 	tests/interpreter_tests.o \
 
 
