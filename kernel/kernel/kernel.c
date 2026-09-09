@@ -346,16 +346,16 @@ void kmain()
 #ifdef TESTS
     execv("/bin/codegen_tests.test", (char *[]){"", NULL});
 #else
-    /* init_program = "/bin/compiler"; */
+    init_program = "/bin/compiler";
     /* init_program = "/bin/codegen_tests"; */
-    init_program = "/bin/wm";
+    /* init_program = "/bin/wm"; */
     /* init_program = "/bin/ls"; */
     /* execv("/bin/wm", (char *[]){"wm", NULL}); */
     /* execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
     int err = execv(init_program, init_program_args);
     if (err)
     {
-        PANIC("init program execv err:%s", strerror(err));
+        PANIC("error when starting init program:%s", strerror(err));
     }
 #endif
 

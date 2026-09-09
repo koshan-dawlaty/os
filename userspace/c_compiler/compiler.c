@@ -1,10 +1,32 @@
+#include "lib/log.h"
 #include <lib/assert.h>
 #include <lib/compiler/ast.h>
 #include <lib/compiler/codegen.h>
+#include <lib/compiler/ir.h>
+#include <lib/list.h>
 #include <lib/utils.h>
+
+void ir_test()
+{
+    const char *expr_str = "x = 3 + 4 + y + z";
+    LIST_DEFINE_HEAD(tokens);
+    tokenizer_parse_tokens(expr_str, &tokens);
+
+    struct ast_parser parser = {&tokens, TOKEN_LIST_GET(tokens.next)};
+    struct ast_error *err;
+    struct ast_expr *expr = ast_parse_expression(&parser, &err);
+
+    struct ir_program program = {.register_offset = 0};
+    list_init_head(&program.operations);
+    ir_generate_expr(&program, expr);
+    ir_display(&program, &LOG_INFO);
+}
 
 int main()
 {
+
+    ir_test();
+    return 0;
 
     LIST_DEFINE_HEAD(tokens);
     const char *program = MACRO_STR(
