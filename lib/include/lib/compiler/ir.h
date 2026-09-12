@@ -4,16 +4,18 @@
 #include <lib/compiler/ast.h>
 #include <types.h>
 
-struct ir_variable
-{
-};
-
 struct ir_operation;
-
 struct ir_program
 {
     struct list operations;
     size_t register_offset;
+
+    struct
+    {
+        struct ir_variable **items;
+        size_t num;
+        size_t capacity;
+    } variables;
 };
 
 struct ir_value
@@ -33,6 +35,14 @@ struct ir_value
         IR_VALUE_REIGSTER,
     } type;
 };
+
+struct ir_variable
+{
+    char *name;
+    struct ir_value *value;
+};
+
+struct ir_variable *ir_variable_alloc(const char *name, struct ir_value *val);
 
 enum ir_operation_type
 {
@@ -55,5 +65,6 @@ struct ir_operation
 
 void ir_generate_expr(struct ir_program *program, struct ast_expr *expr);
 void ir_display(struct ir_program *program, struct log_level *level);
+void ir_generate_block(struct ir_program *program, struct list *statements);
 
 #endif

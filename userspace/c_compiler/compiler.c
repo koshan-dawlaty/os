@@ -1,3 +1,4 @@
+#include "container_of.h"
 #include "lib/log.h"
 #include <lib/assert.h>
 #include <lib/compiler/ast.h>
@@ -8,17 +9,24 @@
 
 void ir_test()
 {
-    const char *expr_str = "x = 3 + 4 + y + z";
+    const char *expr_str = MACRO_STR(int main() {
+        int y = 123 + 456;
+        int x = y;
+    }
+
+    );
+
     LIST_DEFINE_HEAD(tokens);
     tokenizer_parse_tokens(expr_str, &tokens);
 
-    struct ast_parser parser = {&tokens, TOKEN_LIST_GET(tokens.next)};
-    struct ast_error *err;
-    struct ast_expr *expr = ast_parse_expression(&parser, &err);
+    LIST_DEFINE_HEAD(top_statements);
+    struct ast_error *err = ast_parse(&tokens, &top_statements);
 
-    struct ir_program program = {.register_offset = 0};
+    struct ir_program program = {.register_offset = 0, {0}};
     list_init_head(&program.operations);
-    ir_generate_expr(&program, expr);
+    struct ast_top_statement *main =
+        containerof(top_statements.next, struct ast_top_statement, list);
+    ir_generate_block(&program, &main->function->block);
     ir_display(&program, &LOG_INFO);
 }
 

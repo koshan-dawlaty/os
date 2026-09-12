@@ -14,3 +14,7 @@ CompileFlags:
 #     "-Wunused-parameter", "unused-parameter",
 #     "-Wunused-variable", "unused-variable",
 #   ]
+
+Completion:
+  ArgumentLists: None
+

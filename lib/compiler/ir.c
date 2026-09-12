@@ -5,9 +5,32 @@
 #include <lib/compiler/ir.h>
 #include <lib/list.h>
 #include <lib/log.h>
-#include <math.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <types.h>
+
+struct ir_variable *ir_variable_alloc(const char *name, struct ir_value *val)
+{
+    struct ir_variable *out = malloc(sizeof(struct ir_variable));
+    out->name = strdup(name);
+    out->value = val;
+    return out;
+}
+
+struct ir_variable *ir_variable_lookup(struct ir_program *program,
+                                       const char *name)
+{
+    for (size_t i = 0; i < program->variables.num; i++)
+    {
+        struct ir_variable *var = program->variables.items[i];
+        if (!strcmp(var->name, name))
+        {
+            return var;
+        }
+    }
+
+    return NULL;
+}
 
 /* these maybe shouldn't be a pointer, but we could add types to ir_value in the
  * future */
@@ -55,16 +78,22 @@ struct ir_operation *ir_operation_alloc(enum ir_operation_type type,
     return out;
 }
 
+void ir_operation_append(struct ir_program *program, struct ir_operation *op)
+{
+    list_push_end(&op->list, &program->operations);
+}
+
 struct ir_value *ast_value_convert_ir(struct ir_program *program,
                                       struct ast_value value)
 {
     if (value.is_var)
     {
-        return ir_value_alloc_reg(program);
+        struct ir_variable *var = ir_variable_lookup(program, value.varname);
+        NOT_NULL(var, "undeclared variable %s", value.varname);
+        return var->value;
     }
     else
     {
-        /* FIXME: needs to lookup varname */
         return ir_value_alloc_immediate(program, value.literal.integer);
     }
 }
@@ -83,11 +112,28 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
         struct ir_value *rhs = ir_generate_expr_impl(program, dest, expr->rhs);
 
         struct ir_operation *op = ir_operation_alloc(IR_OP_ADD, dest, lhs, rhs);
-        list_push_end(&op->list, &program->operations);
+        ir_operation_append(program, op);
 
         return dest;
     default:
         PANIC("unhandled expr type:%d", expr->type);
+    }
+}
+
+void ir_generate_expr_dest(struct ir_program *program,
+                                       struct ir_value *dest,
+                                       struct ast_expr *expr)
+{
+    if (expr->type == AST_EXPRESSION_VALUE)
+    {
+        struct ir_value *expr_value =
+            ast_value_convert_ir(program, expr->value);
+        ir_operation_append(
+            program, ir_operation_alloc(IR_OP_MOV, dest, expr_value, NULL));
+    }
+    else
+    {
+        ir_generate_expr_impl(program, dest, expr);
     }
 }
 
@@ -105,16 +151,37 @@ void ir_generate_expr(struct ir_program *program, struct ast_expr *expr)
            "complex left hand side of assignment not implemented");
 
     struct ir_value *lhs = ast_value_convert_ir(program, expr->value);
-    ir_generate_expr_impl(program, lhs, expr->rhs);
+    ir_generate_expr_dest(program, lhs, expr->rhs);
 }
 
-void ir_parse_block(struct ir_program *program, struct list *statements)
+void ir_generate_block(struct ir_program *program, struct list *statements)
 {
+
     struct list *pos;
     list_for_each(pos, statements)
     {
         struct ast_statement *statement =
             containerof(pos, struct ast_statement, list);
+        switch (statement->type)
+        {
+        case AST_STATEMENT_EXPR:
+            ir_generate_expr(program, statement->expr);
+
+            break;
+        case AST_STATEMENT_IF:
+        case AST_STATEMENT_WHILE:
+        case AST_STATEMENT_FOR:
+            break;
+        case AST_STATEMENT_DECLARE:;
+            logd("generating for declared as %s", statement->varname);
+            struct ir_variable *var = ir_variable_alloc(
+                statement->varname, ir_value_alloc_reg(program));
+            array_macro_append(&program->variables, var);
+            ir_generate_expr_dest(program, var->value, statement->init_value);
+            break;
+        case AST_STATEMENT_RETURN:
+            break;
+        }
     }
 }
 
