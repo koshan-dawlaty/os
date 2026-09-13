@@ -52,6 +52,9 @@ enum ir_operation_type
 
     /* one = two */
     IR_OP_MOV,
+
+	/* return value = one */
+	IR_OP_RET,
 };
 
 struct ir_operation

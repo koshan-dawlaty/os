@@ -2,6 +2,7 @@
 #define CODEGEN_H
 
 #include <lib/compiler/ast.h>
+#include <lib/compiler/ir.h>
 #include <types.h>
 
 struct bytecode_array
@@ -44,5 +45,8 @@ void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
 
 int run_code(u8 *bytecode, size_t len);
 void generate_return(struct bytecode_array *code);
+
+void codegen_generate_ir(struct bytecode_array *code,
+                         struct ir_program *program);
 
 #endif

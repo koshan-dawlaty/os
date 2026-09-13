@@ -1,17 +1,18 @@
-#include "container_of.h"
-#include "lib/log.h"
+#include <container_of.h>
 #include <lib/assert.h>
 #include <lib/compiler/ast.h>
 #include <lib/compiler/codegen.h>
 #include <lib/compiler/ir.h>
 #include <lib/list.h>
+#include <lib/log.h>
 #include <lib/utils.h>
 
 void ir_test()
 {
     const char *expr_str = MACRO_STR(int main() {
-        int y = 123 + 456;
+        int y = 1 + 2 + 3;
         int x = y;
+		return x;
     }
 
     );
@@ -28,6 +29,25 @@ void ir_test()
         containerof(top_statements.next, struct ast_top_statement, list);
     ir_generate_block(&program, &main->function->block);
     ir_display(&program, &LOG_INFO);
+
+    struct bytecode_array code = {0};
+    codegen_generate_ir(&code, &program);
+
+    log_multiline_start(&LOG_DEBUG);
+    for (size_t i = 0; i < code.num; i++)
+    {
+        if (code.items[i] < 16)
+        {
+            logd("0%p ", code.items[i]);
+        }
+        else
+        {
+            logd("%p ", code.items[i]);
+        }
+    }
+    log_multiline_end(&LOG_DEBUG);
+
+    run_code(code.items, code.num);
 }
 
 int main()

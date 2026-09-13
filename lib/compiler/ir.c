@@ -61,6 +61,8 @@ const char *ir_operation_type_str(enum ir_operation_type type)
         return "SUB";
     case IR_OP_MOV:
         return "MOV";
+    case IR_OP_RET:
+        return "RET";
     }
 }
 
@@ -105,7 +107,6 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
     switch (expr->type)
     {
     case AST_EXPRESSION_VALUE:;
-
         return ast_value_convert_ir(program, expr->value);
     case AST_EXPRESSION_OPERATOR:;
         struct ir_value *lhs = ir_generate_expr_impl(program, dest, expr->lhs);
@@ -120,9 +121,8 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
     }
 }
 
-void ir_generate_expr_dest(struct ir_program *program,
-                                       struct ir_value *dest,
-                                       struct ast_expr *expr)
+void ir_generate_expr_dest(struct ir_program *program, struct ir_value *dest,
+                           struct ast_expr *expr)
 {
     if (expr->type == AST_EXPRESSION_VALUE)
     {
@@ -179,7 +179,16 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
             array_macro_append(&program->variables, var);
             ir_generate_expr_dest(program, var->value, statement->init_value);
             break;
-        case AST_STATEMENT_RETURN:
+        case AST_STATEMENT_RETURN:;
+            /* TODO: there is probably a better way of doing this than
+             * allocating a new register, there could be a special return value
+             * register that would be automatically mapped to the architecture
+             * return value */
+            struct ir_value *return_dest = ir_value_alloc_reg(program);
+            ir_generate_expr_dest(program, return_dest, statement->expr);
+            ir_operation_append(
+                program,
+                ir_operation_alloc(IR_OP_RET, return_dest, NULL, NULL));
             break;
         }
     }

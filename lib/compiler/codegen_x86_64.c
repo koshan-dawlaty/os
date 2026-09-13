@@ -1,3 +1,4 @@
+#include "lib/compiler/ir.h"
 #include <complex.h>
 #include <container_of.h>
 #include <init.h>
@@ -103,8 +104,6 @@ void generate_sib_byte(struct bytecode_array *code,
 {
     if (memory->type == CODEGEN_VALUE_STACK)
     {
-        logd("generating sib byte, sp offset of %d",
-             code->stack_offset - memory->value);
         array_macro_append_v(code, 0b00100100,
                              code->stack_offset - memory->value);
         /* memory->value - code->stack_offset); */
@@ -669,4 +668,73 @@ int run_code(u8 *bytecode, size_t len)
     *(u32 *)(binary_test + 5) = sizeof(bytecode);
     memcpy(binary_test + 9, bytecode, len);
     syscall_wrapper_asm(SYS_load_simple_binary, (ptr_t)binary_test, 0, 0, 0, 0);
+}
+
+struct codegen_value *codegen_convert_ir_value(struct bytecode_array *code,
+                                               struct ir_value *value)
+{
+    if (value == NULL)
+    {
+        return NULL;
+    }
+    switch (value->type)
+    {
+    case IR_VALUE_IMMEDIATE:
+        return codegen_value_alloc(CODEGEN_VALUE_IMMEDIATE, value->value);
+    case IR_VALUE_REIGSTER:
+        return codegen_value_alloc(CODEGEN_VALUE_STACK,
+                                   code->stack_offset - (value->var.num * 8));
+    }
+}
+
+void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
+{
+    struct codegen_value *one = codegen_convert_ir_value(code, op->one);
+    struct codegen_value *two = codegen_convert_ir_value(code, op->two);
+    struct codegen_value *three = codegen_convert_ir_value(code, op->three);
+
+    switch (op->type)
+    {
+    case IR_OP_ADD:
+        /* this is stupid */
+        if (op->one->var.num == op->two->var.num)
+        {
+            generate_add(code, one, three);
+        }
+        else
+        {
+            generate_mov(code, &immediate_temp_reg,
+                         &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, 0));
+            generate_add(code, &immediate_temp_reg, two);
+            generate_add(code, &immediate_temp_reg, three);
+            generate_mov(code, one, &immediate_temp_reg);
+        }
+        break;
+    case IR_OP_SUB:
+        break;
+    case IR_OP_MOV:
+        generate_mov(code, one, two);
+        break;
+    case IR_OP_RET:
+        generate_mov(code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0), one);
+        generate_return(code);
+        break;
+    }
+}
+
+void codegen_generate_ir(struct bytecode_array *code,
+                         struct ir_program *program)
+{
+    size_t vars_size = program->register_offset * 8;
+    generate_sub(code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0b100),
+                 &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, vars_size));
+    code->stack_offset += vars_size;
+
+    struct list *pos;
+    list_for_each(pos, &program->operations)
+    {
+        struct ir_operation *op = containerof(pos, struct ir_operation, list);
+        codegen_generate_op(code, op);
+    }
+    generate_return(code);
 }
