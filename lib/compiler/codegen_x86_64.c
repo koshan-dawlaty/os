@@ -44,7 +44,6 @@ u8 get_modrm_rm(u8 mod, struct codegen_value *rm)
 {
     if (rm->type == CODEGEN_VALUE_STACK)
     {
-        logd("stack rm");
         return 0b01000000 | BYTE_AS_RM(0b100) | ((mod & 0b111) << 3);
     }
     else
@@ -57,7 +56,6 @@ u8 get_modrm(struct codegen_value *reg, struct codegen_value *rm)
 {
     if (rm->type == CODEGEN_VALUE_STACK)
     {
-        logd("rm is memory, %d", reg->value);
         return 0b01000000 | BYTE_AS_RM(0b100) | ((reg->value) << 3);
     }
     else
@@ -120,7 +118,7 @@ void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
 void generate_opcode(struct bytecode_array *code, u8 opcode,
                      struct codegen_value *dest, struct codegen_value *src)
 {
-    logd("%d, %d", dest->type, src->type);
+
     if (src->type == CODEGEN_VALUE_STACK && dest->type == CODEGEN_VALUE_STACK)
     {
         /* this might end up being annoying to debug because of recursion */
@@ -132,7 +130,6 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
     if (dest->type == CODEGEN_VALUE_REGISTER &&
         src->type != CODEGEN_VALUE_REGISTER)
     {
-        logd("setting direction bit");
         opcode |= 0b10; /* r/m to register */
                         /* struct codegen_value *temp = dest; */
                         /* dest = src; */
@@ -142,15 +139,10 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
     }
     else
     {
-        logd("not setting direction bit");
         opcode &= ~0b10;
         rm = dest;
         reg = src;
     }
-
-    logd("opcode:%p", opcode);
-
-    logd("%d, %d", reg->type, rm->type);
 
     generate_opcode_bytes(code, get_rex(reg, rm), opcode, get_modrm(reg, rm));
 
@@ -193,7 +185,6 @@ void generate_opcode_mod(struct bytecode_array *code, u8 opcode, u8 mod,
 void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
                   struct codegen_value *src)
 {
-    logd("mov:%d, %d,%d", dest->value, src->value, src->type);
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
         generate_opcode_mod(code, 0xc7, 0, dest, src);
@@ -216,7 +207,6 @@ void generate_sub(struct bytecode_array *code, struct codegen_value *dest,
 {
     if (src->type == CODEGEN_VALUE_IMMEDIATE)
     {
-        logd("sub on:%d", dest->reg);
         generate_opcode_mod(code, 0x81, 0b101, dest, src);
     }
     else
@@ -696,21 +686,17 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     switch (op->type)
     {
     case IR_OP_ADD:
-        /* this is stupid */
-        if (op->one->var.num == op->two->var.num)
-        {
-            generate_add(code, one, three);
-        }
-        else
-        {
-            generate_mov(code, &immediate_temp_reg,
-                         &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, 0));
-            generate_add(code, &immediate_temp_reg, two);
-            generate_add(code, &immediate_temp_reg, three);
-            generate_mov(code, one, &immediate_temp_reg);
-        }
+        generate_add(code, one, two);
+        generate_add(code, one, three);
         break;
     case IR_OP_SUB:
+        generate_mov(code, one, two);
+        generate_sub(code, one, three);
+        break;
+    case IR_OP_MUL:
+        generate_mov(code, one, two);
+        struct codegen_value *out = generate_mul(code, one, three);
+        generate_mov(code, one, out);
         break;
     case IR_OP_MOV:
         generate_mov(code, one, two);
@@ -719,6 +705,9 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
         generate_mov(code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0), one);
         generate_return(code);
         break;
+
+    case IR_OP_INVALID:
+        PANIC("invalid ir op");
     }
 }
 
@@ -729,6 +718,12 @@ void codegen_generate_ir(struct bytecode_array *code,
     generate_sub(code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0b100),
                  &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, vars_size));
     code->stack_offset += vars_size;
+    for (size_t i = 0; i < vars_size / 8; i++)
+    {
+        generate_mov(
+            code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_STACK, vars_size - i * 8),
+            &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, 0));
+    }
 
     struct list *pos;
     list_for_each(pos, &program->operations)

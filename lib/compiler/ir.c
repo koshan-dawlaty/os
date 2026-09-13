@@ -9,11 +9,11 @@
 #include <stdlib.h>
 #include <types.h>
 
-struct ir_variable *ir_variable_alloc(const char *name, struct ir_value *val)
+struct ir_variable *ir_variable_alloc(const char *name)
 {
     struct ir_variable *out = malloc(sizeof(struct ir_variable));
     out->name = strdup(name);
-    out->value = val;
+    out->max_value = NULL;
     return out;
 }
 
@@ -63,6 +63,10 @@ const char *ir_operation_type_str(enum ir_operation_type type)
         return "MOV";
     case IR_OP_RET:
         return "RET";
+    case IR_OP_MUL:
+        return "MUL";
+    case IR_OP_INVALID:
+        return "INVALID";
     }
 }
 
@@ -92,7 +96,8 @@ struct ir_value *ast_value_convert_ir(struct ir_program *program,
     {
         struct ir_variable *var = ir_variable_lookup(program, value.varname);
         NOT_NULL(var, "undeclared variable %s", value.varname);
-        return var->value;
+		logd("found var:%s", value.varname);
+        return var->max_value;
     }
     else
     {
@@ -101,7 +106,6 @@ struct ir_value *ast_value_convert_ir(struct ir_program *program,
 }
 
 struct ir_value *ir_generate_expr_impl(struct ir_program *program,
-                                       struct ir_value *dest,
                                        struct ast_expr *expr)
 {
     switch (expr->type)
@@ -109,35 +113,61 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
     case AST_EXPRESSION_VALUE:;
         return ast_value_convert_ir(program, expr->value);
     case AST_EXPRESSION_OPERATOR:;
-        struct ir_value *lhs = ir_generate_expr_impl(program, dest, expr->lhs);
-        struct ir_value *rhs = ir_generate_expr_impl(program, dest, expr->rhs);
 
-        struct ir_operation *op = ir_operation_alloc(IR_OP_ADD, dest, lhs, rhs);
+        struct ir_value * out = ir_value_alloc_reg(program);
+        struct ir_value *lhs = ir_generate_expr_impl(program, expr->lhs);
+        struct ir_value *rhs = ir_generate_expr_impl(program, expr->rhs);
+
+        enum ir_operation_type op_type = IR_OP_INVALID;
+        switch (expr->operator)
+        {
+        case TOKEN_PLUS:
+            op_type = IR_OP_ADD;
+            break;
+        case TOKEN_MINUS:
+            op_type = IR_OP_SUB;
+            break;
+        case TOKEN_STAR:
+            op_type = IR_OP_MUL;
+            break;
+
+        /* might not work */
+        case TOKEN_ASSIGN:
+            op_type = IR_OP_MOV;
+            break;
+
+        default:
+            PANIC("invalid operator token:%s", token_type_str(expr->operator));
+        }
+        struct ir_operation *op = ir_operation_alloc(op_type, out, lhs, rhs);
         ir_operation_append(program, op);
 
-        return dest;
+        return out;
     default:
         PANIC("unhandled expr type:%d", expr->type);
     }
 }
 
-void ir_generate_expr_dest(struct ir_program *program, struct ir_value *dest,
+struct ir_value *  ir_generate_expr(struct ir_program *program, 
                            struct ast_expr *expr)
 {
     if (expr->type == AST_EXPRESSION_VALUE)
     {
         struct ir_value *expr_value =
             ast_value_convert_ir(program, expr->value);
+		struct ir_value * dest_value = ir_value_alloc_reg(program);
         ir_operation_append(
-            program, ir_operation_alloc(IR_OP_MOV, dest, expr_value, NULL));
+            program, ir_operation_alloc(IR_OP_MOV, dest_value, expr_value, NULL));
+		
+		return dest_value;
     }
     else
     {
-        ir_generate_expr_impl(program, dest, expr);
+        return ir_generate_expr_impl(program, expr);
     }
 }
 
-void ir_generate_expr(struct ir_program *program, struct ast_expr *expr)
+void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
 {
     /* TODO: need to support statements like
      * 1 + 1
@@ -150,8 +180,12 @@ void ir_generate_expr(struct ir_program *program, struct ast_expr *expr)
     ASSERT(expr->lhs->type == AST_EXPRESSION_VALUE && expr->lhs->value.is_var,
            "complex left hand side of assignment not implemented");
 
+	struct ir_variable* var = ir_variable_lookup(program, expr->lhs->value.varname);
     struct ir_value *lhs = ast_value_convert_ir(program, expr->value);
-    ir_generate_expr_dest(program, lhs, expr->rhs);
+    struct ir_value * result = ir_generate_expr(program, expr->rhs);
+	logd("value:");
+	ir_value_log(result, &LOG_DEBUG);
+	var->max_value = result;
 }
 
 void ir_generate_block(struct ir_program *program, struct list *statements)
@@ -165,7 +199,7 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
         switch (statement->type)
         {
         case AST_STATEMENT_EXPR:
-            ir_generate_expr(program, statement->expr);
+            ir_generate_expr_assign(program, statement->expr);
 
             break;
         case AST_STATEMENT_IF:
@@ -175,17 +209,18 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
         case AST_STATEMENT_DECLARE:;
             logd("generating for declared as %s", statement->varname);
             struct ir_variable *var = ir_variable_alloc(
-                statement->varname, ir_value_alloc_reg(program));
+                statement->varname);
             array_macro_append(&program->variables, var);
-            ir_generate_expr_dest(program, var->value, statement->init_value);
+            struct ir_value * val = ir_generate_expr(program, statement->init_value);
+			var->max_value =  val;
             break;
         case AST_STATEMENT_RETURN:;
             /* TODO: there is probably a better way of doing this than
              * allocating a new register, there could be a special return value
              * register that would be automatically mapped to the architecture
              * return value */
-            struct ir_value *return_dest = ir_value_alloc_reg(program);
-            ir_generate_expr_dest(program, return_dest, statement->expr);
+            
+            struct ir_value *return_dest = ir_generate_expr(program, statement->expr);
             ir_operation_append(
                 program,
                 ir_operation_alloc(IR_OP_RET, return_dest, NULL, NULL));
