@@ -10,12 +10,9 @@
 void ir_test()
 {
     const char *expr_str = MACRO_STR(int main() {
-        int y = 5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9 + 2 + 3 * 4 - 6 * 2 + 
-                7 + 8 * 2 - 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8 +
-                10 * (2 + 3 * (4 + 5));
 
-        return 1 + 1;
-    }
+
+        }
 
     );
 

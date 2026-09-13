@@ -95,8 +95,8 @@ struct ir_value *ast_value_convert_ir(struct ir_program *program,
     if (value.is_var)
     {
         struct ir_variable *var = ir_variable_lookup(program, value.varname);
+		
         NOT_NULL(var, "undeclared variable %s", value.varname);
-		logd("found var:%s", value.varname);
         return var->max_value;
     }
     else
@@ -181,10 +181,8 @@ void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
            "complex left hand side of assignment not implemented");
 
 	struct ir_variable* var = ir_variable_lookup(program, expr->lhs->value.varname);
-    struct ir_value *lhs = ast_value_convert_ir(program, expr->value);
+    struct ir_value *lhs = ast_value_convert_ir(program, expr->lhs->value);
     struct ir_value * result = ir_generate_expr(program, expr->rhs);
-	logd("value:");
-	ir_value_log(result, &LOG_DEBUG);
 	var->max_value = result;
 }
 
@@ -207,7 +205,6 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
         case AST_STATEMENT_FOR:
             break;
         case AST_STATEMENT_DECLARE:;
-            logd("generating for declared as %s", statement->varname);
             struct ir_variable *var = ir_variable_alloc(
                 statement->varname);
             array_macro_append(&program->variables, var);

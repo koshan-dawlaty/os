@@ -4,6 +4,7 @@
 /* this is a test executable, so always run tests */
 #ifndef TESTS
 #define TESTS
+#include "lib/utils.h"
 #endif
 
 #include <lib/assert.h>
@@ -13,7 +14,7 @@
 #include <lib/log.h>
 #include <tests/tests.h>
 
-struct test_result *test_codegen_expr(const char *program_str, int expected)
+struct test_result *test_codegen_program(const char *program_str, int expected)
 {
 
     LIST_DEFINE_HEAD(tokens);
@@ -31,13 +32,16 @@ struct test_result *test_codegen_expr(const char *program_str, int expected)
     struct bytecode_array code = {0};
     codegen_generate_ir(&code, &program);
     int got = run_code(code.items, code.num);
-    ASSERT_EQ(got, expected, ", %s (%d) != %d", program, expected, got);
+    ASSERT_EQ(got, expected, ", %s (%d) != %d", program_str, expected, got);
 
     TEST_OK();
 }
 
 #define TEST_CODEGEN_EXPR(name, expr, expected)                                \
-    TEST(name, { return test_codegen_expr("int main() { return" expr ";}", expected); })
+    TEST(name, {                                                               \
+        return test_codegen_program("int main() { return" expr ";}",           \
+                                    expected);                                 \
+    })
 
 TEST_CODEGEN_EXPR(test_codegen_expr1, "1 + 1", 2);
 TEST_CODEGEN_EXPR(test_codegen_expr2, "2 + 3 * 4 - 6 * 2 + 5", 7);
@@ -47,6 +51,36 @@ TEST_CODEGEN_EXPR(test_codegen_expr3,
                   "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8"
                   "+ 10 * (2 + 3 * (4 + 5)) ",
                   341);
+
+#define TEST_CODEGEN(name, program, expected)                                  \
+    TEST(name, { return test_codegen_program(program, expected); })
+
+TEST_CODEGEN(codegen_test_vars, MACRO_STR(int main() {
+                 int x = 10;
+                 int y = 20;
+                 int z = y + x;
+                 return z;
+             }),
+             30)
+
+TEST_CODEGEN(codegen_test_vars_assign, MACRO_STR(int main() {
+                 int x = 10;
+                 int y = 20;
+                 y = x;
+                 return y;
+             }),
+             10)
+
+TEST_CODEGEN(codegen_test_vars_assign2, MACRO_STR(int main() {
+                 int x = 10;
+                 int y = 20;
+                 int z = 30;
+				 int w = x + y + z;
+				 z = y;
+				 int f = w + z;
+                 return f;
+             }),
+             80)
 
 int main()
 {
