@@ -13,24 +13,23 @@
 #include <lib/log.h>
 #include <tests/tests.h>
 
-struct test_result *test_codegen_expr(const char *program, int expected)
+struct test_result *test_codegen_expr(const char *program_str, int expected)
 {
+
     LIST_DEFINE_HEAD(tokens);
-    tokenizer_parse_tokens(program, &tokens);
+    tokenizer_parse_tokens(program_str, &tokens);
 
-    struct ast_parser parser = {&tokens,
-                                .current = TOKEN_LIST_GET(tokens.next)};
-    struct ast_error *err;
-    struct ast_expr *expr = ast_parse_expression(&parser, &err);
-    LIST_DEFINE_HEAD(top_statements_head);
+    LIST_DEFINE_HEAD(top_statements);
+    struct ast_error *err = ast_parse(&tokens, &top_statements);
+
+    struct ir_program program = {.register_offset = 0, {0}};
+    list_init_head(&program.operations);
+    struct ast_top_statement *main =
+        containerof(top_statements.next, struct ast_top_statement, list);
+    ir_generate_block(&program, &main->function->block);
+
     struct bytecode_array code = {0};
-    list_init_head(&code.current_scope_vars);
-    struct codegen_value *expr_value = generate_expr(&code, expr);
-
-    generate_mov(&code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0),
-                 expr_value);
-    generate_return(&code);
-
+    codegen_generate_ir(&code, &program);
     int got = run_code(code.items, code.num);
     ASSERT_EQ(got, expected, ", %s (%d) != %d", program, expected, got);
 
@@ -38,16 +37,16 @@ struct test_result *test_codegen_expr(const char *program, int expected)
 }
 
 #define TEST_CODEGEN_EXPR(name, expr, expected)                                \
-    TEST(name, { return test_codegen_expr(expr, expected); })
+    TEST(name, { return test_codegen_expr("int main() { return" expr ";}", expected); })
 
-TEST_CODEGEN_EXPR(test_codegen_expr1, "1+1", 2);
+TEST_CODEGEN_EXPR(test_codegen_expr1, "1 + 1", 2);
 TEST_CODEGEN_EXPR(test_codegen_expr2, "2 + 3 * 4 - 6 * 2 + 5", 7);
 TEST_CODEGEN_EXPR(test_codegen_expr3,
                   "  5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9"
-                  "+ 2 + 3 * 4 - 6 * 2 + 5 + 7 + 8 * 2"
+                  "+ 2 + 3 * 4 - 6 * 2 + 7 + 8 * 2"
                   "- 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8"
                   "+ 10 * (2 + 3 * (4 + 5)) ",
-                  346);
+                  341);
 
 int main()
 {

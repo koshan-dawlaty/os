@@ -644,9 +644,7 @@ int run_code(u8 *bytecode, size_t len)
 {
 
     int retval = ((int (*)())bytecode)();
-
     logd("returned:%d", retval);
-
     return retval;
 
     u8 *binary_test = malloc(9 + sizeof(bytecode));
