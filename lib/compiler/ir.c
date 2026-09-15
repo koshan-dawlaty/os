@@ -78,7 +78,12 @@ const char *ir_operation_type_str(enum ir_operation_type type)
         return "INVALID";
     case IR_OP_JZ:
         return "JNZ";
+    case IR_OP_SET_EQ:
+        return "SET EQ";
+	default:
+		return "UNKNOWN";
     }
+	
 }
 
 struct ir_operation *ir_operation_alloc(enum ir_operation_type type,
@@ -156,6 +161,10 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
         case TOKEN_ASSIGN:
             op_type = IR_OP_MOV;
             break;
+
+		case TOKEN_EQUALS:
+			op_type = IR_OP_SET_EQ;
+			break;
 
         default:
             PANIC("invalid operator token:%s", token_type_str(expr->operator));

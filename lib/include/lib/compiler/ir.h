@@ -72,6 +72,9 @@ enum ir_operation_type
 
     /* jump to two if one is not zero */
     IR_OP_JZ,
+
+	/* set one to two == three */
+	IR_OP_SET_EQ,
 };
 
 struct ir_operation
@@ -87,7 +90,7 @@ struct ir_operation
         };
         struct
         {
-            struct ir_value * value;
+            struct ir_value *value;
         } label;
     };
     bool is_label;

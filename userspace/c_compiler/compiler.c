@@ -10,8 +10,8 @@
 void ir_test()
 {
     const char *expr_str = MACRO_STR(int main() {
-        int x = 0;
-        if (x)
+        int x = 123;
+        if (x == 123)
         {
             return 1;
         }
