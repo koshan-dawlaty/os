@@ -5,11 +5,28 @@
 #include <lib/compiler/ir.h>
 #include <types.h>
 
+struct codegen_label
+{
+    /* absolute offset in the code of the jump */
+    size_t jump_offset;
+    /* absolute offset in the code of where the jump will go */
+    size_t label_offset;
+
+	struct ir_value * label_value;
+};
+
 struct bytecode_array
 {
     u8 *items;
     size_t capacity;
     size_t num;
+
+    struct
+    {
+        struct codegen_label *items;
+        size_t capacity;
+        size_t num;
+    } labels;
 
     /* offset from the stack pointer since entering the function */
     size_t stack_offset;

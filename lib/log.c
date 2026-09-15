@@ -79,16 +79,22 @@ void log_display_char(char c, struct log_level level)
 void log_multiline_start(struct log_level *level)
 {
 #ifdef SHOULD_LOG
-    log_write_level(*level);
-    level->is_multiline = true;
+    if (level->multiline_count == 0)
+    {
+        log_write_level(*level);
+        level->multiline_count++;
+    }
 #endif
 }
 
 void log_multiline_end(struct log_level *level)
 {
 #ifdef SHOULD_LOG
-    level->is_multiline = false;
-    log_writechar('\n');
+    if (level->multiline_count < 1)
+    {
+        level->multiline_count--;
+        log_writechar('\n');
+    }
 #endif
 }
 
@@ -101,7 +107,7 @@ void vlog_level(struct log_level level, const char *str, va_list parameters)
 
     char *s = vrprintf(str, parameters);
 
-    if (!level.is_multiline)
+    if (level.multiline_count == 0)
     {
         log_write_level(level);
     }
@@ -112,7 +118,7 @@ void vlog_level(struct log_level level, const char *str, va_list parameters)
         log_display_char(*s2, level);
         s2++;
     }
-    if (!level.is_multiline)
+    if (level.multiline_count == 0)
     {
         log_writechar('\n');
     }

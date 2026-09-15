@@ -672,6 +672,10 @@ struct codegen_value *codegen_convert_ir_value(struct bytecode_array *code,
     case IR_VALUE_REIGSTER:
         return codegen_value_alloc(CODEGEN_VALUE_STACK,
                                    code->stack_offset - (value->var.num * 8));
+    case IR_VALUE_LABEL:
+        /* labels should be handled by using the struct ir_value, codegen does
+         * not need a value for them */
+        return NULL;
     }
 }
 
@@ -703,9 +707,34 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
         generate_mov(code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0), one);
         generate_return(code);
         break;
+    case IR_OP_JZ:
+        generate_test(code, one, one);
+        size_t offset = generate_jump_if_zero(code);
+        struct codegen_label label = {offset, 0, op->two};
+        array_macro_append(&code->labels, label);
 
+        break;
+
+    default:
     case IR_OP_INVALID:
         PANIC("invalid ir op");
+    }
+}
+
+void codegen_generate_label(struct bytecode_array *code,
+                            struct ir_operation *label_op)
+{
+    for (size_t i = 0; i < code->labels.num; i++)
+    {
+        struct codegen_label *label = &code->labels.items[i];
+
+        /* TODO: pointer comparing will probably work for right now, but in the
+         * future a number system, similar to registers should probably be used
+         */
+        if (label->label_value == label_op->label.value)
+        {
+            label->label_offset = code->num;
+        }
     }
 }
 
@@ -727,7 +756,23 @@ void codegen_generate_ir(struct bytecode_array *code,
     list_for_each(pos, &program->operations)
     {
         struct ir_operation *op = containerof(pos, struct ir_operation, list);
-        codegen_generate_op(code, op);
+        if (op->is_label)
+        {
+            codegen_generate_label(code, op);
+        }
+        else
+        {
+            codegen_generate_op(code, op);
+        }
     }
     generate_return(code);
+
+    for (size_t i = 0; i < code->labels.num; i++)
+    {
+        struct codegen_label *label = &code->labels.items[i];
+        logd("jump offset:%d, label offset:%d", label->jump_offset,
+             label->label_offset);
+        code->items[label->jump_offset] =
+            label->label_offset - label->jump_offset;
+    }
 }

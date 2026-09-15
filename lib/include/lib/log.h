@@ -13,11 +13,7 @@ struct log_level
 {
     const char *str;
     const u32 priority; /* 0 is lowest */
-    struct
-    {
-        bool is_multiline : 1;
-        bool multiline_ : 1;
-    };
+	int multiline_count;
 };
 
 void vlog_level(struct log_level level, const char *str, va_list parameters);
@@ -32,7 +28,7 @@ static inline void log_level(struct log_level level, const char *str, ...)
 }
 
 #define LOG_LEVEL_INIT(_str, p)                                                \
-    ((struct log_level){.str = _str, .priority = p, .is_multiline = false})
+    ((struct log_level){.str = _str, .priority = p, .multiline_count = 0})
 
 static struct log_level LOG_DEBUG = LOG_LEVEL_INIT("DEBUG", 3);
 static struct log_level LOG_INFO = LOG_LEVEL_INIT("INFO", 3);

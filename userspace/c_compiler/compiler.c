@@ -10,9 +10,13 @@
 void ir_test()
 {
     const char *expr_str = MACRO_STR(int main() {
-
-
+        int x = 0;
+        if (x)
+        {
+            return 1;
         }
+        return 0;
+    }
 
     );
 
@@ -44,6 +48,7 @@ void ir_test()
             logd("%p ", code.items[i]);
         }
     }
+    logd("\n");
     log_multiline_end(&LOG_DEBUG);
 
     run_code(code.items, code.num);

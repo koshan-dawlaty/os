@@ -18,6 +18,9 @@ struct ir_program
     } variables;
 };
 
+#define IR_PROGRAM_CURRENT_OP(program)                                         \
+    (containerof(((program)->operations.prev), struct ir_operation, list))
+
 struct ir_value
 {
     union
@@ -26,6 +29,11 @@ struct ir_value
         {
             size_t num;
         } var;
+        struct
+        {
+            /* the operation after this label */
+            struct ir_operation *next;
+        } label;
         u64 value;
     };
 
@@ -33,6 +41,7 @@ struct ir_value
     {
         IR_VALUE_IMMEDIATE,
         IR_VALUE_REIGSTER,
+        IR_VALUE_LABEL,
     } type;
 };
 
@@ -60,15 +69,28 @@ enum ir_operation_type
     IR_OP_RET,
 
     IR_OP_INVALID,
+
+    /* jump to two if one is not zero */
+    IR_OP_JZ,
 };
 
 struct ir_operation
 {
+    union
+    {
+        struct
+        {
+            enum ir_operation_type type;
+            struct ir_value *one, *two, *three;
 
-    enum ir_operation_type type;
-    struct ir_value *one, *two, *three;
-
-    struct list list;
+            struct list list;
+        };
+        struct
+        {
+            struct ir_value * value;
+        } label;
+    };
+    bool is_label;
 };
 
 struct ir_value *ir_generate_expr(struct ir_program *program,
@@ -76,6 +98,7 @@ struct ir_value *ir_generate_expr(struct ir_program *program,
 
 void ir_display(struct ir_program *program, struct log_level *level);
 void ir_value_log(struct ir_value *value, struct log_level *level);
+void ir_operation_log(struct ir_operation *op, struct log_level *level);
 
 void ir_generate_block(struct ir_program *program, struct list *statements);
 
