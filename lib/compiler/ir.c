@@ -13,7 +13,9 @@ struct ir_variable *ir_variable_alloc(const char *name)
 {
     struct ir_variable *out = malloc(sizeof(struct ir_variable));
     out->name = strdup(name);
-    out->max_value = NULL;
+    out->values.capacity = 0;
+    out->values.num = 0;
+    out->values.items = NULL;
     return out;
 }
 
@@ -102,6 +104,21 @@ struct ir_operation *ir_operation_alloc(enum ir_operation_type type,
     out->three = three;
     out->list = LIST_INIT();
     out->is_label = false;
+    out->is_phi = false;
+    return out;
+}
+
+struct ir_operation *ir_operation_alloc_phi(struct ir_value *dest,
+                                            struct ir_value *one,
+                                            struct ir_value *two)
+{
+    struct ir_operation *out = malloc(sizeof(struct ir_operation));
+    out->phi.dest = dest;
+    out->phi.one = one;
+    out->phi.two = two;
+    out->is_label = false;
+    out->is_phi = true;
+    out->list = LIST_INIT();
     return out;
 }
 
@@ -110,6 +127,7 @@ struct ir_operation *ir_operation_alloc_label(struct ir_value *label)
     struct ir_operation *out = malloc(sizeof(struct ir_operation));
     out->label.value = label;
     out->is_label = true;
+    out->is_phi = false;
     out->list = LIST_INIT();
     return out;
 }
@@ -127,7 +145,10 @@ struct ir_value *ast_value_convert_ir(struct ir_program *program,
         struct ir_variable *var = ir_variable_lookup(program, value.varname);
 
         NOT_NULL(var, "undeclared variable %s", value.varname);
-        return var->max_value;
+        struct ir_variable_version version =
+            var->values.items[var->values.num - 1];
+
+        return version.var;
     }
     else
     {
@@ -226,7 +247,6 @@ struct ir_value *ir_generate_expr(struct ir_program *program,
         struct ir_value *dest_value = ir_value_alloc_reg(program);
         ir_operation_append(program, ir_operation_alloc(IR_OP_MOV, dest_value,
                                                         expr_value, NULL));
-
         return dest_value;
     }
     else
@@ -237,6 +257,7 @@ struct ir_value *ir_generate_expr(struct ir_program *program,
 
 void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
 {
+    logd("assign");
     /* TODO: need to support statements like
      * 1 + 1
      * and
@@ -252,7 +273,37 @@ void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
         ir_variable_lookup(program, expr->lhs->value.varname);
     struct ir_value *lhs = ast_value_convert_ir(program, expr->lhs->value);
     struct ir_value *result = ir_generate_expr(program, expr->rhs);
-    var->max_value = result;
+
+    struct ir_variable_version version =
+        (struct ir_variable_version){result, program->current_scope_depth};
+    array_macro_append(&var->values, version);
+
+    logd("%d", var->values.num - 2);
+    logd("%p", var->values.items);
+    /* FIXME: this way of check if a variable needs to be reassigned is bad */
+    if (var->values.items[var->values.num - 2].scope_depth <
+        program->current_scope_depth)
+    {
+        struct ir_value *new_value = ir_value_alloc_reg(program);
+
+        struct ir_operation *phi_op = ir_operation_alloc_phi(
+            new_value, var->values.items[var->values.num - 2].var, result);
+        array_macro_append(&program->phi_op_queue, phi_op);
+    }
+}
+
+void ir_empty_phi_queue(struct ir_program *program)
+{
+    for (size_t i = 0; i < program->phi_op_queue.num; i++)
+    {
+        struct ir_operation *op = program->phi_op_queue.items[i];
+        ir_operation_append(program, op);
+    }
+
+    program->phi_op_queue.capacity = 0;
+    program->phi_op_queue.num = 0;
+    free(program->phi_op_queue.items);
+    program->phi_op_queue.items = NULL;
 }
 
 void ir_generate_block(struct ir_program *program, struct list *statements)
@@ -272,12 +323,18 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
         case AST_STATEMENT_IF:;
             struct ir_value *if_val =
                 ir_generate_expr(program, statement->block_expr);
+
+            program->current_scope_depth++;
+
             struct ir_operation *jump_op =
                 ir_operation_alloc(IR_OP_JZ, if_val, NULL, NULL);
             ir_operation_append(program, jump_op);
-            ir_generate_block(program, &statement->block);
 
+            ir_generate_block(program, &statement->block);
             jump_op->two = ir_generate_label(program);
+
+            program->current_scope_depth--;
+            ir_empty_phi_queue(program);
 
             break;
         case AST_STATEMENT_WHILE:;
@@ -289,6 +346,7 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
                 ir_operation_alloc(IR_OP_JZ, condition, NULL, NULL);
             ir_operation_append(program, cond_jump_op);
             ir_generate_block(program, &statement->block);
+
             ir_operation_append(
                 program, ir_operation_alloc(IR_OP_JMP, loop_start, NULL, NULL));
             cond_jump_op->two = ir_generate_label(program);
@@ -301,7 +359,10 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
             array_macro_append(&program->variables, var);
             struct ir_value *val =
                 ir_generate_expr(program, statement->init_value);
-            var->max_value = val;
+
+            struct ir_variable_version version =
+                (struct ir_variable_version){val, program->current_scope_depth};
+            array_macro_append(&var->values, version);
             break;
         case AST_STATEMENT_RETURN:;
             /* TODO: there is probably a better way of doing this than
@@ -351,9 +412,25 @@ void ir_operation_log(struct ir_operation *op, struct log_level *level)
 {
     log_multiline_start(level);
 
-    if (!op->is_label)
+    if (op->is_phi)
     {
 
+        log_level(*level, "PHI ");
+        ir_value_log(op->phi.dest, level);
+        log_level(*level, "(");
+        ir_value_log(op->phi.one, level);
+        log_level(*level, " ");
+        ir_value_log(op->phi.two, level);
+        log_level(*level, ")");
+    }
+    else if (op->is_label)
+    {
+        log_level(*level, " (");
+        ir_value_log(op->label.value, level);
+        log_level(*level, ")");
+    }
+    else
+    {
         log_level(*level, "%s", ir_operation_type_str(op->type));
 
         log_level(*level, " ");
@@ -362,12 +439,6 @@ void ir_operation_log(struct ir_operation *op, struct log_level *level)
         ir_value_log(op->two, level);
         log_level(*level, ", ");
         ir_value_log(op->three, level);
-    }
-    else
-    {
-        log_level(*level, "(");
-        ir_value_log(op->label.value, level);
-        log_level(*level, ")");
     }
     log_level(*level, "\n");
 

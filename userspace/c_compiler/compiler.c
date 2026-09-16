@@ -10,12 +10,13 @@
 void ir_test()
 {
     const char *expr_str = MACRO_STR(int main() {
-        int i = 0;
-        while (i <= 5)
+        int y = 0;
+        int x = 2;
+        if (y)
         {
-            i = i + 1;
+            x = 1;
         }
-        return i;
+        return x;
     }
 
     );
@@ -26,7 +27,7 @@ void ir_test()
     LIST_DEFINE_HEAD(top_statements);
     struct ast_error *err = ast_parse(&tokens, &top_statements);
 
-    struct ir_program program = {.register_offset = 0, {0}};
+    struct ir_program program = {.register_offset = 0, 0, {0}, {0}};
     list_init_head(&program.operations);
     struct ast_top_statement *main =
         containerof(top_statements.next, struct ast_top_statement, list);

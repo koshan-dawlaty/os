@@ -9,6 +9,7 @@ struct ir_program
 {
     struct list operations;
     size_t register_offset;
+    size_t current_scope_depth;
 
     struct
     {
@@ -16,6 +17,14 @@ struct ir_program
         size_t num;
         size_t capacity;
     } variables;
+
+    /* phi operations that should be added at the end of this block */
+    struct
+    {
+        struct ir_operation **items;
+        size_t num;
+        size_t capacity;
+    } phi_op_queue;
 };
 
 #define IR_PROGRAM_CURRENT_OP(program)                                         \
@@ -45,12 +54,21 @@ struct ir_value
     } type;
 };
 
+struct ir_variable_version
+{
+    struct ir_value *var;
+    size_t scope_depth;
+};
+
 struct ir_variable
 {
     char *name;
-    /* the highest register number that this is stored in, the latest value of
-     * this variable */
-    struct ir_value *max_value;
+    struct
+    {
+        struct ir_variable_version *items;
+        size_t num;
+        size_t capacity;
+    } values;
 };
 
 struct ir_variable *ir_variable_alloc(const char *name);
@@ -100,7 +118,20 @@ struct ir_operation
         {
             struct ir_value *value;
         } label;
+        struct
+        {
+            struct ir_value *dest;
+            /* FIXME: this should probably be a list/array, which is why this is
+             * not an ir_operation_type  */
+            struct ir_value *one;
+            struct ir_value *two;
+        } phi;
     };
+
+    /* phi function, described here
+       https://en.wikipedia.org/wiki/Static_single-assignment_form */
+    bool is_phi;
+
     bool is_label;
 };
 

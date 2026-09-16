@@ -23,7 +23,7 @@ struct test_result *test_codegen_program(const char *program_str, int expected)
     LIST_DEFINE_HEAD(top_statements);
     struct ast_error *err = ast_parse(&tokens, &top_statements);
 
-    struct ir_program program = {.register_offset = 0, {0}};
+    struct ir_program program = {.register_offset = 0, 0, {0}};
     list_init_head(&program.operations);
     struct ast_top_statement *main =
         containerof(top_statements.next, struct ast_top_statement, list);
@@ -165,7 +165,6 @@ TEST_CODEGEN(codegen_test_if_and_false2, MACRO_STR(
 		 return 2;
 	 }
 ),2)
-		 
 
 // clang-format on
 //
