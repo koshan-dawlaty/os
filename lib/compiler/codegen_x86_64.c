@@ -288,6 +288,10 @@ void generate_set_conditional(struct bytecode_array *code, u8 opcode,
     /* array_macro_append_v(code, 0x0F, opcode, 0xC0 + dest->reg); */
 }
 
+void generate_setle(struct bytecode_array *code, struct codegen_value *dest)
+{
+    generate_set_conditional(code, 0x9E, dest);
+}
 void generate_setz(struct bytecode_array *code, struct codegen_value *dest)
 {
     generate_set_conditional(code, 0x94, dest);
@@ -322,6 +326,11 @@ void generate_test(struct bytecode_array *code, struct codegen_value *reg1,
 size_t generate_jump_if_zero(struct bytecode_array *code)
 {
     array_macro_append_v(code, 0x74, 0xFF);
+    return code->num - 1;
+}
+size_t generate_jump(struct bytecode_array *code)
+{
+    array_macro_append_v(code, 0xEB, 0);
     return code->num - 1;
 }
 
@@ -679,6 +688,26 @@ struct codegen_value *codegen_convert_ir_value(struct bytecode_array *code,
     }
 }
 
+/* correctly sets jump offsets a label for an offset and an ir_value for a
+ * label */
+void codegen_add_jump_labels(struct bytecode_array *code,
+                             struct ir_value *label, size_t offset)
+{
+    for (size_t i = 0; i < code->labels.num; i++)
+    {
+        struct codegen_label *l = &code->labels.items[i];
+        logd("looking at label:%d", l->jump_offset);
+        if (l->label_value == label)
+        {
+            logd("saw label before this");
+            l->jump_offset = offset;
+            return;
+        }
+    }
+    struct codegen_label new_label = {offset, 0, label};
+    array_macro_append(&code->labels, new_label);
+}
+
 void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
 {
     struct codegen_value *one = codegen_convert_ir_value(code, op->one);
@@ -710,8 +739,7 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     case IR_OP_JZ:
         generate_test(code, one, one);
         size_t offset = generate_jump_if_zero(code);
-        struct codegen_label label = {offset, 0, op->two};
-        array_macro_append(&code->labels, label);
+        codegen_add_jump_labels(code, op->two, offset);
 
         break;
     case IR_OP_SET_EQ:
@@ -722,6 +750,17 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
         generate_test(code, two, two);
         generate_setnz(code, one);
         break;
+    case IR_OP_SET_LE:
+        generate_cmp(code, two, three);
+        generate_setle(code, one);
+        break;
+
+    case IR_OP_JMP:
+    {
+        size_t offset = generate_jump(code);
+        codegen_add_jump_labels(code, op->one, offset);
+    }
+    break;
 
     default:
     case IR_OP_INVALID:
@@ -732,6 +771,7 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
 void codegen_generate_label(struct bytecode_array *code,
                             struct ir_operation *label_op)
 {
+    logd("label");
     for (size_t i = 0; i < code->labels.num; i++)
     {
         struct codegen_label *label = &code->labels.items[i];
@@ -742,8 +782,11 @@ void codegen_generate_label(struct bytecode_array *code,
         if (label->label_value == label_op->label.value)
         {
             label->label_offset = code->num - 1;
+            return;
         }
     }
+    struct codegen_label new_label = {0, code->num - 1, label_op->label.value};
+    array_macro_append(&code->labels, new_label);
 }
 
 void codegen_generate_ir(struct bytecode_array *code,

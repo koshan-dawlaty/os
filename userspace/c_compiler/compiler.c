@@ -10,12 +10,12 @@
 void ir_test()
 {
     const char *expr_str = MACRO_STR(int main() {
-        int x = 0;
-        if (x)
+        int i = 0;
+        while (i <= 5)
         {
-            return 1;
+            i = i + 1;
         }
-        return 2;
+        return i;
     }
 
     );

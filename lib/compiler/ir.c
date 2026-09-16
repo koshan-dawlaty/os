@@ -5,7 +5,6 @@
 #include <lib/compiler/ir.h>
 #include <lib/list.h>
 #include <lib/log.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <types.h>
@@ -80,8 +79,12 @@ const char *ir_operation_type_str(enum ir_operation_type type)
         return "JZ";
     case IR_OP_SET_EQ:
         return "SET EQ";
+    case IR_OP_SET_LE:
+        return "SET LE";
     case IR_OP_SET_NZ:
         return "SET NZ";
+    case IR_OP_JMP:
+        return "JMP";
     default:
         return "UNKNOWN";
     }
@@ -168,6 +171,10 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
         case TOKEN_STAR:
             ir_operation_append(program,
                                 ir_operation_alloc(IR_OP_MUL, out, lhs, rhs));
+            break;
+        case TOKEN_LESS_EQUAL:
+            ir_operation_append(
+                program, ir_operation_alloc(IR_OP_SET_LE, out, lhs, rhs));
             break;
 
         /* might not work */
@@ -273,7 +280,20 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
             jump_op->two = ir_generate_label(program);
 
             break;
-        case AST_STATEMENT_WHILE:
+        case AST_STATEMENT_WHILE:;
+
+            struct ir_value *loop_start = ir_generate_label(program);
+            struct ir_value *condition =
+                ir_generate_expr(program, statement->block_expr);
+            struct ir_operation *cond_jump_op =
+                ir_operation_alloc(IR_OP_JZ, condition, NULL, NULL);
+            ir_operation_append(program, cond_jump_op);
+            ir_generate_block(program, &statement->block);
+            ir_operation_append(
+                program, ir_operation_alloc(IR_OP_JMP, loop_start, NULL, NULL));
+            cond_jump_op->two = ir_generate_label(program);
+
+            break;
         case AST_STATEMENT_FOR:
             break;
         case AST_STATEMENT_DECLARE:;

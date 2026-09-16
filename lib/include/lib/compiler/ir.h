@@ -68,16 +68,21 @@ enum ir_operation_type
     /* return value = one */
     IR_OP_RET,
 
-    IR_OP_INVALID,
-
     /* jump to two if one is zero */
     IR_OP_JZ,
 
-	/* set one to two == three */
-	IR_OP_SET_EQ,
+    /* unconditionally jump to one */
+    IR_OP_JMP,
 
-	/* set one to true if two is not zero */
-	IR_OP_SET_NZ,
+    /* set one to two == three */
+    IR_OP_SET_EQ,
+    /* set one to two <= three */
+    IR_OP_SET_LE,
+
+    /* set one to true if two is not zero */
+    IR_OP_SET_NZ,
+
+    IR_OP_INVALID,
 };
 
 struct ir_operation
