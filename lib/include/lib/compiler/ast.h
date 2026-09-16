@@ -38,6 +38,7 @@ enum token_type
     TOKEN_INVALID,
     TOKEN_INCREMENT,
     TOKEN_REFERENCE,
+	TOKEN_AND,
 };
 const char *token_type_str(enum token_type type);
 

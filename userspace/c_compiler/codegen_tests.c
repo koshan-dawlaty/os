@@ -55,6 +55,7 @@ TEST_CODEGEN_EXPR(test_codegen_expr3,
 #define TEST_CODEGEN(name, program, expected)                                  \
     TEST(name, { return test_codegen_program(program, expected); })
 
+// clang-format off
 TEST_CODEGEN(codegen_test_vars, MACRO_STR(int main() {
                  int x = 10;
                  int y = 20;
@@ -75,13 +76,99 @@ TEST_CODEGEN(codegen_test_vars_assign2, MACRO_STR(int main() {
                  int x = 10;
                  int y = 20;
                  int z = 30;
-				 int w = x + y + z;
-				 z = y;
-				 int f = w + z;
+                 int w = x + y + z;
+                 z = y;
+                 int f = w + z;
                  return f;
              }),
              80)
 
+TEST_CODEGEN(codegen_test_if_basic_true, MACRO_STR(int main() {
+                 int x = 10;
+                 if (x)
+                 {
+                     return 1;
+                 }
+                 return 2;
+             }),
+             1)
+
+TEST_CODEGEN(codegen_test_if_basic_false, MACRO_STR(int main() {
+			 int x = 0;
+			 if (x)
+			 {
+				 return 1;
+			 }
+			 return 2;
+             }),
+             2)
+
+TEST_CODEGEN(codegen_test_if_equals_true, MACRO_STR(
+	int main()
+	{
+		 int x = 10;
+		 if (x == 10)
+		 {
+			 return 1;
+		 }
+		 return 2;
+	 }
+),1)
+
+TEST_CODEGEN(codegen_test_if_equals_false, MACRO_STR(
+	int main()
+	{
+		 int x = 5;
+		 if (x == 10)
+		 {
+			 return 1;
+		 }
+		 return 2;
+	 }
+),2)
+
+TEST_CODEGEN(codegen_test_if_and_true, MACRO_STR(
+	int main()
+	{
+		 int x = 5;
+		 int y = 10;
+		 if (x == 5 && y == 10)
+		 {
+			 return 1;
+		 }
+		 return 2;
+	 }
+),1)
+
+TEST_CODEGEN(codegen_test_if_and_false1, MACRO_STR(
+	int main()
+	{
+		 int x = 3;
+		 int y = 10;
+		 if (x == 5 && y == 10)
+		 {
+			 return 1;
+		 }
+		 return 2;
+	 }
+),2)
+
+TEST_CODEGEN(codegen_test_if_and_false2, MACRO_STR(
+	int main()
+	{
+		 int x = 5;
+		 int y = 9;
+		 if (x == 5 && y == 10)
+		 {
+			 return 1;
+		 }
+		 return 2;
+	 }
+),2)
+		 
+
+// clang-format on
+//
 int main()
 {
 

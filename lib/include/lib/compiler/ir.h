@@ -70,11 +70,14 @@ enum ir_operation_type
 
     IR_OP_INVALID,
 
-    /* jump to two if one is not zero */
+    /* jump to two if one is zero */
     IR_OP_JZ,
 
 	/* set one to two == three */
 	IR_OP_SET_EQ,
+
+	/* set one to true if two is not zero */
+	IR_OP_SET_NZ,
 };
 
 struct ir_operation

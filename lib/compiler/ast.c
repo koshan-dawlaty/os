@@ -24,7 +24,7 @@ bool token_is_operator(enum token_type type)
            type == TOKEN_GREATER || type == TOKEN_LESS ||
            type == TOKEN_EQUALS || type == TOKEN_STAR ||
            type == TOKEN_LESS_EQUAL || type == TOKEN_GREATER_EQUAL ||
-           type == TOKEN_NOT_EQUAL;
+           type == TOKEN_NOT_EQUAL || type == TOKEN_AND;
 }
 
 const char *token_type_str(enum token_type type)
@@ -89,6 +89,8 @@ const char *token_type_str(enum token_type type)
         return "INCREMENT (++)";
     case TOKEN_REFERENCE:
         return "REFERENCE";
+    case TOKEN_AND:
+        return "AND";
     }
 }
 
@@ -172,6 +174,7 @@ struct token_simple_map_entry token_simple_map[] = {
     {"if", TOKEN_IF},
     {"while", TOKEN_WHILE},
     {",", TOKEN_COMMA},
+    {"&&", TOKEN_AND},
     {"&", TOKEN_REFERENCE},
     {"return", TOKEN_RETURN},
     {"for", TOKEN_FOR},

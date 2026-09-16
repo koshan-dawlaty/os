@@ -714,10 +714,14 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
         array_macro_append(&code->labels, label);
 
         break;
-	case IR_OP_SET_EQ:
+    case IR_OP_SET_EQ:
         generate_cmp(code, two, three);
-		generate_setz(code, one);
-		break;
+        generate_setz(code, one);
+        break;
+    case IR_OP_SET_NZ:
+        generate_test(code, two, two);
+        generate_setnz(code, one);
+        break;
 
     default:
     case IR_OP_INVALID:
@@ -737,7 +741,7 @@ void codegen_generate_label(struct bytecode_array *code,
          */
         if (label->label_value == label_op->label.value)
         {
-            label->label_offset = code->num;
+            label->label_offset = code->num - 1;
         }
     }
 }

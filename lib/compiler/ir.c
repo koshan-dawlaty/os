@@ -77,13 +77,14 @@ const char *ir_operation_type_str(enum ir_operation_type type)
     case IR_OP_INVALID:
         return "INVALID";
     case IR_OP_JZ:
-        return "JNZ";
+        return "JZ";
     case IR_OP_SET_EQ:
         return "SET EQ";
-	default:
-		return "UNKNOWN";
+    case IR_OP_SET_NZ:
+        return "SET NZ";
+    default:
+        return "UNKNOWN";
     }
-	
 }
 
 struct ir_operation *ir_operation_alloc(enum ir_operation_type type,
@@ -131,6 +132,15 @@ struct ir_value *ast_value_convert_ir(struct ir_program *program,
     }
 }
 
+struct ir_value *ir_generate_label(struct ir_program *program)
+{
+    struct ir_value *label_value =
+        ir_value_alloc_label(program, IR_PROGRAM_CURRENT_OP(program));
+    struct ir_operation *label_op = ir_operation_alloc_label(label_value);
+    list_push_end(&label_op->list, &program->operations);
+    return label_value;
+}
+
 struct ir_value *ir_generate_expr_impl(struct ir_program *program,
                                        struct ast_expr *expr)
 {
@@ -148,29 +158,50 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
         switch (expr->operator)
         {
         case TOKEN_PLUS:
-            op_type = IR_OP_ADD;
+            ir_operation_append(program,
+                                ir_operation_alloc(IR_OP_ADD, out, lhs, rhs));
             break;
         case TOKEN_MINUS:
-            op_type = IR_OP_SUB;
+            ir_operation_append(program,
+                                ir_operation_alloc(IR_OP_SUB, out, lhs, rhs));
             break;
         case TOKEN_STAR:
-            op_type = IR_OP_MUL;
+            ir_operation_append(program,
+                                ir_operation_alloc(IR_OP_MUL, out, lhs, rhs));
             break;
 
         /* might not work */
         case TOKEN_ASSIGN:
-            op_type = IR_OP_MOV;
+            ir_operation_append(program,
+                                ir_operation_alloc(IR_OP_MOV, out, lhs, rhs));
             break;
 
-		case TOKEN_EQUALS:
-			op_type = IR_OP_SET_EQ;
-			break;
+        case TOKEN_EQUALS:
+            ir_operation_append(
+                program, ir_operation_alloc(IR_OP_SET_EQ, out, lhs, rhs));
+            break;
+        case TOKEN_AND:
+            /* this could be done by codegen, and there might be more
+             * optimizations that could be done there */
+
+            ir_operation_append(
+                program,
+                ir_operation_alloc(IR_OP_MOV, out,
+                                   ir_value_alloc_immediate(program, 0), NULL));
+
+            struct ir_operation *jump_op =
+                ir_operation_alloc(IR_OP_JZ, lhs, NULL, NULL);
+            ir_operation_append(program, jump_op);
+
+            ir_operation_append(
+                program, ir_operation_alloc(IR_OP_SET_NZ, out, rhs, NULL));
+
+            jump_op->two = ir_generate_label(program);
+            break;
 
         default:
             PANIC("invalid operator token:%s", token_type_str(expr->operator));
         }
-        struct ir_operation *op = ir_operation_alloc(op_type, out, lhs, rhs);
-        ir_operation_append(program, op);
 
         return out;
     default:
@@ -238,15 +269,8 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
                 ir_operation_alloc(IR_OP_JZ, if_val, NULL, NULL);
             ir_operation_append(program, jump_op);
             ir_generate_block(program, &statement->block);
-            struct ir_value *label_value =
-                ir_value_alloc_label(program, IR_PROGRAM_CURRENT_OP(program));
-            logd("adding");
-            list_add_before(&ir_operation_alloc_label(label_value)->list,
-                            program->operations.prev);
-            logd("done");
-            /* ir_operation_append(program,
-             * ir_operation_alloc_label(label_value)); */
-            jump_op->two = label_value;
+
+            jump_op->two = ir_generate_label(program);
 
             break;
         case AST_STATEMENT_WHILE:
