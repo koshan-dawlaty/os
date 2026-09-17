@@ -789,6 +789,11 @@ void codegen_generate_label(struct bytecode_array *code,
     array_macro_append(&code->labels, new_label);
 }
 
+void codegen_generate_phi(struct bytecode_array *code,
+                          struct ir_operation *phi_op)
+{
+}
+
 void codegen_generate_ir(struct bytecode_array *code,
                          struct ir_program *program)
 {
@@ -810,6 +815,10 @@ void codegen_generate_ir(struct bytecode_array *code,
         if (op->is_label)
         {
             codegen_generate_label(code, op);
+        }
+        else if (op->is_phi)
+        {
+            codegen_generate_phi(code, op);
         }
         else
         {

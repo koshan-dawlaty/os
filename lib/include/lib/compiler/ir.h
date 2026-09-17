@@ -56,6 +56,7 @@ struct ir_value
 
 struct ir_variable_version
 {
+    struct ir_operation *assign_op;
     struct ir_value *var;
     size_t scope_depth;
 };
@@ -103,6 +104,13 @@ enum ir_operation_type
     IR_OP_INVALID,
 };
 
+struct ir_phi_reg
+{
+    struct ir_value *reg;
+    /* the operation at the assignment to this register */
+    struct ir_operation *op;
+};
+
 struct ir_operation
 {
     union
@@ -111,8 +119,6 @@ struct ir_operation
         {
             enum ir_operation_type type;
             struct ir_value *one, *two, *three;
-
-            struct list list;
         };
         struct
         {
@@ -123,10 +129,11 @@ struct ir_operation
             struct ir_value *dest;
             /* FIXME: this should probably be a list/array, which is why this is
              * not an ir_operation_type  */
-            struct ir_value *one;
-            struct ir_value *two;
+            struct ir_phi_reg one;
+            struct ir_phi_reg two;
         } phi;
     };
+    struct list list;
 
     /* phi function, described here
        https://en.wikipedia.org/wiki/Static_single-assignment_form */
@@ -143,5 +150,6 @@ void ir_value_log(struct ir_value *value, struct log_level *level);
 void ir_operation_log(struct ir_operation *op, struct log_level *level);
 
 void ir_generate_block(struct ir_program *program, struct list *statements);
+void ir_remove_phi(struct ir_program *program);
 
 #endif

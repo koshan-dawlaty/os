@@ -109,8 +109,8 @@ struct ir_operation *ir_operation_alloc(enum ir_operation_type type,
 }
 
 struct ir_operation *ir_operation_alloc_phi(struct ir_value *dest,
-                                            struct ir_value *one,
-                                            struct ir_value *two)
+                                            struct ir_phi_reg one,
+                                            struct ir_phi_reg two)
 {
     struct ir_operation *out = malloc(sizeof(struct ir_operation));
     out->phi.dest = dest;
@@ -273,21 +273,40 @@ void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
         ir_variable_lookup(program, expr->lhs->value.varname);
     struct ir_value *lhs = ast_value_convert_ir(program, expr->lhs->value);
     struct ir_value *result = ir_generate_expr(program, expr->rhs);
+    struct ir_operation *result_op =
+        containerof(program->operations.prev, struct ir_operation, list);
 
-    struct ir_variable_version version =
-        (struct ir_variable_version){result, program->current_scope_depth};
+    struct ir_variable_version version = (struct ir_variable_version){
+        result_op, result, program->current_scope_depth};
     array_macro_append(&var->values, version);
 
-    logd("%d", var->values.num - 2);
-    logd("%p", var->values.items);
     /* FIXME: this way of check if a variable needs to be reassigned is bad */
     if (var->values.items[var->values.num - 2].scope_depth <
         program->current_scope_depth)
     {
         struct ir_value *new_value = ir_value_alloc_reg(program);
+        struct ir_variable_version phi_prev =
+            var->values.items[var->values.num - 2];
 
-        struct ir_operation *phi_op = ir_operation_alloc_phi(
-            new_value, var->values.items[var->values.num - 2].var, result);
+        logd("assign op:%p", phi_prev.assign_op);
+        logd("is label:%d", phi_prev.assign_op->is_label);
+        logd("next list:%p", phi_prev.assign_op->list.next);
+
+        struct ir_phi_reg phi_reg1 =
+            (struct ir_phi_reg){.op = result_op, .reg = result};
+        struct ir_phi_reg phi_reg2 =
+            (struct ir_phi_reg){.op = phi_prev.assign_op, .reg = phi_prev.var};
+
+        logd("phi_reg2.op:%p", phi_reg2.op);
+
+        struct ir_operation *phi_op =
+            ir_operation_alloc_phi(new_value, phi_reg1, phi_reg2);
+
+        logd("list next phi_op:%p", phi_op->phi.two.op);
+
+        struct ir_variable_version new_var = {phi_op, new_value,
+                                              program->current_scope_depth};
+        array_macro_append(&var->values, new_var);
         array_macro_append(&program->phi_op_queue, phi_op);
     }
 }
@@ -361,7 +380,8 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
                 ir_generate_expr(program, statement->init_value);
 
             struct ir_variable_version version =
-                (struct ir_variable_version){val, program->current_scope_depth};
+                (struct ir_variable_version){IR_PROGRAM_CURRENT_OP(program),
+                                             val, program->current_scope_depth};
             array_macro_append(&var->values, version);
             break;
         case AST_STATEMENT_RETURN:;
@@ -408,6 +428,34 @@ void ir_value_log(struct ir_value *value, struct log_level *level)
     }
 }
 
+void ir_phi_convert_mov(struct ir_program *program, struct ir_operation *phi)
+{
+    logd("%p, %p", phi->phi.one.op, phi->phi.two.op);
+    struct ir_operation *one_mov_op =
+        ir_operation_alloc(IR_OP_MOV, phi->phi.dest, phi->phi.one.reg, NULL);
+    list_add_after(&one_mov_op->list, &phi->phi.one.op->list);
+
+    logd("two op value:%p", phi->phi.two.op);
+    logd("%d", phi->phi.two.op->is_label);
+    logd("%p, %p", phi->phi.two.op->list.prev, phi->phi.two.op->list.next);
+    struct ir_operation *two_mov_op =
+        ir_operation_alloc(IR_OP_MOV, phi->phi.dest, phi->phi.two.reg, NULL);
+    list_add_after(&two_mov_op->list, &phi->phi.two.op->list);
+}
+
+void ir_remove_phi(struct ir_program *program)
+{
+    struct list *pos;
+    list_for_each(pos, &program->operations)
+    {
+        struct ir_operation *op = containerof(pos, struct ir_operation, list);
+        if (op->is_phi)
+        {
+            ir_phi_convert_mov(program, op);
+        }
+    }
+}
+
 void ir_operation_log(struct ir_operation *op, struct log_level *level)
 {
     log_multiline_start(level);
@@ -417,10 +465,10 @@ void ir_operation_log(struct ir_operation *op, struct log_level *level)
 
         log_level(*level, "PHI ");
         ir_value_log(op->phi.dest, level);
-        log_level(*level, "(");
-        ir_value_log(op->phi.one, level);
+        log_level(*level, " (");
+        ir_value_log(op->phi.one.reg, level);
         log_level(*level, " ");
-        ir_value_log(op->phi.two, level);
+        ir_value_log(op->phi.two.reg, level);
         log_level(*level, ")");
     }
     else if (op->is_label)

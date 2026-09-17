@@ -10,7 +10,7 @@
 void ir_test()
 {
     const char *expr_str = MACRO_STR(int main() {
-        int y = 0;
+        int y = 1;
         int x = 2;
         if (y)
         {
@@ -32,6 +32,8 @@ void ir_test()
     struct ast_top_statement *main =
         containerof(top_statements.next, struct ast_top_statement, list);
     ir_generate_block(&program, &main->function->block);
+    ir_display(&program, &LOG_INFO);
+    ir_remove_phi(&program);
     ir_display(&program, &LOG_INFO);
 
     struct bytecode_array code = {0};
