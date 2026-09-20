@@ -145,10 +145,10 @@ struct ir_value *ast_value_convert_ir(struct ir_program *program,
         struct ir_variable *var = ir_variable_lookup(program, value.varname);
 
         NOT_NULL(var, "undeclared variable %s", value.varname);
-        struct ir_variable_version version =
+        struct ir_variable_version prev_version =
             var->values.items[var->values.num - 1];
 
-        return version.var;
+        return prev_version.var;
     }
     else
     {
@@ -280,49 +280,45 @@ void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
         result_op, result, program->current_scope_depth};
     array_macro_append(&var->values, version);
 
-    /* FIXME: this way of check if a variable needs to be reassigned is bad */
-    if (var->values.items[var->values.num - 2].scope_depth <
-        program->current_scope_depth)
+    /* FIXME: probably factor out */
+    for (size_t i = 0; i < var->values.num - 1; i++)
     {
-        struct ir_value *new_value = ir_value_alloc_reg(program);
-        struct ir_variable_version phi_prev =
-            var->values.items[var->values.num - 2];
+        struct ir_variable_version current_value = var->values.items[i];
+        logd("version of var has register:%d", current_value.var->var.num);
+        /* FIXME: this way of check if a variable needs to be reassigned is bad
+         */
+        if (current_value.scope_depth != program->current_scope_depth)
+        {
+            struct ir_value *new_value = ir_value_alloc_reg(program);
+            struct ir_phi_reg phi_reg1 =
+                (struct ir_phi_reg){.op = result_op, .reg = result};
+            struct ir_phi_reg phi_reg2 = (struct ir_phi_reg){
+                .op = current_value.assign_op, .reg = current_value.var};
 
-        logd("assign op:%p", phi_prev.assign_op);
-        logd("is label:%d", phi_prev.assign_op->is_label);
-        logd("next list:%p", phi_prev.assign_op->list.next);
+            struct ir_operation *phi_op =
+                ir_operation_alloc_phi(new_value, phi_reg1, phi_reg2);
 
-        struct ir_phi_reg phi_reg1 =
-            (struct ir_phi_reg){.op = result_op, .reg = result};
-        struct ir_phi_reg phi_reg2 =
-            (struct ir_phi_reg){.op = phi_prev.assign_op, .reg = phi_prev.var};
-
-        logd("phi_reg2.op:%p", phi_reg2.op);
-
-        struct ir_operation *phi_op =
-            ir_operation_alloc_phi(new_value, phi_reg1, phi_reg2);
-
-        logd("list next phi_op:%p", phi_op->phi.two.op);
-
-        struct ir_variable_version new_var = {phi_op, new_value,
-                                              program->current_scope_depth};
-        array_macro_append(&var->values, new_var);
-        array_macro_append(&program->phi_op_queue, phi_op);
+            struct ir_variable_version new_var = {phi_op, new_value,
+                                                  program->current_scope_depth};
+            array_macro_append(&var->values, new_var);
+            array_macro_append(&program->phi_op_queue_end, phi_op);
+            break;
+        }
     }
 }
 
 void ir_empty_phi_queue(struct ir_program *program)
 {
-    for (size_t i = 0; i < program->phi_op_queue.num; i++)
+    for (size_t i = 0; i < program->phi_op_queue_end.num; i++)
     {
-        struct ir_operation *op = program->phi_op_queue.items[i];
+        struct ir_operation *op = program->phi_op_queue_end.items[i];
         ir_operation_append(program, op);
     }
 
-    program->phi_op_queue.capacity = 0;
-    program->phi_op_queue.num = 0;
-    free(program->phi_op_queue.items);
-    program->phi_op_queue.items = NULL;
+    program->phi_op_queue_end.capacity = 0;
+    program->phi_op_queue_end.num = 0;
+    free(program->phi_op_queue_end.items);
+    program->phi_op_queue_end.items = NULL;
 }
 
 void ir_generate_block(struct ir_program *program, struct list *statements)
@@ -359,8 +355,11 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
         case AST_STATEMENT_WHILE:;
 
             struct ir_value *loop_start = ir_generate_label(program);
+            program->current_scope_depth++;
+
             struct ir_value *condition =
                 ir_generate_expr(program, statement->block_expr);
+
             struct ir_operation *cond_jump_op =
                 ir_operation_alloc(IR_OP_JZ, condition, NULL, NULL);
             ir_operation_append(program, cond_jump_op);
@@ -369,6 +368,9 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
             ir_operation_append(
                 program, ir_operation_alloc(IR_OP_JMP, loop_start, NULL, NULL));
             cond_jump_op->two = ir_generate_label(program);
+
+            program->current_scope_depth--;
+            ir_empty_phi_queue(program);
 
             break;
         case AST_STATEMENT_FOR:
@@ -504,4 +506,78 @@ void ir_display(struct ir_program *program, struct log_level *level)
     }
     log_level(*level, "\n");
     log_multiline_end(level);
+}
+
+struct cfg_node *cfg_node_alloc()
+{
+    struct cfg_node *out = malloc(sizeof(struct cfg_node));
+    out->children.items = NULL;
+    out->children.capacity = 0;
+    out->children.num = 0;
+
+    out->statements.items = NULL;
+    out->statements.capacity = 0;
+    out->statements.num = 0;
+
+    return out;
+}
+
+struct cfg_node *cfg_parse(struct list *statements)
+{
+    struct cfg_node *out = cfg_node_alloc();
+    struct list *pos;
+    list_for_each(pos, statements)
+    {
+        struct ast_statement *statement =
+            containerof(pos, struct ast_statement, list);
+
+        switch (statement->type)
+        {
+        case AST_STATEMENT_IF:;
+            struct cfg_node *child = cfg_parse(&statement->block);
+            array_macro_append(&out->children, child);
+
+            LIST_DEFINE_HEAD(new_head);
+            new_head.next = pos->next;
+            new_head.prev = statements->prev;
+            new_head.next->prev = &new_head;
+            new_head.prev->next = &new_head;
+
+            statements->prev = pos;
+            pos = statements;
+            pos->next = statements;
+
+            struct cfg_node *block_after = cfg_parse(&new_head);
+            array_macro_append(&child->children, block_after);
+            array_macro_append(&out->children, block_after);
+            break;
+
+        case AST_STATEMENT_EXPR:
+        case AST_STATEMENT_DECLARE:
+        case AST_STATEMENT_RETURN:
+            /* derefrence might be stupid */
+            array_macro_append(&out->statements, *statement);
+            break;
+        case AST_STATEMENT_WHILE:
+        case AST_STATEMENT_FOR:
+            PANIC("unimplemented");
+        }
+    }
+    return out;
+}
+
+void cfg_display(struct cfg_node *node)
+{
+    logd("cfg block start");
+    for (size_t i = 0; i < node->statements.num; i++)
+    {
+        struct ast_statement *statement = &array_index(&node->statements, i);
+        logd("statement:%s", ast_statement_type_str(statement->type));
+    }
+
+    for (size_t i = 0; i < node->children.num; i++)
+    {
+        cfg_display(array_index(&node->children, i));
+    }
+    logd("cfg block end");
 }

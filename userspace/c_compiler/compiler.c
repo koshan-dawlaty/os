@@ -10,13 +10,14 @@
 void ir_test()
 {
     const char *expr_str = MACRO_STR(int main() {
-        int y = 1;
-        int x = 2;
-        if (y)
+        int i = 0;
+        if (i)
         {
-            x = 1;
+            int y = 10;
+            return 123;
         }
-        return x;
+
+        return i;
     }
 
     );
@@ -26,11 +27,15 @@ void ir_test()
 
     LIST_DEFINE_HEAD(top_statements);
     struct ast_error *err = ast_parse(&tokens, &top_statements);
+    struct ast_top_statement *main =
+        containerof(top_statements.next, struct ast_top_statement, list);
+
+    struct cfg_node *root = cfg_parse(&main->function->block);
+    cfg_display(root);
+    return;
 
     struct ir_program program = {.register_offset = 0, 0, {0}, {0}};
     list_init_head(&program.operations);
-    struct ast_top_statement *main =
-        containerof(top_statements.next, struct ast_top_statement, list);
     ir_generate_block(&program, &main->function->block);
     ir_display(&program, &LOG_INFO);
     ir_remove_phi(&program);

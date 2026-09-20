@@ -28,6 +28,7 @@ struct test_result *test_codegen_program(const char *program_str, int expected)
     struct ast_top_statement *main =
         containerof(top_statements.next, struct ast_top_statement, list);
     ir_generate_block(&program, &main->function->block);
+	ir_remove_phi(&program);
 
     struct bytecode_array code = {0};
     codegen_generate_ir(&code, &program);
@@ -166,6 +167,31 @@ TEST_CODEGEN(codegen_test_if_and_false2, MACRO_STR(
 	 }
 ),2)
 
+TEST_CODEGEN(codegen_test_phi_basic1, MACRO_STR(
+	int main()
+	{
+        int y = 0;
+        int x = 2;
+        if (y)
+        {
+            x = 1;
+        }
+        return x;
+	 }
+),2)
+
+TEST_CODEGEN(codegen_test_phi_basic2, MACRO_STR(
+	int main()
+	{
+        int y = 1;
+        int x = 2;
+        if (y)
+        {
+            x = 1;
+        }
+        return x;
+	 }
+),1)
 // clang-format on
 //
 int main()

@@ -148,4 +148,6 @@ u8 array_pop_middle(struct array *array, size_t offset);
 #define array_macro_remove_end(array)                                          \
     ((array)->num--, (array)->items[(array)->num])
 
+#define array_index(array, index) ((array)->items[index])
+
 #endif

@@ -440,6 +440,27 @@ struct ast_statement *ast_statement_alloc_return(struct ast_expr *expr)
     return out;
 }
 
+const char *ast_statement_type_str(enum ast_statement_type type)
+{
+    switch (type)
+    {
+    case AST_STATEMENT_EXPR:
+        return "EXPR";
+    case AST_STATEMENT_IF:
+        return "IF";
+    case AST_STATEMENT_WHILE:
+        return "WHILE";
+    case AST_STATEMENT_FOR:
+        return "FOR";
+    case AST_STATEMENT_DECLARE:
+        return "DECLARE";
+    case AST_STATEMENT_RETURN:
+        return "RETURN";
+    default:
+        return "UNKNOWN";
+    }
+}
+
 void ast_expr_free(struct ast_expr *expr)
 {
     switch (expr->type)

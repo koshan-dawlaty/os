@@ -24,7 +24,14 @@ struct ir_program
         struct ir_operation **items;
         size_t num;
         size_t capacity;
-    } phi_op_queue;
+    } phi_op_queue_end;
+
+    struct
+    {
+        struct ir_operation **items;
+        size_t num;
+        size_t capacity;
+    } phi_op_queue_start;
 };
 
 #define IR_PROGRAM_CURRENT_OP(program)                                         \
@@ -151,5 +158,26 @@ void ir_operation_log(struct ir_operation *op, struct log_level *level);
 
 void ir_generate_block(struct ir_program *program, struct list *statements);
 void ir_remove_phi(struct ir_program *program);
+
+struct cfg_node
+{
+    /* this probably doesn't need to be partially modified, unlike the ast, so
+     * the should be fine as an array */
+    struct
+    {
+        struct ast_statement *items;
+        size_t num;
+        size_t capacity;
+    } statements;
+
+    struct
+    {
+        struct cfg_node **items;
+        size_t num;
+        size_t capacity;
+    } children;
+};
+struct cfg_node *cfg_parse(struct list *statements);
+void cfg_display(struct cfg_node * root);
 
 #endif
