@@ -5,6 +5,7 @@
 #include <lib/compiler/ir.h>
 #include <lib/list.h>
 #include <lib/log.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <types.h>
@@ -321,84 +322,76 @@ void ir_empty_phi_queue(struct ir_program *program)
     program->phi_op_queue_end.items = NULL;
 }
 
-void ir_generate_block(struct ir_program *program, struct list *statements)
+void ir_generate_statement(struct ir_program *program,
+                           struct ast_statement *statement)
 {
 
-    struct list *pos;
-    list_for_each(pos, statements)
+    switch (statement->type)
     {
-        struct ast_statement *statement =
-            containerof(pos, struct ast_statement, list);
-        switch (statement->type)
-        {
-        case AST_STATEMENT_EXPR:
-            ir_generate_expr_assign(program, statement->expr);
+    case AST_STATEMENT_EXPR:
+        ir_generate_expr_assign(program, statement->expr);
 
-            break;
-        case AST_STATEMENT_IF:;
-            struct ir_value *if_val =
-                ir_generate_expr(program, statement->block_expr);
+        break;
+    case AST_STATEMENT_IF:;
+        struct ir_value *if_val =
+            ir_generate_expr(program, statement->block_expr);
 
-            program->current_scope_depth++;
+        program->current_scope_depth++;
 
-            struct ir_operation *jump_op =
-                ir_operation_alloc(IR_OP_JZ, if_val, NULL, NULL);
-            ir_operation_append(program, jump_op);
+        struct ir_operation *jump_op =
+            ir_operation_alloc(IR_OP_JZ, if_val, NULL, NULL);
+        ir_operation_append(program, jump_op);
 
-            ir_generate_block(program, &statement->block);
-            jump_op->two = ir_generate_label(program);
+        ir_generate_block(program, &statement->block);
+        jump_op->two = ir_generate_label(program);
 
-            program->current_scope_depth--;
-            ir_empty_phi_queue(program);
+        program->current_scope_depth--;
+        ir_empty_phi_queue(program);
 
-            break;
-        case AST_STATEMENT_WHILE:;
+        break;
+    case AST_STATEMENT_WHILE:;
 
-            struct ir_value *loop_start = ir_generate_label(program);
-            program->current_scope_depth++;
+        struct ir_value *loop_start = ir_generate_label(program);
+        program->current_scope_depth++;
 
-            struct ir_value *condition =
-                ir_generate_expr(program, statement->block_expr);
+        struct ir_value *condition =
+            ir_generate_expr(program, statement->block_expr);
 
-            struct ir_operation *cond_jump_op =
-                ir_operation_alloc(IR_OP_JZ, condition, NULL, NULL);
-            ir_operation_append(program, cond_jump_op);
-            ir_generate_block(program, &statement->block);
+        struct ir_operation *cond_jump_op =
+            ir_operation_alloc(IR_OP_JZ, condition, NULL, NULL);
+        ir_operation_append(program, cond_jump_op);
+        ir_generate_block(program, &statement->block);
 
-            ir_operation_append(
-                program, ir_operation_alloc(IR_OP_JMP, loop_start, NULL, NULL));
-            cond_jump_op->two = ir_generate_label(program);
+        ir_operation_append(
+            program, ir_operation_alloc(IR_OP_JMP, loop_start, NULL, NULL));
+        cond_jump_op->two = ir_generate_label(program);
 
-            program->current_scope_depth--;
-            ir_empty_phi_queue(program);
+        program->current_scope_depth--;
+        ir_empty_phi_queue(program);
 
-            break;
-        case AST_STATEMENT_FOR:
-            break;
-        case AST_STATEMENT_DECLARE:;
-            struct ir_variable *var = ir_variable_alloc(statement->varname);
-            array_macro_append(&program->variables, var);
-            struct ir_value *val =
-                ir_generate_expr(program, statement->init_value);
+        break;
+    case AST_STATEMENT_FOR:
+        break;
+    case AST_STATEMENT_DECLARE:;
+        struct ir_variable *var = ir_variable_alloc(statement->varname);
+        array_macro_append(&program->variables, var);
+        struct ir_value *val = ir_generate_expr(program, statement->init_value);
 
-            struct ir_variable_version version =
-                (struct ir_variable_version){IR_PROGRAM_CURRENT_OP(program),
-                                             val, program->current_scope_depth};
-            array_macro_append(&var->values, version);
-            break;
-        case AST_STATEMENT_RETURN:;
-            /* TODO: there is probably a better way of doing this than
-             * allocating a new register, there could be a special return value
-             * register that would be automatically mapped to the architecture
-             * return value */
+        struct ir_variable_version version = (struct ir_variable_version){
+            IR_PROGRAM_CURRENT_OP(program), val, program->current_scope_depth};
+        array_macro_append(&var->values, version);
+        break;
+    case AST_STATEMENT_RETURN:;
+        /* TODO: there is probably a better way of doing this than
+         * allocating a new register, there could be a special return value
+         * register that would be automatically mapped to the architecture
+         * return value */
 
-            struct ir_value *return_dest =
-                ir_generate_expr(program, statement->expr);
-            ir_operation_append(
-                program,
-                ir_operation_alloc(IR_OP_RET, return_dest, NULL, NULL));
-            break;
-        }
+        struct ir_value *return_dest =
+            ir_generate_expr(program, statement->expr);
+        ir_operation_append(
+            program, ir_operation_alloc(IR_OP_RET, return_dest, NULL, NULL));
+        break;
     }
 }
 
@@ -508,6 +501,92 @@ void ir_display(struct ir_program *program, struct log_level *level)
     log_multiline_end(level);
 }
 
+void ir_generate_block(struct ir_program *program, struct list *statements) {};
+
+void ir_generate_cfg(struct ir_program *program, struct cfg_node *node)
+{
+    for (size_t i = 0; i < node->children.num; i++)
+    {
+        struct cfg_node *node = array_at(&node->children, i);
+        if (node->parents.num >= 2)
+        {
+            for (size_t j = 0; j < node->parents.num; j++)
+            {
+                struct cfg_node *current = array_at(&node->parents, j);
+            }
+        }
+    }
+}
+
+/* TODO: FIXME: the cfg node dominance code is very very very very bad.
+ * the time complexity is probably larger than O(n^4), this could be somewhat
+ * fixed with an actual set implementation using a hashmap. Also, to detect
+ * changing dominance, you could just see if the intersection found anything
+ * that was not in the set
+ *
+ * the array_remove calls also are probably pretty expensive
+ */
+
+/* true if removed an item from @dest's dominance */
+static bool cfg_node_set_dominance_intersection(struct cfg_parser *parser,
+                                                struct cfg_node *dest,
+                                                struct cfg_node *other)
+{
+    bool retval = false;
+    for (size_t i = dest->dominance.num; i > 0; i--)
+    {
+        for (size_t j = 0; j < other->dominance.num; j++)
+        {
+            if (array_at(&dest->dominance, i) != array_at(&other->dominance, j))
+            {
+                array_remove(&dest->dominance, i);
+                retval = true;
+            }
+        }
+    }
+    return retval;
+}
+
+static bool cfg_node_set_new_dominance(struct cfg_parser *parser,
+                                       struct cfg_node *dest,
+                                       struct cfg_node *current)
+{
+    /* order probably does not matter, but calling this here is nice for
+     * debugging */
+    bool retval = cfg_node_set_dominance_intersection(parser, dest, current);
+
+    for (size_t i = 0; i < current->parents.num; i++)
+    {
+        cfg_node_set_new_dominance(parser, dest,
+                                   array_at(&current->parents, i));
+    }
+
+    return retval;
+}
+
+void cfg_set_dominance(struct cfg_parser *parser, struct cfg_node *root)
+{
+    for (size_t i = 0; i < parser->nodes.num; i++)
+    {
+        struct cfg_node *node = array_at(&parser->nodes, i);
+        array_copy_other(&node->dominance, &parser->nodes);
+    }
+
+    bool is_changing = false;
+    do
+    {
+
+        for (size_t i = 0; i < parser->nodes.num; i++)
+        {
+            struct cfg_node *node = array_at(&parser->nodes, i);
+            if (cfg_node_set_new_dominance(parser, node, node))
+            {
+                is_changing = true;
+            }
+        }
+    } while (is_changing);
+}
+
 struct cfg_node *cfg_node_alloc()
 {
     struct cfg_node *out = malloc(sizeof(struct cfg_node));
@@ -519,12 +598,40 @@ struct cfg_node *cfg_node_alloc()
     out->statements.capacity = 0;
     out->statements.num = 0;
 
+    out->parents.items = NULL;
+    out->parents.capacity = 0;
+    out->parents.num = 0;
+
+    out->dominance.items = NULL;
+    out->dominance.capacity = 0;
+    out->dominance.num = 0;
+
     return out;
 }
 
-struct cfg_node *cfg_parse(struct list *statements)
+void cfg_node_add_child(struct cfg_parser *parser, struct cfg_node *parent,
+                        struct cfg_node *child)
+{
+    array_macro_append(&parent->children, child);
+    array_macro_append(&child->parents, parent);
+
+    /* FIXME: parser.nodes should definitly use a hashmap or something, i just
+     * dont want to do it right now */
+    for (size_t i = 0; i < parser->nodes.num; i++)
+    {
+        if (child == array_at(&parser->nodes, i))
+        {
+            return;
+        }
+    }
+    array_macro_append(&parser->nodes, child);
+}
+
+struct cfg_node *cfg_parse(struct cfg_parser *parser, struct list *statements)
 {
     struct cfg_node *out = cfg_node_alloc();
+    array_macro_append(&parser->nodes, out);
+
     struct list *pos;
     list_for_each(pos, statements)
     {
@@ -534,8 +641,8 @@ struct cfg_node *cfg_parse(struct list *statements)
         switch (statement->type)
         {
         case AST_STATEMENT_IF:;
-            struct cfg_node *child = cfg_parse(&statement->block);
-            array_macro_append(&out->children, child);
+            struct cfg_node *child = cfg_parse(parser, &statement->block);
+            cfg_node_add_child(parser, out, child);
 
             LIST_DEFINE_HEAD(new_head);
             new_head.next = pos->next;
@@ -547,9 +654,9 @@ struct cfg_node *cfg_parse(struct list *statements)
             pos = statements;
             pos->next = statements;
 
-            struct cfg_node *block_after = cfg_parse(&new_head);
-            array_macro_append(&child->children, block_after);
-            array_macro_append(&out->children, block_after);
+            struct cfg_node *block_after = cfg_parse(parser, &new_head);
+            cfg_node_add_child(parser, child, block_after);
+            cfg_node_add_child(parser, out, block_after);
             break;
 
         case AST_STATEMENT_EXPR:
@@ -571,13 +678,13 @@ void cfg_display(struct cfg_node *node)
     logd("cfg block start");
     for (size_t i = 0; i < node->statements.num; i++)
     {
-        struct ast_statement *statement = &array_index(&node->statements, i);
+        struct ast_statement *statement = &array_at(&node->statements, i);
         logd("statement:%s", ast_statement_type_str(statement->type));
     }
 
     for (size_t i = 0; i < node->children.num; i++)
     {
-        cfg_display(array_index(&node->children, i));
+        cfg_display(array_at(&node->children, i));
     }
     logd("cfg block end");
 }

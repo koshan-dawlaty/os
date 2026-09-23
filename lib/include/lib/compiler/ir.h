@@ -159,6 +159,7 @@ void ir_operation_log(struct ir_operation *op, struct log_level *level);
 void ir_generate_block(struct ir_program *program, struct list *statements);
 void ir_remove_phi(struct ir_program *program);
 
+
 struct cfg_node
 {
     /* this probably doesn't need to be partially modified, unlike the ast, so
@@ -176,8 +177,35 @@ struct cfg_node
         size_t num;
         size_t capacity;
     } children;
+
+    /* having pointers to the parent of each node might be unnecessary, this is
+     * used for getting dominance frontier, you can maybe iterate backwards
+     * through all nodes and see the predecessors that way? */
+    /* immediate predecessors */
+    struct
+    {
+        struct cfg_node **items;
+        size_t num;
+        size_t capacity;
+    } parents;
+
+    struct
+    {
+        struct cfg_node **items;
+        size_t num;
+        size_t capacity;
+    } dominance;
 };
-struct cfg_node *cfg_parse(struct list *statements);
-void cfg_display(struct cfg_node * root);
+struct cfg_parser
+{
+	struct {
+		struct cfg_node ** items;
+		size_t num;
+		size_t capacity;
+	} nodes;
+};
+
+struct cfg_node *cfg_parse(struct cfg_parser * parser, struct list *statements);
+void cfg_display(struct cfg_node *root);
 
 #endif

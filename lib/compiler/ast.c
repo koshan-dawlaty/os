@@ -5,13 +5,11 @@
 #include <lib/compiler/ast.h>
 #include <lib/list.h>
 #include <lib/log.h>
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <tests/tests.h>
 
 bool token_is_branch_statement(enum token_type type)
 {

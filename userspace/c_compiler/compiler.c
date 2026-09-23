@@ -30,7 +30,8 @@ void ir_test()
     struct ast_top_statement *main =
         containerof(top_statements.next, struct ast_top_statement, list);
 
-    struct cfg_node *root = cfg_parse(&main->function->block);
+    struct cfg_parser cfg_parser = {0};
+    struct cfg_node *root = cfg_parse(&cfg_parser, &main->function->block);
     cfg_display(root);
     return;
 

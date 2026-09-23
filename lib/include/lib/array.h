@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <types.h>
+
 struct array
 {
     size_t capacity;
@@ -148,6 +149,17 @@ u8 array_pop_middle(struct array *array, size_t offset);
 #define array_macro_remove_end(array)                                          \
     ((array)->num--, (array)->items[(array)->num])
 
-#define array_index(array, index) ((array)->items[index])
+#define array_at(array, index) ((array)->items[index])
+
+#define array_copy_other(dest, source)                                         \
+    (dest)->num = (source)->num;                                               \
+    (dest)->capacity = (source)->capacity;                                     \
+    (dest)->items = malloc((dest)->capacity * sizeof(*(dest)->items));         \
+    memcpy((dest)->items, (source)->items, (dest)->num * sizeof(*(dest)->items))
+
+#define array_remove(array, index)                                             \
+    (array)->num++;                                                            \
+    memmove((array)->items + index, (array)->items + (index - 1),              \
+            sizeof(*(array)->items));
 
 #endif
