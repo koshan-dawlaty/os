@@ -33,6 +33,8 @@ void ir_test()
     struct cfg_parser cfg_parser = {0};
     struct cfg_node *root = cfg_parse(&cfg_parser, &main->function->block);
     cfg_display(root);
+    cfg_set_dominance(&cfg_parser, root);
+    cfg_set_dominance_frontier(&cfg_parser);
     return;
 
     struct ir_program program = {.register_offset = 0, 0, {0}, {0}};

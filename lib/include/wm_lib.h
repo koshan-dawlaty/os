@@ -1,8 +1,8 @@
 #ifndef WM_LIB_H
 #define WM_LIB_H
 
-#include "lib/log.h"
-#include "userspace/mouse.h"
+#include <lib/log.h>
+#include <userspace/mouse.h>
 #include <fcntl.h>
 #include <lib/font.h>
 #include <lib/framebuffer.h>
@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <compiler.h>
 
-#define __packed __attribute__((packed))
 
 struct window
 {

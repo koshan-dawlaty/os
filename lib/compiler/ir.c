@@ -5,7 +5,6 @@
 #include <lib/compiler/ir.h>
 #include <lib/list.h>
 #include <lib/log.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <types.h>
@@ -527,6 +526,35 @@ void ir_generate_cfg(struct ir_program *program, struct cfg_node *node)
  * the array_remove calls also are probably pretty expensive
  */
 
+/* gets immediate dominator of node */
+/* this is probably not correct, but i dont care right now */
+static struct cfg_node *cfg_get_idom(struct cfg_node *node)
+{
+    return array_at(&node->dominance, node->dominance.num - 1);
+}
+
+void cfg_set_dominance_frontier(struct cfg_parser *parser)
+{
+    for (size_t i = 0; i < parser->nodes.num; i++)
+    {
+        struct cfg_node *node = array_at(&parser->nodes, i);
+        if (node->parents.num >= 2)
+        {
+            struct cfg_node *node_idom = cfg_get_idom(node);
+            for (size_t j = 0; j < node->parents.num; j++)
+            {
+                struct cfg_node *parent = array_at(&node->parents, j);
+                struct cfg_node *current = parent;
+                while (current != node_idom)
+                {
+                    array_macro_append(&current->dominance_frontier, node);
+                    current = cfg_get_idom(current);
+                }
+            }
+        }
+    }
+}
+
 /* true if removed an item from @dest's dominance */
 static bool cfg_node_set_dominance_intersection(struct cfg_parser *parser,
                                                 struct cfg_node *dest,
@@ -605,6 +633,10 @@ struct cfg_node *cfg_node_alloc()
     out->dominance.items = NULL;
     out->dominance.capacity = 0;
     out->dominance.num = 0;
+
+    out->dominance_frontier.items = NULL;
+    out->dominance_frontier.capacity = 0;
+    out->dominance_frontier.num = 0;
 
     return out;
 }

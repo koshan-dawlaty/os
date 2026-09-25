@@ -159,7 +159,6 @@ void ir_operation_log(struct ir_operation *op, struct log_level *level);
 void ir_generate_block(struct ir_program *program, struct list *statements);
 void ir_remove_phi(struct ir_program *program);
 
-
 struct cfg_node
 {
     /* this probably doesn't need to be partially modified, unlike the ast, so
@@ -189,23 +188,35 @@ struct cfg_node
         size_t capacity;
     } parents;
 
+    /* this maybe does not need to be its own array, you could do this as a
+     * tree, and it would definitly be faster */
     struct
     {
         struct cfg_node **items;
         size_t num;
         size_t capacity;
     } dominance;
+
+    struct
+    {
+        struct cfg_node **items;
+        size_t num;
+        size_t capacity;
+    } dominance_frontier;
 };
 struct cfg_parser
 {
-	struct {
-		struct cfg_node ** items;
-		size_t num;
-		size_t capacity;
-	} nodes;
+    struct
+    {
+        struct cfg_node **items;
+        size_t num;
+        size_t capacity;
+    } nodes;
 };
 
-struct cfg_node *cfg_parse(struct cfg_parser * parser, struct list *statements);
+struct cfg_node *cfg_parse(struct cfg_parser *parser, struct list *statements);
 void cfg_display(struct cfg_node *root);
+void cfg_set_dominance(struct cfg_parser *parser, struct cfg_node *root);
+void cfg_set_dominance_frontier(struct cfg_parser *parser);
 
 #endif
