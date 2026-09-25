@@ -691,20 +691,20 @@ struct codegen_value *codegen_convert_ir_value(struct bytecode_array *code,
 /* correctly sets jump offsets a label for an offset and an ir_value for a
  * label */
 void codegen_add_jump_labels(struct bytecode_array *code,
-                             struct ir_value *label, size_t offset)
+                             size_t label_num, size_t offset)
 {
     for (size_t i = 0; i < code->labels.num; i++)
     {
         struct codegen_label *l = &code->labels.items[i];
         logd("looking at label:%d", l->jump_offset);
-        if (l->label_value == label)
+        if (l->label_num == label_num)
         {
             logd("saw label before this");
             l->jump_offset = offset;
             return;
         }
     }
-    struct codegen_label new_label = {offset, 0, label};
+    struct codegen_label new_label = {offset, 0, label_num};
     array_macro_append(&code->labels, new_label);
 }
 
@@ -739,7 +739,7 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     case IR_OP_JZ:
         generate_test(code, one, one);
         size_t offset = generate_jump_if_zero(code);
-        codegen_add_jump_labels(code, op->two, offset);
+        codegen_add_jump_labels(code, op->two->label.label_num, offset);
 
         break;
     case IR_OP_SET_EQ:
@@ -758,7 +758,7 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     case IR_OP_JMP:
     {
         size_t offset = generate_jump(code);
-        codegen_add_jump_labels(code, op->one, offset);
+        codegen_add_jump_labels(code, op->one->label.label_num, offset);
     }
     break;
 
@@ -768,8 +768,7 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     }
 }
 
-void codegen_generate_label(struct bytecode_array *code,
-                            struct ir_operation *label_op)
+void codegen_generate_label(struct bytecode_array *code, size_t label_num)
 {
     logd("label");
     for (size_t i = 0; i < code->labels.num; i++)
@@ -779,13 +778,13 @@ void codegen_generate_label(struct bytecode_array *code,
         /* TODO: pointer comparing will probably work for right now, but in the
          * future a number system, similar to registers should probably be used
          */
-        if (label->label_value == label_op->label.value)
+        if (label->label_num == label_num)
         {
             label->label_offset = code->num - 1;
             return;
         }
     }
-    struct codegen_label new_label = {0, code->num - 1, label_op->label.value};
+    struct codegen_label new_label = {0, code->num - 1, label_num};
     array_macro_append(&code->labels, new_label);
 }
 
@@ -809,20 +808,24 @@ void codegen_generate_ir(struct bytecode_array *code,
     }
 
     struct list *pos;
-    list_for_each(pos, &program->operations)
+    list_for_each(pos, &program->instructions)
     {
-        struct ir_operation *op = containerof(pos, struct ir_operation, list);
-        if (op->is_label)
+        struct ir_instruction *inst =
+            containerof(pos, struct ir_instruction, list);
+        if (inst->is_label)
         {
-            codegen_generate_label(code, op);
-        }
-        else if (op->is_phi)
-        {
-            codegen_generate_phi(code, op);
+            codegen_generate_label(code, inst->label.label_num);
         }
         else
         {
-            codegen_generate_op(code, op);
+            if (inst->op.is_phi)
+            {
+                codegen_generate_phi(code, &inst->op);
+            }
+            else
+            {
+                codegen_generate_op(code, &inst->op);
+            }
         }
     }
     generate_return(code);

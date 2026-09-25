@@ -12,7 +12,7 @@ struct codegen_label
     /* absolute offset in the code of where the jump will go */
     size_t label_offset;
 
-	struct ir_value * label_value;
+    size_t label_num;
 };
 
 struct bytecode_array

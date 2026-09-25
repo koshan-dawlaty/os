@@ -24,11 +24,10 @@ struct test_result *test_codegen_program(const char *program_str, int expected)
     struct ast_error *err = ast_parse(&tokens, &top_statements);
 
     struct ir_program program = {.register_offset = 0, 0, {0}};
-    list_init_head(&program.operations);
+    list_init_head(&program.instructions);
     struct ast_top_statement *main =
         containerof(top_statements.next, struct ast_top_statement, list);
     ir_generate_block(&program, &main->function->block);
-	ir_remove_phi(&program);
 
     struct bytecode_array code = {0};
     codegen_generate_ir(&code, &program);
