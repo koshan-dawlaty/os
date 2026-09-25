@@ -4,12 +4,23 @@
 #include <lib/compiler/ast.h>
 #include <types.h>
 
-struct ir_operation;
+struct ir_label
+{
+    struct ir_instruction *instruction;
+};
+
 struct ir_program
 {
-    struct list operations;
+    struct list instructions;
     size_t register_offset;
     size_t current_scope_depth;
+
+    struct
+    {
+        struct ir_label *items;
+        size_t num;
+        size_t capacity;
+    } labels;
 
     struct
     {
@@ -17,25 +28,10 @@ struct ir_program
         size_t num;
         size_t capacity;
     } variables;
-
-    /* phi operations that should be added at the end of this block */
-    struct
-    {
-        struct ir_operation **items;
-        size_t num;
-        size_t capacity;
-    } phi_op_queue_end;
-
-    struct
-    {
-        struct ir_operation **items;
-        size_t num;
-        size_t capacity;
-    } phi_op_queue_start;
 };
 
-#define IR_PROGRAM_CURRENT_OP(program)                                         \
-    (containerof(((program)->operations.prev), struct ir_operation, list))
+#define IR_PROGRAM_CURRENT_INS(program)                                        \
+    (containerof(((program)->instructions.prev), struct ir_instruction, list))
 
 struct ir_value
 {
@@ -47,8 +43,7 @@ struct ir_value
         } var;
         struct
         {
-            /* the operation after this label */
-            struct ir_operation *next;
+            size_t label_num;
         } label;
         u64 value;
     };
@@ -127,10 +122,7 @@ struct ir_operation
             enum ir_operation_type type;
             struct ir_value *one, *two, *three;
         };
-        struct
-        {
-            struct ir_value *value;
-        } label;
+
         struct
         {
             struct ir_value *dest;
@@ -140,14 +132,28 @@ struct ir_operation
             struct ir_phi_reg two;
         } phi;
     };
-    struct list list;
 
-    /* phi function, described here
-       https://en.wikipedia.org/wiki/Static_single-assignment_form */
     bool is_phi;
+};
 
+struct ir_instruction
+{
+    union
+    {
+        struct ir_operation op;
+
+        /* this maybe does not need to be here, but it makes printing /
+         * debugging easier */
+        struct
+        {
+            size_t label_num;
+        } label;
+    };
+
+    struct list list;
     bool is_label;
 };
+
 
 struct ir_value *ir_generate_expr(struct ir_program *program,
                                   struct ast_expr *expr);
@@ -161,8 +167,6 @@ void ir_remove_phi(struct ir_program *program);
 
 struct cfg_node
 {
-    /* this probably doesn't need to be partially modified, unlike the ast, so
-     * the should be fine as an array */
     struct
     {
         struct ast_statement *items;
