@@ -33,7 +33,9 @@ void ir_test()
     struct cfg_parser cfg_parser = {0};
     struct cfg_node *root = cfg_parse(&cfg_parser, &main->function->block);
     cfg_display(root);
+	logd("dominance");
     cfg_set_dominance(&cfg_parser, root);
+	logd("dominance frontier");
     cfg_set_dominance_frontier(&cfg_parser);
     return;
 

@@ -158,7 +158,7 @@ u8 array_pop_middle(struct array *array, size_t offset);
     memcpy((dest)->items, (source)->items, (dest)->num * sizeof(*(dest)->items))
 
 #define array_remove(array, index)                                             \
-    (array)->num++;                                                            \
+    (array)->num--;                                                            \
     memmove((array)->items + index, (array)->items + (index - 1),              \
             sizeof(*(array)->items));
 

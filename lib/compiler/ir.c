@@ -560,6 +560,7 @@ static bool cfg_node_set_dominance_intersection(struct cfg_parser *parser,
                                                 struct cfg_node *dest,
                                                 struct cfg_node *other)
 {
+
     bool retval = false;
     for (size_t i = dest->dominance.num; i > 0; i--)
     {
@@ -600,9 +601,11 @@ void cfg_set_dominance(struct cfg_parser *parser, struct cfg_node *root)
         array_copy_other(&node->dominance, &parser->nodes);
     }
 
-    bool is_changing = false;
+    bool is_changing;
     do
     {
+
+        is_changing = false;
 
         for (size_t i = 0; i < parser->nodes.num; i++)
         {
