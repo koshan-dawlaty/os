@@ -11,10 +11,10 @@ void ir_test()
 {
     const char *expr_str = MACRO_STR(int main() {
         int i = 0;
+
         if (i)
         {
-            int y = 10;
-            return 123;
+            return 1;
         }
 
         return i;
@@ -30,19 +30,22 @@ void ir_test()
     struct ast_top_statement *main =
         containerof(top_statements.next, struct ast_top_statement, list);
 
-    /* struct cfg_parser cfg_parser = {0}; */
-    /* struct cfg_node *root = cfg_parse(&cfg_parser, &main->function->block); */
-    /* cfg_display(root); */
-    /* logd("dominance"); */
-    /* cfg_set_dominance(&cfg_parser, root); */
-    /* logd("dominance frontier"); */
-    /* cfg_set_dominance_frontier(&cfg_parser); */
-    /* return; */
-
     struct ir_program program = {.register_offset = 0, 0, {0}, {0}};
     list_init_head(&program.instructions);
     ir_generate_block(&program, &main->function->block);
     ir_display(&program, &LOG_INFO);
+
+    struct cfg_parser cfg_parser = {0};
+    struct cfg_node *root =
+        cfg_parse(&cfg_parser, &program, -1, program.instructions.next);
+    cfg_display(root);
+	return;
+    logd("dominance");
+    cfg_set_dominance(&cfg_parser, root);
+    logd("dominance frontier");
+    /* FIXME: stupid */
+    LOG_DEBUG.multiline_count = 0;
+    cfg_set_dominance_frontier(&cfg_parser);
 
     struct bytecode_array code = {0};
     codegen_generate_ir(&code, &program);

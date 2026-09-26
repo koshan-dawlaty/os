@@ -10,6 +10,11 @@
 #include <serial.h>
 #endif
 
+struct log_level LOG_DEBUG = LOG_LEVEL_INIT("DEBUG", 3);
+struct log_level LOG_INFO = LOG_LEVEL_INIT("INFO", 3);
+struct log_level LOG_WARN = LOG_LEVEL_INIT("WARN", 3);
+struct log_level LOG_ERROR = LOG_LEVEL_INIT("ERROR", 3);
+
 #define LOG_SERIAL_PORT 0x3F8
 
 static inline void log_serial_writechar(char c)

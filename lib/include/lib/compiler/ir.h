@@ -66,6 +66,7 @@ struct ir_variable_version
 struct ir_variable
 {
     char *name;
+
     struct
     {
         struct ir_variable_version *items;
@@ -154,7 +155,6 @@ struct ir_instruction
     bool is_label;
 };
 
-
 struct ir_value *ir_generate_expr(struct ir_program *program,
                                   struct ast_expr *expr);
 
@@ -169,10 +169,10 @@ struct cfg_node
 {
     struct
     {
-        struct ast_statement *items;
+        struct ir_instruction **items;
         size_t num;
         size_t capacity;
-    } statements;
+    } instructions;
 
     struct
     {
@@ -218,7 +218,9 @@ struct cfg_parser
     } nodes;
 };
 
-struct cfg_node *cfg_parse(struct cfg_parser *parser, struct list *statements);
+struct cfg_node *cfg_parse(struct cfg_parser *parser,
+                           struct ir_program *program, int end_label_num,
+                           struct list *start_list);
 void cfg_display(struct cfg_node *root);
 void cfg_set_dominance(struct cfg_parser *parser, struct cfg_node *root);
 void cfg_set_dominance_frontier(struct cfg_parser *parser);

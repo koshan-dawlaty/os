@@ -103,6 +103,7 @@ struct ir_instruction *ir_inst_alloc_op(enum ir_operation_type type,
     out->op.one = one;
     out->op.two = two;
     out->op.three = three;
+    out->op.is_phi = false;
     out->list = LIST_INIT();
     out->is_label = false;
 
@@ -143,9 +144,12 @@ struct ir_value *ast_value_convert_ir(struct ir_program *program,
         struct ir_variable *var = ir_variable_lookup(program, value.varname);
 
         NOT_NULL(var, "undeclared variable %s", value.varname);
+        logd("var items:%p", var->values.items);
+
+        /* FIXME: this will make it so that the most recent version is always
+         * used before converting to ssa, which is stupid */
         struct ir_variable_version prev_version =
             var->values.items[var->values.num - 1];
-
         return prev_version.var;
     }
     else
@@ -273,6 +277,10 @@ void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
     struct ir_value *lhs = ast_value_convert_ir(program, expr->lhs->value);
     struct ir_value *result = ir_generate_expr(program, expr->rhs);
     struct ir_instruction *result_op = IR_PROGRAM_CURRENT_INS(program);
+    struct ir_variable_version version = (struct ir_variable_version){
+        /* might be bad idea to take addr here */
+        &result_op->op, result, program->current_scope_depth};
+    array_macro_append(&var->values, version);
 }
 
 void ir_generate_statement(struct ir_program *program,
@@ -327,6 +335,12 @@ void ir_generate_statement(struct ir_program *program,
         struct ir_variable *var = ir_variable_alloc(statement->varname);
         array_macro_append(&program->variables, var);
         struct ir_value *val = ir_generate_expr(program, statement->init_value);
+
+        struct ir_variable_version version =
+            /* taking address of op here might be stupid */
+            (struct ir_variable_version){&IR_PROGRAM_CURRENT_INS(program)->op,
+                                         val, program->current_scope_depth};
+        array_macro_append(&var->values, version);
 
         break;
     case AST_STATEMENT_RETURN:;
@@ -401,6 +415,19 @@ void ir_operation_log(struct ir_operation *op, struct log_level *level)
     log_multiline_end(level);
 }
 
+void ir_instruction_log(struct log_level *level, struct ir_instruction *inst)
+{
+    if (!inst->is_label)
+    {
+        ir_operation_log(&inst->op, level);
+    }
+    else
+    {
+        log_level(*level, "LABEL %d", inst->label.label_num);
+        log_level(*level, "\n");
+    }
+}
+
 void ir_display(struct ir_program *program, struct log_level *level)
 {
     log_multiline_start(level);
@@ -409,21 +436,21 @@ void ir_display(struct ir_program *program, struct log_level *level)
     {
         struct ir_instruction *inst =
             containerof(pos, struct ir_instruction, list);
-        if (!inst->is_label)
-        {
-            ir_operation_log(&inst->op, level);
-        }
-        else
-        {
-            log_level(*level, "LABEL %d", inst->label.label_num);
-            log_level(*level, "\n");
-        }
+		ir_instruction_log(level, inst);
     }
     log_level(*level, "\n");
     log_multiline_end(level);
 }
 
-void ir_generate_block(struct ir_program *program, struct list *statements) {};
+void ir_generate_block(struct ir_program *program, struct list *statements)
+{
+    struct list *pos;
+    list_for_each(pos, statements)
+    {
+        ir_generate_statement(program,
+                              containerof(pos, struct ast_statement, list));
+    }
+}
 
 void ir_generate_cfg(struct ir_program *program, struct cfg_node *node)
 {
@@ -453,6 +480,7 @@ void ir_generate_cfg(struct ir_program *program, struct cfg_node *node)
 /* this is probably not correct, but i dont care right now */
 static struct cfg_node *cfg_get_idom(struct cfg_node *node)
 {
+	ASSERT(node->dominance.num > 0, "node does not have any dominators set");
     return array_at(&node->dominance, node->dominance.num - 1);
 }
 
@@ -548,9 +576,9 @@ struct cfg_node *cfg_node_alloc()
     out->children.capacity = 0;
     out->children.num = 0;
 
-    out->statements.items = NULL;
-    out->statements.capacity = 0;
-    out->statements.num = 0;
+    out->instructions.items = NULL;
+    out->instructions.capacity = 0;
+    out->instructions.num = 0;
 
     out->parents.items = NULL;
     out->parents.capacity = 0;
@@ -585,64 +613,74 @@ void cfg_node_add_child(struct cfg_parser *parser, struct cfg_node *parent,
     array_macro_append(&parser->nodes, child);
 }
 
-struct cfg_node *cfg_parse(struct cfg_parser *parser, struct list *statements)
+struct cfg_node *cfg_parse_jump(struct cfg_parser *parser,
+                                struct ir_program *program,
+                                struct ir_instruction *jump_inst, struct cfg_node * dest, int end_label_num)
+{
+	struct ir_operation * jump = &jump_inst->op;
+    struct ir_value *label_value = jump->two;
+
+    struct ir_label *label =
+        &array_at(&program->labels, label_value->label.label_num);
+    struct cfg_node *child =
+        cfg_parse(parser, program, label_value->label.label_num,
+                 jump_inst->list.next);
+    cfg_node_add_child(parser, dest, child);
+
+    struct cfg_node *block_after =
+        cfg_parse(parser, program, end_label_num, label->instruction->list.next);
+
+    cfg_node_add_child(parser, child, block_after);
+    cfg_node_add_child(parser, dest, block_after);
+
+    return block_after;
+}
+
+/* -1 end_label_num for no end label */
+struct cfg_node *cfg_parse(struct cfg_parser *parser,
+                           struct ir_program *program, int end_label_num,
+                           struct list *start_list)
 {
     struct cfg_node *out = cfg_node_alloc();
-    array_macro_append(&parser->nodes, out);
 
-    struct list *pos;
-    list_for_each(pos, statements)
+    for (struct list *pos = start_list; pos != (&program->instructions);
+         pos = pos->next)
     {
-        struct ast_statement *statement =
-            containerof(pos, struct ast_statement, list);
+        struct ir_instruction *inst =
+            containerof(pos, struct ir_instruction, list);
 
-        switch (statement->type)
+        /* FIXME: ir_operation is_jump function */
+        if (!inst->is_label && inst->op.type == IR_OP_JZ)
         {
-        case AST_STATEMENT_IF:;
-            struct cfg_node *child = cfg_parse(parser, &statement->block);
-            cfg_node_add_child(parser, out, child);
-
-            LIST_DEFINE_HEAD(new_head);
-            new_head.next = pos->next;
-            new_head.prev = statements->prev;
-            new_head.next->prev = &new_head;
-            new_head.prev->next = &new_head;
-
-            statements->prev = pos;
-            pos = statements;
-            pos->next = statements;
-
-            struct cfg_node *block_after = cfg_parse(parser, &new_head);
-            cfg_node_add_child(parser, child, block_after);
-            cfg_node_add_child(parser, out, block_after);
-            break;
-
-        case AST_STATEMENT_EXPR:
-        case AST_STATEMENT_DECLARE:
-        case AST_STATEMENT_RETURN:
-            /* derefrence might be stupid */
-            array_macro_append(&out->statements, *statement);
-            break;
-        case AST_STATEMENT_WHILE:
-        case AST_STATEMENT_FOR:
-            PANIC("unimplemented");
+            struct cfg_node *ending_block =
+                cfg_parse_jump(parser, program, inst, out, end_label_num);
+            return out;
+        }
+        else
+        {
+            if (inst->is_label && inst->label.label_num == end_label_num)
+            {
+                return out;
+            }
+            array_macro_append(&out->instructions, inst);
         }
     }
+
     return out;
 }
 
 void cfg_display(struct cfg_node *node)
 {
-    logd("cfg block start");
-    for (size_t i = 0; i < node->statements.num; i++)
+    logd("cfg block start\n");
+    for (size_t i = 0; i < node->instructions.num; i++)
     {
-        struct ast_statement *statement = &array_at(&node->statements, i);
-        logd("statement:%s", ast_statement_type_str(statement->type));
+        struct ir_instruction *inst = array_at(&node->instructions, i);
+        ir_instruction_log(&LOG_DEBUG, inst);
     }
 
     for (size_t i = 0; i < node->children.num; i++)
     {
         cfg_display(array_at(&node->children, i));
     }
-    logd("cfg block end");
+    logd("cfg block end\n");
 }

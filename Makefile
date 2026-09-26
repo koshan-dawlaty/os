@@ -151,6 +151,11 @@ debug : $(ISO)
 	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
 	./build/debug.sh
 
+codegen-debug : $(ISO)
+	rm -f build/qemu.img
+	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
+	./build/debug.sh "-x build/codegen_debug.gdb"
+
 test : CFLAGS += -DTESTS
 test : export TEST_SUFFIX=.test
 test : $(ISO) 
