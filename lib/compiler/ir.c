@@ -148,8 +148,7 @@ struct ir_value *ast_value_convert_ir(struct ir_program *program,
 
         /* FIXME: this will make it so that the most recent version is always
          * used before converting to ssa, which is stupid */
-        struct ir_variable_version prev_version =
-            var->values.items[var->values.num - 1];
+        struct ir_variable_version prev_version = var->values.items[0];
         return prev_version.var;
     }
     else
@@ -169,6 +168,7 @@ struct ir_value *ir_generate_label(struct ir_program *program)
 }
 
 struct ir_value *ir_generate_expr_impl(struct ir_program *program,
+                                       struct ir_value *dest,
                                        struct ast_expr *expr)
 {
     switch (expr->type)
@@ -177,9 +177,9 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
         return ast_value_convert_ir(program, expr->value);
     case AST_EXPRESSION_OPERATOR:;
 
-        struct ir_value *out = ir_value_alloc_reg(program);
-        struct ir_value *lhs = ir_generate_expr_impl(program, expr->lhs);
-        struct ir_value *rhs = ir_generate_expr_impl(program, expr->rhs);
+        struct ir_value *out = dest;
+        struct ir_value *lhs = ir_generate_expr_impl(program, dest, expr->lhs);
+        struct ir_value *rhs = ir_generate_expr_impl(program, dest, expr->rhs);
 
         enum ir_operation_type op_type = IR_OP_INVALID;
         switch (expr->operator)
@@ -241,20 +241,20 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
 }
 
 struct ir_value *ir_generate_expr(struct ir_program *program,
-                                  struct ast_expr *expr)
+                                  struct ir_value *dest, struct ast_expr *expr)
 {
     if (expr->type == AST_EXPRESSION_VALUE)
     {
         struct ir_value *expr_value =
             ast_value_convert_ir(program, expr->value);
-        struct ir_value *dest_value = ir_value_alloc_reg(program);
+        struct ir_value *dest_value = dest;
         ir_add_instruction(
             program, ir_inst_alloc_op(IR_OP_MOV, dest_value, expr_value, NULL));
         return dest_value;
     }
     else
     {
-        return ir_generate_expr_impl(program, expr);
+        return ir_generate_expr_impl(program, dest, expr);
     }
 }
 
@@ -272,15 +272,17 @@ void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
     ASSERT(expr->lhs->type == AST_EXPRESSION_VALUE && expr->lhs->value.is_var,
            "complex left hand side of assignment not implemented");
 
-    struct ir_variable *var =
-        ir_variable_lookup(program, expr->lhs->value.varname);
+    /* struct ir_variable *var = */
+    /*     ir_variable_lookup(program, expr->lhs->value.varname); */
+
     struct ir_value *lhs = ast_value_convert_ir(program, expr->lhs->value);
-    struct ir_value *result = ir_generate_expr(program, expr->rhs);
-    struct ir_instruction *result_op = IR_PROGRAM_CURRENT_INS(program);
-    struct ir_variable_version version = (struct ir_variable_version){
-        /* might be bad idea to take addr here */
-        &result_op->op, result, program->current_scope_depth};
-    array_macro_append(&var->values, version);
+    struct ir_value *result = ir_generate_expr(program, lhs, expr->rhs);
+
+    /* struct ir_instruction *result_op = IR_PROGRAM_CURRENT_INS(program); */
+    /* struct ir_variable_version version = (struct ir_variable_version){ */
+    /* /1* might be bad idea to take addr here *1/ */
+    /* &result_op->op, result, program->current_scope_depth}; */
+    /* array_macro_append(&var->values, version); */
 }
 
 void ir_generate_statement(struct ir_program *program,
@@ -294,8 +296,8 @@ void ir_generate_statement(struct ir_program *program,
 
         break;
     case AST_STATEMENT_IF:;
-        struct ir_value *if_val =
-            ir_generate_expr(program, statement->block_expr);
+        struct ir_value *if_val = ir_value_alloc_reg(program);
+        ir_generate_expr(program, if_val, statement->block_expr);
 
         program->current_scope_depth++;
 
@@ -314,8 +316,8 @@ void ir_generate_statement(struct ir_program *program,
         struct ir_value *loop_start = ir_generate_label(program);
         program->current_scope_depth++;
 
-        struct ir_value *condition =
-            ir_generate_expr(program, statement->block_expr);
+        struct ir_value *condition = ir_value_alloc_reg(program);
+        ir_generate_expr(program, condition, statement->block_expr);
 
         struct ir_instruction *cond_jump_op =
             ir_inst_alloc_op(IR_OP_JZ, condition, NULL, NULL);
@@ -334,7 +336,8 @@ void ir_generate_statement(struct ir_program *program,
     case AST_STATEMENT_DECLARE:;
         struct ir_variable *var = ir_variable_alloc(statement->varname);
         array_macro_append(&program->variables, var);
-        struct ir_value *val = ir_generate_expr(program, statement->init_value);
+        struct ir_value *val = ir_value_alloc_reg(program);
+        ir_generate_expr(program, val, statement->init_value);
 
         struct ir_variable_version version =
             /* taking address of op here might be stupid */
@@ -349,8 +352,8 @@ void ir_generate_statement(struct ir_program *program,
          * register that would be automatically mapped to the architecture
          * return value */
 
-        struct ir_value *return_dest =
-            ir_generate_expr(program, statement->expr);
+        struct ir_value *return_dest = ir_value_alloc_reg(program);
+        ir_generate_expr(program, return_dest, statement->expr);
         ir_add_instruction(
             program, ir_inst_alloc_op(IR_OP_RET, return_dest, NULL, NULL));
         break;
@@ -436,7 +439,7 @@ void ir_display(struct ir_program *program, struct log_level *level)
     {
         struct ir_instruction *inst =
             containerof(pos, struct ir_instruction, list);
-		ir_instruction_log(level, inst);
+        ir_instruction_log(level, inst);
     }
     log_level(*level, "\n");
     log_multiline_end(level);
@@ -480,7 +483,7 @@ void ir_generate_cfg(struct ir_program *program, struct cfg_node *node)
 /* this is probably not correct, but i dont care right now */
 static struct cfg_node *cfg_get_idom(struct cfg_node *node)
 {
-	ASSERT(node->dominance.num > 0, "node does not have any dominators set");
+    ASSERT(node->dominance.num > 0, "node does not have any dominators set");
     return array_at(&node->dominance, node->dominance.num - 1);
 }
 
@@ -615,20 +618,20 @@ void cfg_node_add_child(struct cfg_parser *parser, struct cfg_node *parent,
 
 struct cfg_node *cfg_parse_jump(struct cfg_parser *parser,
                                 struct ir_program *program,
-                                struct ir_instruction *jump_inst, struct cfg_node * dest, int end_label_num)
+                                struct ir_instruction *jump_inst,
+                                struct cfg_node *dest, int end_label_num)
 {
-	struct ir_operation * jump = &jump_inst->op;
+    struct ir_operation *jump = &jump_inst->op;
     struct ir_value *label_value = jump->two;
 
     struct ir_label *label =
         &array_at(&program->labels, label_value->label.label_num);
-    struct cfg_node *child =
-        cfg_parse(parser, program, label_value->label.label_num,
-                 jump_inst->list.next);
+    struct cfg_node *child = cfg_parse(
+        parser, program, label_value->label.label_num, jump_inst->list.next);
     cfg_node_add_child(parser, dest, child);
 
-    struct cfg_node *block_after =
-        cfg_parse(parser, program, end_label_num, label->instruction->list.next);
+    struct cfg_node *block_after = cfg_parse(parser, program, end_label_num,
+                                             label->instruction->list.next);
 
     cfg_node_add_child(parser, child, block_after);
     cfg_node_add_child(parser, dest, block_after);

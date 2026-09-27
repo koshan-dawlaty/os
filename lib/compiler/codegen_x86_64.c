@@ -690,8 +690,8 @@ struct codegen_value *codegen_convert_ir_value(struct bytecode_array *code,
 
 /* correctly sets jump offsets a label for an offset and an ir_value for a
  * label */
-void codegen_add_jump_labels(struct bytecode_array *code,
-                             size_t label_num, size_t offset)
+void codegen_add_jump_labels(struct bytecode_array *code, size_t label_num,
+                             size_t offset)
 {
     for (size_t i = 0; i < code->labels.num; i++)
     {
@@ -714,10 +714,24 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     struct codegen_value *two = codegen_convert_ir_value(code, op->two);
     struct codegen_value *three = codegen_convert_ir_value(code, op->three);
 
+    logd("%p, %p, %p", one, two, three);
+
+    struct codegen_value *dest = one;
+    if (one != NULL && ((two != NULL && one->reg == two->reg) ||
+                        (three != NULL && one->reg == three->reg)))
+    {
+        one = raise_sp(code);
+        generate_mov(code, one,
+                     &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, 0));
+    }
+
     switch (op->type)
     {
-    case IR_OP_ADD:
-        generate_add(code, one, two);
+        /* FIXME: this allocates many temporary variables, this would not be
+         * necessary if the program was in ssa form */
+    case IR_OP_ADD:;
+
+        generate_mov(code, one, two);
         generate_add(code, one, three);
         break;
     case IR_OP_SUB:
@@ -765,6 +779,12 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     default:
     case IR_OP_INVALID:
         PANIC("invalid ir op");
+    }
+
+    if (one != NULL && one->reg != dest->reg)
+    {
+        generate_mov(code, dest, one);
+        lower_sp(code);
     }
 }
 

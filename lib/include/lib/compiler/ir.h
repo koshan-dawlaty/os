@@ -155,8 +155,6 @@ struct ir_instruction
     bool is_label;
 };
 
-struct ir_value *ir_generate_expr(struct ir_program *program,
-                                  struct ast_expr *expr);
 
 void ir_display(struct ir_program *program, struct log_level *level);
 void ir_value_log(struct ir_value *value, struct log_level *level);
