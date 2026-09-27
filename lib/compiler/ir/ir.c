@@ -199,7 +199,7 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
         case TOKEN_LESS_EQUAL:
             ir_add_instruction(program,
                                ir_inst_alloc_op(IR_OP_SET_LE, out, lhs, rhs));
-            break;
+			break;
 
         /* might not work */
         case TOKEN_ASSIGN:
@@ -314,7 +314,8 @@ void ir_generate_statement(struct ir_program *program,
         program->current_scope_depth--;
 
         break;
-    case AST_STATEMENT_WHILE:;
+    case AST_STATEMENT_WHILE:
+    {
 
         struct ir_value *loop_start = ir_generate_label(program);
         program->current_scope_depth++;
@@ -332,10 +333,30 @@ void ir_generate_statement(struct ir_program *program,
         cond_jump_op->op.two = ir_generate_label(program);
 
         program->current_scope_depth--;
+        break;
+    }
+
+    case AST_STATEMENT_FOR:
+    {
+        ir_generate_expr_assign(program, statement->for_expr.expr1);
+        struct ir_value *start_label = ir_generate_label(program);
+
+        struct ir_value *condition = ir_value_alloc_reg(program);
+        ir_generate_expr(program, condition, statement->for_expr.expr2);
+
+        struct ir_instruction *cond_jump_op =
+            ir_inst_alloc_op(IR_OP_JZ, condition, NULL, NULL);
+        ir_add_instruction(program, cond_jump_op);
+
+        ir_generate_block(program, &statement->block);
+        ir_generate_expr_assign(program, statement->for_expr.expr3);
+        ir_add_instruction(
+            program, ir_inst_alloc_op(IR_OP_JMP, start_label, NULL, NULL));
+
+        cond_jump_op->op.two = ir_generate_label(program);
 
         break;
-    case AST_STATEMENT_FOR:
-        break;
+    }
     case AST_STATEMENT_DECLARE:;
         struct ir_variable *var = ir_variable_alloc(statement->varname);
         array_macro_append(&program->variables, var);
@@ -457,4 +478,3 @@ void ir_generate_block(struct ir_program *program, struct list *statements)
                               containerof(pos, struct ast_statement, list));
     }
 }
-

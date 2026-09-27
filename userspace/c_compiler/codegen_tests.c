@@ -207,11 +207,52 @@ TEST_CODEGEN(codegen_test_while, MACRO_STR(
 	 }
 ),11)
 
+TEST_CODEGEN(codegen_test_nested_if, MACRO_STR(
+	int main() {
+		int i = 0;
+		if (i <= 6) {
+			if (i <= 5) {
+				if (i <= 4) {
+					if (i <= 3) {
+						if (i <= 2) {
+							if (i <= 1) {
+								return 123;
+							}
+						} 
+					} 
+				} 
+			}
+		}
+		return 456;
+	}
+	), 123)
+
+TEST_CODEGEN(codegen_test_for_basic1, MACRO_STR(int main() {
+        int i = 0;
+        for (i = 0; i <= 10; i = i + 1)
+        {
+        }
+
+        return i;
+    }
+	), 11)
+
+TEST_CODEGEN(codegen_test_for_basic2, MACRO_STR(int main() {
+        int i = 0;
+        int j = 0;
+        for (i = 0; i <= 10; i = i + 1)
+        {
+            j = j + 3;
+        }
+
+        return j;
+    }
+	), 33)
+
 // clang-format on
 //
 int main()
 {
-
     struct test_input input = {
         {0},
         TEST_INPUT_ONLY,

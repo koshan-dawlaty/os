@@ -325,13 +325,20 @@ void generate_test(struct bytecode_array *code, struct codegen_value *reg1,
 
 size_t generate_jump_if_zero(struct bytecode_array *code)
 {
-    array_macro_append_v(code, 0x74, 0xFF);
-    return code->num - 1;
+    /* array_macro_append_v(code, 0x74, 0); */
+    array_macro_append_v(code, 0x0F, 0x84, 0, 0, 0, 0);
+    return code->num - 4;
 }
 size_t generate_jump(struct bytecode_array *code)
 {
-    array_macro_append_v(code, 0xEB, 0);
-    return code->num - 1;
+    array_macro_append_v(code, 0xE9, 0, 0, 0, 0);
+    return code->num - 4;
+}
+
+static void codegen_write_jump_offset(struct bytecode_array *code,
+                                      size_t offset, u32 new_value)
+{
+    *(u32 *)(code->items + offset) = new_value;
 }
 
 struct codegen_value *generate_push(struct bytecode_array *code,
@@ -783,11 +790,11 @@ void codegen_generate_label(struct bytecode_array *code, size_t label_num)
          */
         if (label->label_num == label_num)
         {
-            label->label_offset = code->num - 1;
+            label->label_offset = code->num - 4;
             return;
         }
     }
-    struct codegen_label new_label = {0, code->num - 1, label_num};
+    struct codegen_label new_label = {0, code->num - 4, label_num};
     array_macro_append(&code->labels, new_label);
 }
 
@@ -838,7 +845,7 @@ void codegen_generate_ir(struct bytecode_array *code,
         struct codegen_label *label = &code->labels.items[i];
         logd("jump offset:%d, label offset:%d", label->jump_offset,
              label->label_offset);
-        code->items[label->jump_offset] =
-            label->label_offset - label->jump_offset;
+        codegen_write_jump_offset(code, label->jump_offset,
+                                  label->label_offset - label->jump_offset);
     }
 }
