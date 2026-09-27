@@ -155,10 +155,9 @@ struct ir_instruction
     bool is_label;
 };
 
-
 void ir_display(struct ir_program *program, struct log_level *level);
 void ir_value_log(struct ir_value *value, struct log_level *level);
-void ir_operation_log(struct ir_operation *op, struct log_level *level);
+void ir_instruction_log(struct log_level *level, struct ir_instruction *inst);
 
 void ir_generate_block(struct ir_program *program, struct list *statements);
 void ir_remove_phi(struct ir_program *program);

@@ -166,6 +166,8 @@ TEST_CODEGEN(codegen_test_if_and_false2, MACRO_STR(
 	 }
 ),2)
 
+/* all of the phi tests don't actually work when generating ssa,
+ * ssa does not work at time of writing */
 TEST_CODEGEN(codegen_test_phi_basic1, MACRO_STR(
 	int main()
 	{
@@ -191,6 +193,20 @@ TEST_CODEGEN(codegen_test_phi_basic2, MACRO_STR(
         return x;
 	 }
 ),1)
+
+
+TEST_CODEGEN(codegen_test_while, MACRO_STR(
+	int main()
+	{
+		int i = 0;
+		while (i <= 10) {
+			i = i + 1;
+		}
+
+		return i;
+	 }
+),11)
+
 // clang-format on
 //
 int main()
