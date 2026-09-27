@@ -14,7 +14,6 @@ ARCHDIR=arch/$(firstword $(subst /, ,$(HOSTARCH)))
 BIN=bin
 
 
-FS_ROOT?=
 BINARY_PREFIX?=bin
 
 CFLAGS?= -g
@@ -229,14 +228,10 @@ install-headers:
 
 install-binaries: $(BINARIES_BIN)
 	# ../build/ is bad
-	mkdir -p ../build/$(FS_ROOT)/$(BINARY_PREFIX)
-	# $(foreach binary, $@, $(cp $(binary) ../build/$(FS_ROOT)/$(BINARY_PREFIX)))
+	mkdir -p ../$(FS_ROOT)/$(BINARY_PREFIX)
 	for f in $(BINARIES_BIN); do \
-		cp $$f ../build/$(FS_ROOT)/bin/; \
+		cp $$f ../$(FS_ROOT)/bin/; \
 	done; 
-
-	# # may break with more files in binaries
-	# cp $(BIN)/$(BINARIES) ../build/$(FS_ROOT)/$(BINARY_PREFIX)
 
 
 test : 

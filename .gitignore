@@ -1,3 +1,7 @@
 .cache/
 config
 compile_commands.json
+
+fs_root/bin/
+*.psfu
+fs_root/*.tga

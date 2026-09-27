@@ -4,6 +4,3 @@ sysroot/
 log.txt
 test.img
 qemu.img
-fs-root/bin/
-*.psfu
-fs-root/*.tga

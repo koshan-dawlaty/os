@@ -10,7 +10,7 @@ CONFIG?=config
 CONFIG_FLAGS=$(shell ./build/parse_config.py $(CONFIG))
 
 export SYSROOT := $(shell pwd)/build/sysroot
-export FS_ROOT := fs-root
+export FS_ROOT := fs_root
 
 export DESTDIR := $(SYSROOT)
 export ARCH := $(shell ./build/default-host.sh)
@@ -135,7 +135,7 @@ userspace-headers:
 
 qemu : $(ISO)
 	rm -f build/qemu.img
-	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
+	./build/get-ext2-image.sh "build/qemu.img" $(FS_ROOT)
 	# $(QEMU_COMMAND) -monitor stdio $(QEMU_FLAGS)
 	$(QEMU_COMMAND) -serial mon:stdio $(QEMU_FLAGS) $(QEMU_DRIVE)
 
@@ -148,12 +148,12 @@ clean:
 # debug : QEMU_FLAGS += -display none
 debug : $(ISO)
 	rm -f build/qemu.img
-	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
+	./build/get-ext2-image.sh "build/qemu.img" $(FS_ROOT)
 	./build/debug.sh
 
 codegen-debug : $(ISO)
 	rm -f build/qemu.img
-	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
+	./build/get-ext2-image.sh "build/qemu.img" $(FS_ROOT)
 	./build/debug.sh "-x build/codegen_debug.gdb"
 
 test : CFLAGS += -DTESTS

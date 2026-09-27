@@ -18,7 +18,7 @@ export CFLAGS
 export ISO
 
 
-./build/get-ext2-image.sh "$IMAGE_FILE" build/fs-root 
+./build/get-ext2-image.sh "$IMAGE_FILE" $FS_ROOT
 
 
 # qemu-system-$(./target-triplet-to-arch.sh $HOST) -cdrom os.iso -nographic console=ttyS0
