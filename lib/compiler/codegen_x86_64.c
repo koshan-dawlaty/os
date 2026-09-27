@@ -714,17 +714,6 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     struct codegen_value *two = codegen_convert_ir_value(code, op->two);
     struct codegen_value *three = codegen_convert_ir_value(code, op->three);
 
-    logd("%p, %p, %p", one, two, three);
-
-    struct codegen_value *dest = one;
-    if (one != NULL && ((two != NULL && one->reg == two->reg) ||
-                        (three != NULL && one->reg == three->reg)))
-    {
-        one = raise_sp(code);
-        generate_mov(code, one,
-                     &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, 0));
-    }
-
     switch (op->type)
     {
         /* FIXME: this allocates many temporary variables, this would not be
@@ -779,12 +768,6 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     default:
     case IR_OP_INVALID:
         PANIC("invalid ir op");
-    }
-
-    if (one != NULL && one->reg != dest->reg)
-    {
-        generate_mov(code, dest, one);
-        lower_sp(code);
     }
 }
 

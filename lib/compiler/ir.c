@@ -168,7 +168,7 @@ struct ir_value *ir_generate_label(struct ir_program *program)
 }
 
 struct ir_value *ir_generate_expr_impl(struct ir_program *program,
-                                       struct ir_value *dest,
+
                                        struct ast_expr *expr)
 {
     switch (expr->type)
@@ -177,9 +177,9 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
         return ast_value_convert_ir(program, expr->value);
     case AST_EXPRESSION_OPERATOR:;
 
-        struct ir_value *out = dest;
-        struct ir_value *lhs = ir_generate_expr_impl(program, dest, expr->lhs);
-        struct ir_value *rhs = ir_generate_expr_impl(program, dest, expr->rhs);
+        struct ir_value *out = ir_value_alloc_reg(program);
+        struct ir_value *lhs = ir_generate_expr_impl(program, expr->lhs);
+        struct ir_value *rhs = ir_generate_expr_impl(program, expr->rhs);
 
         enum ir_operation_type op_type = IR_OP_INVALID;
         switch (expr->operator)
@@ -254,7 +254,10 @@ struct ir_value *ir_generate_expr(struct ir_program *program,
     }
     else
     {
-        return ir_generate_expr_impl(program, dest, expr);
+        struct ir_value *result = ir_generate_expr_impl(program, expr);
+        ir_add_instruction(program,
+                           ir_inst_alloc_op(IR_OP_MOV, dest, result, NULL));
+        return dest;
     }
 }
 
