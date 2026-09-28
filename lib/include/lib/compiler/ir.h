@@ -45,6 +45,10 @@ struct ir_value
         {
             size_t label_num;
         } label;
+        struct
+        {
+            u64 addr;
+        } ptr;
         u64 value;
     };
 
@@ -52,6 +56,7 @@ struct ir_value
     {
         IR_VALUE_IMMEDIATE,
         IR_VALUE_REIGSTER,
+        IR_VALUE_PTR,
         IR_VALUE_LABEL,
     } type;
 };
@@ -83,6 +88,11 @@ enum ir_operation_type
     IR_OP_ADD,
     IR_OP_SUB,
     IR_OP_MUL,
+
+    /* two must be a IR_VALUE_PTR */
+    IR_OP_STORE,
+    /* one must be a IR_VALUE_PTR */
+    IR_OP_LOAD,
 
     /* one = two */
     IR_OP_MOV,

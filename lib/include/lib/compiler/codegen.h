@@ -40,7 +40,8 @@ struct codegen_value
     enum codegen_value_type
     {
         CODEGEN_VALUE_REGISTER,
-        CODEGEN_VALUE_MEMORY,
+        CODEGEN_VALUE_MEMORY_REG,
+        CODEGEN_VALUE_MEMORY_STACK_REF,
         CODEGEN_VALUE_IMMEDIATE,
         CODEGEN_VALUE_STACK,
     } type;
@@ -48,6 +49,11 @@ struct codegen_value
     {
         u64 value;
         u8 reg;
+        union
+        {
+            u8 reg;
+			u64 stack_offset;
+        } memory;
     };
 };
 

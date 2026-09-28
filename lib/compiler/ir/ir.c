@@ -5,6 +5,7 @@
 #include <lib/compiler/ir.h>
 #include <lib/list.h>
 #include <lib/log.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <types.h>
@@ -61,6 +62,13 @@ struct ir_value *ir_value_alloc_label(struct ir_program *program,
     out->label.label_num = program->labels.num - 1;
     return out;
 }
+struct ir_value *ir_value_alloc_ptr(u64 addr)
+{
+    struct ir_value *out = malloc(sizeof(struct ir_value));
+    out->type = IR_VALUE_PTR;
+    out->ptr.addr = addr;
+    return out;
+}
 
 const char *ir_operation_type_str(enum ir_operation_type type)
 {
@@ -88,8 +96,10 @@ const char *ir_operation_type_str(enum ir_operation_type type)
         return "SET NZ";
     case IR_OP_JMP:
         return "JMP";
-    default:
-        return "UNKNOWN";
+    case IR_OP_STORE:
+        return "STORE";
+    case IR_OP_LOAD:
+        return "LOAD";
     }
 }
 
@@ -144,7 +154,6 @@ struct ir_value *ast_value_convert_ir(struct ir_program *program,
         struct ir_variable *var = ir_variable_lookup(program, value.varname);
 
         NOT_NULL(var, "undeclared variable %s", value.varname);
-        logd("var items:%p", var->values.items);
 
         /* FIXME: this will make it so that the most recent version is always
          * used before converting to ssa, which is stupid */
@@ -175,6 +184,24 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
     {
     case AST_EXPRESSION_VALUE:;
         return ast_value_convert_ir(program, expr->value);
+    case AST_EXPRESSION_UNARY_OPERATOR:
+    {
+        struct ir_value *value =
+            ir_generate_expr_impl(program, expr->unary_operator.expr);
+        struct ir_value *out = ir_value_alloc_reg(program);
+        switch (expr->unary_operator.operator)
+        {
+        case TOKEN_STAR:;
+
+            ir_add_instruction(program,
+                               ir_inst_alloc_op(IR_OP_LOAD, out, value, NULL));
+            break;
+        default:
+            PANIC("invalid unary operator %s",
+                  token_type_str(expr->unary_operator.operator));
+        }
+        return out;
+    }
     case AST_EXPRESSION_OPERATOR:;
 
         struct ir_value *out = ir_value_alloc_reg(program);
@@ -199,7 +226,7 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
         case TOKEN_LESS_EQUAL:
             ir_add_instruction(program,
                                ir_inst_alloc_op(IR_OP_SET_LE, out, lhs, rhs));
-			break;
+            break;
 
         /* might not work */
         case TOKEN_ASSIGN:
@@ -263,7 +290,6 @@ struct ir_value *ir_generate_expr(struct ir_program *program,
 
 void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
 {
-    logd("assign");
     /* TODO: need to support statements like
      * 1 + 1
      * and
@@ -272,13 +298,29 @@ void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
     ASSERT(expr->type == AST_EXPRESSION_OPERATOR &&
                expr->operator == TOKEN_ASSIGN,
            "not implemented for expression statements");
-    ASSERT(expr->lhs->type == AST_EXPRESSION_VALUE && expr->lhs->value.is_var,
-           "complex left hand side of assignment not implemented");
+    /* ASSERT(expr->lhs->type == AST_EXPRESSION_VALUE &&
+     * expr->lhs->value.is_var, */
+    /*        "complex left hand side of assignment not implemented"); */
+
+    struct ir_value *lhs;
+    if (expr->lhs->type == AST_EXPRESSION_VALUE)
+    {
+        lhs = ast_value_convert_ir(program, expr->lhs->value);
+    }
+    else if (expr->lhs->type == AST_EXPRESSION_UNARY_OPERATOR &&
+             expr->lhs->unary_operator.operator == TOKEN_STAR)
+    {
+        lhs = ir_value_alloc_reg(program);
+        ir_generate_expr(program, lhs, expr->unary_operator.expr);
+    }
+    else
+    {
+        PANIC("expression not assignable");
+    }
 
     /* struct ir_variable *var = */
     /*     ir_variable_lookup(program, expr->lhs->value.varname); */
 
-    struct ir_value *lhs = ast_value_convert_ir(program, expr->lhs->value);
     struct ir_value *result = ir_generate_expr(program, lhs, expr->rhs);
 
     /* struct ir_instruction *result_op = IR_PROGRAM_CURRENT_INS(program); */
@@ -404,6 +446,13 @@ void ir_value_log(struct ir_value *value, struct log_level *level)
             log_multiline_start(level);
             log_level(*level, "label(");
             log_level(*level, "%d", value->label.label_num);
+            log_level(*level, ")");
+            log_multiline_end(level);
+            break;
+        case IR_VALUE_PTR:
+            log_multiline_start(level);
+            log_level(*level, "p(");
+            log_level(*level, "%d", value->ptr.addr);
             log_level(*level, ")");
             log_multiline_end(level);
             break;

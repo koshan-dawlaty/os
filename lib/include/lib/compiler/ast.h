@@ -189,7 +189,7 @@ struct ast_expr
         struct
         {
             struct ast_expr *expr;
-            char *operator;
+            enum token_type operator;
         } unary_operator;
     };
 

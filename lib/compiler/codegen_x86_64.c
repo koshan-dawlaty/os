@@ -1,4 +1,5 @@
 #include "lib/compiler/ir.h"
+#include "userspace/mouse.h"
 #include <complex.h>
 #include <container_of.h>
 #include <init.h>
@@ -20,7 +21,7 @@ extern int syscall_wrapper_asm(ptr_t ax, ptr_t bx, ptr_t cx, ptr_t dx, ptr_t si,
 /* true if the type can be used in the r/m field in the modrm byte */
 #define CODEGEN_TYPE_IS_RM(type)                                               \
     (type == CODEGEN_VALUE_REGISTER || type == CODEGEN_VALUE_STACK ||          \
-     type == CODEGEN_VALUE_MEMORY)
+     type == CODEGEN_VALUE_MEMORY_REG)
 
 #define REG_IS_EXTENDED(reg) (reg & 0b1000)
 
@@ -31,6 +32,23 @@ struct codegen_value *codegen_value_alloc(enum codegen_value_type type,
     out->type = type;
     out->value = value;
     return out;
+}
+
+struct codegen_value *
+codegen_value_to_memory_refrence(struct codegen_value *value)
+{
+    if (value->type == CODEGEN_VALUE_REGISTER)
+    {
+        logd("returning register refrence");
+        return codegen_value_alloc(CODEGEN_VALUE_MEMORY_REG, value->reg);
+    }
+    else if (value->type == CODEGEN_VALUE_STACK)
+    {
+        logd("returning stack refrence");
+        return codegen_value_alloc(CODEGEN_VALUE_MEMORY_STACK_REF,
+                                   value->value);
+    }
+    PANIC("not implemented");
 }
 
 #define BYTE_AS_RM(byte) (byte & 0b111)
@@ -58,9 +76,14 @@ u8 get_modrm(struct codegen_value *reg, struct codegen_value *rm)
     {
         return 0b01000000 | BYTE_AS_RM(0b100) | ((reg->value) << 3);
     }
+    else if (rm->type == CODEGEN_VALUE_MEMORY_REG)
+    {
+        logd("register refrence");
+        return 0b00000000 | BYTE_AS_RM(rm->memory.reg) | ((reg->value) << 3);
+    }
     else
     {
-        return 0b11000000 | (reg->value & 0b111) << 3 | BYTE_AS_RM(rm->reg);
+        return 0b11000000 | BYTE_AS_RM(rm->reg) | ((reg->value & 0b111) << 3);
     }
 }
 
@@ -112,6 +135,12 @@ struct codegen_value immediate_temp_reg = {CODEGEN_VALUE_REGISTER, 1};
 struct codegen_value immediate_temp_reg2 = {CODEGEN_VALUE_REGISTER, 3};
 struct codegen_value stack_stack_temp_reg = {CODEGEN_VALUE_REGISTER, 0b110};
 
+bool codegen_type_is_memory(enum codegen_value_type type)
+{
+    return type == CODEGEN_VALUE_STACK || type == CODEGEN_VALUE_MEMORY_STACK_REF ||
+           type == CODEGEN_VALUE_MEMORY_REG;
+}
+
 void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
                   struct codegen_value *src);
 
@@ -119,8 +148,18 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
                      struct codegen_value *dest, struct codegen_value *src)
 {
 
-    if (src->type == CODEGEN_VALUE_STACK && dest->type == CODEGEN_VALUE_STACK)
+    if (src->type == CODEGEN_VALUE_MEMORY_STACK_REF)
     {
+        logd("here");
+        struct codegen_value src_no_ref =
+            CODEGEN_VALUE_INIT(CODEGEN_VALUE_STACK, src->memory.stack_offset);
+        generate_mov(code, &stack_stack_temp_reg, &src_no_ref);
+        src = codegen_value_to_memory_refrence(&stack_stack_temp_reg);
+        logd("just got:%d", src->type);
+    }
+    if (codegen_type_is_memory(src->type) && codegen_type_is_memory(dest->type))
+    {
+        logd("moving because %d and %d are memory", src->type, dest->type);
         /* this might end up being annoying to debug because of recursion */
         generate_mov(code, &stack_stack_temp_reg, src);
         src = &stack_stack_temp_reg;
@@ -143,6 +182,8 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
         rm = dest;
         reg = src;
     }
+
+    logd("rm type:%d", rm->type, reg->type);
 
     generate_opcode_bytes(code, get_rex(reg, rm), opcode, get_modrm(reg, rm));
 
@@ -763,6 +804,11 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     case IR_OP_SET_LE:
         generate_cmp(code, two, three);
         generate_setle(code, one);
+        break;
+    case IR_OP_LOAD:
+        ASSERT(two->type != CODEGEN_VALUE_IMMEDIATE,
+               "not implemented for immediate");
+        generate_mov(code, one, codegen_value_to_memory_refrence(two));
         break;
 
     case IR_OP_JMP:

@@ -384,12 +384,12 @@ struct ast_expr *ast_expr_alloc_call(const char *function_name)
 }
 
 struct ast_expr *ast_expr_alloc_unary_operator(struct ast_expr *e,
-                                               const char *operator)
+                                               enum token_type type)
 {
     struct ast_expr *expr = malloc(sizeof(struct ast_expr));
 
     expr->type = AST_EXPRESSION_UNARY_OPERATOR;
-    expr->unary_operator.operator = strdup(operator);
+    expr->unary_operator.operator = type;
     expr->unary_operator.expr = e;
 
     return expr;
@@ -470,7 +470,6 @@ void ast_expr_free(struct ast_expr *expr)
 
     case AST_EXPRESSION_UNARY_OPERATOR:
         ast_expr_free(expr->unary_operator.expr);
-        free(expr->unary_operator.operator);
         break;
 
     case AST_EXPRESSION_CALL:
@@ -659,7 +658,7 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
             return NULL;
         }
 
-        return ast_expr_alloc_unary_operator(expr, tok->token);
+        return ast_expr_alloc_unary_operator(expr, tok->type);
     }
 
     switch (tok->type)
@@ -857,7 +856,7 @@ end:;
     struct token *end_token = parser_get_current(parser);
     if (token_is_unary_operator(end_token->type))
     {
-        retval = ast_expr_alloc_unary_operator(retval, end_token->token);
+        retval = ast_expr_alloc_unary_operator(retval, end_token->type);
         parser_advance(parser);
     }
 
@@ -915,7 +914,6 @@ struct ast_statement *ast_parse_statement_branch(struct ast_parser *parser,
         }
         else
         {
-            logd("not a declaration");
             out = ast_statement_alloc_block_for(false);
             out->for_expr.expr1 = ast_parse_expression(parser, err);
             if (out->for_expr.expr1 == NULL)

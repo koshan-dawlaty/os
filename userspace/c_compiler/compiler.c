@@ -10,14 +10,10 @@
 void ir_test()
 {
     const char *expr_str = MACRO_STR(int main() {
-        int i = 0;
-        int j = 0;
-        for (i = 0; i <= 10; i = i + 1)
-        {
-            j = j + 3;
-        }
+        int *ptr = 0;
+        int value = *ptr;
 
-        return j;
+        return value;
     }
 
     );

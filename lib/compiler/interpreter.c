@@ -110,13 +110,13 @@ struct interp_value *expr_eval(struct ast_expr *expr,
             if (!(expr->lhs->type == AST_EXPRESSION_VALUE &&
                   expr->lhs->value.is_var) &&
                 !(expr->lhs->type == AST_EXPRESSION_UNARY_OPERATOR &&
-                  !strcmp(expr->lhs->unary_operator.operator, "*")))
+                  expr->lhs->unary_operator.operator == TOKEN_STAR))
             {
                 PANIC("attempt to assign to not variable");
             }
 
             if (expr->lhs->type == AST_EXPRESSION_UNARY_OPERATOR &&
-                !strcmp(expr->lhs->unary_operator.operator, "*"))
+                expr->lhs->unary_operator.operator == TOKEN_STAR)
             {
                 /* dereference */
                 struct interp_value *value =
@@ -239,7 +239,7 @@ struct interp_value *expr_eval(struct ast_expr *expr,
     }
     else if (expr->type == AST_EXPRESSION_UNARY_OPERATOR)
     {
-        if (!strcmp(expr->unary_operator.operator, "*"))
+        if (expr->unary_operator.operator == TOKEN_STAR)
         {
             struct interp_value *value =
                 expr_eval(expr->unary_operator.expr, interp);
@@ -261,7 +261,7 @@ struct interp_value *expr_eval(struct ast_expr *expr,
             /* TODO: type / size should not be int */
             return out;
         }
-        else if (!strcmp(expr->unary_operator.operator, "&"))
+        else if (expr->unary_operator.operator == TOKEN_REFERENCE)
         {
             struct interp_value *value =
                 expr_eval(expr->unary_operator.expr, interp);
@@ -275,7 +275,7 @@ struct interp_value *expr_eval(struct ast_expr *expr,
             return interp_value_alloc(var->value->type,
                                       var->value->num_pointers + 1, var->addr);
         }
-        else if (!strcmp(expr->unary_operator.operator, "++"))
+        else if (expr->unary_operator.operator == TOKEN_INCREMENT)
         {
 
             struct ast_expr *e = expr->unary_operator.expr;
