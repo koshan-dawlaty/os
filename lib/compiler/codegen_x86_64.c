@@ -39,12 +39,10 @@ codegen_value_to_memory_refrence(struct codegen_value *value)
 {
     if (value->type == CODEGEN_VALUE_REGISTER)
     {
-        logd("returning register refrence");
         return codegen_value_alloc(CODEGEN_VALUE_MEMORY_REG, value->reg);
     }
     else if (value->type == CODEGEN_VALUE_STACK)
     {
-        logd("returning stack refrence");
         return codegen_value_alloc(CODEGEN_VALUE_MEMORY_STACK_REF,
                                    value->value);
     }
@@ -52,6 +50,15 @@ codegen_value_to_memory_refrence(struct codegen_value *value)
 }
 
 #define BYTE_AS_RM(byte) (byte & 0b111)
+
+void codegen_add_immediate(struct bytecode_array *code,
+                           struct codegen_value *imm)
+{
+    if (imm->type == CODEGEN_VALUE_IMMEDIATE)
+    {
+        array_macro_append_buf(code, &imm->value, 4);
+    }
+}
 
 u8 get_modrm_bytes(u8 mod, u8 rm)
 {
@@ -78,7 +85,6 @@ u8 get_modrm(struct codegen_value *reg, struct codegen_value *rm)
     }
     else if (rm->type == CODEGEN_VALUE_MEMORY_REG)
     {
-        logd("register refrence");
         return 0b00000000 | BYTE_AS_RM(rm->memory.reg) | ((reg->value) << 3);
     }
     else
@@ -137,7 +143,8 @@ struct codegen_value stack_stack_temp_reg = {CODEGEN_VALUE_REGISTER, 0b110};
 
 bool codegen_type_is_memory(enum codegen_value_type type)
 {
-    return type == CODEGEN_VALUE_STACK || type == CODEGEN_VALUE_MEMORY_STACK_REF ||
+    return type == CODEGEN_VALUE_STACK ||
+           type == CODEGEN_VALUE_MEMORY_STACK_REF ||
            type == CODEGEN_VALUE_MEMORY_REG;
 }
 
@@ -150,16 +157,13 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
 
     if (src->type == CODEGEN_VALUE_MEMORY_STACK_REF)
     {
-        logd("here");
         struct codegen_value src_no_ref =
             CODEGEN_VALUE_INIT(CODEGEN_VALUE_STACK, src->memory.stack_offset);
         generate_mov(code, &stack_stack_temp_reg, &src_no_ref);
         src = codegen_value_to_memory_refrence(&stack_stack_temp_reg);
-        logd("just got:%d", src->type);
     }
     if (codegen_type_is_memory(src->type) && codegen_type_is_memory(dest->type))
     {
-        logd("moving because %d and %d are memory", src->type, dest->type);
         /* this might end up being annoying to debug because of recursion */
         generate_mov(code, &stack_stack_temp_reg, src);
         src = &stack_stack_temp_reg;
@@ -183,15 +187,11 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
         reg = src;
     }
 
-    logd("rm type:%d", rm->type, reg->type);
 
     generate_opcode_bytes(code, get_rex(reg, rm), opcode, get_modrm(reg, rm));
 
     generate_sib_byte(code, rm);
-    if (src->type == CODEGEN_VALUE_IMMEDIATE)
-    {
-        array_macro_append_v(code, src->value, 0, 0, 0);
-    }
+    codegen_add_immediate(code, src);
 }
 
 void generate_opcode_modrm(struct bytecode_array *code, u8 opcode, u8 modrm,
@@ -201,10 +201,6 @@ void generate_opcode_modrm(struct bytecode_array *code, u8 opcode, u8 modrm,
     generate_opcode_bytes(code, get_rex(dest, src), opcode, modrm);
 
     generate_sib_byte(code, dest);
-    if (src->type == CODEGEN_VALUE_IMMEDIATE)
-    {
-        array_macro_append_v(code, src->value, 0, 0, 0);
-    }
 }
 
 void generate_opcode_mod(struct bytecode_array *code, u8 opcode, u8 mod,
@@ -217,10 +213,7 @@ void generate_opcode_mod(struct bytecode_array *code, u8 opcode, u8 mod,
         opcode, get_modrm_rm(mod, dest));
 
     generate_sib_byte(code, dest);
-    if (src->type == CODEGEN_VALUE_IMMEDIATE)
-    {
-        array_macro_append_v(code, src->value, 0, 0, 0);
-    }
+	codegen_add_immediate(code, src);
 }
 
 void generate_mov(struct bytecode_array *code, struct codegen_value *dest,

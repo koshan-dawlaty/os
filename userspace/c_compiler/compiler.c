@@ -9,8 +9,16 @@
 
 void ir_test()
 {
+
+    char *memory = malloc(4096);
+    char *memory2 = malloc(4096);
+	memory[0] = 123;
+	memory[1] = 0;
+	memory[2] = 0;
+	memory[3] = 0;
+    logd("%p", memory);
     const char *expr_str = MACRO_STR(int main() {
-        int *ptr = 0;
+        int *ptr = 2684370960;
         int value = *ptr;
 
         return value;
