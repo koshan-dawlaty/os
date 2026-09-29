@@ -187,7 +187,6 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
         reg = src;
     }
 
-
     generate_opcode_bytes(code, get_rex(reg, rm), opcode, get_modrm(reg, rm));
 
     generate_sib_byte(code, rm);
@@ -213,7 +212,7 @@ void generate_opcode_mod(struct bytecode_array *code, u8 opcode, u8 mod,
         opcode, get_modrm_rm(mod, dest));
 
     generate_sib_byte(code, dest);
-	codegen_add_immediate(code, src);
+    codegen_add_immediate(code, src);
 }
 
 void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
@@ -416,6 +415,27 @@ struct codegen_value *generate_mul(struct bytecode_array *code,
     generate_ax_opcode(code, 0xF7, 0b100, &immediate_temp_reg);
     /* ax */
     return out;
+}
+
+void codegen_write_addr(struct bytecode_array *code, struct codegen_value *dest,
+                        struct codegen_value *value)
+{
+    switch (value->type)
+    {
+    case CODEGEN_VALUE_MEMORY_REG:
+        generate_mov(code, dest, value);
+        break;
+    case CODEGEN_VALUE_STACK:
+        generate_mov(code, dest,
+                     &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0b100));
+		logd("converting offset of %x to address", value->value);
+        generate_add(code, dest,
+                     &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE,
+                                         code->stack_offset - value->value));
+        break;
+    default:
+        PANIC("can't take address of that");
+    }
 }
 
 /* duplicated in interpreter */
@@ -798,10 +818,21 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
         generate_cmp(code, two, three);
         generate_setle(code, one);
         break;
+    case IR_OP_STORE:
+        ASSERT(two->type != CODEGEN_VALUE_IMMEDIATE,
+               "not implemented for immediate");
+        generate_mov(code, codegen_value_to_memory_refrence(one), two);
+        break;
     case IR_OP_LOAD:
         ASSERT(two->type != CODEGEN_VALUE_IMMEDIATE,
                "not implemented for immediate");
         generate_mov(code, one, codegen_value_to_memory_refrence(two));
+        break;
+    case IR_OP_ADDR_OF:
+        ASSERT(two->type != CODEGEN_VALUE_IMMEDIATE,
+               "can't take address of that");
+
+        codegen_write_addr(code, one, two);
         break;
 
     case IR_OP_JMP:

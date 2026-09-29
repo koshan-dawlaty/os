@@ -94,6 +94,17 @@ enum ir_operation_type
     /* one must be a IR_VALUE_PTR */
     IR_OP_LOAD,
 
+    /* the way that this should actually work is that values are, in ir,
+       initally all on the stack, then registers are found for ones where the
+       address is not taken
+
+       another way to do this would be by having the register
+       allocation not assign a processor register to a ir register if it is
+       marked as having its address taken
+    */
+    /* one = address of two */
+    IR_OP_ADDR_OF,
+
     /* one = two */
     IR_OP_MOV,
 

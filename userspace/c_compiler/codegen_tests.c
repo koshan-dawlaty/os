@@ -249,6 +249,15 @@ TEST_CODEGEN(codegen_test_for_basic2, MACRO_STR(int main() {
     }
 	), 33)
 
+TEST_CODEGEN(codegen_test_stack_addr, MACRO_STR(int main() {
+        int x = 123;
+        int *ptr = &x;
+        int value = *ptr;
+
+        return value;
+    }
+	), 123)
+
 // clang-format on
 //
 int main()

@@ -100,6 +100,8 @@ const char *ir_operation_type_str(enum ir_operation_type type)
         return "STORE";
     case IR_OP_LOAD:
         return "LOAD";
+    case IR_OP_ADDR_OF:
+        return "ADDR_OF";
     }
 }
 
@@ -192,9 +194,12 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
         switch (expr->unary_operator.operator)
         {
         case TOKEN_STAR:;
-
             ir_add_instruction(program,
                                ir_inst_alloc_op(IR_OP_LOAD, out, value, NULL));
+            break;
+        case TOKEN_REFERENCE:
+            ir_add_instruction(
+                program, ir_inst_alloc_op(IR_OP_ADDR_OF, out, value, NULL));
             break;
         default:
             PANIC("invalid unary operator %s",
