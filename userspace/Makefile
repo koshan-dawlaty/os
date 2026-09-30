@@ -86,6 +86,7 @@ BINARIES=\
 	sokoban$(TEST_SUFFIX) \
 	mkdir$(TEST_SUFFIX) \
 	opener$(TEST_SUFFIX) \
+	paint$(TEST_SUFFIX) \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -182,6 +183,10 @@ $(BIN)/sokoban$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/sokoban.o$(TEST_SUFFIX)  
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
 $(BIN)/opener$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/opener.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
+
+$(BIN)/paint$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/paint.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 

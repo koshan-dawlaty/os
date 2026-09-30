@@ -12,17 +12,15 @@ void ir_test()
 
     char *memory = malloc(4096);
     char *memory2 = malloc(4096);
-	memory[0] = 123;
-	memory[1] = 0;
-	memory[2] = 0;
-	memory[3] = 0;
+    memory[0] = 123;
+    memory[1] = 0;
+    memory[2] = 0;
+    memory[3] = 0;
     logd("%p", memory);
     const char *expr_str = MACRO_STR(int main() {
-		int x = 123;
-        int *ptr = &x;
-        int value = *ptr;
-
-        return value;
+        return 5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9 + 2 + 3 * 4 - 6 * 2 + 7 +
+               8 * 2 - 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8 +
+               10 * (2 + 3 * (4 + 5));
     }
 
     );

@@ -880,12 +880,6 @@ void codegen_generate_ir(struct bytecode_array *code,
     generate_sub(code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0b100),
                  &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, vars_size));
     code->stack_offset += vars_size;
-    for (size_t i = 0; i < vars_size / 8; i++)
-    {
-        generate_mov(
-            code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_STACK, vars_size - i * 8),
-            &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, 0));
-    }
 
     struct list *pos;
     list_for_each(pos, &program->instructions)

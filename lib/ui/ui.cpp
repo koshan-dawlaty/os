@@ -31,13 +31,7 @@ void WMScreen::input_loop(View *root)
         {
             struct mouse_event *ev = (struct mouse_event *)message.message_data;
             size_t mouse_x = ev->x_change, mouse_y = ev->y_change;
-
-            if (ev->buttons.left_click || ev->buttons.right_click ||
-                ev->buttons.middle_click || ev->scroll != 0)
-            {
-                root->handle_mouse_action(mouse_x, mouse_y, 0, 0, ev);
-            }
-
+            root->handle_mouse_action(mouse_x, mouse_y, 0, 0, ev);
             break;
         }
         case WM_MESSAGE_KEY:

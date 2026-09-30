@@ -911,7 +911,10 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     return 0;
 }
 
-int drag_count = 0;
+int hold_count = 0;
+
+bool is_moving_window = false;
+struct window_queue_entry *moving_window = NULL;
 bool right_click_is_held = false;
 int x_resize_start;
 int y_resize_start;
@@ -921,8 +924,8 @@ static void process_mouse(struct mouse_event *ev)
     if (focused != NULL)
     {
 
-        int change_x = WIN_X(mouse_queue_ent->win) - WIN_X(focused->win);
-        int change_y = WIN_Y(mouse_queue_ent->win) - WIN_Y(focused->win);
+        int change_x = WIN_X(mouse_queue_ent->win) - (WIN_X(focused->win) + WINDOW_DECORATION_LEFT_WIDTH);
+        int change_y = WIN_Y(mouse_queue_ent->win) - (WIN_Y(focused->win) + WINDOW_DECORATION_TOP_HEIGHT);
 
         struct wm_message message = {
 
@@ -949,18 +952,32 @@ static void process_mouse(struct mouse_event *ev)
     }
     right_click_is_held = ev->buttons.right_click;
 
+    /* stupid */
+    if (is_moving_window)
+    {
+        move_window(moving_window, ev->x_change, ev->y_change, buffer);
+    }
+
     if (ev->buttons.left_click)
     {
 
-        if (drag_count > 3)
+        if (hold_count > 3)
         {
             if (focused != NULL)
             {
-                move_window(focused, ev->x_change, ev->y_change, buffer);
+                if (WIN_X(mouse) > WIN_X(focused->win) &&
+                    WIN_Y(mouse) > WIN_Y(focused->win) &&
+                    WIN_X(mouse) < WIN_X(focused->win) + WIN_W(focused->win) &&
+                    WIN_Y(mouse) <
+                        WIN_Y(focused->win) + WINDOW_DECORATION_TOP_HEIGHT)
+                {
+                    is_moving_window = true;
+                    moving_window = focused;
+                }
             }
         }
 
-        drag_count++;
+        hold_count++;
 
         /* TODO: this should be its own function that traverses the list
          * backwards */
@@ -1023,7 +1040,9 @@ static void process_mouse(struct mouse_event *ev)
     }
     else
     {
-        drag_count = 0;
+        hold_count = 0;
+        is_moving_window = false;
+        moving_window = NULL;
     }
 }
 
@@ -1273,7 +1292,8 @@ int main()
 
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
-    execv("/bin/explore", (char *[]){"explore", NULL});
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    execv("/bin/paint", (char *[]){"paint", NULL});
     /* execv("/bin/term", (char *[]){"term", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/term", (char *[]){"term", NULL}); */
