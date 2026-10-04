@@ -9,7 +9,7 @@
 #
 
 USER_EXECUTABLE="$FS_ROOT/bin/wm"
-USER_EXECUTABLE2="$FS_ROOT/bin/compiler"
+USER_EXECUTABLE2="$FS_ROOT/bin/paint"
 
 KERNEL_ADDR=objdump -h isodir/boot/os.kernel | grep \ .text\  | awk '{print $4}'
 USERSPACE_ADDR=objdump -h $USER_EXECUTABLE | grep \ .text\  | awk '{print $4}'

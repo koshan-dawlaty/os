@@ -188,7 +188,7 @@ $(BIN)/opener$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/opener.o$(TEST_SUFFIX)  $(
 
 $(BIN)/paint$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/paint.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
 
 $(BIN)/compiler$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/compiler.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)

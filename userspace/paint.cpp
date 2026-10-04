@@ -1,5 +1,6 @@
 #include <cpp/cpp_c_include_start.hpp>
 
+#include <sys/stat.h>
 #include <lib/font.h>
 #include <lib/framebuffer.h>
 #include <wm_lib.h>
@@ -13,19 +14,77 @@
 
 struct PSF_font *font;
 
-class PaintCanvas : public Element
+struct CanvasState
 {
+    /* where click starts */
+    size_t start_x = 0, start_y = 0;
 
-  public:
-    u32 current_color = 0xFF00FF;
     size_t last_x = 0, last_y = 0;
+    size_t current_x = 0, current_y = 0;
     /* it might be best to have other functions that are called when a click
      * happens, like click_release or something to make this easier and not
      * duplicate */
     bool click_held = false;
+    u32 current_color = 0xFF00FF;
+};
 
+class PaintTool
+{
+  public:
+    virtual void click_start(struct framebuffer *fb, CanvasState *state)
+    {
+    }
+    virtual void click_held(struct framebuffer *fb, CanvasState *state)
+    {
+    }
+    virtual void click_end(struct framebuffer *fb, CanvasState *state)
+    {
+    }
+};
+
+class PixelDrawTool : public PaintTool
+{
+    void click_held(struct framebuffer *fb, CanvasState *state) override
+    {
+        framebuffer_draw_line(fb, state->current_x, state->current_y,
+                              state->last_x, state->last_y,
+                              state->current_color);
+    }
+};
+
+class RectDrawTool : public PaintTool
+{
+
+    void click_end(struct framebuffer *fb, CanvasState *state) override
+    {
+		size_t x = MIN(state->current_x, state->start_x);
+		size_t y = MIN(state->current_y, state->start_y);
+        size_t w = abs(state->current_x - state->start_x);
+        size_t h = abs(state->current_y - state->start_y);
+        framebuffer_draw_rect(fb, x, y, w, h,
+                              state->current_color);
+    }
+};
+
+class PaintCanvas : public Element
+{
+  private:
+    CanvasState state;
+    PaintTool *current_tool = NULL;
+
+  public:
     PaintCanvas(size_t w, size_t h) : Element(w, h)
     {
+    }
+
+    void set_color(u32 color)
+    {
+        state.current_color = color;
+    }
+
+    void set_tool(PaintTool *tool)
+    {
+        current_tool = tool;
     }
 
     void render() override
@@ -35,28 +94,41 @@ class PaintCanvas : public Element
     bool handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
                              size_t abs_y, struct mouse_event *ev) override
     {
+        if (!current_tool)
+        {
+            return false;
+        }
 
         if (ev->buttons.left_click)
         {
-            int x_pos = click_x - x;
-            int y_pos = click_y - y;
+            state.current_x = click_x - x;
+            state.current_y = click_y - y;
 
-            if (!click_held)
+            if (!state.click_held)
             {
-                last_x = x_pos;
-                last_y = y_pos;
+                state.last_x = state.current_x;
+                state.last_y = state.current_y;
+
+                current_tool->click_start(&fb, &state);
+
+                state.start_x = state.current_x;
+                state.start_y = state.current_y;
             }
 
-            framebuffer_draw_line(&fb, x_pos, y_pos, last_x, last_y,
-                                  current_color);
-            last_x = x_pos;
-            last_y = y_pos;
+            current_tool->click_held(&fb, &state);
 
-            click_held = true;
+            state.last_x = state.current_x;
+            state.last_y = state.current_y;
+
+            state.click_held = true;
         }
         else
         {
-            click_held = false;
+            if (state.click_held)
+            {
+                current_tool->click_end(&fb, &state);
+                state.click_held = false;
+            }
         }
         /* FIXME: do a partial redraw */
         redraw();
@@ -72,8 +144,17 @@ ButtonElement *get_color_button(PaintCanvas *canvas, u32 color)
         [=](ButtonElement *element) -> void
         {
             logd("setting color:%p", color);
-            canvas->current_color = color;
+            canvas->set_color(color);
         });
+    return out;
+}
+
+ButtonElement *get_tool_button(PaintCanvas *canvas, PaintTool *tool,
+                               const char *image_path)
+{
+    ButtonElement *out = new ButtonElement(new ImageElement(image_path));
+    out->set_onclick([=](ButtonElement *element) -> void
+                     { canvas->set_tool(tool); });
     return out;
 }
 
@@ -98,8 +179,15 @@ int main()
     color_buttons->add_child(get_color_button(canvas, 0x0000FF));
     color_buttons->add_child(get_color_button(canvas, 0xFF00FF));
 
+    Layout *tool_buttons = new HorizontalLineLayout(5);
+    tool_buttons->add_child(
+        get_tool_button(canvas, new PixelDrawTool(), "images/line.tga"));
+    tool_buttons->add_child(
+        get_tool_button(canvas, new RectDrawTool(), "images/rectangle.tga"));
+
     root->add_child(canvas);
     root->add_child(color_buttons);
+    root->add_child(tool_buttons);
 
     root->render();
     root->redraw();
