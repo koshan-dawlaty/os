@@ -53,7 +53,7 @@ void test123_generate_instruction_bytes(struct bytecode_array *code, u8 opcode,
                                         u8 reg1, u8 reg2, u8 reg3)
 {
     // clang-format off
-	u32 instruction = opcode | (reg1 << 6) | (reg2 << 12) | (reg3 << 18);
+	u32 instruction = opcode | (reg1 << 6) | (reg2 << 11) | (reg3 << 16);
 	logd("0x%p", instruction);
     // clang-format on
     test123_append_instruction(code, instruction);
@@ -104,8 +104,9 @@ void test123_generate_instruction(struct bytecode_array *code, u8 opcode,
     }
     else
     {
-        test123_generate_instruction_bytes(code, (opcode << 1) & ~1, one->data,
-                                           two->data, three->data);
+		logd("three registers %d %d %d", two->data, three->data, one->data);
+        test123_generate_instruction_bytes(code, (opcode << 1) & ~1, two->data,
+                                           three->data, one->data);
     }
 }
 
