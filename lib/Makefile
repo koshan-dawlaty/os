@@ -36,6 +36,7 @@ OBJS=\
 	compiler/ast.o \
 	compiler/interpreter.o \
 	compiler/codegen_x86_64.o \
+	compiler/codegen_test123.o \
 	compiler/ir/ir.o \
 	compiler/ir/ssa.o \
 	list.o \

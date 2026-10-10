@@ -2,6 +2,7 @@
 #include <lib/assert.h>
 #include <lib/compiler/ast.h>
 #include <lib/compiler/codegen.h>
+#include <lib/compiler/codegen_test123.h>
 #include <lib/compiler/ir.h>
 #include <lib/list.h>
 #include <lib/log.h>
@@ -10,17 +11,13 @@
 void ir_test()
 {
 
-    char *memory = malloc(4096);
-    char *memory2 = malloc(4096);
-    memory[0] = 123;
-    memory[1] = 0;
-    memory[2] = 0;
-    memory[3] = 0;
-    logd("%p", memory);
     const char *expr_str = MACRO_STR(int main() {
-        return 5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9 + 2 + 3 * 4 - 6 * 2 + 7 +
-               8 * 2 - 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8 +
-               10 * (2 + 3 * (4 + 5));
+        /* return 5 * 2 - (7 - 2 * 6) + 8 * (4 + 1) - 9 + 2 + 3 * 4 - 6 * 2 + 7
+         * + */
+        /*        8 * 2 - 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8 + */
+        /* return 10 * (2 + 3 * (4 + 5)); */
+        /* return 2 * 3; */
+        return 1 - 2;
     }
 
     );
@@ -48,24 +45,35 @@ void ir_test()
     /* cfg_set_dominance_frontier(&cfg_parser); */
 
     struct bytecode_array code = {0};
-    codegen_generate_ir(&code, &program);
+    test123_generate_ir(&code, &program);
 
     log_multiline_start(&LOG_DEBUG);
-    for (size_t i = 0; i < code.num; i++)
+    logd("\n");
+    for (size_t i = 0; i < code.num; i += 4)
     {
-        if (code.items[i] < 16)
-        {
-            logd("0%p ", code.items[i]);
-        }
-        else
-        {
-            logd("%p ", code.items[i]);
-        }
+        logd("%p\n", *(u32 *)(code.items + i));
+        /* logd("%p%p%p%p\n", code.items[i], code.items[i + 1], code.items[i +
+         * 2], */
+        /*      code.items[i + 3]); */
     }
     logd("\n");
+    /*
+for (size_t i = 0; i < code.num; i++)
+{
+    if (code.items[i] < 16)
+    {
+        logd("0%p ", code.items[i]);
+    }
+    else
+    {
+        logd("%p ", code.items[i]);
+    }
+}
+logd("\n");
+    */
     log_multiline_end(&LOG_DEBUG);
 
-    run_code(code.items, code.num);
+    /* run_code(code.items, code.num); */
 }
 
 int main()
