@@ -18,7 +18,7 @@ void ir_test()
         /* return 10 * (2 + 3 * (4 + 5)); */
         /* return 2 * 3; */
         /* return (8 * 2) - (9 * 3); */
-        return (9 * 3) - (8 * 2) ;
+        return 8 * 2 - 9 * 3 + 5 + 7 * 2 - 4 * (6 - 1) + 8;
     }
 
     );
@@ -33,7 +33,22 @@ void ir_test()
 
     struct ir_program program = {.register_offset = 0, 0, {0}, {0}};
     list_init_head(&program.instructions);
-    ir_generate_block(&program, &main->function->block);
+
+    struct ir_value *addr_reg = ir_value_alloc_reg(&program);
+    struct ir_value *dest_reg = ir_value_alloc_reg(&program);
+    ir_add_instruction(&program,
+                       ir_inst_alloc_op(IR_OP_MOV, addr_reg,
+                                        ir_value_alloc_immediate(&program, 40),
+                                        NULL));
+    ir_add_instruction(&program,
+                       ir_inst_alloc_op(IR_OP_STORE, addr_reg,
+                                        ir_value_alloc_immediate(&program, 123),
+                                        NULL));
+    ir_add_instruction(&program,
+                       ir_inst_alloc_op(IR_OP_LOAD, addr_reg, dest_reg, NULL));
+    ir_add_instruction(&program, ir_inst_alloc_op(IR_OP_RET, NULL, NULL, NULL));
+
+    /* ir_generate_block(&program, &main->function->block); */
     ir_display(&program, &LOG_INFO);
 
     /* struct cfg_parser cfg_parser = {0}; */

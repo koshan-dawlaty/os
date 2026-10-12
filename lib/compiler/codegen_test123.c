@@ -1,4 +1,4 @@
-#include "lib/array.h"
+#include <lib/array.h>
 #include <lib/assert.h>
 #include <lib/compiler/codegen.h>
 #include <lib/compiler/codegen_test123.h>
@@ -104,7 +104,7 @@ void test123_generate_instruction(struct bytecode_array *code, u8 opcode,
     }
     else
     {
-		logd("three registers %d %d %d", two->data, three->data, one->data);
+        logd("three registers %d %d %d", two->data, three->data, one->data);
         test123_generate_instruction_bytes(code, (opcode << 1) & ~1, two->data,
                                            three->data, one->data);
     }
@@ -115,30 +115,6 @@ void test123_generate_mov(struct bytecode_array *code,
                           struct test123_value *dest, struct test123_value *src)
 {
     test123_generate_instruction(code, 1, dest, src, NULL);
-}
-
-/*
- * generates the immediate instruction twice if both are immediates, once with
- * the first argument, and once with the second
- */
-void test123_generate_instruction_imm_twice(struct bytecode_array *code,
-                                            u8 opcode,
-                                            struct test123_value *dest,
-                                            struct test123_value *one,
-                                            struct test123_value *two)
-{
-    if (one->type == TEST123_VALUE_IMMEDIATE &&
-        two->type == TEST123_VALUE_IMMEDIATE)
-    {
-        test123_generate_instruction_immediate_bytes(code, (opcode << 1) | 1,
-                                                     dest->data, 0, one->data);
-        test123_generate_instruction_immediate_bytes(code, (opcode << 1) | 1,
-                                                     dest->data, 0, two->data);
-    }
-    else
-    {
-        test123_generate_instruction(code, opcode, one, two, dest);
-    }
 }
 
 /*
@@ -160,6 +136,24 @@ void test123_generate_instruction_imm_mov(struct bytecode_array *code,
     {
         test123_generate_instruction(code, opcode, dest, one, two);
     }
+}
+
+#define TEST123_TEMP_REG_1                                                     \
+    ((struct test123_value){.type = TEST123_VALUE_REG, .data = 20})
+
+void test123_generate_store(struct bytecode_array *code,
+                            struct test123_value *dest,
+                            struct test123_value *src)
+{
+    ASSERT(dest->type != TEST123_VALUE_IMMEDIATE,
+           "not implemented for immediate address");
+    if (src->type == TEST123_VALUE_IMMEDIATE)
+    {
+        test123_generate_mov(code, &TEST123_TEMP_REG_1, src);
+        src = &TEST123_TEMP_REG_1;
+    }
+    test123_generate_instruction_immediate_bytes(code, 49, src->data,
+                                                 dest->data, 0);
 }
 
 void test123_generate_op(struct bytecode_array *code, struct ir_operation *op)
@@ -186,6 +180,15 @@ void test123_generate_op(struct bytecode_array *code, struct ir_operation *op)
 
     case IR_OP_RET:
         test123_generate_instruction_bytes(code, 63, 0, 0, 0);
+        break;
+
+    case IR_OP_STORE:
+        test123_generate_store(code, one, two);
+        break;
+
+    case IR_OP_LOAD:
+        test123_generate_instruction_immediate_bytes(code, 33, two->data,
+                                                     one->data, 0);
         break;
 
     default:

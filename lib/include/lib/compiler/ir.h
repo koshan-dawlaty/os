@@ -61,6 +61,10 @@ struct ir_value
     } type;
 };
 
+struct ir_value *ir_value_alloc_immediate(struct ir_program *program,
+                                          ptr_t value);
+struct ir_value *ir_value_alloc_reg(struct ir_program *program);
+
 struct ir_variable_version
 {
     struct ir_operation *assign_op;
@@ -175,6 +179,12 @@ struct ir_instruction
     struct list list;
     bool is_label;
 };
+
+struct ir_instruction *ir_inst_alloc_op(enum ir_operation_type type,
+                                        struct ir_value *one,
+                                        struct ir_value *two,
+                                        struct ir_value *three);
+void ir_add_instruction(struct ir_program *program, struct ir_instruction *ins);
 
 void ir_display(struct ir_program *program, struct log_level *level);
 void ir_value_log(struct ir_value *value, struct log_level *level);
