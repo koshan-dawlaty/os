@@ -40,14 +40,6 @@ struct client_window
     void *buffer;
 };
 
-#ifdef CONFIG_HOST_SDL
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_main.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_surface.h>
-#include <SDL3/SDL_video.h>
-#endif
 
 struct wm_client
 {
@@ -57,10 +49,14 @@ struct wm_client
     int mem_id;
     struct framebuffer fb;
 #else
-    SDL_Surface *surface;
-    SDL_Renderer *renderer;
-    SDL_Texture *texture;
-    SDL_Window *win;
+    int socket;
+    int key_socket;
+    int mem_id;
+    struct framebuffer fb;
+    /* SDL_Surface *surface; */
+    /* SDL_Renderer *renderer; */
+    /* SDL_Texture *texture; */
+    /* SDL_Window *win; */
 #endif
 };
 
