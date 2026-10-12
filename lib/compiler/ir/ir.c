@@ -316,7 +316,14 @@ void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
              expr->lhs->unary_operator.operator == TOKEN_STAR)
     {
         lhs = ir_value_alloc_reg(program);
-        ir_generate_expr(program, lhs, expr->unary_operator.expr);
+        ir_generate_expr(program, lhs, expr->lhs->unary_operator.expr);
+        struct ir_value *rhs = ir_value_alloc_reg(program);
+        ir_generate_expr(program, rhs, expr->rhs);
+
+        ir_add_instruction(program,
+                           ir_inst_alloc_op(IR_OP_STORE, lhs, rhs, NULL));
+
+        return;
     }
     else
     {

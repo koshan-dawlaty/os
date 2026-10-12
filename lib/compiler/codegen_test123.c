@@ -187,8 +187,8 @@ void test123_generate_op(struct bytecode_array *code, struct ir_operation *op)
         break;
 
     case IR_OP_LOAD:
-        test123_generate_instruction_immediate_bytes(code, 33, two->data,
-                                                     one->data, 0);
+        test123_generate_instruction_immediate_bytes(code, 33, one->data,
+                                                     two->data, 0);
         break;
 
     default:

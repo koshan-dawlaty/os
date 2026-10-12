@@ -428,7 +428,7 @@ void codegen_write_addr(struct bytecode_array *code, struct codegen_value *dest,
     case CODEGEN_VALUE_STACK:
         generate_mov(code, dest,
                      &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0b100));
-		logd("converting offset of %x to address", value->value);
+        logd("converting offset of %x to address", value->value);
         generate_add(code, dest,
                      &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE,
                                          code->stack_offset - value->value));
@@ -831,7 +831,6 @@ void codegen_generate_op(struct bytecode_array *code, struct ir_operation *op)
     case IR_OP_ADDR_OF:
         ASSERT(two->type != CODEGEN_VALUE_IMMEDIATE,
                "can't take address of that");
-
         codegen_write_addr(code, one, two);
         break;
 
