@@ -10,31 +10,53 @@ CONFIG?=config
 CONFIG_FLAGS=$(shell ./build/parse_config.py $(CONFIG))
 
 export SYSROOT := $(shell pwd)/build/sysroot
-export FS_ROOT := fs-root
+export FS_ROOT := fs_root
 
 export DESTDIR := $(SYSROOT)
 export ARCH := $(shell ./build/default-host.sh)
 
 export CC := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
+export AS := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
 
+export CXX := $(shell ./build/compiler-arch.sh $(ARCH))-g++ --sysroot=$(SYSROOT)
+
+# -fno-optimize-sibling-calls will not generate jmp instructions for save/load registers which will make them not break
 # once printf supports the actual standard format specifiers, -Wno-format can be removed
-export CFLAGS := -DMYOS1234 -Werror \
+export CFLAGS := -DMYOS1234 -Werror -O0 -g3 -g \
 -Wno-format	\
--Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -O0 -g -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fno-omit-frame-pointer -Wno-unused-parameter 
+-fno-optimize-sibling-calls \
+-Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fno-omit-frame-pointer -Wno-unused-parameter 
 
+export CXXFLAGS := \
+-Wno-pointer-arith -fpermissive -std=gnu++17 -Wno-pointer-arith -fno-rtti  -Wno-narrowing -Wno-invalid-offsetof -fno-exceptions
 
 export QEMU_COMMAND := qemu-system-$(shell ./build/qemu-arch.sh $(ARCH))
 
 export QEMU_FLAGS :=  -cdrom build/os.iso \
 -m 256M \
 -machine pc \
--d int \
 -D build/log.txt \
 -boot d  \
 -vga std \
 -display default,show-cursor=on \
--drive file=build/qemu.img,format=raw,if=ide,index=0 \
+# --enable-kvm \
+
+# -netdev tap,id=net0,ifname=tap0,script=no,downscript=no \
+# -device e1000,netdev=net0
+# -netdev user,id=net0 \
+# -device e1000,netdev=net0 \
 # -smp 1 \
+
+
+
+
+export QEMU_DRIVE=\
+-drive file=build/qemu.img,format=raw,if=ide,index=0 
+
+
+ifdef NODISPLAY
+	QEMU_FLAGS += -display none
+endif
 
 ISO=build/os.iso
 
@@ -120,8 +142,9 @@ userspace-headers:
 
 qemu : $(ISO)
 	rm -f build/qemu.img
-	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
-	$(QEMU_COMMAND) -serial mon:stdio $(QEMU_FLAGS)
+	./build/get-ext2-image.sh "build/qemu.img" $(FS_ROOT)
+	# $(QEMU_COMMAND) -monitor stdio $(QEMU_FLAGS)
+	$(QEMU_COMMAND) -serial mon:stdio $(QEMU_FLAGS) $(QEMU_DRIVE)
 
 clean:
 	$(RM) -r $(SYSROOT)
@@ -132,8 +155,13 @@ clean:
 # debug : QEMU_FLAGS += -display none
 debug : $(ISO)
 	rm -f build/qemu.img
-	./build/get-ext2-image.sh "build/qemu.img" build/fs-root
+	./build/get-ext2-image.sh "build/qemu.img" $(FS_ROOT)
 	./build/debug.sh
+
+codegen-debug : $(ISO)
+	rm -f build/qemu.img
+	./build/get-ext2-image.sh "build/qemu.img" $(FS_ROOT)
+	./build/debug.sh "-x build/codegen_debug.gdb"
 
 test : CFLAGS += -DTESTS
 test : export TEST_SUFFIX=.test

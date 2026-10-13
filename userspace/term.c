@@ -24,8 +24,6 @@
 #include <unistd.h>
 #include <userspace/syscall_wrappers.h>
 
-size_t mouse_x = 0;
-size_t mouse_y = 0;
 size_t x = 0, y = 0;
 struct PSF_font *font;
 struct wm_client client;
@@ -35,12 +33,15 @@ int mutex; /* TODO: maybe have a mutex in the wm_client variable? */
 
 void key_thread()
 {
-    while (1)
+    while (wm_is_alive(&client))
     {
         /* logd("getting key"); */
         /* user_mutex_lock(mutex); */
         struct wm_message message;
-        wm_get_message(&client, &message);
+        if (wm_get_message(&client, &message))
+        {
+            break;
+        }
         switch (message.header.type)
         {
         case WM_MESSAGE_KEY:
@@ -55,6 +56,7 @@ void key_thread()
             write(pipe_write, &c, 1);
             /* printf("%c ", c); */
             terminal_addchar(c, &term);
+
             user_mutex_lock(mutex);
             wm_render(client);
             user_mutex_unlock(mutex);
@@ -63,12 +65,12 @@ void key_thread()
         case WM_MESSAGE_MOUSE:
         {
             struct mouse_event *ev = message.message_data;
-            mouse_x += ev->x_change;
-            mouse_y += ev->y_change;
-            /* logd("mouse at %d %d", mouse_x, mouse_y); */
-            /* client_draw_string(client, font, "this is the mouse", mouse_x, */
-            /*                    mouse_y); */
-            /* client_draw_pixel(client, mouse_x, mouse_y, 0xFF00FF); */
+
+            /* client_draw_string(client, font, "this is the mouse",
+             * ev->x_change, */
+            /*                    ev->y_change); */
+            /* client_draw_pixel(client, ev->x_change, ev->y_change, 0xFF00FF);
+             */
 
             /* user_mutex_lock(mutex); */
             /* wm_render(client); */
@@ -76,12 +78,16 @@ void key_thread()
         }
         }
     }
-    loge("bad key");
+
+    while (1)
+    {
+        sched_yield();
+    }
     exit(1);
 }
 
-u32 bg_color = 0x4b3973;
-u32 cursor_color = 0x9f1ec9;
+u32 bg_color = 0;
+u32 cursor_color = 0xFFFFFF;
 
 void wm_terminal_draw_char_at(char character, size_t x, size_t y,
                               bool is_cursor)
@@ -102,6 +108,11 @@ void wm_terminal_draw_char_at(char character, size_t x, size_t y,
     }
     client_draw_char(client, font, character, x * font->header.width,
                      y * font->header.height);
+
+    /* wm_render_partial( */
+    /*     client, (struct rect){x * font->header.width, y *
+     * font->header.height, */
+    /*                           font->header.width, font->header.height}); */
 }
 
 size_t wm_terminal_get_width()
@@ -119,8 +130,6 @@ const struct terminal_operations wm_term_operations = {
 
 int main()
 {
-
-    init_libc();
 
     /* int serial = open("/serial0", O_RDWR); */
 

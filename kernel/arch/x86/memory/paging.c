@@ -55,114 +55,15 @@ void *phys_page_start = (void *)0x200000;
 
 struct spinlock phys_page_lock = SPINLOCK_INIT();
 
-void free_phys_pages(void *addr, size_t num)
-{
-
-    spinlock_lock(&phys_page_lock);
-
-    size_t index = (((size_t)addr - (ptr_t)phys_page_start)) / 4096;
-
-    for (size_t i = 0; i < num; i++)
-    {
-        phys_free_page_bitmap[(index + i) / 8] |= GFP_FREE >> ((index + i) % 8);
-    }
-
-    spinlock_unlock(&phys_page_lock);
-}
-
 struct pagedir init_pgdir;
 struct pagedir *current_pagedir = &init_pgdir;
-void *get_free_phys_page_dir(struct pagedir dir)
-{
-    spinlock_lock(&phys_page_lock);
-    ptr_t i = 0;
 
-    while (i < NUM_PAGES)
-    {
-        if (((phys_free_page_bitmap[i / 8] >> (i % 8)) & 1) == FREE)
-        {
-            break;
-        }
-
-        i++;
-    }
-
-    if (i >= NUM_PAGES - 3)
-    {
-        PANIC("ran out of space in get_free_phys_pages");
-    }
-
-    phys_free_page_bitmap[i / 8] |= IN_USE << (i % 8);
-
-    void *addr = (void *)(phys_page_start + (i * PAGE_SIZE));
-
-#if defined(CONFIG_x86_64) && defined(CONFIG_CLEAR_PAGES)
-    memset(addr + 0xffffc00000000000, 'b', PAGE_SIZE);
-#endif
-
-    spinlock_unlock(&phys_page_lock);
-
-    return addr;
-}
-
-void *get_free_phys_pages(struct pagedir *dir, size_t amount)
-{
-    spinlock_lock(&phys_page_lock);
-    ptr_t i;
-    size_t consecutive = 0;
-    size_t consecutive_start = 0;
-    for (i = 0; i < NUM_PAGES; i++)
-    {
-        if (((phys_free_page_bitmap[i / 8] >> (i % 8)) & 1) == GFP_FREE)
-        {
-            /* printf("i is:%d\n", i); */
-            if (consecutive == 0)
-            {
-                consecutive_start = i;
-            }
-
-            consecutive++;
-        }
-        else
-        {
-            consecutive_start = 0;
-            consecutive = 0;
-        }
-
-        if (consecutive >= amount)
-        {
-            break;
-        }
-    }
-
-    /* printf("start:%d\n", consecutive_start); */
-
-    /* logd("allocating at index:%d", consecutive_start); */
-    for (size_t j = consecutive_start; j < amount + i; j++)
-    {
-        /* printf("j is:%d\n", j); */
-
-        /* printf("virtual:%p\nphysical:%p\n", virtual_addr, physical_addr); */
-        phys_free_page_bitmap[j / 8] |= (1 << (j % 8));
-    }
-
-    void *address = (void *)((i * PAGE_SIZE) + phys_page_start);
-
-    /* release_semaphore(get_free_pages_semaphore); */
-    spinlock_unlock(&phys_page_lock);
-
-    return address;
-}
-
-void *get_free_phys_page()
-{
-    return get_free_phys_page_dir(*current_pagedir);
-}
+bool initalized = false;
 
 void map_page(void *physaddr, void *virtualaddr, unsigned int flags)
 {
     write_pagedir(current_pagedir, physaddr, virtualaddr, flags);
-    flush_tlb_full();
+    /* flush_tlb_full(); */
 }
 
 struct pagedir *new_pagedir()
@@ -190,7 +91,7 @@ void load_pgdir(struct pagedir *d)
     __asm__ volatile("mov %0, %%cr3" : : "r"(d->pgdir));
 
     // probably useless
-    flush_tlb_full();
+    /* flush_tlb_full(); */
 
     current_pagedir = d;
 }

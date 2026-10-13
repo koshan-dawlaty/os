@@ -1,6 +1,8 @@
-#include "kernel/multiboot.h"
+#include <container_of.h>
+#include <kernel/multiboot.h>
 #include <kernel/paging.h>
 #include <kernel/syscall.h>
+#include <kernel/timer.h>
 #include <kernel/utils.h>
 #include <lib/log.h>
 #include <memory/get_free_pages.h>
@@ -15,6 +17,10 @@ struct shared_memory_entry
     /* the virtal address of the entry in the creator's address space */
     void *creator_addr;
     size_t len;
+
+    size_t resize_len;
+
+    struct timer_callback_data callback_data;
 };
 
 /* TODO: make this dynamic */
@@ -33,7 +39,7 @@ int shared_mem_alloc(void **addr, size_t len)
     void *memory = SHARED_MEMORY_START + shared_memory_offset;
     size_t mem_len = ((len / PAGE_SIZE) + 1) * PAGE_SIZE;
     size_t num_pages = (mem_len / PAGE_SIZE) + 2;
-    void *physical = get_free_phys_pages(get_current_pagedir(), num_pages);
+    void *physical = get_free_phys_pages(num_pages);
 
     /* printf("physaddr:%p-%p, %d\n", physical, physical + len, num_pages); */
     /* printf("virtaddr:%p-%p, %d\n", memory, memory + num_pages * PAGE_SIZE, */
@@ -45,7 +51,7 @@ int shared_mem_alloc(void **addr, size_t len)
     }
 
     shared_memory_list[shared_memory_list_index] =
-        (struct shared_memory_entry){physical, memory, mem_len};
+        (struct shared_memory_entry){physical, memory, mem_len, 0, {}};
     shared_memory_list_index++;
     shared_memory_offset += mem_len;
 
@@ -80,6 +86,13 @@ int shared_mem_get(int id, void **p)
     return 0;
 }
 
+void shared_mem_resize_timeout(struct timer_callback_data *data)
+{
+    struct shared_memory_entry *ent =
+        containerof(data, struct shared_memory_entry, callback_data);
+    /* TODO: resize page to be len bytes, not resize_len */
+}
+
 int shared_mem_resize(int id, size_t new_size, void **new_addr)
 {
     spinlock_lock(&shared_mem_lock);
@@ -88,30 +101,44 @@ int shared_mem_resize(int id, size_t new_size, void **new_addr)
 
     size_t old_size = ent->len;
 
-    logd("new:%p old:%p", new_size, old_size);
     if (new_size > old_size)
     {
-        void *memory = SHARED_MEMORY_START + shared_memory_offset;
-        size_t num_pages = (new_size / PAGE_SIZE) + 3;
-        logd("num_pages:%d, old:%d", num_pages, (old_size / PAGE_SIZE) + 3);
-        shared_memory_offset += (num_pages + PAGE_SIZE) * PAGE_SIZE;
-        void *physical = get_free_phys_pages(get_current_pagedir(), num_pages);
 
-        for (size_t i = 0; i < num_pages; i++)
+        if (new_size > ent->resize_len)
         {
-            map_page(physical + (PAGE_SIZE * i), memory + (PAGE_SIZE * i),
-                     PAGING_PRESENT | PAGING_USER | PAGING_WRITEABLE);
+            void *memory = SHARED_MEMORY_START + shared_memory_offset;
+
+            size_t actual_len =
+                (new_size / (PAGE_SIZE * 100) + 1) * (PAGE_SIZE * 100);
+            size_t num_pages = ((actual_len) / PAGE_SIZE) + 3;
+            ent->resize_len = actual_len;
+            shared_memory_offset += (num_pages + PAGE_SIZE) * PAGE_SIZE;
+            void *physical = get_free_phys_pages(num_pages);
+
+            for (size_t i = 0; i < num_pages; i++)
+            {
+                map_page(physical + (PAGE_SIZE * i), memory + (PAGE_SIZE * i),
+                         PAGING_PRESENT | PAGING_USER | PAGING_WRITEABLE);
+            }
+
+            struct timer_event *ev = timer_event_alloc(
+                shared_mem_resize_timeout, &ent->callback_data);
+            timer_event_add(ev, 1000);
+
+            size_t num_old_pages = (old_size / PAGE_SIZE) + 3;
+
+            /* memcpy(memory, ent->creator_addr, old_size); */
+            free_phys_pages(ent->mem, num_old_pages);
+
+            ent->creator_addr = memory;
+            ent->mem = physical;
+
+            *new_addr = memory;
         }
-
-        size_t num_old_pages = (old_size / PAGE_SIZE) + 3;
-
-        memcpy(memory, ent->creator_addr, old_size);
-        free_phys_pages(ent->mem, num_old_pages);
-
-        ent->creator_addr = memory;
-        ent->mem = physical;
-
-        *new_addr = memory;
+        else
+        {
+            *new_addr = NULL;
+        }
     }
     else
     {

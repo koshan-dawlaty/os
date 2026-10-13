@@ -45,6 +45,11 @@
 
 #define SYS_shared_mem_resize 37
 
+#define SYS_getcwd 38
+#define SYS_stat 39
+
+#define SYS_load_simple_binary 40
+
 #else
 
 #define SYS_mutex_unlock 123

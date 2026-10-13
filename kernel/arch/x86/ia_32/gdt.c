@@ -80,7 +80,7 @@ volatile uint8_t user_stack[USER_STACK_SIZE] __attribute__((aligned(16)));
 
 volatile void *user_stack_top = &user_stack[USER_STACK_SIZE];
 
-void set_kernel_stack(ptr stack)
+void set_kernel_stack(ptr_t stack)
 {
     tss.esp0 = stack;
 }
@@ -124,7 +124,7 @@ void load_gdt()
 {
 
     gdtr.limit = sizeof(gdt) - 1;
-    gdtr.base = (ptr)&gdt;
+    gdtr.base = (ptr_t)&gdt;
 
     asm volatile("lgdt (%0)" : : "r"(&gdtr));
 
@@ -157,7 +157,7 @@ void init_gdt()
     register int esp asm("esp");
 
     tss.ss0 = 0x10;
-    tss.esp0 = (ptr)kernel_stack_top;
+    tss.esp0 = (ptr_t)kernel_stack_top;
 
     // tss
     add_gdt_entry((GDT_entry){sizeof(tss) - 1, 0x89, 0x0, (uint32_t)&tss}, 5);

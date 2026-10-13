@@ -140,12 +140,13 @@ static inline void user_mutex_unlock(int mutex)
 
 #ifdef CONFIG_HOST_SDL
 #else
-extern int execv_stdio(const char *path, char *const argv[], int in,
-                              int out);
-/* static inline int execv_stdio(const char *path, char *const argv[], int in, */
+extern int execv_stdio(const char *path, char *const argv[], int in, int out);
+/* static inline int execv_stdio(const char *path, char *const argv[], int in,
+ */
 /*                               int out) */
 /* { */
-/*     return syscall_wrapper_asm(SYS_execv_stdio, (ptr_t)path, (ptr_t)argv, in, */
+/*     return syscall_wrapper_asm(SYS_execv_stdio, (ptr_t)path, (ptr_t)argv, in,
+ */
 /*                                out, 0); */
 /* } */
 #endif

@@ -1,4 +1,6 @@
+#include "container_of.h"
 #include "ext2.h"
+#include "lib/list.h"
 #include <err_ptr.h>
 #include <errno.h>
 #include <kernel/utils.h>
@@ -42,6 +44,10 @@ read_entry:;
 
     char *name_ptr = (char *)buf + 8;
     u16 total_size = *(u16 *)(buf + 4);
+    /* if (total_size != 0) */
+    /* { */
+    /*     logd("size of:%d", total_size); */
+    /* } */
 
     /* TODO: slightly more efficent way of doing this by checking only the first
      * two characters (dcache does this in dcache_handle_dot) */
@@ -156,4 +162,69 @@ done:
     free(buf);
 
     return 0;
+}
+
+/* this could also be done without a linked list, by appending to a string, but
+ * it would be slower as it would have to shift the string every new pathname,
+ * although it would use less memory */
+struct dentry_pathname_list
+{
+    struct dentry *entry;
+    struct list list;
+};
+size_t dentry_get_pathname(struct dentry *entry, char *buf, size_t len)
+{
+    LIST_DEFINE_HEAD(head);
+
+    struct dentry *current = entry;
+    struct dentry *prev = NULL;
+
+    /* FIXME: maybe there should be a better way of checking if something is the
+     * root directory? */
+    while (current != prev)
+    {
+        struct dentry_pathname_list *l =
+            malloc(sizeof(struct dentry_pathname_list));
+        l->list = LIST_INIT();
+        l->entry = current;
+        list_push(&l->list, &head);
+
+        prev = current;
+        current = current->parent;
+    }
+
+    bool should_include_slash = false;
+    size_t i = 0;
+    struct list *pos;
+    list_for_each(pos, &head)
+    {
+        struct dentry_pathname_list *l =
+            containerof(pos, struct dentry_pathname_list, list);
+        const char *name = l->entry->name;
+
+        size_t copy_len = strlen(name);
+        if (i + strlen(name) >= len)
+        {
+            memcpy(buf + i, name, len - i);
+            break;
+        }
+
+        /* not the first entry being read */
+        if (i != 0)
+        {
+            if (should_include_slash)
+            {
+                buf[i] = '/';
+                i++;
+            }
+            else
+            {
+                should_include_slash = true;
+            }
+        }
+        memcpy(buf + i, name, strlen(name));
+        i += strlen(name);
+    }
+    buf[i] = 0;
+    return i;
 }

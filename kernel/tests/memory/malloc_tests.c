@@ -111,6 +111,5 @@ TEST(malloc_test_big2, {
     free(three);
 })
 
-// bad
 TEST(malloc_test_multiple_small, { malloc_test_multiple(10, 10); })
 TEST(malloc_test_multiple_large, { malloc_test_multiple(4096, 3); })

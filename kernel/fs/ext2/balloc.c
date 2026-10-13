@@ -31,16 +31,29 @@ struct inode *ext2_inode_alloc(struct superblock *sb, u16 type)
                 usage_bitmap[(i - 1) / 8] |= (1 << (i - 1) % 8);
                 ext2_write_block(usage_bitmap, usage_block, sb);
 
-                inode *node = ext2_iget(i, sb);
+                struct inode *node = ext2_iget(i, sb);
 
                 ext2_inode *ext2_node = EXT2_INODE(node);
                 ext2_node->type = type;
                 /* TODO: only check if the correct bits are set for the type */
                 if (type == EXT2_INODE_DIR)
                 {
-                    /* TODO: this is kinda stupid, but we want to add a dentry
-                     * that says that this directory is empty  */
                     ext2_node->size_low = EXT2_BLOCK_SIZE(sb);
+                    ext2_node->direct_blocks[0] = ext2_block_alloc(sb);
+                    size_t dentry_len = 12;
+                    u8 *dentry = malloc(dentry_len);
+                    ((u32 *)dentry)[0] = node->number;
+                    ((u16 *)dentry)[2] = EXT2_BLOCK_SIZE(sb);
+                    dentry[6] = 1;
+                    dentry[7] = 0;
+                    /* FIXME: this creates a dentry that has the name '.', this
+                     * is because the vfs will ignore this, however this should
+                     * probably not be done */
+                    memset(dentry + 9, 0, 3);
+                    dentry[8] = '.';
+
+                    ext2_write_inode(node, dentry, dentry_len, 0, sb);
+                    free(dentry);
                 }
                 else
                 {
@@ -190,7 +203,7 @@ void ext2_write_inode(inode *vfs_node, const uint8_t *buf, size_t buf_len,
     }
     else
     {
-        panic("not implemented!!!!!!!!!! (ext2)\n");
+        PANIC("not implemented!!!!!!!!!! (ext2)\n");
     }
 
 end:;
@@ -200,13 +213,12 @@ end:;
 
     if (index + buf_len > size)
     {
-        /* WILL BREAK (maybe ??? ) */
-        node->size_low = index + buf_len;
+        ext2_inode_set_size(node, index + buf_len);
         ext2_update_inode(vfs_node, sb);
     }
 }
 
-struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
+struct dentry *ext2_append_dentry(struct dentry *parent, char *name,
                                   enum dentry_type type, superblock *sb)
 {
 
@@ -248,7 +260,6 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
     struct inode *new_node = ext2_inode_alloc(sb, ext2_get_inode_type(type));
 
     memcpy(new_buf + 8, name, strlen(name));
-    logd("%s", new_buf + 8);
     *(u32 *)(new_buf) = new_node->number;
     *(u16 *)(new_buf + 4) = EXT2_BLOCK_SIZE(sb) - i;
     *(u8 *)(new_buf + 6) = strlen(name);
@@ -256,10 +267,9 @@ struct dentry *ext2_append_dentry(struct dentry *parent, const char *name,
     /* ext2_write_inode(parent->inode, (u8 *)new_buf, buf_len, i, sb); */
     ext2_write_inode(parent->inode, buf, EXT2_BLOCK_SIZE(sb), 0, sb);
 
-    /* TODO: bad */
-    ext2_entry->size_low = EXT2_BLOCK_SIZE(sb);
+    /* this should maybe not call udpate_inode? */
+    ext2_inode_set_size(ext2_entry, EXT2_BLOCK_SIZE(sb));
     ext2_update_inode(parent->inode, sb);
 
-    /* TODO: cast discards qualifiers */
-    return new_dentry((char *)name, parent, new_node, type);
+    return new_dentry(name, parent, new_node, type);
 }

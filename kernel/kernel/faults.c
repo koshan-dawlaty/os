@@ -21,13 +21,15 @@ void page_fault(void *addr, void *ip, struct page_fault_flags flags)
     if (!flags.user)
     {
         printf("page fault\n");
-        stacktrace_log();
+
         loge("page fault\naddr:%p\nip:%p", addr, ip);
 
         printf("addr:%p\n", addr);
         print_page_fault_flags(flags);
         printf("\n");
         printf("instruction pointer:%p\n", ip);
+
+        stacktrace_log();
         while (true)
         {
             irq_disable();
@@ -37,19 +39,17 @@ void page_fault(void *addr, void *ip, struct page_fault_flags flags)
     IRQ_OFF({
         struct task *t = get_current_task();
 
-        loge("user page fault at addr:%p",
-             addr); /* TODO: make this print to the task's stdout */
-        printf("user page fault at addr:%p\n",
-               addr); /* TODO: make this print to the task's stdout */
+        /* TODO: make this print to the task's stdout */
+        loge("user page fault at addr:%p", addr);
+        printf("user page fault at addr:%p\n", addr);
         print_page_fault_flags(flags);
         printf("\n");
-        while (1)
+        while (true)
         {
+            irq_disable();
+            irq_wait();
         }
 
-        /* TODO: free task (maybe make a separate function to remove and free at
-         * the same time */
-
-        remove_task(t);
+        task_remove_free(t);
     })
 }

@@ -33,7 +33,6 @@ struct array read_dir_array(DIR *d)
 
 int main()
 {
-    init_libc();
 
     DIR *bin_dir = opendir(BIN_DIR);
     if (bin_dir == NULL)
@@ -65,7 +64,7 @@ int main()
 
     struct array search = ARRAY_INIT();
 
-    while (true)
+    while (wm_is_alive(&client))
     {
         wm_render(client);
         struct wm_message message;
@@ -90,6 +89,7 @@ int main()
                                            strlen(BIN_DIR) + 1 /* slash */ + 1);
                         stpcpy(stpcpy(stpcpy(str, BIN_DIR), "/"), ent->d_name);
                         execv(str, (char *[]){str, NULL});
+                        break;
                     }
                 }
                 array_free(&search);
@@ -132,7 +132,6 @@ int main()
     }
 done:
 
-    /* TODO: exit() does not call the close operation on sockets */
     close(client.socket);
     close(client.key_socket);
 

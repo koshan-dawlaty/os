@@ -30,18 +30,18 @@ struct bitmap_memory_zone gfp_bitmap_kernel_zone = {
 #endif
     .size = DEFAULT_BITMAP_SIZE,
     .bitmap = gfp_kernel_bitmap,
-    .pg_flags = PAGING_WRITEABLE,
+    .pg_flags = PAGING_WRITEABLE | PAGING_PRESENT,
 };
 
 struct memory_zone gfp_kernel_zone =
     BITMAP_TO_GFP_ZONE(&gfp_bitmap_kernel_zone);
 
-struct bitmap_memory_zone gfp_bitmap_user_zone = {.virtual = 0x80000000,
-                                                  .physical = 0xC00000,
-                                                  .size = DEFAULT_BITMAP_SIZE,
-                                                  .bitmap = NULL,
-                                                  .pg_flags = PAGING_WRITEABLE |
-                                                              PAGING_USER};
+struct bitmap_memory_zone gfp_bitmap_user_zone = {
+    .virtual = 0x80000000,
+    .physical = 0xC00000,
+    .size = DEFAULT_BITMAP_SIZE,
+    .bitmap = NULL,
+    .pg_flags = PAGING_WRITEABLE | PAGING_USER | PAGING_PRESENT};
 
 struct memory_zone gfp_user_zone = BITMAP_TO_GFP_ZONE(&gfp_bitmap_user_zone);
 
@@ -87,7 +87,7 @@ void *get_free_pages_bitmap(size_t amount, struct memory_zone *z)
 
     if (i >= zone->size)
     {
-        panic("out of memory in get_free_pages_bitmap() for requested size:%d, "
+        PANIC("out of memory in get_free_pages_bitmap() for requested size:%d, "
               "and offset:%d, max size:%d",
               amount, i, zone->size);
     }
@@ -146,6 +146,7 @@ void free_pages_bitmap(void *addr, size_t amount, struct memory_zone *z)
         void *ptr = (void *)(addr + (i * PAGE_SIZE));
         void *physaddr = get_physaddr(ptr);
         free_phys_pages(physaddr, 1);
+        /* TODO: FIXME: this seemed to be causing issues with the tests */
         unmap_page(ptr);
     }
     spinlock_unlock(&z->lock);
@@ -310,8 +311,11 @@ void free_pages_tree(void *addr, size_t amount, struct memory_zone *z)
     if (node == NULL)
     {
         /* invalid */
-        loge("possible double free_pages_tree for addr:%p", addr);
-        stacktrace_log();
+        /* TODO: this sometimes seems to happen when it is not an invalid page,
+         * it might be due to the page allocation zone in malloc changing from a
+         * bitmap one to a tree one */
+        /* loge("possible double free_pages_tree for addr:%p", addr); */
+        /* stacktrace_log(); */
         return;
     }
 

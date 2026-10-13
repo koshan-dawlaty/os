@@ -25,7 +25,7 @@ volatile size_t default_memory_regions_len = 0;
 #endif
 
 #define CONVERT_PHYSADDR(addr)                                                 \
-    (void *)(((void *)addr) - ((void *)KERNEL_VIRTUAL_OFFSET))
+    (void *)(((ptr_t)addr) - ((ptr_t)KERNEL_VIRTUAL_OFFSET))
 
 void __section(".multiboot.text") __no_ssp
     multiboot_test(struct multiboot_info *info, ptr_t magic)
@@ -55,7 +55,8 @@ void __section(".multiboot.text") __no_ssp
         {
             struct memory_region *memory_regions_ptr =
                 CONVERT_PHYSADDR(&memory_regions);
-            size_t *length_ptr = CONVERT_PHYSADDR(&default_memory_regions_len);
+            size_t *length_ptr =
+                CONVERT_PHYSADDR((void *)&default_memory_regions_len);
             (*length_ptr)++;
 
             memory_regions_ptr[(*length_ptr) - 1] = (struct memory_region){

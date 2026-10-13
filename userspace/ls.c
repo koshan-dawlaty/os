@@ -1,24 +1,20 @@
-#include "lib/log.h"
 #include <dirent.h>
 #include <err_ptr.h>
 #include <errno.h>
-#include <init.h>
+#include <lib/log.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <types.h>
 
 int main(int argc, char **argv)
 {
-
-    init_libc();
 
     /* printf("%p\n", malloc(4095)); */
     /* printf("%p\n", malloc(4095)); */
 
     /* exit(0); */
-
-    printf("\n");
 
     const char *path = ".";
     if (argc >= 2)
@@ -46,7 +42,4 @@ int main(int argc, char **argv)
 
         /* printf("%p\n", malloc(10)); */
     }
-    printf("\n\n");
-
-    exit(0);
 }

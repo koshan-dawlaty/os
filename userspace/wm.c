@@ -23,6 +23,7 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <userspace/keyboard.h>
 #include <userspace/mouse.h>
 #include <userspace/syscall_wrappers.h>
 
@@ -34,12 +35,12 @@ struct wm_connection
 
     int shared_mem_id;
 
-    bool updated_mouse;
-
     void *buffer;
 };
 
 struct PSF_font *font;
+
+struct keyboard *keyboard;
 
 struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf,
                                           int mem_id)
@@ -47,7 +48,6 @@ struct wm_connection *wm_connection_alloc(int client_socket, void *client_buf,
     struct wm_connection *conn = malloc(sizeof(struct wm_connection));
 
     conn->client_socket = client_socket;
-    conn->updated_mouse = false;
     conn->input_socket = socket_create();
     conn->buffer = client_buf;
     conn->shared_mem_id = mem_id;
@@ -324,42 +324,85 @@ void move_window_step(struct window_queue_entry *ent, int x, int y,
     }
 }
 
-#define WINDOW_DECORATION_ROWS 14
-/* #define WINDOW_CLOSE_WIDTH 15 */
+#define WINDOW_DECORATION_TOP_HEIGHT 14
+#define WINDOW_DECORATION_BOTTOM_HEIGHT 4
+#define WINDOW_DECORATION_LEFT_WIDTH 4
+#define WINDOW_DECORATION_RIGHT_WIDTH 4
 #define WINDOW_CLOSE_WIDTH 20
 #define WINDOW_CLOSE_OFFSET 1
 
 static void draw_window_decoration(struct window *win, bool focused)
 {
+    u32 color;
     if (focused)
     {
-        framebuffer_draw_rect(&win->fb, 0, 0, win->fb.width,
-                              WINDOW_DECORATION_ROWS, 0x3933e8);
+        color = 0x0054ff;
     }
     else
     {
-        framebuffer_draw_rect(&win->fb, 0, 0, win->fb.width,
-                              WINDOW_DECORATION_ROWS, 0x28249e);
+        color = 0x2a4170;
     }
+    framebuffer_draw_rect(&win->fb, WINDOW_DECORATION_LEFT_WIDTH, 0,
+                          win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
+                              WINDOW_DECORATION_LEFT_WIDTH,
+                          WINDOW_DECORATION_TOP_HEIGHT, color);
+    framebuffer_draw_rect(&win->fb, 0, 0, WINDOW_DECORATION_LEFT_WIDTH,
+                          win->fb.height, color);
 
-    framebuffer_draw_char(&win->fb, font, 'X', WINDOW_CLOSE_OFFSET, 0);
+    framebuffer_draw_rect(&win->fb,
+                          win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH, 0,
+                          WINDOW_DECORATION_RIGHT_WIDTH, win->fb.height, color);
+
+    framebuffer_draw_rect(&win->fb, WINDOW_DECORATION_LEFT_WIDTH,
+                          win->fb.height - WINDOW_DECORATION_BOTTOM_HEIGHT,
+                          win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
+                              WINDOW_DECORATION_LEFT_WIDTH,
+                          WINDOW_DECORATION_BOTTOM_HEIGHT, color);
+
+    framebuffer_draw_char(&win->fb, font, 'X',
+                          WINDOW_CLOSE_OFFSET + WINDOW_DECORATION_LEFT_WIDTH,
+                          0);
 
     /* draw 'x' pattern for closing a window */
     /* for (size_t y = 0, x = 0; */
-    /*      y < WINDOW_DECORATION_ROWS && x < WINDOW_CLOSE_WIDTH; y++) */
+    /*      y < WINDOW_DECORATION_TOP_HEIGHT && x < WINDOW_CLOSE_WIDTH; y++) */
     /* { */
     /*     framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y); */
     /*     x++; */
     /* } */
 
-    /* for (size_t y = WINDOW_DECORATION_ROWS, x = 0; */
+    /* for (size_t y = WINDOW_DECORATION_TOP_HEIGHT, x = 0; */
     /*      y >= 0 && x < WINDOW_CLOSE_WIDTH + 1; y--) */
     /* { */
     /*     framebuffer_put_pixel(&win->fb, 0xFFFFFF, x, y); */
     /*     x++; */
     /* } */
+    update_area_up(RECT_INIT(WIN_X(win) + WINDOW_DECORATION_LEFT_WIDTH,
+                             WIN_Y(win),
+                             win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
+                                 WINDOW_DECORATION_LEFT_WIDTH,
+                             WINDOW_DECORATION_TOP_HEIGHT),
+                   buffer);
+    update_area_up(RECT_INIT(WIN_X(win), WIN_Y(win),
+                             WINDOW_DECORATION_LEFT_WIDTH, win->fb.height),
+                   buffer);
+
     update_area_up(
-        RECT_INIT(WIN_X(win), WIN_Y(win), WIN_W(win), WINDOW_DECORATION_ROWS),
+        RECT_INIT(WIN_X(win) + win->fb.width + WINDOW_DECORATION_LEFT_WIDTH,
+                  WIN_Y(win), WINDOW_DECORATION_RIGHT_WIDTH, win->fb.height),
+        buffer);
+
+    update_area_up(
+        RECT_INIT(WIN_X(win) + win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH,
+                  WIN_Y(win), WINDOW_DECORATION_RIGHT_WIDTH, win->fb.height),
+        buffer);
+
+    update_area_up(
+        RECT_INIT(WIN_X(win) + WINDOW_DECORATION_LEFT_WIDTH,
+                  WIN_Y(win) + win->fb.height - WINDOW_DECORATION_BOTTOM_HEIGHT,
+                  win->fb.width - WINDOW_DECORATION_RIGHT_WIDTH -
+                      WINDOW_DECORATION_LEFT_WIDTH,
+                  WINDOW_DECORATION_BOTTOM_HEIGHT),
         buffer);
 }
 
@@ -413,10 +456,14 @@ struct window *new_client_window(size_t x, size_t y, size_t w, size_t h)
     out->y = y;
 
     /* allocate extra space for decorations */
-    size_t height = h + WINDOW_DECORATION_ROWS;
+    size_t height =
+        h + WINDOW_DECORATION_TOP_HEIGHT + WINDOW_DECORATION_BOTTOM_HEIGHT;
+    size_t width =
+        w + WINDOW_DECORATION_LEFT_WIDTH + WINDOW_DECORATION_RIGHT_WIDTH;
     /* the shared memory buffer could be used here, but the way it works
      * now, it will break window decorations */
-    out->fb = FRAMEBUFFER_INIT(w, height, w * 4, 32, 4, malloc(w * height * 4));
+    out->fb = FRAMEBUFFER_INIT(width, height, width * 4, 32, 4,
+                               malloc(width * height * 4));
 
     return out;
 }
@@ -494,7 +541,7 @@ int current_client = 1;
 int current_key_socket;
 
 size_t y = 10;
-size_t x = 400;
+size_t x = 10;
 
 size_t num_connections = 0;
 
@@ -505,6 +552,31 @@ void server_send_message(struct wm_connection *conn, struct wm_message *message)
     send(conn->client_key_socket, &message->header,
          sizeof(struct wm_message_header));
     send(conn->client_key_socket, message->message_data, message->header.len);
+}
+
+static void window_render_from_buffer(struct window_queue_entry *ent)
+{
+    struct window *w = ent->win;
+    for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_TOP_HEIGHT -
+                            WINDOW_DECORATION_BOTTOM_HEIGHT);
+         y++)
+    {
+        size_t server_offset =
+            (y + WINDOW_DECORATION_TOP_HEIGHT) * WIN_W(w) * 4 +
+            (WINDOW_DECORATION_LEFT_WIDTH * 4);
+        size_t client_offset = y *
+                               (WIN_W(w) - WINDOW_DECORATION_LEFT_WIDTH -
+                                WINDOW_DECORATION_RIGHT_WIDTH) *
+                               4;
+
+        memcpy(w->fb.buffer + server_offset, ent->conn->buffer + client_offset,
+               (WIN_W(w) - WINDOW_DECORATION_RIGHT_WIDTH -
+                WINDOW_DECORATION_LEFT_WIDTH) *
+                   4);
+        /* logd("%d", y); */
+    }
+
+    update_area_up(WIN_RECT(w), buffer);
 }
 
 void process_connection()
@@ -531,9 +603,9 @@ void process_connection()
         wm_connection_alloc(socket, client_buf, mem_id);
     conn->client_key_socket = key_socket;
 
-    struct window *w = new_client_window(x, y, win_info.width, win_info.height);
-    /* y += win_info.height - 30; */
-    /* x += 40; */
+    struct window *w = new_client_window(0, 0, win_info.width, win_info.height);
+    /* y += 10; */
+    /* x += 10; */
 
     struct window_queue_entry *ent = malloc(sizeof(struct window_queue_entry));
     ent->list = LIST_INIT();
@@ -542,17 +614,28 @@ void process_connection()
     ent->nonblock_info.is_nonblock = win_info.is_nonblock;
     ent->nonblock_info.current_key = 0;
 
-    user_mutex_lock(window_queue_mutex);
-    list_add_after(&ent->list, window_queue.next);
-    user_mutex_unlock(window_queue_mutex);
     if (win_info.auto_foucs)
     {
+        user_mutex_lock(window_queue_mutex);
+        list_push(&ent->list, &window_queue);
+        user_mutex_unlock(window_queue_mutex);
+
         change_focus(ent);
     }
-
-    if (num_connections < 1)
+    else
     {
-        focused = ent;
+        user_mutex_lock(window_queue_mutex);
+        list_add_after(&ent->list, window_queue.next);
+        user_mutex_unlock(window_queue_mutex);
+        if (num_connections < 1)
+        {
+            focused = ent;
+            draw_window_decoration(w, true);
+        }
+        else
+        {
+            draw_window_decoration(w, false);
+        }
     }
 
     num_connections++;
@@ -566,17 +649,8 @@ void process_connection()
         case WM_RES_RENDER:
         {
 
-            for (size_t y = 0; y < (WIN_H(w) - WINDOW_DECORATION_ROWS); y++)
-            {
-                size_t server_offset =
-                    (y + WINDOW_DECORATION_ROWS) * WIN_W(w) * 4;
-                size_t client_offset = y * WIN_W(w) * 4;
+            window_render_from_buffer(ent);
 
-                memcpy(w->fb.buffer + server_offset, client_buf + client_offset,
-                       WIN_W(w) * 4);
-            }
-
-            update_area_up(WIN_RECT(w), buffer);
             /* draw_window(buffer, ent->win); */
 
             int ack_code = 3;
@@ -587,6 +661,64 @@ void process_connection()
             }
 
             /* draw_window(buffer, w); */
+            break;
+        }
+        case WM_RES_RENDER_PARTIAL:
+        {
+            struct rect r = {};
+            recv(socket, &r, sizeof(struct rect));
+
+            size_t real_w = WIN_W(w) - WINDOW_DECORATION_LEFT_WIDTH -
+                            WINDOW_DECORATION_RIGHT_WIDTH;
+            size_t real_h = WIN_H(w) - WINDOW_DECORATION_TOP_HEIGHT -
+                            WINDOW_DECORATION_BOTTOM_HEIGHT;
+
+            if (r.x > real_w || r.y > real_h)
+            {
+                break;
+            }
+
+            if (real_w < r.x + r.w)
+            {
+                r.w = real_w - r.x;
+            }
+            if (real_h < r.y + r.h)
+            {
+                r.h = real_h - r.y;
+            }
+            /* logd("%d, %d %d, %d", r.x, r.y, r.w, r.h); */
+
+            // framebuffer_draw_rect(buffer, r.x + WIN_X(w), r.y + WIN_Y(w),
+            // r.w,
+            //                      r.h, 0xFFFF00);
+
+            /* logd("%d", r.x); */
+            for (size_t y = r.y; y < r.h + r.y; y++)
+            {
+                size_t server_offset =
+                    ((y + WINDOW_DECORATION_TOP_HEIGHT) * WIN_W(w) * 4) +
+                    ((r.x + WINDOW_DECORATION_LEFT_WIDTH) * 4);
+                size_t client_offset = (y * real_w * 4) + (r.x * 4);
+
+                memcpy(w->fb.buffer + server_offset,
+                       conn->buffer + client_offset, (r.w) * 4);
+                /* memset(w->fb.buffer + server_offset, 0xFF, (r.w) * 4); */
+            }
+
+            /* r.y += WINDOW_DECORATION_TOP_HEIGHT; */
+            struct rect update_area = {
+                r.x + WIN_X(w) + WINDOW_DECORATION_LEFT_WIDTH,
+                r.y + WIN_Y(w) + WINDOW_DECORATION_TOP_HEIGHT, r.w, r.h};
+            update_area_up(update_area, buffer);
+            /* update_area_up(WIN_RECT(w), buffer); */
+
+            int ack_code = 3;
+            int retval = send(socket, &ack_code, sizeof(int));
+            if (retval == -ENOTSOCK)
+            {
+                goto disconnect;
+            }
+
             break;
         }
 
@@ -673,6 +805,8 @@ disconnect:;
 
     update_area_up(old_area, buffer);
 
+    close(conn->client_key_socket);
+
     while (1)
     {
         sched_yield(); /* need something like task hierarchy for this to work,
@@ -682,23 +816,38 @@ disconnect:;
     exit(1);
 }
 
+static size_t win_get_buffer_width(struct window *win)
+{
+    /* breaks for things like the mouse */
+    return win->fb.width - WINDOW_DECORATION_LEFT_WIDTH -
+           WINDOW_DECORATION_RIGHT_WIDTH;
+}
+
+static size_t win_get_buffer_height(struct window *win)
+{
+    /* breaks for things like the mouse */
+    return win->fb.height - WINDOW_DECORATION_BOTTOM_HEIGHT -
+           WINDOW_DECORATION_TOP_HEIGHT;
+}
+
 static int resize_window(struct window_queue_entry *ent, int width_diff,
                          int height_diff)
 {
-    logd("%d", width_diff);
-    size_t old_height = WIN_H(ent->win) - WINDOW_DECORATION_ROWS;
+    size_t old_height = WIN_H(ent->win);
     size_t old_width = WIN_W(ent->win);
 
     size_t new_height = old_height + height_diff;
     size_t new_width = old_width + width_diff;
 
-    size_t old_size = old_width * (old_height + WINDOW_DECORATION_ROWS) * 4;
-    size_t new_size = new_width * (new_height + WINDOW_DECORATION_ROWS) * 4;
+    size_t old_size = old_width * (old_height) * 4;
+    size_t new_size = new_width * (new_height) * 4;
 
-    logd("old w:%d h:%d new w:%d h:%d", old_width, old_height, new_width,
-         new_height);
+    size_t new_buffer_width = new_width - WINDOW_DECORATION_LEFT_WIDTH -
+                              WINDOW_DECORATION_RIGHT_WIDTH;
+    size_t new_buffer_height = new_height - WINDOW_DECORATION_TOP_HEIGHT -
+                               WINDOW_DECORATION_BOTTOM_HEIGHT;
 
-    struct wm_message_resize resize = {new_width, new_height};
+    struct wm_message_resize resize = {new_buffer_width, new_buffer_height};
     struct wm_message message = {
         WM_MESSAGE_RESIZE_HEADER,
         .message_data = &resize,
@@ -707,14 +856,29 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     shared_mem_resize(ent->conn->shared_mem_id, new_size, &new_addr);
     if (new_addr == NULL)
     {
-        new_addr = ent->win->fb.buffer;
+        new_addr = ent->conn->buffer;
     }
-    logd("new addr is %p", new_addr);
     server_send_message(ent->conn, &message);
+
+    framebuffer_resize(win_get_buffer_width(ent->win),
+                       win_get_buffer_height(ent->win), new_buffer_width,
+                       new_buffer_height, ent->conn->buffer, new_addr);
+
+    ent->conn->buffer = new_addr;
+    /* ent->win->fb.buffer = new_addr; */
+    ent->win->fb.buffer =
+        realloc(ent->win->fb.buffer, new_height * new_width * 4);
+    ent->win->fb.height = new_height;
+    ent->win->fb.width = new_width;
+    ent->win->fb.pitch = new_width * 4;
+
+    /* for (size_t i = 0; i < 100; i++) */
+    /* { */
+    /*     sched_yield(); */
+    /* } */
 
     int ack_code;
     recv(ent->conn->client_key_socket, &ack_code, sizeof(int));
-
     if (ack_code != 123)
     {
         /* FIXME: shouldn't panic, but instead disconnect from client */
@@ -723,17 +887,7 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
         return -EINVAL;
     }
 
-    /* for (size_t i = 0; i < 100; i++) */
-    /* { */
-    /*     sched_yield(); */
-    /* } */
-
-    ent->win->fb.buffer = new_addr;
-    framebuffer_resize(&ent->win->fb, new_width, new_height,
-                       ent->win->fb.buffer);
-    ent->win->fb.height = new_height + WINDOW_DECORATION_ROWS;
-    ent->win->fb.width = new_width;
-    ent->win->fb.pitch = new_width * 4;
+    window_render_from_buffer(ent);
 
     /* framebuffer_draw_rect(&ent->win->fb, 0, 0, ent->win->fb.width, */
     /*                       ent->win->fb.height, 0xFF); */
@@ -744,8 +898,8 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
             .x = WIN_X(ent->win),
             .y = WIN_Y(ent->win),
 
-            .w = new_width,
-            .h = new_height + WINDOW_DECORATION_ROWS,
+            .w = MAX(old_width, new_width),
+            .h = MAX(old_height, new_height),
 
         },
         buffer);
@@ -755,50 +909,75 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     return 0;
 }
 
-int drag_count = 0;
+int hold_count = 0;
+
+bool is_moving_window = false;
+struct window_queue_entry *moving_window = NULL;
+bool right_click_is_held = false;
+int x_resize_start;
+int y_resize_start;
 
 static void process_mouse(struct mouse_event *ev)
 {
     if (focused != NULL)
     {
 
-        struct mouse_event ev2 = *ev;
-        if (!focused->conn->updated_mouse)
-        {
-
-            int change_x = WIN_X(mouse_queue_ent->win) - WIN_X(focused->win);
-            int change_y = WIN_Y(mouse_queue_ent->win) - WIN_Y(focused->win);
-            /* logd("change_x:%d, %d", change_x, change_y); */
-            ev2.x_change += change_x;
-            ev2.y_change += change_y;
-
-            focused->conn->updated_mouse = true;
-        }
+        int change_x = WIN_X(mouse_queue_ent->win) -
+                       (WIN_X(focused->win) + WINDOW_DECORATION_LEFT_WIDTH);
+        int change_y = WIN_Y(mouse_queue_ent->win) -
+                       (WIN_Y(focused->win) + WINDOW_DECORATION_TOP_HEIGHT);
 
         struct wm_message message = {
 
             .header = WM_MESSAGE_MOUSE_HEADER,
-            .message_data =
-                &ev2, /* this is fine as server_send_message should not do
-                       anything with this other than send it to the kernel */
+            /* FIXME: the member names in struct mouse_event do not convey that
+               these are absolute positions */
+            .message_data = &(struct mouse_event){change_x, change_y,
+                                                  ev->buttons, ev->scroll},
         };
         server_send_message(focused->conn, &message);
     }
 
     move_window(mouse_queue_ent, ev->x_change, ev->y_change, buffer);
 
+    if (right_click_is_held && !ev->buttons.right_click && focused != NULL)
+    {
+        resize_window(focused, mouse->x - x_resize_start,
+                      mouse->y - y_resize_start);
+    }
+    else if (!right_click_is_held && ev->buttons.right_click)
+    {
+        x_resize_start = mouse->x;
+        y_resize_start = mouse->y;
+    }
+    right_click_is_held = ev->buttons.right_click;
+
+    /* stupid */
+    if (is_moving_window)
+    {
+        move_window(moving_window, ev->x_change, ev->y_change, buffer);
+    }
+
     if (ev->buttons.left_click)
     {
 
-        if (drag_count > 3)
+        if (hold_count > 3)
         {
             if (focused != NULL)
             {
-                move_window(focused, ev->x_change, ev->y_change, buffer);
+                if (WIN_X(mouse) > WIN_X(focused->win) &&
+                    WIN_Y(mouse) > WIN_Y(focused->win) &&
+                    WIN_X(mouse) < WIN_X(focused->win) + WIN_W(focused->win) &&
+                    WIN_Y(mouse) <
+                        WIN_Y(focused->win) + WINDOW_DECORATION_TOP_HEIGHT)
+                {
+                    is_moving_window = true;
+                    moving_window = focused;
+                }
             }
         }
 
-        drag_count++;
+        hold_count++;
 
         /* TODO: this should be its own function that traverses the list
          * backwards */
@@ -814,6 +993,7 @@ static void process_mouse(struct mouse_event *ev)
 
         for (pos = prev; pos != &window_queue; pos = pos->prev)
         {
+            /* execv("/bin/term", (char *[]){"term", NULL}); */
 
             struct window_queue_entry *queue_ent =
                 LIST_ENTRY(pos, struct window_queue_entry, list);
@@ -844,9 +1024,11 @@ static void process_mouse(struct mouse_event *ev)
             struct window *win = new_focus->win;
 
             if (WIN_X(mouse) > WIN_X(win) &&
-                WIN_X(mouse) < WIN_X(win) + WINDOW_CLOSE_WIDTH &&
+                WIN_X(mouse) < WIN_X(win) + WINDOW_CLOSE_WIDTH +
+                                   WINDOW_DECORATION_LEFT_WIDTH +
+                                   WINDOW_CLOSE_OFFSET &&
                 WIN_Y(mouse) > WIN_Y(win) &&
-                WIN_Y(mouse) < WIN_Y(win) + WINDOW_DECORATION_ROWS)
+                WIN_Y(mouse) < WIN_Y(win) + WINDOW_DECORATION_TOP_HEIGHT)
             {
                 close(new_focus->conn->client_socket);
             }
@@ -858,87 +1040,60 @@ static void process_mouse(struct mouse_event *ev)
     }
     else
     {
-        drag_count = 0;
+        hold_count = 0;
+        is_moving_window = false;
+        moving_window = NULL;
     }
 }
 
-static void process_keyboard(char c)
+static void process_keyboard_char(char c)
 {
-    if (c == '\\')
+    if (focused != NULL)
     {
-        if (focused != NULL)
+        switch (c)
         {
-            close(focused->conn->client_socket);
-            /* close(focused->conn->client_key_socket); */ /* TODO: causes
-                                                              issues */
-        }
-    }
-    /* else if (c == 'a' && focused != NULL) */
-    /* { */
-    /*     resize_window(focused, 10, 0); */
-    /* } */
-    else if (c == 'R')
-    {
-        execv("/bin/run", (char *const[]){"run", NULL});
-    }
-    else if (c == '\t')
-    {
-        struct list *next = window_queue.next->next;
-        if (focused != NULL)
-        {
-            struct list *next = focused->list.next;
-        }
-        if (next == &window_queue)
-        {
-            next = window_queue.next->next;
-        }
-        struct window_queue_entry *ent =
-            containerof(next, struct window_queue_entry, list);
-
-        if (ent->win == mouse)
-        {
-            ent = containerof(window_queue.next->next,
-                              struct window_queue_entry, list);
-        }
-        if (ent == background_queue_ent)
-        {
-            ent = containerof(window_queue.next->next,
-                              struct window_queue_entry, list);
+        /* case 'h': */
+        /*     resize_window(focused, 10, 10); */
+        /*     break; */
+        case 'l':
+            /* resize_window(focused, -100, 0); */
+            /* return; */
+            break;
+        /* case 'j': */
+        /*     resize_window(focused, 0, 10); */
+        /*     break; */
+        /* case 'k': */
+        /*     resize_window(focused, 0, -10); */
+        /*     break; */
+        default:;
         }
 
-        if (ent->win != mouse && ent != background_queue_ent) /* stupid */
+        if (focused->nonblock_info.is_nonblock)
         {
-            change_focus(ent);
+            focused->nonblock_info.current_key = c;
         }
-    }
-    else
-    {
-        if (focused != NULL)
+        else
         {
-            if (focused->nonblock_info.is_nonblock)
-            {
-                focused->nonblock_info.current_key = c;
-            }
-            else
-            {
-                struct wm_connection *conn = focused->conn;
-                current_keyboard_char = c;
+            struct wm_connection *conn = focused->conn;
+            current_keyboard_char = c;
 
-                struct wm_message message = {
-                    .header = WM_MESSAGE_KEY_HEADER,
-                    .message_data = &c,
-                };
-                server_send_message(conn, &message);
-                /* send(conn->client_key_socket, &c, sizeof(char)); */
-            }
+            struct wm_message message = {
+                .header = WM_MESSAGE_KEY_HEADER,
+                .message_data = &c,
+            };
+            server_send_message(conn, &message);
+            /* send(conn->client_key_socket, &c, sizeof(char)); */
         }
     }
 }
 
 void input_thread()
 {
+    keyboard = userspace_keyboard_alloc("/dev/keyboard");
     int mouse_fd = open("/dev/mouse", O_RDONLY);
-    int keyboard_fd = 0; /* TODO: make this use the keyboard device instead */
+    int keyboard_fd =
+        keyboard
+            ->keyboard_fd; /* TODO: make this use the keyboard device instead */
     int fds[] = {mouse_fd, keyboard_fd};
     struct mouse_event *ev = malloc(sizeof(struct mouse_event));
     while (true)
@@ -946,14 +1101,70 @@ void input_thread()
         int fd = poll(fds, 2);
         if (fd == keyboard_fd)
         {
-            char c;
-            int err = read(0, &c, 1);
+            u8 scancode;
+            int err = read(keyboard_fd, &scancode, 1);
             if (err < 0)
             {
                 PANIC("error reading from keyboard %s", strerror(err));
             }
 
-            process_keyboard(c);
+            char c = userspace_keyboard_process_scancode(keyboard, scancode);
+            /* logd("%d,%d,%p", keyboard->shift_pressed,
+             * keyboard->control_pressed, */
+            /*      c); */
+
+            if (keyboard->control_pressed)
+            {
+                if (c == 'r')
+                {
+                    execv("/bin/run", (char *const[]){"run", NULL});
+                }
+                else if (c == 'q')
+                {
+
+                    if (focused != NULL)
+                    {
+                        close(focused->conn->client_socket);
+                        /* TODO: causes issues */
+                        /* close(focused->conn->client_key_socket); */
+                    }
+                }
+                else if (c == '\t')
+                {
+                    struct list *next = window_queue.next->next;
+                    if (focused != NULL)
+                    {
+                        struct list *next = focused->list.next;
+                    }
+                    if (next == &window_queue)
+                    {
+                        next = window_queue.next->next;
+                    }
+                    struct window_queue_entry *ent =
+                        containerof(next, struct window_queue_entry, list);
+
+                    if (ent->win == mouse)
+                    {
+                        ent = containerof(window_queue.next->next,
+                                          struct window_queue_entry, list);
+                    }
+                    if (ent == background_queue_ent)
+                    {
+                        ent = containerof(window_queue.next->next,
+                                          struct window_queue_entry, list);
+                    }
+
+                    if (ent->win != mouse &&
+                        ent != background_queue_ent) /* stupid */
+                    {
+                        change_focus(ent);
+                    }
+                }
+            }
+            else if (!USERSPACE_KEYBOARD_INVALID_CHAR(c))
+            {
+                process_keyboard_char(c);
+            }
         }
         else if (fd == mouse_fd)
         {
@@ -991,7 +1202,12 @@ void thread1()
 
 int main()
 {
-    init_libc();
+    /* int fd = open("/one", O_RDONLY); */
+    /* char buf[100]; */
+    /* read(fd, buf, 100); */
+    /* logd("%s", buf); */
+    /* clone((ptr_t)thread1); */
+    /* exit(0); */
 
     /* char c = getchar(); */
     /* logd("%c", c); */
@@ -1065,6 +1281,24 @@ int main()
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
     /* execv("imgview", (char *[]){"imgview", "osdev.tga", NULL}); */
+
+    /* for (size_t i = 0; i < 10; i++) */
+    /* { */
+    /*     execv("/bin/term", (char *[]){"term", NULL}); */
+    /* } */
+
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    /* execv("/bin/term", (char *[]){"term", NULL}); */
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    /* execv("/bin/paint", (char *[]){"paint", NULL}); */
+    /* execv("/bin/term", (char *[]){"term", NULL}); */
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    /* execv("/bin/term", (char *[]){"term", NULL}); */
+
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    /* execv("/bin/explore", (char *[]){"explore", NULL}); */
+    /* execv("/bin/edit", (char *[]){"edit", "one", NULL}); */
+    /* execv("/bin/sokoban", (char *[]){"", NULL}); */
     /* execv("/bin/explore", (char *[]){"explore", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/render_test", (char *[]){"/bin/render_test", NULL}); */
@@ -1078,7 +1312,6 @@ int main()
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
 
-    /* execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
     /* execv("/bin/imgview", (char *[]){"imgview", "dog2.tga", NULL}); */
 
     /* execv("imgview", (char *[]){"imgview", "dog.tga", NULL}); */
@@ -1088,6 +1321,11 @@ int main()
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("/elf_test", (char *[]){"elf_test", NULL}); */
     /* execv("tron", (char *[]){"imgview", "osdev.tga", NULL}); */
+
+    /* for (size_t i = 0; i < 20; i++) */
+    /* { */
+    /*     execv("/bin/imgview", (char *[]){"imgview", "dog.tga", NULL}); */
+    /* } */
 
     while (true)
     {
@@ -1101,7 +1339,6 @@ int main()
 
         clone((ptr_t)(process_connection));
     }
-    /* process_connection(client_sock); */
 
     exit(0);
 }

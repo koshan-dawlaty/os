@@ -85,7 +85,7 @@ struct tmpfs_node *tmpfs_node_alloc_dir(const char *name,
     return out;
 }
 
-struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, const char *name,
+struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, char *name,
                                    enum dentry_type type, struct superblock *sb)
 {
     struct tmpfs_node *parent = TMPFS_NODE(vfs_parent->inode);
@@ -110,10 +110,9 @@ struct dentry *tmpfs_dentry_append(struct dentry *vfs_parent, const char *name,
     struct inode *inode_new =
         new_inode(TMPFS_SB(sb)->inode_count++, 0, node, sb);
     TMPFS_SB(sb)->inode_count++;
-    /*TODO: cast discards qualifiers */
     dentry_get(vfs_parent);
     struct dentry *entry_new =
-        new_dentry(strdup((char *)name), vfs_parent, inode_new, type);
+        new_dentry(strdup(name), vfs_parent, inode_new, type);
 
     /* if (parent->dir_head == NULL) */
     /* { */
@@ -218,6 +217,8 @@ dentry *tmpfs_mount(struct bdev *dev)
     /* assume that the caller wants to create a new filesystem */
     struct superblock *sb = tmpfs_parse_superblock(dev);
     struct tmpfs_node *node =
+        /* FIXME: this is kind of stupid, as it assumes that the vfs will ignore
+           a file called "." */
         tmpfs_node_alloc_dir(strdup("."), TMPFS_NODE_DIR, sb);
     struct inode *root = new_inode(TMPFS_SB(sb)->inode_count, 0, node, sb);
     TMPFS_SB(sb)->inode_count++;
@@ -232,7 +233,7 @@ int tmpfs_dentry_remove(dentry *parent, char *name, superblock *sb)
     ASSERT(node->type == TMPFS_NODE_DIR,
            "tmpfs_remove_dentry needs a directory passed as the dentry");
 
-    list2 *pos;
+    struct list2 *pos;
     list1_old_for_each(pos, node->dir_head)
     {
         struct tmpfs_node *current = LIST_ENTRY(pos, struct tmpfs_node, list);

@@ -35,7 +35,7 @@ void wait_semaphore(semaphore *s)
 
         struct task *current = get_current_task();
 
-        save_registers(&current->regs);
+        /* save_registers(&current->regs); */
         remove_task_add_queue(current, &s->queue);
     }
 

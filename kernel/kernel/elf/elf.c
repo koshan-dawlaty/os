@@ -1,3 +1,4 @@
+#include "err_ptr.h"
 #include "fcntl.h"
 #include "gdt.h"
 #include "kernel/addr_space.h"
@@ -17,8 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-/* TODO: delete this */
-extern struct pagedir init_pgdir;
 
 void free_elf(elf *elf)
 {
@@ -40,7 +39,9 @@ elf *parse_elf(int fd)
 struct task *load_elf(elf *elf, int argc, char **argv)
 {
 
-    struct task *t = new_task_user(elf->entry_point, 0xBFFEF000, argc, argv);
+    int err;
+
+    struct task *t = user_task_alloc(elf->entry_point, 0xBFFEF000, argc, argv);
 
     for (size_t j = 0; j < elf->program_headers_len; j++)
     {
@@ -58,9 +59,14 @@ struct task *load_elf(elf *elf, int argc, char **argv)
                  i += PAGE_SIZE)
             {
 
-                addr_space_map(&t->addr_space,
-                               (void *)(header->virtual_addr + i), 1,
-                               PAGING_PRESENT | PAGING_USER | PAGING_PRESENT);
+                err = addr_space_map(
+                    t->addr_space, (void *)(header->virtual_addr + i), 1,
+                    PAGING_PRESENT | PAGING_USER | PAGING_PRESENT);
+                if (IS_ERR(err))
+                {
+                    logw("addr_space_map failed when loading elf");
+                    return ERR_PTR(err);
+                }
 
                 /*
 write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
@@ -76,7 +82,7 @@ write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
 
             irq_state_t state = irq_save_disable();
             struct pagedir *temp_pgdir = get_current_pagedir();
-            addr_space_load(&t->addr_space);
+            addr_space_load(t->addr_space);
             if (header->size_memory > header->size_file)
             {
                 for (size_t i = 0; i < header->size_memory - header->size_file;
@@ -103,7 +109,7 @@ write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
         }
     }
 
-    create_userspace_stack(&t->addr_space);
+    create_userspace_stack(t->addr_space);
 
     /* *(char ***)(0xBFFEF000 + sizeof(ptr)) = args; */
     /* *(int *)(0xBFFEF000) = argc; */

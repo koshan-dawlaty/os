@@ -1,7 +1,7 @@
 #ifndef KERNEL_LOG_H
 #define KERNEL_LOG_H
 
-#if defined(CONFIG_LOG) && !defined(TESTS)
+#if defined(CONFIG_LOG)
 #define SHOULD_LOG
 #endif
 
@@ -13,11 +13,7 @@ struct log_level
 {
     const char *str;
     const u32 priority; /* 0 is lowest */
-    struct
-    {
-        bool is_multiline : 1;
-        bool multiline_ : 1;
-    };
+    int multiline_count;
 };
 
 void vlog_level(struct log_level level, const char *str, va_list parameters);
@@ -32,12 +28,12 @@ static inline void log_level(struct log_level level, const char *str, ...)
 }
 
 #define LOG_LEVEL_INIT(_str, p)                                                \
-    ((struct log_level){.str = _str, .priority = p, .is_multiline = false})
+    ((struct log_level){.str = _str, .priority = p, .multiline_count = 0})
 
-static struct log_level LOG_DEBUG = LOG_LEVEL_INIT("DEBUG", 3);
-static struct log_level LOG_INFO = LOG_LEVEL_INIT("INFO", 3);
-static struct log_level LOG_WARN = LOG_LEVEL_INIT("WARN", 3);
-static struct log_level LOG_ERROR = LOG_LEVEL_INIT("ERROR", 3);
+extern struct log_level LOG_DEBUG;
+extern struct log_level LOG_INFO;
+extern struct log_level LOG_WARN;
+extern struct log_level LOG_ERROR;
 #define LOG_DEFAULT LOG_DEBUG
 
 #define LOG_PRIORITY_THRESHOLD LOG_DEFAULT

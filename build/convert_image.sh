@@ -1,3 +1,2 @@
 #!/bin/sh
-
-magick $1 -alpha set -compress None $2
+magick $1 -alpha set -compress None tga:$2

@@ -77,6 +77,7 @@ kernel/stack_trace.o \
 kernel/elf/elf.o \
 kernel/elf/elf32.o \
 kernel/elf/elf64.o \
+kernel/elf/simple_binary.o \
 kernel/scheduler/scheduler.o \
 kernel/scheduler/task_queue.o \
 kernel/scheduler/wait_queue.o \
@@ -89,6 +90,7 @@ kernel/graphics/graphics.o \
 kernel/multiboot.o \
 kernel/socket/socket.o \
 kernel/faults.o \
+kernel/timer.o \
 lib/binary_tree.o \
 lib/lru.o \
 lib/rc.o \
@@ -120,6 +122,7 @@ drivers/character/keyboard/device.o \
 drivers/device.o \
 \
 $(ACPI_OBJS_EXTRA)
+# drivers/character/network/e1000.o \
 
 
 
@@ -185,7 +188,7 @@ $(BIN)/kernel_symbols$(TEST_SUFFIX) : $(BIN)/os.kernel$(TEST_SUFFIX)
 
 $(BIN)/%.o$(TEST_SUFFIX): %.S
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+	$(AS) -MD -MF$(BIN)/$*.d -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
 $(BIN)/%.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)

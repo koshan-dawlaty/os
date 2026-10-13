@@ -1,7 +1,10 @@
 #include "pit.h"
+#include "kernel/timer.h"
+#include "lib/log.h"
 #include <compiler.h>
 #include <interrupts/idt.h>
 #include <interrupts/pic.h>
+#include <lib/list.h>
 #include <scheduler.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -40,6 +43,7 @@ void init_pit()
 }
 
 INT_HANDLER(pit_handler, {
+    timer_events_update();
     pit_time++;
     if (likely(is_scheduler_enabled()))
     {

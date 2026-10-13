@@ -1,5 +1,6 @@
 #include <kernel_syscall.h>
 #include <utils.h>
+#include <unistd.h>
 #ifdef __is_libk
 #include <scheduler.h>
 #endif

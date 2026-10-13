@@ -1,8 +1,11 @@
 #include "kernel/paging.h"
+#include "lib/log.h"
 #include "tests/tests.h"
 #include <memory/get_free_pages.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+/* #error "these tests seem to cause a page fault" */
 
 TEST(get_free_pages_test_basic, {
     int *one = get_free_pages(1);
@@ -24,8 +27,7 @@ TEST(get_free_pages_test_basic, {
     free_pages(three, 1);
 })
 
-test_result *get_free_pages_test_multiple_test()
-{
+TEST(get_free_pages_test_multiple, {
     int amount = 10;
     int size = 1;
     int **ptrs = malloc(amount * sizeof(void *));
@@ -46,10 +48,4 @@ test_result *get_free_pages_test_multiple_test()
         free_pages(ptrs[i], size);
     }
     return new_test_result(0, "");
-}
-__attribute__((constructor)) void
-get_free_pages_test_multiple_test_constructor()
-{
-    add_test(new_test("get_free_pages_test_multiple",
-                      get_free_pages_test_multiple_test));
-}
+})

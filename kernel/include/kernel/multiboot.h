@@ -8,6 +8,7 @@ struct memory_region
     size_t len;
 };
 
+#define DEFAULT_MEMORY_REGIONS_MAX 100
 extern struct memory_region memory_regions[];
 extern volatile size_t default_memory_regions_len;
 

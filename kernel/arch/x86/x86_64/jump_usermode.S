@@ -154,8 +154,8 @@ load_registers:
 	cli
 
 	mov %rdi, %rcx
-	mov 0xA8(%rdi), %rax
-	frstor (%rax) # TODO: 32 bit version
+	mov 0xa8(%rdi), %rax
+	frstor (%rax) # todo: 32 bit version
 
 	mov 0x60(%rcx), %rax 
 
@@ -179,7 +179,7 @@ load_registers:
 	mov 0x88(%rcx), %r12
 	mov 0x90(%rcx), %r13
 	mov 0x98(%rcx), %r14
-	mov 0xA0(%rcx), %r15
+	mov 0xa0(%rcx), %r15
 	mov 0x50(%rcx), %rcx
 
 	# pushf
@@ -189,3 +189,56 @@ load_registers:
 
 
 	ret
+
+
+# void switch_to(struct registers * prev, struct registers * current)
+.section .text
+.global switch_to_asm
+.type switch_to_asm @function
+switch_to_asm:
+
+    mov %rsp, 0(%rdi)
+    mov %rbx, 8(%rdi)
+    mov %rbp,16(%rdi)
+    mov %r12,24(%rdi)
+    mov %r13,32(%rdi)
+    mov %r14,40(%rdi)
+    mov %r15,48(%rdi)
+
+    mov 0(%rsi), %rsp
+    mov 8(%rsi), %rbx
+    mov 16(%rsi),%rbp
+    mov 24(%rsi),%r12
+    mov 32(%rsi),%r13
+    mov 40(%rsi),%r14
+    mov 48(%rsi),%r15
+
+	ret
+
+# void switch_to_arg(struct registers * prev, struct registers * current, ptr_t arg)
+.section .text
+.global switch_to_asm_arg
+.type switch_to_asm_arg @function
+switch_to_asm_arg:
+
+    mov %rsp, 0(%rdi)
+    mov %rbx, 8(%rdi)
+    mov %rbp,16(%rdi)
+    mov %r12,24(%rdi)
+    mov %r13,32(%rdi)
+    mov %r14,40(%rdi)
+    mov %r15,48(%rdi)
+
+    mov 0(%rsi), %rsp
+    mov 8(%rsi), %rbx
+    mov 16(%rsi),%rbp
+    mov 24(%rsi),%r12
+    mov 32(%rsi),%r13
+    mov 40(%rsi),%r14
+    mov 48(%rsi),%r15
+
+	# setup rdi for the function that this will return to
+	mov %rdx, %rdi 
+
+	ret
+

@@ -15,8 +15,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef ptr directory_entry;
-typedef ptr table_entry;
+typedef ptr_t directory_entry;
+typedef ptr_t table_entry;
 
 extern long paging_page_table_addr;
 #define paging_page_table ((table_entry *)&paging_page_table_addr)

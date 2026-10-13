@@ -36,6 +36,12 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 
 OBJS=\
+	compiler/ast.o \
+	compiler/interpreter.o \
+	compiler/codegen_x86_64.o \
+	compiler/codegen_test123.o \
+	compiler/ir/ir.o \
+	compiler/ir/ssa.o \
 	list.o \
 	font.o \
 	img.o \
@@ -43,10 +49,19 @@ OBJS=\
 	term.o \
 	framebuffer.o \
 	log.o \
+	utils.o \
+	wm_lib.o \
 	rect.o \
 	assert.o \
-	tests/tap.o \
-	tests/tests_lib.o \
+	tests_lib/tap.o \
+	tests_lib/tests_lib.o \
+	ui/ui.o \
+	ui/text_input.o \
+	ui/text.o \
+	ui/image.o \
+	ui/button.o \
+	userspace/input/keyboard.o \
+	tests/interpreter_tests.o \
 
 
 OBJS_BIN_NO_SUFFIX = $(foreach obj,$(OBJS),bin/$(obj))
@@ -81,16 +96,24 @@ $(LIB_BINARY) : $(OBJS_BIN)
 
 $(KERNEL_LIB_BINARY) : $(LIBK_OBJS_BIN)
 	@mkdir -p $(BIN)
-	$(AR) rcs $@ $^
+	$(AR) rcs $@ $^ 
 
 
 $(BIN)/%.libk.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -D__is_libk
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -D__is_libk 
 
 $(BIN)/%.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -D__is_libc
+
+$(BIN)/%.libk.o$(TEST_SUFFIX): %.cpp
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS) -D__is_libk 
+
+$(BIN)/%.o$(TEST_SUFFIX): %.cpp
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS) -D__is_libc
 
 
 install: install-lib

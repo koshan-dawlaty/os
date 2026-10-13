@@ -23,7 +23,7 @@
 /* returns -1 on error, 0 on success */
 int ps2_write_dev(u8 byte, bool is_port2)
 {
-    if (!is_port2)
+    if (is_port2)
     {
         outb(PS2_COMMAND, 0xD4);
     }

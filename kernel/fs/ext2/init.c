@@ -1,5 +1,6 @@
 #include "bdev.h"
 #include "ext2.h"
+#include "lib/log.h"
 #include "string.h"
 #include <ata/ata.h>
 #include <err_ptr.h>

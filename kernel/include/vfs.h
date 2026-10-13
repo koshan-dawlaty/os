@@ -102,8 +102,6 @@ typedef enum dentry_type
     DENTRY_INVALID,
 
     DENTRY_MOUNT_POINT,
-
-    DENTRY_SOCKET
 } dentry_type;
 
 /*
@@ -181,8 +179,8 @@ dentry *dentry_mount_point_alloc(struct superblock *sb, struct inode *root);
 typedef struct
 {
     dentry *(*read_dir)(dentry *entry, struct dir_context *, superblock *sb);
-    dentry *(*append_dentry)(dentry *parent, const char *name,
-                             enum dentry_type type, superblock *sb);
+    dentry *(*append_dentry)(dentry *parent, char *name, enum dentry_type type,
+                             superblock *sb);
 
     int (*remove_dentry)(dentry *, char *, superblock *);
 } dentry_functions;
@@ -451,5 +449,7 @@ static inline int inode_write(struct inode *node, const u8 *buf, size_t n,
 
     return 0;
 }
+
+size_t dentry_get_pathname(struct dentry *entry, char *buf, size_t len);
 
 #endif

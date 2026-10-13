@@ -8,8 +8,7 @@ def main():
 
     for line in lines:
         line = line.strip()
-        
-        if (line[0] == '#'):
+        if (len(line) > 0 and line[0] == '#'):
             continue
 
         sys.stdout.write("-DCONFIG_" + line + " ")

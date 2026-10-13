@@ -19,7 +19,8 @@ void wait_queue_wait(struct wait_queue *queue)
 
     ASSERT(current->can_sleep, "current task can't sleep");
 
-    save_registers(&current->regs);
+    struct task *old = current;
+    /* save_registers(&current->regs); */
 
     task_queue_remove(&scheduler_queue.queue, current);
     if (current == SCHED_QUEUE_CURRENT_TASK(scheduler_queue))
@@ -44,15 +45,15 @@ void wait_queue_wait(struct wait_queue *queue)
 
     /* print_tasks(); */
 
-    if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space.dir != NULL)
+    if (SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space->dir != NULL)
     {
-        addr_space_load(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
+        addr_space_load(SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->addr_space);
     }
     set_kernel_stack((ptr_t)SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->stack);
 
     /* FIXME: this should maybe be in load_registers() or something */
     preempt_enable();
-    load_registers(&SCHED_QUEUE_CURRENT_TASK(scheduler_queue)->regs);
+    switch_to(old, SCHED_QUEUE_CURRENT_TASK(scheduler_queue));
 }
 
 void wait_queue_done(struct wait_queue *queue)

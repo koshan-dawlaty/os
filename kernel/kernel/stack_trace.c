@@ -75,7 +75,11 @@ void stacktrace_log()
 #ifdef CONFIG_STACK_TRACE
     log_multiline_start(&LOG_ERROR);
     struct stackframe *stk;
+#ifdef CONFIG_x86_64
     asm("mov %%rbp,%0" : "=r"(stk)::);
+#elif defined(CONFIG_x86_32)
+    asm("mov %%ebp,%0" : "=r"(stk)::);
+#endif
     loge("stack trace:");
     for (unsigned int frame = 0; stk && frame < max_frames; ++frame)
     {

@@ -4,8 +4,8 @@
  * everything in this file is not standard
  */
 
-#include "sys/syscall.h"
-#include "utils.h"
+#include <sys/syscall.h>
+#include <utils.h>
 #include <stdarg.h>
 
 /*

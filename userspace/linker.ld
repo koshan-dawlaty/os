@@ -3,13 +3,44 @@ ENTRY (_start)
 
 SECTIONS
 {
-	.ctors ALIGN (4) : AT(ADDR(.ctors))
-	{
-		PROVIDE(__ctors_start = .);
-		KEEP(*(SORT_BY_INIT_PRIORITY(.ctors.*)))
-		KEEP(*(.ctors))
-		PROVIDE(__ctors_end = .);
-	}
-}
+	. = 0x600000;
 
-/* INSERT AFTER .text */
+    .text : ALIGN(4K)
+    {
+        *(.text)
+        *(.text.*)
+    }
+
+    .rodata : ALIGN(4K)
+    {
+        *(.rodata)
+        *(.rodata.*)
+    }
+
+    .ctors : ALIGN(4)
+    {
+        PROVIDE(__ctors_start = .);
+        KEEP(*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+        KEEP(*(.ctors))
+        PROVIDE(__ctors_end = .);
+    }
+
+    .data : ALIGN(4K)
+    {
+        *(.data)
+        *(.data.*)
+    }
+
+    .bss : ALIGN(4K)
+    {
+        *(COMMON)
+        *(.bss)
+        *(.bss.*)
+    }
+
+    /DISCARD/ :
+    {
+        *(.comment)
+        *(.eh_frame)
+    }
+}

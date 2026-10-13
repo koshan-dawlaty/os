@@ -22,6 +22,7 @@
 #include <kernel/paging.h>
 #include <kernel/ps2.h>
 #include <kernel/semaphore.h>
+#include <kernel/simple_binary.h>
 #include <kernel/stacktrace.h>
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
@@ -75,7 +76,6 @@
 #endif
 
 uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
-
 
 extern struct pagedir init_pgdir;
 
@@ -150,6 +150,7 @@ void sse_enable()
     asm("fninit");
 }
 
+extern void phys_pages_init(struct memory_region *regions, size_t len);
 extern __int_handler void syscall_handler_asm(struct interrupt_frame *frame);
 void kernel_init()
 {
@@ -157,7 +158,7 @@ void kernel_init()
     terminal_initialize();
 
     init_paging();
-
+    phys_pages_init(memory_regions, memory_regions_len());
     init_heap();
     init_gfp_zones();
 
@@ -168,6 +169,9 @@ void kernel_init()
         graphics_init(f);
         draw_background(f);
     }
+
+    /* TODO: put in arch init */
+    sse_enable();
 
     init_gdt();
     init_idt();
@@ -203,11 +207,8 @@ void kernel_init()
     keyboard_init();
 
     init_pit();
-    init_pci();
     init_ata();
-
     init_vfs();
-
     ps2_init();
 
     call_constructors();
@@ -215,16 +216,23 @@ void kernel_init()
     IRQ_OFF({
         register_interrupt_handler(0x80, syscall_handler_asm,
                                    (int_handler_flags){.is_user = true});
-    })
-
-    /* TODO: put in arch init */
-    sse_enable();
+    });
 
 #ifdef TESTS
-    run_tests();
+    struct test_input input = {
+        {0},
+        TEST_INPUT_ONLY,
+        /* TEST_INPUT_EXCLUDE, */
+    };
+
+    array_macro_append(&input.test_patterns, "*");
+
+    tests_run_input(&input);
+    /* run_tests(); */
 #else
     /* symbol_table_parse(); /1* seems to break with tests *1/ */
 #endif
+    init_pci();
 }
 
 WAIT_QUEUE_DEFINE(poll_wait_queue);
@@ -242,15 +250,44 @@ void t3(void *a)
     logd("writing");
     write_file(f, "abc", 4, 0);
 }
+void t11(void *a)
+{
+    /* while (1) */
+    /* { */
+    schedule();
+    logd("t11");
+    schedule();
+    /* } */
+}
 
 void t1(void *a)
 {
+    /* while (1) */
+    /* { */
+    schedule();
+    logd("t1");
+    schedule();
+    /* } */
 }
 
 extern void scheduler_init();
 
+struct test_array
+{
+    int *items;
+    size_t num;
+    size_t capacity;
+};
+
 void kmain()
 {
+
+    /* struct dentry *entry = lookup_path("/dir/other-dir",
+     * PATHNAME_LOOKUP_FIND); */
+    /* char str[100]; */
+    /* dentry_get_pathname(entry, str, 100); */
+    /* logd("str:%s", str); */
+    /* return; */
 
     scheduler_init();
 
@@ -270,6 +307,9 @@ void kmain()
     create_device("/dev/serial0", serial_cdev_create(0x3F8));
 #endif
 
+    /* ktask_run(t1, NULL); */
+    /* ktask_run(t11, NULL); */
+
     /* struct file *read, *write; */
     /* pipe_open(&read, &write); */
 
@@ -277,16 +317,39 @@ void kmain()
 
     /* int err = execv("/elf_test", (char *[]){"/elf_test", NULL}); */
 
-#ifdef TESTS
-    execv("/bin/compiler", (char *[]){"compiler", NULL});
-#else
-    /* execv("/bin/compiler", (char *[]){"compiler", NULL}); */
-    execv("/bin/wm", (char *[]){"wm", NULL});
-#endif
+    /* u8 bytecode[] = {0xa3, 0x34, 0x12, 0, 0, 0, 0, 0, 0}; */
+    /* logd("%d", sizeof(bytecode)); */
 
-    /* int err = execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
-    /* int err = execv("/bin/ls", (char *[]){"/bin/ls", "/dev", NULL}); */
-    /* int err = execv("/cat", (char *[]){"/cat", "one", NULL}); */
+    /* u8 *binary_test = malloc(9 + sizeof(bytecode)); */
+    /* binary_test[0] = 'T'; */
+    /* binary_test[1] = 'E'; */
+    /* binary_test[2] = 'S'; */
+    /* binary_test[3] = 'T'; */
+    /* binary_test[4] = 0; */
+    /* *(u32 *)(binary_test + 5) = sizeof(bytecode); */
+    /* memcpy(binary_test + 9, bytecode, sizeof(bytecode)); */
+
+    /* struct task *simple_binary = simple_binary_load(binary_test); */
+    /* add_task(simple_binary); */
+
+    const char *init_program;
+    char *init_program_args[] = {"", NULL};
+
+#ifdef TESTS
+    execv("/bin/codegen_tests.test", (char *[]){"", NULL});
+#else
+    /* init_program = "/bin/compiler"; */
+    /* init_program = "/bin/codegen_tests"; */
+    init_program = "/bin/wm";
+    /* init_program = "/bin/ls"; */
+    /* execv("/bin/wm", (char *[]){"wm", NULL}); */
+    /* execv("/bin/cat", (char *[]){"/bin/cat", "one", NULL}); */
+    int err = execv(init_program, init_program_args);
+    if (err)
+    {
+        PANIC("error when starting init program:%s", strerror(err));
+    }
+#endif
 
     enable_scheduler();
     irq_enable();

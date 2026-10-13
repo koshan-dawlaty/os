@@ -1,5 +1,6 @@
 #include <err_ptr.h>
 #include <errno.h>
+#include <extension.h>
 #include <lib/font.h>
 #include <lib/framebuffer.h>
 #include <lib/log.h>

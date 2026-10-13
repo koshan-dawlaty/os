@@ -62,15 +62,18 @@ file/read.o \
 file/pread.o \
 sys/mman/mmap.o \
 sys/stat/mkdir.o \
+sys/stat/stat.o \
 unistd/execv.o \
 unistd/sleep.o \
 unistd/close.o \
 unistd/chdir.o \
+unistd/getcwd.o \
 sched/sched_yield.o \
 dirent/dirent.o \
 init.o \
 errno.o \
 ctype.o \
+cpp_utils.o \
 
 
 HOSTEDOBJS=\
@@ -126,6 +129,14 @@ $(BIN)/%.libk.o$(TEST_SUFFIX): %.c
 $(BIN)/%.libk.o$(TEST_SUFFIX): %.S
 	mkdir -p $(BIN)/$(dir $<)
 	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
+
+$(BIN)/%.o$(TEST_SUFFIX): %.cpp
+	mkdir -p $(BIN)/$(dir $<)
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS)
+
+$(BIN)/%.libk.o$(TEST_SUFFIX): %.cpp
+	mkdir -p $(BIN)/$(dir $<)
+	$(CXX) -MD -MF$(BIN)/$*.libk.d -c $< -o $@ $(LIBK_CFLAGS) $(LIBK_CPPFLAGS) $(LIBK_CXXFLAGS)
 
 clean:
 	$(RM) -r bin/*

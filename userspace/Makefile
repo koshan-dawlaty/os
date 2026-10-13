@@ -14,7 +14,6 @@ ARCHDIR=arch/$(firstword $(subst /, ,$(HOSTARCH)))
 BIN=bin
 
 
-FS_ROOT?=
 BINARY_PREFIX?=bin
 
 CFLAGS?= -g
@@ -30,7 +29,7 @@ CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  
 
-CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings 
+CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings  # -mcmodel=small
 # this gets rid of moddi3 and simliar functions
 CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib -Tlinker.ld
 
@@ -59,13 +58,12 @@ OBJS_END=\
 
 endif
 
-
 # this is kinda bad
 OBJS_START_BIN = $(foreach obj,$(OBJS_START),bin/$(obj))
 OBJS_END_BIN = $(foreach obj,$(OBJS_END),bin/$(obj))
 
 START_OBJ=\
-		  $(BIN)/start.o$(TEST_SUFFIX)
+		  $(BIN)/$(ARCHDIR)/$(ARCHDIR_x86)/start.o$(TEST_SUFFIX)
 
 BINARIES=\
 	flashcards$(TEST_SUFFIX) \
@@ -80,17 +78,22 @@ BINARIES=\
 	ls$(TEST_SUFFIX) \
 	wm$(TEST_SUFFIX) \
 	compiler$(TEST_SUFFIX) \
+	interpreter$(TEST_SUFFIX) \
+	codegen_tests$(TEST_SUFFIX) \
 	ui_lib$(TEST_SUFFIX) \
 	tron$(TEST_SUFFIX) \
 	render_test$(TEST_SUFFIX) \
 	explore$(TEST_SUFFIX) \
 	run$(TEST_SUFFIX) \
 	sokoban$(TEST_SUFFIX) \
+	mkdir$(TEST_SUFFIX) \
+	opener$(TEST_SUFFIX) \
+	paint$(TEST_SUFFIX) \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
 ifndef CONFIG_HOST_SDL
-DEPENDENCIES=../libc/libc$(TEST_SUFFIX).a ../lib/bin/libutil$(TEST_SUFFIX).a
+DEPENDENCIES=../lib/bin/libutil$(TEST_SUFFIX).a ../libc/libc$(TEST_SUFFIX).a
 else
 DEPENDENCIES=../lib/bin/libutil$(TEST_SUFFIX).a
 CFLAGS:=$(CFLAGS) -lc -lutil -I../lib/include/ -I../libc/include/ -Tlinux.ld
@@ -103,87 +106,109 @@ endif
 all : $(BINARIES_BIN)
 	$(CC) -o $(BIN)/$
 
-# $(BIN)/term : $(OBJS_START_BIN) $(BIN)/term.o $(BIN)/wm_lib.o  $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+# $(BIN)/term : $(OBJS_START_BIN) $(BIN)/term.o   $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
 # 	@mkdir -p $(BIN)/$(dir $<)
 # 	$(CC) -Ttext=0x600000  -o $@ $^ $(CFLAGS) $(UTIL_FLAG)  -nostdlib -lgcc 
 	# $(CC) -o $@ $^ $(CFLAGS)  -nostdlib -lgcc 
 	# $(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/elf_test2$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/elf_test2.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/elf_test2$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/elf_test2.o$(TEST_SUFFIX) $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x700000 -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
 	# $(CC) -o  $@ $^ $(CFLAGS)  -nostdlib -lgcc
-$(BIN)/ksh$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/ksh.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/ksh$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/ksh.o$(TEST_SUFFIX) $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0xb00000  -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/ls$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/ls.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/ls$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/ls.o$(TEST_SUFFIX) $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x800000  -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/overwrite$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/overwrite.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/overwrite$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/overwrite.o$(TEST_SUFFIX) $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x800000 -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/cat$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/cat.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/cat$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/cat.o$(TEST_SUFFIX) $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/rm$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/rm.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/rm$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/rm.o$(TEST_SUFFIX) $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x800000  -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/touch$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/touch.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/touch$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/touch.o$(TEST_SUFFIX) $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/wm$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/wm.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/mkdir$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/mkdir.o$(TEST_SUFFIX) $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CC) -o $@ $^ $(CFLAGS) -nostdlib -lgcc
 
-$(BIN)/imgview$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/imgview.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
-	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
 
-$(BIN)/tron$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/tron.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/wm$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/wm.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
-$(BIN)/explore$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/explore.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/imgview$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/imgview.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
-$(BIN)/flashcards$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/flashcards.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/tron$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/tron.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC)  -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
-$(BIN)/render_test$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/render_test.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/explore$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/explore.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CXX) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) $(CXXFLAGS) -nostdlib -lgcc 
 
-$(BIN)/term$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/term.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/flashcards$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/flashcards.o$(TEST_SUFFIX) $(START_OBJ) $(DEPENDENCIES) $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
-$(BIN)/run$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/run.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/render_test$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/render_test.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
-$(BIN)/edit$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/edit.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/term$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/term.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
-$(BIN)/ui_lib$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/ui_lib.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/run$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/run.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
+
+$(BIN)/edit$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/edit.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
+
+$(BIN)/ui_lib$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/ui_lib.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CXX) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) $(CXXFLAGS) -nostdlib -lgcc 
 	
-$(BIN)/sokoban$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/sokoban.o$(TEST_SUFFIX) $(BIN)/wm_lib.o$(TEST_SUFFIX) $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/sokoban$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/sokoban.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc -Oz
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
-$(BIN)/compiler$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/c_compiler.o$(TEST_SUFFIX) $(BIN)/c_compiler/interpreter.o$(TEST_SUFFIX) $(BIN)/c_compiler/tests.o$(TEST_SUFFIX)  $(DEPENDENCIES) $(START_OBJ)  $(OBJS_END_BIN)
+$(BIN)/opener$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/opener.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000  
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
+
+$(BIN)/paint$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/paint.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
+
+
+$(BIN)/compiler$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/compiler.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000   -DTESTS
+
+$(BIN)/interpreter$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/interpreter.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000   -DTESTS
+
+$(BIN)/codegen_tests$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/codegen_tests.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000   -DTESTS
 
 
 $(BIN)/%.o$(TEST_SUFFIX): %.S
@@ -192,7 +217,11 @@ $(BIN)/%.o$(TEST_SUFFIX): %.S
 
 $(BIN)/%.o$(TEST_SUFFIX): %.c
 	@mkdir -p $(BIN)/$(dir $<)
-	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS)  # -DTESTS # stupid
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) # -DTESTS #  stupid
+
+$(BIN)/%.o$(TEST_SUFFIX): %.cpp
+	mkdir -p $(BIN)/$(dir $<)
+	$(CC) -MD -MF$(BIN)/$*.d -c $< -o $@ $(CFLAGS) $(CPPFLAGS) $(CXXFLAGS)
 
 
 ifdef CONFIG_x86_32
@@ -211,14 +240,10 @@ install-headers:
 
 install-binaries: $(BINARIES_BIN)
 	# ../build/ is bad
-	mkdir -p ../build/$(FS_ROOT)/$(BINARY_PREFIX)
-	# $(foreach binary, $@, $(cp $(binary) ../build/$(FS_ROOT)/$(BINARY_PREFIX)))
+	mkdir -p ../$(FS_ROOT)/$(BINARY_PREFIX)
 	for f in $(BINARIES_BIN); do \
-		cp $$f ../build/$(FS_ROOT)/bin/; \
+		cp $$f ../$(FS_ROOT)/bin/; \
 	done; 
-
-	# # may break with more files in binaries
-	# cp $(BIN)/$(BINARIES) ../build/$(FS_ROOT)/$(BINARY_PREFIX)
 
 
 test : 

@@ -30,6 +30,8 @@ const char *strerror(int errnum)
         return "bad file descriptor";
     case EISDIR:
         return "is a directory";
+    case EFAULT:
+        return "EFAULT, bad address";
     default:
         return "no error message for this";
     }

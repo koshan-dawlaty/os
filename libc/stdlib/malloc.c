@@ -1,3 +1,4 @@
+#include "lib/log.h"
 #include <extension.h>
 #include <malloc_internal.h>
 #include <sched.h>
@@ -161,8 +162,9 @@ heap_block *get_block(size_t size, struct malloc_zone *zone)
     return block;
 }
 
-heap_block *get_block_from_bin_fast(heap_block **bin, int new_size,
-                                    struct malloc_zone *zone)
+static inline heap_block *get_block_from_bin_fast(heap_block **bin,
+                                                  int new_size,
+                                                  struct malloc_zone *zone)
 {
     if (*bin == NULL)
     {
@@ -179,8 +181,8 @@ heap_block *get_block_from_bin_fast(heap_block **bin, int new_size,
     return output;
 }
 
-heap_block *get_block_from_bin(heap_block **bin, size_t new_size,
-                               struct malloc_zone *zone)
+static inline heap_block *get_block_from_bin(heap_block **bin, size_t new_size,
+                                             struct malloc_zone *zone)
 {
 
     if (bin == NULL)

@@ -217,3 +217,54 @@ load_registers:
 	# popf
 
 	ret
+
+
+# void switch_to(struct registers * prev, struct registers * current)
+.section .text
+.global switch_to_asm
+.type switch_to_asm @function
+switch_to_asm:
+	
+	mov 4(%esp), %eax       
+	mov 8(%esp), %edx       
+
+	mov %esp,  0(%eax)
+	mov %ebx,  4(%eax)
+	mov %ebp,  8(%eax)
+	mov %esi, 12(%eax)
+	mov %edi, 16(%eax)
+
+	mov  0(%edx), %esp
+	mov  4(%edx), %ebx
+	mov  8(%edx), %ebp
+	mov 12(%edx), %esi
+	mov 16(%edx), %edi
+
+	ret
+
+# void switch_to_arg(struct registers * prev, struct registers * current, ptr_t arg)
+.section .text
+.global switch_to_asm_arg
+.type switch_to_asm_arg @function
+switch_to_asm_arg:
+
+	mov 4(%esp), %eax       
+	mov 8(%esp), %edx       
+	mov 12(%esp), %ecx       
+
+	mov %esp,  0(%eax)
+	mov %ebx,  4(%eax)
+	mov %ebp,  8(%eax)
+	mov %esi, 12(%eax)
+	mov %edi, 16(%eax)
+
+	mov  0(%edx), %esp
+	mov  4(%edx), %ebx
+	mov  8(%edx), %ebp
+	mov 12(%edx), %esi
+	mov 16(%edx), %edi
+
+    # mov %ecx, 4(%esp)
+    mov %ecx, 8(%esp)
+	ret
+

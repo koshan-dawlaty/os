@@ -13,13 +13,18 @@
 #include <syscall.h>
 #include <unistd.h>
 
+char current_dir[100];
+
+void print_prompt()
+{
+    printf("\n %s > ", current_dir);
+}
+
 int main()
 {
 
-    init_libc();
-
-    printf(
-        " \n"); /* TODO: remove, this needs to be here so the terminal works */
+    getcwd(current_dir, sizeof(current_dir));
+    print_prompt();
 
     /* int term_fd = open("/terminal", 0); */
     /* char *buf = malloc(10); */
@@ -59,12 +64,18 @@ int main()
             {
                 if (args[1] != NULL)
                 {
-                    chdir(args[1]);
+                    int retval = chdir(args[1]);
+                    if (retval != 0)
+                    {
+                        printf("cant cd, err:%s\n", strerror(retval));
+                    }
                 }
                 else
                 {
                     printf("not enough arguments\n");
                 }
+                getcwd(current_dir, sizeof(current_dir));
+                print_prompt();
             }
             else
             {
@@ -80,8 +91,12 @@ int main()
                 if (err < 0)
                 {
                     printf("could not execute\nerror:%s", strerror(err));
-                    printf("\n");
+                    /* printf("\n"); */
                 }
+                /* TODO: this should have a way of waiting for the process to
+                 * exit */
+                sleep(2);
+                print_prompt();
             }
             free(input);
             input = malloc(0);
@@ -89,10 +104,10 @@ int main()
             continue;
         }
 
-        if (c == '-')
-        {
-            c = '_';
-        }
+        /* if (c == '-') */
+        /* { */
+        /*     c = '_'; */
+        /* } */
 
         if (c == '\b' && input_len != 0)
         {

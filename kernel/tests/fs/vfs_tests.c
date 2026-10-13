@@ -1,3 +1,5 @@
+#include "dirent.h"
+#include "lib/log.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <panic.h>
@@ -264,6 +266,17 @@ TEST(vfs_mkdir, {
     close(fd);
 })
 
+TEST(vfs_mkdir_ls_empty, {
+    mkdir("ls_emtpy_test_dir", 0);
+    int fd;
+    struct file *dir = open_file("ls_emtpy_test_dir", O_DIRECTORY, &fd);
+
+    struct dirent *buf = calloc(2, sizeof(struct dirent));
+    read_dir(dir, buf, 2);
+    ASSERT_EQ_STR(buf[0].d_name, ".");
+    ASSERT_EQ_STR(buf[1].d_name, "..");
+})
+
 TEST(vfs_file_permissions, {
     int write_only = open("/one", O_WRONLY);
     char *buf = malloc(100);
@@ -274,4 +287,15 @@ TEST(vfs_file_permissions, {
     err = write(read_only, buf, 100);
     ASSERT_EQ(-err, EACCES, "writing to a RDONLY file should not work")
     close(read_only);
+})
+
+TEST(vfs_dentry_get_pathname, {
+    const char *pathname = "/dir/other-dir/file.txt";
+    struct dentry *entry = lookup_path(pathname, PATHNAME_LOOKUP_FIND);
+    ASSERT_NOERR(entry);
+
+    char buf[100];
+    dentry_get_pathname(entry, buf, 100);
+
+    ASSERT_EQ_STR(pathname, buf);
 })

@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <types.h>
 #include <unistd.h>
@@ -247,6 +248,33 @@ void set_filename(struct editor_buffer *buffer)
     buffer->file = fopen(name, "c");
 }
 
+void insert_char(char c, struct editor_buffer *buffer)
+{
+    if (c == '\b')
+    {
+        editor_buffer_delete_cursor(buffer);
+
+        framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                              client.fb.height, 0);
+        editor_buffer_redraw(buffer, &client.fb, 0, 0);
+    }
+    else if (c == '\n')
+    {
+        editor_buffer_insert_newline_cursor(buffer);
+        framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                              client.fb.height, 0);
+        editor_buffer_redraw(buffer, &client.fb, 0, 0);
+    }
+    else
+    {
+        editor_buffer_insert_cursor(buffer, c);
+
+        framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
+                              client.fb.height, 0);
+        editor_buffer_redraw(buffer, &client.fb, 0, 0);
+    }
+}
+
 void write_to_file(struct editor_buffer *buffer)
 {
 
@@ -255,6 +283,7 @@ void write_to_file(struct editor_buffer *buffer)
         set_filename(buffer);
     }
 
+    lseek(buffer->file->fd, 0, SEEK_SET);
     struct list *pos;
     list_for_each(pos, &buffer->rows_head)
     {
@@ -269,12 +298,37 @@ void write_to_file(struct editor_buffer *buffer)
     }
 }
 
-int main()
+void handle_args(int argc, char **argv, struct editor_buffer *buffer)
+{
+    if (argc > 1)
+    {
+        buffer->file = fopen(argv[1], "c");
+        if (buffer->file != NULL)
+        {
+            size_t read_size = 10;
+            char *buf = malloc(read_size);
+            bzero(buf, read_size);
+            size_t bytes_read = 0;
+            do
+            {
+                bytes_read = fread(buf, read_size, 1, buffer->file);
+                for (size_t i = 0; i < bytes_read; i++)
+                {
+                    insert_char(buf[i], buffer);
+                }
+            } while (bytes_read == read_size);
+            wm_render(client);
+        free_buffer:
+            free(buf);
+        }
+    }
+}
+
+int main(int argc, char **argv)
 {
 
-    init_libc();
-
-    const char *str = "/home/koshan/os/build/fs-root/font.psfu";
+    /* const char *str = "/home/koshan/os/build/fs-root/font.psfu"; */
+    const char *str = "font.psfu";
     int font_fd = open(str, O_RDONLY);
     font = font_parse_fd(font_fd);
 
@@ -289,19 +343,20 @@ int main()
     size_t x = 0, y = 0;
     client = wm_client_connect(h, w);
 
-    wm_render(client);
-
     /* struct editor_buffer buffer = {0, 0, .top_line = 0, */
     /*                                .num_lines = */
     /*                                    client.fb.height /
      * font->header.height}; */
-    struct editor_buffer buffer = {0, 0, .top_line = 0, .num_lines = 4};
+    struct editor_buffer buffer = {0, 0, .top_line = 0, .file = NULL,
+                                   .num_lines =
+                                       client.fb.height / font->header.height};
+
     list_init_head(&buffer.rows_head);
     struct editor_row *row = editor_row_alloc();
     list_push(&row->list, &buffer.rows_head);
     buffer.current_row = row;
-
-    array_push(&row->characters, "abc", 3);
+    handle_args(argc, argv, &buffer);
+    /* array_push(&row->characters, "abc", 3); */
 
     framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, client.fb.height,
                           0);
@@ -309,14 +364,28 @@ int main()
     wm_render(client);
 
     bool insert_mode = true;
-    while (1)
+    while (wm_is_alive(&client))
     {
         struct wm_message message;
         wm_get_message(&client, &message);
 
+        /* continue; */
+
         switch (message.header.type)
         {
-        case WM_MESSAGE_KEY:;
+        case WM_MESSAGE_RESIZE:
+        {
+            /* framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width, */
+            /*                       client.fb.height, 0); */
+
+            buffer.num_lines = client.fb.height / font->header.height;
+
+            /* editor_buffer_redraw(&buffer, &client.fb, 0, 0); */
+            /* wm_render(client); */
+            break;
+        }
+        case WM_MESSAGE_KEY:
+        {
 
             char c = *(char *)message.message_data;
             if (insert_mode)
@@ -325,30 +394,9 @@ int main()
                 {
                     insert_mode = false;
                 }
-                else if (c == '\b')
-                {
-                    editor_buffer_delete_cursor(&buffer);
-
-                    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-                                          client.fb.height, 0);
-                    editor_buffer_redraw(&buffer, &client.fb, 0, 0);
-                    wm_render(client);
-                }
-                else if (c == '\n')
-                {
-                    editor_buffer_insert_newline_cursor(&buffer);
-                    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-                                          client.fb.height, 0);
-                    editor_buffer_redraw(&buffer, &client.fb, 0, 0);
-                    wm_render(client);
-                }
                 else
                 {
-                    editor_buffer_insert_cursor(&buffer, c);
-
-                    framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
-                                          client.fb.height, 0);
-                    editor_buffer_redraw(&buffer, &client.fb, 0, 0);
+                    insert_char(c, &buffer);
                     wm_render(client);
                 }
             }
@@ -388,16 +436,15 @@ int main()
                 framebuffer_draw_rect(&client.fb, 0, 0, client.fb.width,
                                       client.fb.height, 0);
                 editor_buffer_redraw(&buffer, &client.fb, 0, 0);
-                wm_render(client);
 
                 wm_render(client);
             }
             break;
+        }
         default:;
         }
     }
 
     close(client.socket);
 
-    exit(0);
 }

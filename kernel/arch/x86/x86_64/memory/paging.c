@@ -1,13 +1,12 @@
 #include <kernel/paging.h>
 #include <kernel/utils.h>
 #include <lib/log.h>
+#include <memory/x86_paging.h>
 #include <spinlock.h>
 #include <string.h>
 #include <types.h>
 
 void *paging_page_table_addr = 0;
-
-extern struct pagedir init_pgdir;
 
 void flush_tlb_full()
 {
@@ -52,8 +51,7 @@ void unmap_page(void *virtualaddr)
     u64 pdt_index = (virtual >> 21) & 0x1FF;
     u64 pt_index = (virtual >> 12) & 0x1FF;
 
-    /* TODO: bad */
-    u64 *pml4 = (void *)get_current_pagedir();
+    u64 *pml4 = (void *)get_current_pagedir()->pgdir_virtual;
     u64 pml4_entry = pml4[pml4_index];
 
     if ((pml4_entry & 1) == 0)
@@ -66,9 +64,7 @@ void unmap_page(void *virtualaddr)
         return;
     }
 
-    /* TODO: math might be wrong */
     u64 *pdpt_physical = (void *)(((pml4[pml4_index]) & ~0xFFF));
-    // u64 *pdpt_physical = (void *)(pml4[pml4_index]);
     u64 *pdpt = get_virtual_addr(pdpt_physical);
     u64 pdpt_entry = pdpt[pdpt_index];
 
@@ -100,7 +96,8 @@ void unmap_page(void *virtualaddr)
     pt[pt_index] = 0;
     spinlock_unlock(&paging_spinlock);
 
-    flush_tlb_full();
+    invlpg((void *)virtual);
+    /* flush_tlb_full(); */
 }
 
 void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
@@ -125,6 +122,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
         void *page = get_free_phys_page();
 
         void *pg_virtual = get_virtual_addr(page);
+
         bzero(pg_virtual, PAGE_SIZE);
 
         pml4[pml4_index] = (u64)page | 0x3 | flags;
@@ -153,6 +151,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
     {
         void *page = get_free_phys_page();
         void *pg_virtual = get_virtual_addr(page);
+
         bzero(pg_virtual, PAGE_SIZE);
         pdt[pdt_index] = (u64)page | 0x3 | flags;
     }
@@ -162,7 +161,7 @@ void write_pagedir(struct pagedir *pgdir, void *physaddr, void *virtualaddr,
     pt[pt_index] = physical | 0x3 | flags;
     spinlock_unlock(&paging_spinlock);
 
-    flush_tlb_full();
+    invlpg((void *)virtual);
 }
 
 void *get_physaddr(void *virtualaddr)
@@ -214,6 +213,6 @@ void *get_physaddr(void *virtualaddr)
         return NULL;
     }
 
-    flush_tlb_full();
+    /* flush_tlb_full(); */
     return (void *)((pt_entry & ~0xfff) + ((u64)virtualaddr & 0xfff));
 }

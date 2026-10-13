@@ -46,7 +46,7 @@ static inline void framebuffer_put_pixel(struct framebuffer *f, int color,
 
     size_t location = y * f->pitch + x * f->pixel_width;
 
-    u8 *pixel = f->buffer + location;
+    u8 *pixel = (u8 *)f->buffer + location;
 
     framebuffer_pixel_write(f, pixel, color);
 }
@@ -59,7 +59,9 @@ u32 framebuffer_get_pixel(struct framebuffer *fb, size_t x, size_t y);
 
 void framebuffer_draw_line(struct framebuffer *f, int x1, int y1, int x2,
                            int y2, int color);
-void framebuffer_resize(struct framebuffer *fb, size_t new_width,
-                        size_t new_height, void *new_buffer);
+/* void framebuffer_resize(struct framebuffer *fb, size_t new_width, */
+/*                         size_t new_height, void *new_buffer); */
+void framebuffer_resize(size_t old_width, size_t old_height, size_t new_width,
+                        size_t new_height, void *old_buffer, void *new_buffer);
 
 #endif

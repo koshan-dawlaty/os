@@ -33,8 +33,8 @@ WAIT_QUEUE_DEFINE(mouse_waitqueue);
 #define PS2_MOUSE_X_OVERFLOW (1 << 6)
 #define PS2_MOUSE_Y_OVERFLOW (1 << 7)
 
-struct mouse_event ps2_mouse_event = {0, 0, {false, false, false}};
-struct mouse_event ps2_mouse_event_prev = {0, 0, {false, false, false}};
+struct mouse_event ps2_mouse_event = {0, 0, {false, false, false}, 0};
+struct mouse_event ps2_mouse_event_prev = {0, 0, {false, false, false}, 0};
 
 static bool ps2_mouse_has_changed()
 {
@@ -45,7 +45,8 @@ static bool ps2_mouse_has_changed()
              ps2_mouse_event.buttons.right_click ==
                  ps2_mouse_event_prev.buttons.right_click &&
              ps2_mouse_event.buttons.middle_click ==
-                 ps2_mouse_event_prev.buttons.middle_click);
+                 ps2_mouse_event_prev.buttons.middle_click &&
+             ps2_mouse_event.scroll == ps2_mouse_event_prev.scroll);
 }
 
 void mouse_ps2_interrupt()
@@ -60,6 +61,8 @@ void mouse_ps2_interrupt()
     }
     int8_t x = inb(0x60);
     int8_t y = inb(0x60);
+    int8_t scroll = inb(0x60);
+    /* logd("%x %x %x %x", buttons, x, y, scroll); */
 
     if (!(buttons & PS2_MOUSE_ALWAYS_ONE))
     {
@@ -87,6 +90,26 @@ void mouse_ps2_interrupt()
     ps2_mouse_event.x_change += x;
     ps2_mouse_event.y_change -= y;
 
+    if (scroll & 1)
+    {
+        if ((scroll & 0b1111) == 1)
+        {
+            ps2_mouse_event.scroll = -1;
+        }
+        else if ((scroll & 0b1111) == 0xF)
+        {
+            ps2_mouse_event.scroll = 1;
+        }
+        else
+        {
+            /* ps2_mouse_event.scroll = 0; */
+        }
+    }
+    else
+    {
+        /* ps2_mouse_event.scroll = 0; */
+    }
+
     if (!WAIT_QUEUE_EMPTY(mouse_waitqueue) && ps2_mouse_has_changed())
     {
         wait_queue_done(&mouse_waitqueue);
@@ -108,6 +131,7 @@ int mouse_read(struct cdev *dev, u8 *buf, size_t len)
     ps2_mouse_event.y_change = 0;
 
     ps2_mouse_event.buttons = (struct mouse_buttons){false, false, false};
+    ps2_mouse_event.scroll = 0;
 
     ps2_mouse_event_prev = ps2_mouse_event;
 
@@ -139,6 +163,31 @@ struct device *mouse_get()
 {
     if (mouse_device == NULL)
     {
+        /* FIXME: all of these ps2_read_poll() calls should be checked to return
+         * 0xFA, there should probably be a better way of sending a command to a
+         * generic ps/2 device */
+        ps2_write_dev(0xF3, true);
+        ps2_read_poll(true);
+        ps2_write_dev(0xC8, true);
+        ps2_read_poll(true);
+
+        ps2_write_dev(0xF3, true);
+        ps2_read_poll(true);
+        ps2_write_dev(0x64, true);
+        ps2_read_poll(true);
+
+        ps2_write_dev(0xF3, true);
+        ps2_read_poll(true);
+        ps2_write_dev(0x50, true);
+        ps2_read_poll(true);
+
+        ps2_write_dev(0xF2, true);
+        ps2_read_poll(true);
+        if (ps2_read_poll(true) != 3)
+        {
+            PANIC("ps/2 mouse init failed");
+        }
+
         mouse_device = new_cdev(NULL, mouse_cdev_functions);
     }
 

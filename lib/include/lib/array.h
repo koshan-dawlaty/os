@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <types.h>
+
 struct array
 {
     size_t capacity;
@@ -78,5 +79,87 @@ static inline void array_set(struct array *array, size_t index, void *data,
 void array_insert(struct array *array, size_t offset, void *data, size_t len);
 
 u8 array_pop_middle(struct array *array, size_t offset);
+
+/*
+ * macros that take a struct that looks like
+ {
+        type * items;
+        size_t capacity;
+        size_t num;
+ }
+ */
+
+/* FIXME: these can maybe be improved by not making them macros, and instead
+ * functions that take the size of the type */
+
+#define ARRAY_DEFAULT_CAPACITY 2
+#define array_macro_append(array, item)                                        \
+    do                                                                         \
+    {                                                                          \
+        if ((array)->num >= (array)->capacity)                                 \
+        {                                                                      \
+            if ((array)->capacity == 0)                                        \
+            {                                                                  \
+                (array)->capacity = ARRAY_DEFAULT_CAPACITY;                    \
+            }                                                                  \
+            else                                                               \
+            {                                                                  \
+                (array)->capacity *= 2;                                        \
+            }                                                                  \
+            (array)->items = (typeof(*array.items))realloc(                    \
+                (array)->items,                                                \
+                (array)->capacity * sizeof(*((array)->items)));                \
+        }                                                                      \
+        (array)->items[(array)->num] = item;                                   \
+        (array)->num++;                                                        \
+    } while (0)
+
+#define array_macro_append_buf(array, buf, n)                                  \
+    do                                                                         \
+    {                                                                          \
+        if ((array)->num + (n) >= (array)->capacity)                           \
+        {                                                                      \
+            if ((array)->capacity == 0)                                        \
+            {                                                                  \
+                (array)->capacity = MAX(ARRAY_DEFAULT_CAPACITY, n);            \
+            }                                                                  \
+            else                                                               \
+            {                                                                  \
+                (array)->capacity = ((array)->num + n) * 2;                    \
+            }                                                                  \
+            (array)->items = realloc(                                          \
+                (array)->items, (array)->capacity * sizeof(*(array)->items));  \
+        }                                                                      \
+        memcpy((array)->items + (array)->num, buf,                             \
+               n * sizeof(*(array)->items));                                   \
+        (array)->num += n;                                                     \
+    } while (0)
+
+#define array_macro_append_v(array, ...)                                       \
+    do                                                                         \
+    {                                                                          \
+        typeof((array)->items) buf =                                           \
+            (typeof (*(array)->items)[]){__VA_ARGS__};                         \
+        array_macro_append_buf(                                                \
+            array, buf,                                                        \
+            sizeof((typeof (*(array)->items)[]){__VA_ARGS__}) /                \
+                sizeof(*(array)->items));                                      \
+    } while (0)
+
+#define array_macro_remove_end(array)                                          \
+    ((array)->num--, (array)->items[(array)->num])
+
+#define array_at(array, index) ((array)->items[index])
+
+#define array_copy_other(dest, source)                                         \
+    (dest)->num = (source)->num;                                               \
+    (dest)->capacity = (source)->capacity;                                     \
+    (dest)->items = malloc((dest)->capacity * sizeof(*(dest)->items));         \
+    memcpy((dest)->items, (source)->items, (dest)->num * sizeof(*(dest)->items))
+
+#define array_remove(array, index)                                             \
+    (array)->num--;                                                            \
+    memmove((array)->items + index, (array)->items + (index - 1),              \
+            sizeof(*(array)->items));
 
 #endif

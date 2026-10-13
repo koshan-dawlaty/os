@@ -34,7 +34,6 @@ int recv(int socket, void *buf, size_t len)
 
 int main(int argc, char **argv)
 {
-    init_libc();
 
     /* for (size_t i = 0; i < 2; i++) */
     /* { */

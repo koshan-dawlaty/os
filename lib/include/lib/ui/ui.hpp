@@ -1,0 +1,240 @@
+#ifndef UI_H
+#define UI_H
+
+#include <cpp/cpp_c_include_start.hpp>
+
+#include "wm_lib.h"
+#include <lib/assert.h>
+#include <lib/framebuffer.h>
+#include <lib/img.h>
+#include <lib/list.h>
+#include <lib/log.h>
+#include <lib/rect.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <types.h>
+#include <userspace/mouse.h>
+
+#include <cpp/cpp_c_include_end.hpp>
+
+#include <cpp/function.hpp>
+
+class View;
+
+class Screen
+{
+  protected:
+    struct framebuffer *fb;
+
+  public:
+    inline Screen(struct framebuffer *fb) : fb(fb)
+    {
+    }
+    virtual void update_area(struct rect area) = 0;
+    inline size_t get_width()
+    {
+        return fb->width;
+    }
+    inline size_t get_height()
+    {
+        return fb->height;
+    }
+
+    virtual void input_loop(View *root) = 0;
+};
+
+/*
+ * this class will not do anything when updating an area, this is intended to be
+ * used when you want to render straight to a framebuffer
+ */
+class DefaultScreen : public Screen
+{
+
+  public:
+    inline void update_area(struct rect area) override
+    {
+    }
+    inline void input_loop(View *root) override
+    {
+    }
+
+    inline DefaultScreen(struct framebuffer *fb) : Screen(fb) {};
+};
+
+class WMScreen : public Screen
+{
+  private:
+    struct wm_client *client;
+
+  public:
+    void input_loop(View *root) override;
+
+    inline WMScreen(struct wm_client *client)
+        : client(client), Screen(&client->fb)
+    {
+    }
+    inline void update_area(struct rect area) override
+    {
+        wm_render_partial(*client, area);
+    };
+};
+
+class View
+{
+
+  public:
+    struct framebuffer fb;
+    size_t abs_x = 0, abs_y = 0;
+    size_t x = 0, y = 0;
+
+    Screen *screen = nullptr;
+    View *parent = nullptr;
+
+    virtual ~View();
+
+    struct list list;
+
+    /* returns true if the click was handled */
+    virtual bool handle_mouse_action(size_t click_x, size_t click_y,
+                                     size_t abs_x, size_t abs_y,
+                                     struct mouse_event *ev);
+
+    inline void handle_mouse_action_root(size_t click_x, size_t click_y,
+                                         struct mouse_event *ev)
+    {
+        handle_mouse_action(click_x, click_y, 0, 0, ev);
+    }
+
+    virtual void render() = 0;
+    size_t get_width();
+    size_t get_height();
+    void clamp_child_dimensions(View *child);
+
+    virtual void on_key(char c);
+
+    virtual void update_child(View *child);
+
+    virtual inline void redraw()
+    {
+        screen->update_area(
+            {(int)abs_x, (int)abs_y, (int)get_width(), (int)get_height()});
+    }
+
+    /*
+     * makes this View's framebuffer a child of the parent framebuffer, so it
+     * will be rendered using this View's position as an offset into the parent
+     * framebuffer, should be called by Layout::render() to set children of the
+     * layout
+     */
+    inline void set_fb_parent(struct framebuffer parent)
+    {
+        // logd("setting with parent fb as %d %d", parent.width, parent.height);
+
+        fb.pitch = parent.pitch;
+        fb.depth = parent.depth;
+        fb.pixel_width = parent.pixel_width;
+        fb.buffer = (u8 *)parent.buffer + FRAMEBUFFER_OFFSET(parent, x, y);
+    }
+};
+
+class Layout : public View
+{
+  public:
+    struct list children;
+    virtual void add_child(View *view);
+    virtual void update_child(View *view) override;
+    Layout();
+    virtual ~Layout();
+    bool handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+                             size_t abs_y, struct mouse_event *ev) override;
+    virtual void clear_children();
+    void on_key(char c) override;
+};
+
+class Element : public View
+{
+  public:
+    Element(size_t w, size_t h);
+    ~Element();
+    bool handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+                             size_t abs_y, struct mouse_event *ev) override;
+    virtual void handle_element_click();
+};
+
+class RectElement : public Element
+{
+  public:
+    void render() override;
+    RectElement(size_t w, size_t h, u32 color);
+    u32 color;
+};
+class LineLayout : public Layout
+{
+  public:
+    bool is_vertical;
+    size_t offset;
+
+    void render() override;
+    void update_child(View *view) override;
+    LineLayout(bool is_vertical, size_t offset);
+
+    ~LineLayout();
+
+  private:
+    bool added_first_element = false;
+};
+
+class VerticalLineLayout : public LineLayout
+{
+  public:
+    inline VerticalLineLayout(size_t offset) : LineLayout(true, offset)
+    {
+    }
+};
+
+class HorizontalLineLayout : public LineLayout
+{
+  public:
+    inline HorizontalLineLayout(size_t offset) : LineLayout(false, offset)
+    {
+    }
+};
+
+class ScrollLayout : public LineLayout
+{
+  private:
+    struct
+    {
+        View **items;
+        size_t capacity;
+        size_t num;
+    } all_elements = {0, 0, 0};
+    size_t scroll_offset = 0;
+
+    void scroll_up();
+    void scroll_down();
+
+  public:
+    void extracted(View *&child);
+    void add_child(View *child) override;
+    bool handle_mouse_action(size_t click_x, size_t click_y, size_t abs_x,
+                             size_t abs_y, struct mouse_event *ev) override;
+
+    size_t max_elements;
+    void set_max_elements(size_t max);
+    void clear_children() override;
+
+    /* debugging */
+    inline void render() override
+    {
+        LineLayout::render();
+    }
+
+    inline ScrollLayout(size_t offset, size_t max_elements)
+        : LineLayout(true, offset), max_elements(max_elements),
+          scroll_offset(max_elements)
+    {
+    }
+};
+
+#endif

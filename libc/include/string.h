@@ -1,10 +1,11 @@
 #ifndef _STRING_H
 #define _STRING_H
 
-#include <stddef.h>
+#include <types.h>
 
 size_t strlen(const char *str);
 
+void *memmove(void *dstptr, const void *srcptr, size_t size);
 void *memcpy(void *dest, const void *src, size_t size);
 void *memset(void *dest, int c, size_t n);
 void bzero(void *s, size_t n);
