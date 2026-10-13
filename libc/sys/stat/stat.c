@@ -7,8 +7,8 @@
 #include <syscall.h>
 #include <utils.h>
 
-#include <kernel/userspace.h>
 #ifdef __is_libk
+#include <kernel/userspace.h>
 #include <vfs.h>
 #endif
 
@@ -48,6 +48,7 @@ int stat(const char *pathname, struct stat *buf)
 #endif
 }
 
+#ifdef __is_libk
 SYSCALL_DEFINE2(SYS_stat, int, const char *, pathname, struct stat *, buf)
 {
     char *kpath = get_user_pathname(pathname);
@@ -55,3 +56,4 @@ SYSCALL_DEFINE2(SYS_stat, int, const char *, pathname, struct stat *, buf)
     free(kpath);
     return retval;
 }
+#endif

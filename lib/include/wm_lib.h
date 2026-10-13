@@ -50,6 +50,7 @@ struct wm_client
     int socket;
     int key_socket;
     int mem_id;
+    bool is_alive;
     struct framebuffer fb;
     /* SDL_Surface *surface; */
     /* SDL_Renderer *renderer; */

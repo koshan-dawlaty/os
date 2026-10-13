@@ -5,7 +5,6 @@
 
 #include <stdlib.h>
 
-
 void init_libc()
 {
     /* TODO: maybe make these not writeable */

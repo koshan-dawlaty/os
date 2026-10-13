@@ -1,10 +1,8 @@
 #include "tap.h"
 #include <extension.h>
 #include <fcntl.h>
-#include <kernel/tty.h>
 #include <lib/assert.h>
 #include <lib/log.h>
-#include <serial.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -12,6 +10,10 @@
 #include <string.h>
 #include <tests/tests.h>
 #include <unistd.h>
+
+#ifdef __is_libk
+#include <serial.h>
+#endif
 
 #define TEST_OUTPUT_SERIAL_PORT 0x2F8
 

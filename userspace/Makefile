@@ -31,7 +31,7 @@ LIBS:=$(LIBS)
 
 CFLAGS:=$(CFLAGS) -fno-merge-constants -fno-merge-all-constants -Wno-write-strings  # -mcmodel=small
 # this gets rid of moddi3 and simliar functions
-CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib -Tlinker.ld
+CFLAGS:=$(CFLAGS) -fno-semantic-interposition -L$(SYSROOT)/usr/lib 
 
 
 # very bad
@@ -94,6 +94,7 @@ BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
 ifndef CONFIG_HOST_SDL
 DEPENDENCIES=../lib/bin/libutil$(TEST_SUFFIX).a ../libc/libc$(TEST_SUFFIX).a
+CFLAGS:=$(CFLAGS) -Tlinker.ld
 else
 DEPENDENCIES=../lib/bin/libutil$(TEST_SUFFIX).a
 CFLAGS:=$(CFLAGS) -lc -lutil -I../lib/include/ -I../libc/include/ -Tlinux.ld

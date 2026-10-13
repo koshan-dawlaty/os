@@ -52,6 +52,7 @@
 
 #else
 
+#define SYS_load_simple_binary 123
 #define SYS_mutex_unlock 123
 #define SYS_mutex_lock 123
 #define SYS_mutex_create 123
