@@ -54,6 +54,7 @@
 #define SYS_pread 123
 #define SYS_execv 123
 #define SYS_sleep 123
+#define SYS_execv_stdio 123
 
 /* taken from my nixos sys/syscall.h, then asm/unistd_64.h */
 #define SYS_read 0

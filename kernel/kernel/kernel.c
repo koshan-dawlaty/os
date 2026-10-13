@@ -76,10 +76,6 @@
 
 uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 
-__noreturn void __stack_chk_fail(void)
-{
-    PANIC("stack smashing detected");
-}
 
 extern struct pagedir init_pgdir;
 
@@ -227,7 +223,7 @@ void kernel_init()
 #ifdef TESTS
     run_tests();
 #else
-    symbol_table_parse(); /* seems to break with tests */
+    /* symbol_table_parse(); /1* seems to break with tests *1/ */
 #endif
 }
 

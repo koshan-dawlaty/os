@@ -1,4 +1,5 @@
 #include <lib/array.h>
+#include <userspace/syscall_wrappers.h>
 #include <lib/assert.h>
 #include <lib/list.h>
 #include <lib/log.h>

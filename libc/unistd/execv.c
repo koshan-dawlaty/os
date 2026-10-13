@@ -66,10 +66,10 @@ SYSCALL_DEFINE2(SYS_execv, int, const char *, path, char **, argv)
 {
     return execv(path, argv);
 }
-#ifdef __is_libk
 int execv_stdio(const char *path, char *const argv[], int stdin, int stdout)
 {
 
+#ifdef __is_libk
     struct fdlist *current_fdlist = get_current_task()->descriptors;
     struct file *new_stdin = fdlist_lookup(current_fdlist, stdin);
     struct file *new_stdout = fdlist_lookup(current_fdlist, stdout);
@@ -114,11 +114,11 @@ int execv_stdio(const char *path, char *const argv[], int stdin, int stdout)
     close(f);
 
     return 0;
-}
+#else
+    return syscall_wrapper_asm(SYS_execv_stdio, (ptr_t)path, (ptr_t)argv, stdin,
+                               stdout, 0);
 #endif
-
-/* TODO: */
-/* SYSCALL_DEFINE4(execv_stdio, SYS_execv_stdio); */
+}
 
 SYSCALL_DEFINE4(SYS_execv_stdio, int, const char *, path, char **, argv, int,
                 stdin, int, stdout)
