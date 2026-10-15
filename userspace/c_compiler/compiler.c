@@ -58,6 +58,7 @@ void ir_test()
     for (size_t i = 0; i < code.num; i += 4)
     {
         logd("%p\n", *(u32 *)(code.items + i));
+        printf("%p\n", *(u32 *)(code.items + i));
         /* logd("%p%p%p%p\n", code.items[i], code.items[i + 1], code.items[i +
          * 2], */
         /*      code.items[i + 3]); */

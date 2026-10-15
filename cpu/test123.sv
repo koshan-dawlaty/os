@@ -9,15 +9,18 @@ typedef logic [cfg::REGISTER_SEL_BITS - 1:0] reg_num_t;
 typedef logic [cfg::REGISTER_WIDTH - 1:0] reg_t;
 typedef logic [cfg::ADDRESS_WIDTH - 1:0] addr_t;
 
+interface memory_bus(input clk);
+	addr_t addr;
+	addr_t data_in;
+
+	/* maybe should be wire? it would not work with testbenches */
+	logic is_writing;
+	logic is_enabled = 1;
+
+endinterface
 
 module memory_sim (
-    input addr_t address,
-    input addr_t data_in,
-
-    input wire is_writing,
-    input wire is_enabled,
-    input wire clk,
-
+	memory_bus bus,
     output addr_t data_out
 
 );
@@ -57,11 +60,11 @@ module memory_sim (
 
     addr_t temp_addr = 0;
 
-    always @(posedge clk) begin
-        if (is_writing && is_enabled) begin
-            mem[address] <= data_in;
+    always @(posedge bus.clk) begin
+        if (bus.is_writing && bus.is_enabled) begin
+            mem[bus.addr] <= bus.data_in;
         end else begin
-            temp_addr <= address;
+            temp_addr <= bus.addr;
         end
     end
 
@@ -71,11 +74,11 @@ endmodule
 
 module test_memory_sim ();
 
-    addr_t address;
-    addr_t data_in;
-    logic  is_writing;
-    logic  is_enabled;
     logic  clk;
+	memory_bus bus (
+		.clk(clk)
+	);
+
     addr_t data_out;
 
     memory_sim memory_sim (.*);
@@ -83,18 +86,18 @@ module test_memory_sim ();
     initial begin
         clk = 0;
 
-        is_enabled = 1;
+        bus.is_enabled = 1;
 
-        is_writing = 1;
-        address = 4;
-        data_in = 123;
+        bus.is_writing = 1;
+        bus.addr = 4;
+        bus.data_in = 123;
         clk = ~clk;
         #1;
         clk = ~clk;
         #1;
 
-        is_writing = 0;
-        address = 4;
+        bus.is_writing = 0;
+        bus.addr = 4;
         clk = ~clk;
         #1;
         clk = ~clk;
@@ -224,6 +227,11 @@ module opcode_handle (
                 2: out = reg1 - reg2;
                 3: out = reg1 * reg2;
                 31: $finish();
+
+				/* these are for memory instructions so ignore them. */	
+				16: ; 
+				24: ;
+
                 default: $error("no case for %d", opcode);
             endcase
         end
@@ -254,6 +262,11 @@ module immediate_opcode_handle (
                 2:  out = reg_16 - immediate;
                 3:  out = reg_16 * immediate;
                 31: $finish();
+
+				/* FIXME: this is probably not good */
+				/* these are for memory instructions so ignore them. */	
+				16: ; 
+				24: ;
 
                 default: $error("no immediate case for %d", opcode);
             endcase
@@ -349,19 +362,11 @@ module test123;
 
     logic [31:0] current_instruction = 0;
 
-    addr_t addr = 0;
-    addr_t mem_in = 0;
+	memory_bus mem_bus (clk);
     wire addr_t mem_out;
 
-    logic writing_mem = 0;
-    logic addr_enabled = 1;
-
     memory_sim memory_sim (
-        .address   (addr),
-        .data_in   (mem_in),
-        .is_writing(writing_mem),
-        .is_enabled(addr_enabled),
-        .clk       (clk),
+		.bus(mem_bus),
         .data_out  (mem_out)
     );
 
@@ -383,8 +388,8 @@ module test123;
     always_ff @(posedge clk) begin
         case (state)
             INSTRUCTION_FETCH_1: begin
-                addr <= current_instruction;
-                writing_mem <= 0;
+                mem_bus.addr <= current_instruction;
+                mem_bus.is_writing <= 0;
                 state <= INSTRUCTION_FETCH_2;
             end
             INSTRUCTION_FETCH_2: begin
@@ -464,8 +469,8 @@ module test123;
 
             MEMORY_LOAD_START: begin
 				$display("load start at addr %d", data_out);
-                addr <= data_out;
-                writing_mem <= 0;
+                mem_bus.addr <= data_out;
+                mem_bus.is_writing <= 0;
 
                 state <= MEMORY_LOAD_SKIP;
             end
@@ -477,7 +482,7 @@ module test123;
                 reg_num <= reg2_num;
                 should_write <= 1;
 
-				$display("read %d", mem_out);
+				$display("read %d after load", mem_out);
 
                 state <= INSTRUCTION_FETCH_1;
             end
@@ -490,9 +495,9 @@ module test123;
                 state <= MEMORY_STORE_WRITE;
             end
             MEMORY_STORE_WRITE: begin
-                addr <= store_address;
-                mem_in <= data_out;
-                writing_mem <= 1;
+                mem_bus.addr <= store_address;
+                mem_bus.data_in <= data_out;
+                mem_bus.is_writing <= 1;
 
 				$display("storing value %d", data_out);
 
