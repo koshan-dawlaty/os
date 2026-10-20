@@ -1245,13 +1245,18 @@ int main()
     background = new_window(0, 0, buffer->width, buffer->height);
 
     /* struct tga_header background_img_header; */
-    /* void *background_img_data = */
-    /*     tga_image_parse("/dog.tga", &background_img_header); */
-    /* framebuffer_draw_img(&background->fb, background_img_data, */
-    /*                      background_img_header); */
-
-    framebuffer_draw_rect(&background->fb, 0, 0, WIN_W(background),
-                          WIN_H(background), 0x233826);
+    struct image background_img;
+    image_parse("/images/background.tga", &background_img);
+	/* logd("parsed background, got %p", background_img.data); */
+    if (background_img.data == NULL)
+    {
+        framebuffer_draw_rect(&background->fb, 0, 0, WIN_W(background),
+                              WIN_H(background), 0x233826);
+    }
+    else
+    {
+        framebuffer_draw_img(&background->fb, 0, 0, background_img);
+    }
 
     /* this might be bad because these are stack allocations */
     mouse_queue_ent = malloc(sizeof(struct window_queue_entry));

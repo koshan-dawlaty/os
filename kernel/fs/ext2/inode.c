@@ -1,4 +1,5 @@
 #include "ext2.h"
+#include "lib/rect.h"
 #include "panic.h"
 #include <container_of.h>
 #include <err_ptr.h>
@@ -59,27 +60,86 @@ ext2_inode *ext2_get_inode(ext2_inode_addr inode_number, superblock *sb)
     return node_out;
 }
 
+struct ext2_indirect_block_values
+{
+    u32 *singly_indirect_block;
+    /* the block that has block numbers in it */
+    u32 *doubly_indirect_block;
+
+    /* the singly indirect block, read from the doubly indirect block, that was
+     * used most recently */
+    u32 *doubly_indirect_current_block;
+    /* the offset into the doubly_indirect_blocks where the current block is */
+    size_t current_block_offset;
+};
+
+static inline void
+ext2_free_indirect_block_values(struct ext2_indirect_block_values values)
+{
+
+    if (values.singly_indirect_block != NULL)
+    {
+        free(values.singly_indirect_block);
+    }
+    if (values.doubly_indirect_block != NULL)
+    {
+        free(values.doubly_indirect_block);
+    }
+    if (values.doubly_indirect_current_block != NULL)
+    {
+        free(values.doubly_indirect_current_block);
+    }
+}
+
 /* gets the actual block number from a logical block */
 static u32 ext2_inode_get_block(struct ext2_inode *node, size_t block_num,
+                                struct ext2_indirect_block_values *data,
                                 struct superblock *sb)
 {
+    const size_t BLOCKS_PER_INDIRECT = EXT2_BLOCK_SIZE(sb) / 4;
 
     if (block_num < 12)
     {
         return node->direct_blocks[block_num];
     }
 
-    if (block_num > EXT2_BLOCK_SIZE(sb))
+    if (block_num > BLOCKS_PER_INDIRECT + 12)
     {
-        panic("ext2 file read too big");
+        size_t block_index = block_num - 12 - BLOCKS_PER_INDIRECT;
+        size_t doubly_indirect_index = block_index / BLOCKS_PER_INDIRECT;
+
+        if (data->doubly_indirect_block == NULL)
+        {
+            data->doubly_indirect_block =
+                (u32 *)ext2_read_block(node->doubly_indirect_block_pointer, sb);
+            data->current_block_offset = 0;
+        }
+        if (doubly_indirect_index != data->current_block_offset || data->doubly_indirect_current_block == NULL)
+        {
+            data->doubly_indirect_current_block = (u32 *)ext2_read_block(
+                data->doubly_indirect_block[doubly_indirect_index], sb);
+            data->current_block_offset = doubly_indirect_index;
+        }
+        size_t index =
+            block_index - (doubly_indirect_index * BLOCKS_PER_INDIRECT);
+        u32 retval =
+            data->doubly_indirect_current_block[block_index -
+                                                (doubly_indirect_index *
+                                                 BLOCKS_PER_INDIRECT)];
+
+        return retval;
     }
+    else
+    {
 
-    u32 *indirect_block =
-        (u32 *)ext2_read_block(node->singly_indirect_block_pointer, sb);
+        if (data->singly_indirect_block == NULL)
+        {
+            data->singly_indirect_block =
+                (u32 *)ext2_read_block(node->singly_indirect_block_pointer, sb);
+        }
 
-    u32 block = indirect_block[block_num - 12];
-    free(indirect_block);
-    return block;
+        return data->singly_indirect_block[block_num - 12];
+    }
 }
 
 /* TODO: this would be a lot better if it was inplace */
@@ -91,9 +151,12 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
     size_t current_offset = index % EXT2_BLOCK_SIZE(sb);
     size_t buf_offset = 0;
 
+    struct ext2_indirect_block_values indirect_blocks = {NULL, NULL, NULL, 0};
+
     while (buf_offset < buf_len)
     {
-        u32 block_num = ext2_inode_get_block(node, block_index, sb);
+        u32 block_num =
+            ext2_inode_get_block(node, block_index, &indirect_blocks, sb);
         u8 *block = ext2_read_block(block_num, sb);
         block_index++;
 
@@ -111,4 +174,5 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
         buf_offset += read_size;
         current_offset = 0;
     }
+	ext2_free_indirect_block_values(indirect_blocks);	
 }

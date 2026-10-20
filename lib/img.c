@@ -19,8 +19,8 @@ void *tga_image_parse(const char *path, struct tga_header *header)
 
     read(fd, header, sizeof(struct tga_header));
 
-    /* printf("w:%d h:%d, bpp:%d, %d\n", header->w, header->h, header->bpp, */
-    /*        header->encoding); */
+    logd("w:%d h:%d, bpp:%d, %d", header->w, header->h, header->bpp,
+           header->encoding);
 
     size_t data_size = header->h * header->w * (header->bpp / 8);
     void *data = calloc(data_size, 1);
