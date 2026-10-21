@@ -31,4 +31,8 @@ void framebuffer_draw_img(struct framebuffer *fb, size_t x, size_t y,
 void framebuffer_draw_img_scale(struct framebuffer *fb, size_t x_pos,
                                 size_t y_pos, double scale, struct image img);
 
+void framebuffer_draw_img_dim_scale(struct framebuffer *fb, size_t x_pos,
+                                    size_t y_pos, double w_scale,
+                                    double h_scale, struct image img);
+
 #endif

@@ -1200,6 +1200,7 @@ void thread1()
     exit(0);
 }
 
+
 int main()
 {
     /* int fd = open("/one", O_RDONLY); */
@@ -1246,8 +1247,9 @@ int main()
 
     /* struct tga_header background_img_header; */
     struct image background_img;
-    image_parse("/images/background.tga", &background_img);
-	/* logd("parsed background, got %p", background_img.data); */
+    /* image_parse("/images/background.tga", &background_img); */
+    image_parse("/images/dog.tga", &background_img);
+    /* logd("parsed background, got %p", background_img.data); */
     if (background_img.data == NULL)
     {
         framebuffer_draw_rect(&background->fb, 0, 0, WIN_W(background),
@@ -1255,7 +1257,9 @@ int main()
     }
     else
     {
-        framebuffer_draw_img(&background->fb, 0, 0, background_img);
+		double w_scale = (double)background->fb.width / background_img.header.w;
+		double h_scale = (double)background->fb.height / background_img.header.h;
+        framebuffer_draw_img_dim_scale(&background->fb, 0, 0, w_scale, h_scale, background_img);
     }
 
     /* this might be bad because these are stack allocations */

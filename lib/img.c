@@ -20,7 +20,7 @@ void *tga_image_parse(const char *path, struct tga_header *header)
     read(fd, header, sizeof(struct tga_header));
 
     logd("w:%d h:%d, bpp:%d, %d", header->w, header->h, header->bpp,
-           header->encoding);
+         header->encoding);
 
     size_t data_size = header->h * header->w * (header->bpp / 8);
     void *data = calloc(data_size, 1);
@@ -82,16 +82,17 @@ void framebuffer_draw_img(struct framebuffer *fb, size_t x_pos, size_t y_pos,
     }
 }
 
-void framebuffer_draw_img_scale(struct framebuffer *fb, size_t x_pos,
-                                size_t y_pos, double scale, struct image img)
+void framebuffer_draw_img_dim_scale(struct framebuffer *fb, size_t x_pos,
+                                    size_t y_pos, double w_scale,
+                                    double h_scale, struct image img)
 {
 
-    for (size_t y = 0; y < img.header.h * scale; y++)
+    for (size_t y = 0; y < img.header.h * h_scale; y++)
     {
-        for (size_t x = 0; x < img.header.w * scale; x++)
+        for (size_t x = 0; x < img.header.w * w_scale; x++)
         {
-            size_t index = ((size_t)(x * (1 / scale)) +
-                            ((size_t)(y * (1 / scale)) * img.header.w)) *
+            size_t index = ((size_t)(x * (1 / w_scale)) +
+                            ((size_t)(y * (1 / h_scale)) * img.header.w)) *
                            (img.header.bpp / 8);
 
             u8 *pixel = img.data + index;
@@ -105,4 +106,9 @@ void framebuffer_draw_img_scale(struct framebuffer *fb, size_t x_pos,
             framebuffer_put_pixel(fb, color, x + x_pos, y + y_pos);
         }
     }
+}
+void framebuffer_draw_img_scale(struct framebuffer *fb, size_t x_pos,
+                                size_t y_pos, double scale, struct image img)
+{
+    framebuffer_draw_img_dim_scale(fb, x_pos, y_pos, scale, scale, img);
 }

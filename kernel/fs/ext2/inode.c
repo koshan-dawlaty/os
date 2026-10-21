@@ -110,12 +110,15 @@ static u32 ext2_inode_get_block(struct ext2_inode *node, size_t block_num,
 
         if (data->doubly_indirect_block == NULL)
         {
+            logd("reading doubly indreict block");
             data->doubly_indirect_block =
                 (u32 *)ext2_read_block(node->doubly_indirect_block_pointer, sb);
             data->current_block_offset = 0;
         }
-        if (doubly_indirect_index != data->current_block_offset || data->doubly_indirect_current_block == NULL)
+        if (doubly_indirect_index != data->current_block_offset ||
+            data->doubly_indirect_current_block == NULL)
         {
+			logd("reading new indirect");
             data->doubly_indirect_current_block = (u32 *)ext2_read_block(
                 data->doubly_indirect_block[doubly_indirect_index], sb);
             data->current_block_offset = doubly_indirect_index;
@@ -174,5 +177,5 @@ void ext2_read_inode(ext2_inode *node, uint8_t *buf, size_t buf_len,
         buf_offset += read_size;
         current_offset = 0;
     }
-	ext2_free_indirect_block_values(indirect_blocks);	
+    ext2_free_indirect_block_values(indirect_blocks);
 }
