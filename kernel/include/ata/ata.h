@@ -2,6 +2,7 @@
 #define ATA_H
 
 // #include "interrupts/idt.h"
+#include <kernel/interrupts.h>
 #include "vfs.h"
 #include <bdev.h>
 #include <stddef.h>
@@ -53,6 +54,9 @@ void read_ata_pio(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
 void write_ata_pio(uint16_t io_offset, uint16_t control_offset, uint32_t lba,
                    uint8_t *buffer, size_t buffer_size);
 
+void read_ata_dma(uint8_t *buffer, uint16_t io_offset, uint16_t control_offset,
+                  uint32_t sectors, uint32_t lba);
+
 extern uint16_t ata_bus_master_register;
 
 typedef struct ata_drive
@@ -89,5 +93,9 @@ typedef struct ata_drive
 struct bdev *get_ata_drive(u8 drive_num);
 
 extern struct bdev_functions ata_bdev_functions;
+
+extern volatile bool ata_isr_handled;
+
+__int_handler void ata_isr_1(struct interrupt_frame *frame);
 
 #endif

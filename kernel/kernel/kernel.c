@@ -1,4 +1,5 @@
 #include "../acpi/acpica.h"
+#include "bdev.h"
 #include "multiboot.h"
 #include <ata/ata.h>
 #include <compiler.h>
@@ -207,7 +208,14 @@ void kernel_init()
     keyboard_init();
 
     init_pit();
+    init_pci();
     init_ata();
+
+    void *buffer = malloc(1024);
+    struct bdev *dev = get_ata_drive(0);
+    bdev_read(dev, buffer, 1024, 0x400);
+    return;
+
     init_vfs();
     ps2_init();
 
@@ -232,7 +240,6 @@ void kernel_init()
 #else
     /* symbol_table_parse(); /1* seems to break with tests *1/ */
 #endif
-    init_pci();
 }
 
 WAIT_QUEUE_DEFINE(poll_wait_queue);
@@ -281,6 +288,7 @@ struct test_array
 
 void kmain()
 {
+    return;
 
     /* struct dentry *entry = lookup_path("/dir/other-dir",
      * PATHNAME_LOOKUP_FIND); */

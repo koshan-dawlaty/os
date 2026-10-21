@@ -2,8 +2,10 @@
 #include "ata_utils.h"
 #include "interrupts/idt.h"
 #include "interrupts/pic.h"
+#include "kernel/interrupts.h"
 #include "stdlib.h"
 #include "utils.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -21,8 +23,12 @@ void print_all_regs(uint16_t offset)
     printf("status: %p\n", inb(offset + ATA_STATUS));
 }
 
-ISR(ata_isr_1, {
-    printf("ata isr 1\n");
+volatile bool ata_isr_handled;
+
+INT_HANDLER(ata_isr_1, {
+    logd("ata isr 1");
+	
+    ata_isr_handled = true;
 
     PIC_sendEOI(14);
 })

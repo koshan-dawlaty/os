@@ -1,6 +1,7 @@
 #include <drivers/character/mouse.h>
 #include <interrupts/faults.h>
 #include <interrupts/idt.h>
+#include <ata/ata.h>
 #include <interrupts/idt_internal.h>
 #include <interrupts/pic.h>
 #include <kernel/interrupts.h>
@@ -92,6 +93,11 @@ void init_idt()
     }
 
     init_faults();
+    add_idt_entry((IDT_entry){.offset = (u64)ata_isr_1,
+                              .segment_selector = 8,
+                              .flags = 0x8E,
+                              .stack_table = 0},
+                  0x2E);
 
     add_idt_entry((IDT_entry){.offset = (u64)pit_handler,
                               .segment_selector = 8,

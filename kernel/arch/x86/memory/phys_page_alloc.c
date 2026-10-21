@@ -96,11 +96,8 @@ void phys_pages_init(struct memory_region *regions, size_t len)
 
         size_t bitmap_size = (m.len / PAGE_SIZE) / 8;
         size_t num_pages = (bitmap_size / PAGE_SIZE) + 1;
-        logd("m.start:%p", m.start);
-        logd("m.len:%p", m.len);
 
         void *virtual = get_free_pages_unmmaped(num_pages, &gfp_kernel_zone);
-        logd("virutal:%p", virtual);
         for (size_t j = 0; j < num_pages; j++)
         {
             map_page(m.start + (j * PAGE_SIZE), virtual + (j * PAGE_SIZE),

@@ -81,6 +81,12 @@ void ata_send_command_24(uint16_t io_offset, uint16_t control_offset,
     outb(control_offset, 0);
     io_wait();
 
+	/* TODO: test this with pio */
+    ata_drive_select(io_offset, control_offset, 0xE0 | ((lba >> 24) & 0x0F));
+
+    wait_for_bit(io_offset, control_offset, 7, 0);
+    wait_for_bit(io_offset, control_offset, 6, 1);
+
     outb(io_offset + ATA_ERROR, 0);
     outb(io_offset + ATA_SECTOR_COUNT, (unsigned char)sectors);
 
@@ -90,8 +96,8 @@ void ata_send_command_24(uint16_t io_offset, uint16_t control_offset,
 
     outb(io_offset + ATA_DRIVE_HEAD, 0xE0 | ((lba >> 24) & 0x0F));
 
-    wait_for_bit(io_offset, control_offset, 7, 0);
-    wait_for_bit(io_offset, control_offset, 6, 1);
+/*     wait_for_bit(io_offset, control_offset, 7, 0); */
+/*     wait_for_bit(io_offset, control_offset, 6, 1); */
 
     outb(io_offset + ATA_COMMAND, command);
 

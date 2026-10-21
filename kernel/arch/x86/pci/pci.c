@@ -68,9 +68,26 @@ void parse_device(uint8_t bus, uint8_t dev, uint8_t func)
     if (base == 1 && sub == 1)
     {
         logd("ide controller found");
-        // ide controller
 
-        ata_bus_master_register = read_pci_config(bus, dev, func, 0x20);
+        u16 command = pci_read_config_word(bus, dev, func, 4);
+
+        command |= 4;
+
+        pci_write_config(bus, dev, func, 4, command);
+        u16 check = pci_read_config_word(bus, dev, func, 4);
+
+        ASSERT(check & 4, "pci busmastering failed to enable");
+
+        u32 bar4 = pci_read_config_word(bus, dev, func, 0x20);
+        if (bar4 & 1)
+        {
+            ata_bus_master_register = bar4 & 0xFFFC;
+        }
+        else
+        {
+            PANIC("memory ata bus master register found!");
+        }
+        /* logd("ata register:%p", ata_bus_master_register); */
     }
 }
 

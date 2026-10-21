@@ -98,11 +98,16 @@ int ata_read_bdev(struct bdev *dev, u8 *buffer, size_t amount, u64 offset)
 
     mutex_lock(&drive->lock);
 
-    /* if (!drive->is_dma) */
-    /* { */
-    read_ata_pio(buffer, drive->io_offset, drive->control_offset, amount,
-                 offset);
-    /* } */
+    if (!drive->is_dma)
+    {
+        read_ata_pio(buffer, drive->io_offset, drive->control_offset, amount,
+                     offset);
+    }
+    else
+    {
+        read_ata_dma(buffer, drive->io_offset, drive->control_offset, amount,
+                     offset);
+    }
     mutex_unlock(&drive->lock);
 
     /* TODO: return value */
