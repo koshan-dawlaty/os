@@ -1,3 +1,4 @@
+#include <lib/assert.h>
 #include <fcntl.h>
 #include <lib/log.h>
 #include <stdlib.h>
@@ -8,7 +9,7 @@ int main(int argc, char **argv)
 
     if (argc <= 1)
     {
-        loge("not enough args");
+        PANIC("not enough args");
     }
 
     int fd = open(argv[1], O_RDONLY);
@@ -39,7 +40,6 @@ int main(int argc, char **argv)
     else
     {
     edit_open:
-        logi("opening in editor as default");
         execv("/bin/edit", (char *[]){"edit", argv[1], NULL});
     }
 

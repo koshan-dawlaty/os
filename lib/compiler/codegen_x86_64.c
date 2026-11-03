@@ -1,5 +1,3 @@
-#include "lib/compiler/ir.h"
-#include "userspace/mouse.h"
 #include <complex.h>
 #include <container_of.h>
 #include <init.h>
@@ -7,12 +5,14 @@
 #include <lib/assert.h>
 #include <lib/compiler/ast.h>
 #include <lib/compiler/codegen.h>
+#include <lib/compiler/ir.h>
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/utils.h>
 #include <sys/syscall.h>
 #include <tests/tests.h>
 #include <unistd.h>
+#include <userspace/mouse.h>
 #include <utils.h>
 
 extern int syscall_wrapper_asm(ptr_t ax, ptr_t bx, ptr_t cx, ptr_t dx, ptr_t si,
@@ -306,6 +306,10 @@ void generate_set_conditional(struct bytecode_array *code, u8 opcode,
 {
     ASSERT(CODEGEN_TYPE_IS_RM(dest->type),
            "set conditional can only operate on r/m");
+
+    /* FIXME: these instructions only set the low byte, and i could not get it
+     * to work with the 1 byte version of test/cmp, so this is here for now */
+    generate_mov(code, dest, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, 0));
     /* TODO: this should use generate_opcode_mod(), but it has a 2 byte opcode,
      * and generate_opcode_mod() does not support that, the opcode probably
      * can't be appended to the array before this, because the rex prefix could
@@ -879,6 +883,14 @@ void codegen_generate_ir(struct bytecode_array *code,
     generate_sub(code, &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0b100),
                  &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, vars_size));
     code->stack_offset += vars_size;
+
+    /* for (size_t i = 8; i < vars_size; i+=8) */
+    /* { */
+    /*     generate_mov(code, */
+    /*                  &CODEGEN_VALUE_INIT(CODEGEN_VALUE_STACK, */
+    /*                                      i), */
+    /*                  &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, 0)); */
+    /* } */
 
     struct list *pos;
     list_for_each(pos, &program->instructions)

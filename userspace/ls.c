@@ -23,10 +23,16 @@ int main(int argc, char **argv)
     }
 
     DIR *d = opendir(path);
+    if (d == NULL)
+    {
+		printf("cant open %s\n", path);
+		return 1;
+    }
     struct dirent *e = readdir(d);
     if (errno != 0)
     {
         printf("ls error:%s\n", strerror(errno));
+		return 1;
     }
 
     while (e != NULL)
@@ -34,6 +40,7 @@ int main(int argc, char **argv)
         if (errno != 0)
         {
             printf("ls error:%s\n", strerror(errno));
+			return 1;
         }
 
         printf("%s ", e->d_name);

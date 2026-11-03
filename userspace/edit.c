@@ -328,7 +328,7 @@ int main(int argc, char **argv)
 {
 
     /* const char *str = "/home/koshan/os/build/fs-root/font.psfu"; */
-    const char *str = "font.psfu";
+    const char *str = "/font.psfu";
     int font_fd = open(str, O_RDONLY);
     font = font_parse_fd(font_fd);
 
@@ -446,5 +446,4 @@ int main(int argc, char **argv)
     }
 
     close(client.socket);
-
 }
