@@ -1,21 +1,17 @@
 #include <string.h>
 
-int memcmp(void *arg_one, void *arg_two, size_t n)
+int memcmp(const void *s1, const void *s2, size_t n)
 {
 
-    char *one = arg_one;
-    char *two = arg_two;
-
+    const u8 *one = s1;
+    const u8 *two = s2;
     for (size_t i = 0; i < n; i++)
     {
-        if (one[i] < two[i])
+
+        if (one[i] != two[i])
         {
-            return -1;
-        }
-        else if (one[i] > two[i])
-        {
-            return 1;
+            return (int)one[i] - (int)two[i];
         }
     }
-    return 0;
+	return 0;
 }

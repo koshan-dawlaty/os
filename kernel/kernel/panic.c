@@ -26,7 +26,7 @@ extern void panic_asm();
 
 #define KERNEL_PANIC_MESSAGE                                                   \
     "kernel panicked\n"                                                        \
-    "reason:\n"
+    "reason:"
 
 void vpanic(const char *message, va_list parameters)
 {
@@ -47,8 +47,8 @@ void panic_no_malloc(const char *message)
 
     stacktrace_log();
 
-    terminal_writestring(KERNEL_PANIC_MESSAGE);
-    terminal_writestring(message);
+    /* terminal_writestring(KERNEL_PANIC_MESSAGE "\n"); */
+    /* terminal_writestring(message); */
 
     while (1)
     {

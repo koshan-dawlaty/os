@@ -28,6 +28,7 @@ def main():
 
         # print(num_bytes + name_bytes)
         outfile.write(num_bytes + name_bytes)
+ 
 
     outfile.write('____SYMTABLE_DONE'.encode('ascii'))
 

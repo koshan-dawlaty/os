@@ -38,6 +38,7 @@ string/strcpy.o \
 string/strchr.o \
 string/strcat.o \
 string/strcmp.o \
+string/memcmp.o \
 string/strncmp.o \
 stdlib/atoi.o \
 stdlib/exit.o \

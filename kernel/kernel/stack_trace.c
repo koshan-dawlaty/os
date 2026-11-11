@@ -24,7 +24,7 @@ void symbol_table_parse()
     size_t num = 0;
     while (true)
     {
-        if (!strcmp(ptr, SYMBOL_TABLE_END))
+        if (!memcmp(ptr, SYMBOL_TABLE_END, strlen(SYMBOL_TABLE_END)))
         {
             break;
         }
@@ -87,6 +87,7 @@ void stacktrace_log()
         loge("0x%p, %s", stk->ip, symbol_get_name(stk->ip));
         stk = stk->bp;
     }
+        loge("\n");
     log_multiline_end(&LOG_ERROR);
 #endif
 }
