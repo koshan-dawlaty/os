@@ -89,6 +89,7 @@ BINARIES=\
 	mkdir$(TEST_SUFFIX) \
 	opener$(TEST_SUFFIX) \
 	paint$(TEST_SUFFIX) \
+	asm$(TEST_SUFFIX) \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -198,6 +199,9 @@ $(BIN)/paint$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/paint.o$(TEST_SUFFIX)  $(ST
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -Ttext=0x300000 -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
+$(BIN)/asm$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/asm_cpu.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
 $(BIN)/compiler$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/compiler.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)

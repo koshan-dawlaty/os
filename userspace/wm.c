@@ -1200,7 +1200,6 @@ void thread1()
     exit(0);
 }
 
-
 int main()
 {
     /* int fd = open("/one", O_RDONLY); */
@@ -1257,9 +1256,11 @@ int main()
     }
     else
     {
-		double w_scale = (double)background->fb.width / background_img.header.w;
-		double h_scale = (double)background->fb.height / background_img.header.h;
-        framebuffer_draw_img_dim_scale(&background->fb, 0, 0, w_scale, h_scale, background_img);
+        double w_scale = (double)background->fb.width / background_img.header.w;
+        double h_scale =
+            (double)background->fb.height / background_img.header.h;
+        framebuffer_draw_img_dim_scale(&background->fb, 0, 0, w_scale, h_scale,
+                                       background_img);
     }
 
     /* this might be bad because these are stack allocations */
