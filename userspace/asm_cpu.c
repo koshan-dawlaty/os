@@ -215,6 +215,7 @@ void assemble_program(const char *str, struct asm_code *code)
 
 int main(int argc, char **argv)
 {
+	logd("test");
     struct asm_code code = {0};
     if (argc <= 1)
     {

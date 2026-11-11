@@ -30,6 +30,9 @@ extern void panic_asm();
 
 void vpanic(const char *message, va_list parameters)
 {
+    /* FIXME: this will result in logging twice when building for host, as it
+     * will use stdout for both printf and log, but it is probably fine for now
+     */
     loge("%s", KERNEL_PANIC_MESSAGE);
     char *str = vrprintf(message, parameters);
     loge("%s", str);

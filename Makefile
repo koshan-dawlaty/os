@@ -96,7 +96,7 @@ kernel: headers lib libc
 
 sdl-host: export CONFIG_HOST_SDL=1 
 sdl-host: CC=gcc
-sdl-host: CFLAGS=-isystem=/usr/include -DCONFIG_HOST_SDL -Wl,--noinhibit-exec -no-pie -g  -fno-stack-protector
+sdl-host: CFLAGS=-isystem=/usr/include -DCONFIG_HOST_SDL -Wl,--noinhibit-exec -no-pie -g  -fno-stack-protector $(CONFIG_FLAGS)
 sdl-host: lib libc userspace
 
 

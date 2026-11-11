@@ -10,6 +10,13 @@
 #include <serial.h>
 #endif
 
+/* this is here to log to stdout for host programs, something similar could be done using dup() with stdout */
+#ifdef CONFIG_HOST_SDL
+#define LOG_FD 1 /* stdout */
+#else
+#define LOG_FD 3
+#endif
+
 struct log_level LOG_DEBUG = LOG_LEVEL_INIT("DEBUG", 3);
 struct log_level LOG_INFO = LOG_LEVEL_INIT("INFO", 3);
 struct log_level LOG_WARN = LOG_LEVEL_INIT("WARN", 3);
@@ -22,7 +29,7 @@ static inline void log_serial_writechar(char c)
 #ifdef __is_libk
     serial_write(LOG_SERIAL_PORT, c);
 #else
-    write(3, &c, 1);
+    write(LOG_FD, &c, 1);
 #endif
 }
 
@@ -31,7 +38,7 @@ static inline void log_serial_writestring(const char *s, size_t len)
 #ifdef __is_libk
     serial_writestring(s, len, LOG_SERIAL_PORT);
 #else
-    write(3, s, len);
+    write(LOG_FD, s, len);
 #endif
 }
 
