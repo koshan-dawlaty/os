@@ -90,6 +90,7 @@ BINARIES=\
 	opener$(TEST_SUFFIX) \
 	paint$(TEST_SUFFIX) \
 	asm$(TEST_SUFFIX) \
+	tests/userspace_tests$(TEST_SUFFIX) \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 
@@ -203,6 +204,12 @@ $(BIN)/asm$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/asm_cpu.o$(TEST_SUFFIX)  $(ST
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
 
+
+# FIXME: it would be nice if the userspace tests appeared in /bin/tests/userspace_tests when copied to fs_root
+$(BIN)/tests/userspace_tests$(TEST_SUFFIX): $(OBJS_START_BIN) $(BIN)/tests/userspace_tests.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
+	@mkdir -p $(BIN)/$(dir $<)
+	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc 
+
 $(BIN)/compiler$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/compiler.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000   -DTESTS
@@ -214,6 +221,7 @@ $(BIN)/interpreter$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/interpret
 $(BIN)/codegen_tests$(TEST_SUFFIX) : $(OBJS_START_BIN) $(BIN)/c_compiler/codegen_tests.o$(TEST_SUFFIX)  $(START_OBJ) $(DEPENDENCIES)  $(OBJS_END_BIN)
 	@mkdir -p $(BIN)/$(dir $<)
 	$(CC) -o $@ $^ $(CFLAGS) $(UTIL_FLAG) -nostdlib -lgcc  -Ttext=0x300000   -DTESTS
+
 
 
 $(BIN)/%.o$(TEST_SUFFIX): %.S

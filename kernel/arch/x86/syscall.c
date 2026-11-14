@@ -24,6 +24,7 @@
 /* eax should be at 19 words offset */
 struct syscall_regs
 {
+    /* ptr_t syscall_stack_start; */
     ptr_t ebx;
     ptr_t ecx;
     ptr_t edx;
@@ -40,10 +41,7 @@ struct syscall_regs
     ptr_t sp;
     ptr_t ss;
 
-} __attribute__((packed));
-
-/* int test; */
-semaphore *test_semaphore = NULL;
+} __packed;
 
 int syscall_handler(struct syscall_regs *regs)
 {
@@ -55,6 +53,7 @@ int syscall_handler(struct syscall_regs *regs)
 
         return 1;
     }
+	/* get_current_task()->user_syscall_start_stack = (void*)regs->syscall_stack_start; */
 
     return kernel_syscall(regs->eax, regs->ebx, regs->ecx, regs->edx, regs->esi,
                           regs->edi);

@@ -4,7 +4,7 @@
 /* this is a test executable, so always run tests */
 #ifndef TESTS
 #define TESTS
-#include "lib/utils.h"
+#include <lib/utils.h>
 #endif
 
 #include <lib/assert.h>

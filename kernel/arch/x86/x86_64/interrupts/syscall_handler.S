@@ -1,3 +1,4 @@
+
 .globl syscall_handler_asm
 .type syscall_handler_asm, @function
 syscall_handler_asm:
@@ -12,11 +13,16 @@ syscall_handler_asm:
 	push %rdx
 	push %rcx
 	push %rbx
+
+# 	push %rsp
+
 	mov %rsp, %rdi
 
+	
 	# this will allow the kernel to be preempted, however it may result in alot of race conditions
 	sti
 	call syscall_handler
+
 	# add $8, %rsp
 
 	pop %rbx
@@ -34,6 +40,25 @@ syscall_handler_asm:
 	pop %gs
 
 	# skip this because it would need to pop ax which is the return value
+	add $8, %rsp
+
+	iretq
+
+
+.globl syscall_handler_page_fault_stub
+.type syscall_handler_page_fault_stub, @function
+syscall_handler_page_fault_stub:
+	add $8, %rsp
+
+	pop %rbx
+	pop %rcx
+	pop %rdx
+	pop %rsi
+	pop %rdi
+	pop %rbp
+
+	pop %fs
+	pop %gs
 	add $8, %rsp
 
 	iretq

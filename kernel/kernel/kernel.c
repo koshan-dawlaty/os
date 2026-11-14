@@ -141,7 +141,6 @@ void kernel_init()
     {
         terminal_init_graphics(f);
         graphics_init(f);
-    
     }
 
     /* TODO: put in arch init */
@@ -314,7 +313,8 @@ void kmain()
 #else
     /* init_program = "/bin/compiler"; */
     /* init_program = "/bin/codegen_tests"; */
-    init_program = "/bin/wm";
+    init_program = "/bin/userspace_tests";
+    /* init_program = "/bin/wm"; */
     /* init_program = "/bin/asm"; */
     /* init_program = "/bin/ls"; */
     /* execv("/bin/wm", (char *[]){"wm", NULL}); */

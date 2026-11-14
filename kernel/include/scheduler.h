@@ -98,10 +98,19 @@ struct task
 
     /*  only used on x86_64, the inital rdi */
     u64 inital_arg;
-
     bool ran_setup;
 
     const char *name;
+
+    /* TODO: this could also be done by putting related functions in their own
+     * section and checking if the instruction that the fault was on was in one
+     * of those functions */
+    /* used by copy_(from|to)_user to know if a page fault was caused in one of
+     * those functions */
+    bool checking_user_addr;
+
+	/* the stack pointer before the call instruction in the syscall handler */
+	void *user_syscall_start_stack;
 };
 
 void switch_tasks();

@@ -43,8 +43,10 @@ SYSCALL_DEFINE3(SYS_read, int, int, fd, void *, buf, size_t, n)
 {
     void *kernel = malloc(n);
     size_t retval = read(fd, kernel, n);
+
     if (copy_to_user(buf, kernel, n))
     {
+
         return -EFAULT;
     }
 
