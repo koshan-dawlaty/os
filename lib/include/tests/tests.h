@@ -72,21 +72,26 @@ void tests_run_input(struct test_input *input);
 
 #define FAIL_TEST_EXTRA_REASON2(a, b, why, ...)                                \
     FAIL_TEST(why VALUE_IFNOT(__VA_OPT__(1), , ) FIRST_ARG(__VA_ARGS__)        \
-                  __VA_OPT__(, ) MACRO_STR(a),                                 \
+                  __VA_OPT__(, ) a,                                            \
+              b, MACRO_STR(a),                                                 \
               MACRO_STR(b) COMMA_IF_SECOND(__VA_ARGS__)                        \
                   __VA_OPT__(NOT_FIRST_ARG(__VA_ARGS__)))
+
+#define FAIL_TEST_EXTRA_REASON_BIN_OP(a, b, op_str, ...)                       \
+    FAIL_TEST_EXTRA_REASON2(a, b, "%d " op_str " %d, (%s " op_str " %s) ",     \
+                            __VA_ARGS__)
 
 // TODO: make these macros type independent
 #define ASSERT_EQ(a, b, ...)                                                   \
     if (a != b)                                                                \
     {                                                                          \
-        FAIL_TEST_EXTRA_REASON2(a, b, "%s != %s ", __VA_ARGS__)                \
+        FAIL_TEST_EXTRA_REASON_BIN_OP(a, b, "!=", __VA_ARGS__)                 \
     }
 
 #define ASSERT_NE(a, b, ...)                                                   \
     if (a == b)                                                                \
     {                                                                          \
-        FAIL_TEST_EXTRA_REASON2(a, b, "%s == %s ", __VA_ARGS__)                \
+        FAIL_TEST_EXTRA_REASON_BIN_OP(a, b, "==", __VA_ARGS__)                 \
     }
 
 #define ASSERT_TRUE(a, ...)                                                    \
@@ -98,25 +103,25 @@ void tests_run_input(struct test_input *input);
 #define ASSERT_LT(a, b, ...)                                                   \
     if (a >= b)                                                                \
     {                                                                          \
-        FAIL_TEST_EXTRA_REASON2(a, b, "%s >= %s ", __VA_ARGS__)                \
+        FAIL_TEST_EXTRA_REASON_BIN_OP(a, b, ">=", __VA_ARGS__)                 \
     }
 
 #define ASSERT_GT(a, b, ...)                                                   \
     if (a <= b)                                                                \
     {                                                                          \
-        FAIL_TEST_EXTRA_REASON2(a, b, "%s <= %s ", __VA_ARGS__)                \
+        FAIL_TEST_EXTRA_REASON_BIN_OP(a, b, "<=", __VA_ARGS__)                 \
     }
 
 #define ASSERT_GE(a, b, ...)                                                   \
     if (a < b)                                                                 \
     {                                                                          \
-        FAIL_TEST_EXTRA_REASON2(a, b, "%s < %s ", __VA_ARGS__)                 \
+        FAIL_TEST_EXTRA_REASON_BIN_OP(a, b, "<", __VA_ARGS__)                  \
     }
 
 #define ASSERT_LE(a, b, ...)                                                   \
     if (a > b)                                                                 \
     {                                                                          \
-        FAIL_TEST_EXTRA_REASON2(a, b, "%s > %s ", __VA_ARGS__)                 \
+        FAIL_TEST_EXTRA_REASON_BIN_OP(a, b, ">", __VA_ARGS__)                  \
     }
 #define ASSERT_EQ_STR(a, b, ...)                                               \
     if (strcmp(a, b) != 0)                                                     \
