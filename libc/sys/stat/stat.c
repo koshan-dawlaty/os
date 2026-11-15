@@ -8,7 +8,7 @@
 #include <utils.h>
 
 #ifdef __is_libk
-#include <kernel/userspace.h>
+#include <kernel/user_copy.h>
 #include <vfs.h>
 #endif
 

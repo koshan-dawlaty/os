@@ -13,9 +13,16 @@ TEST(read_valid_addr, {
     int fd = open("/one", O_RDONLY);
 
     char *buf = malloc(10);
-
     ASSERT_GE(read(fd, buf, 123), 0);
     free(buf);
+
+    close(fd);
+})
+
+TEST(read_invalid_addr, {
+    int fd = open("/one", O_RDONLY);
+
+    ASSERT_EQ(read(fd, NULL, 123), -EFAULT);
 
     close(fd);
 })

@@ -14,7 +14,7 @@ syscall_handler_asm:
 	push %rcx
 	push %rbx
 
-# 	push %rsp
+	push %rsp
 
 	mov %rsp, %rdi
 
@@ -23,7 +23,7 @@ syscall_handler_asm:
 	sti
 	call syscall_handler
 
-	# add $8, %rsp
+	add $8, %rsp
 
 	pop %rbx
 	pop %rcx
@@ -48,7 +48,8 @@ syscall_handler_asm:
 .globl syscall_handler_page_fault_stub
 .type syscall_handler_page_fault_stub, @function
 syscall_handler_page_fault_stub:
-	add $8, %rsp
+	mov %rdi, %rsp
+	# add $8, %rsp
 
 	pop %rbx
 	pop %rcx
@@ -60,5 +61,7 @@ syscall_handler_page_fault_stub:
 	pop %fs
 	pop %gs
 	add $8, %rsp
+
+	mov $-14, %rax
 
 	iretq

@@ -10,7 +10,7 @@
 
 #ifdef __is_libk
 #include <kernel/syscall.h>
-#include <kernel/userspace.h>
+#include <kernel/user_copy.h>
 #include <vfs.h>
 #endif
 
@@ -43,12 +43,16 @@ SYSCALL_DEFINE3(SYS_read, int, int, fd, void *, buf, size_t, n)
 {
     void *kernel = malloc(n);
     size_t retval = read(fd, kernel, n);
+    struct task *t = get_current_task();
+    t->checking_user_addr = true;
+
 
     if (copy_to_user(buf, kernel, n))
     {
-
+        t->checking_user_addr = false;
         return -EFAULT;
     }
+    t->checking_user_addr = false;
 
     free(kernel);
 

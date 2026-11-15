@@ -8,8 +8,9 @@
 #include <stdlib.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+
 #ifdef __is_libk
-#include <kernel/userspace.h>
+#include <kernel/user_copy.h>
 #include <vfs.h>
 #endif
 

@@ -26,7 +26,6 @@
 #include <kernel/stacktrace.h>
 #include <kernel/syscall.h>
 #include <kernel/tty.h>
-#include <kernel/userspace.h>
 #include <lib/array.h>
 #include <lib/assert.h>
 #include <lib/binary_tree.h>

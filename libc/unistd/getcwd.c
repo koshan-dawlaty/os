@@ -1,10 +1,10 @@
-#include "lib/log.h"
 #ifdef __is_libk
-#include <kernel/userspace.h>
+#include <kernel/user_copy.h>
 #include <scheduler.h>
 #include <vfs.h>
 #endif
 
+#include <lib/log.h>
 #include <kernel_syscall.h>
 #include <lib/utils.h>
 #include <sys/syscall.h>

@@ -109,9 +109,10 @@ struct task
      * those functions */
     bool checking_user_addr;
 
-	/* the stack pointer before the call instruction in the syscall handler */
-	void *user_syscall_start_stack;
+    /* the stack pointer before the call instruction in the syscall handler */
+    void *user_syscall_start_stack;
 };
+
 
 void switch_tasks();
 
@@ -213,5 +214,16 @@ struct sched_queue
     struct task_queue queue;
 };
 #define SCHED_QUEUE_CURRENT_TASK(q) (q.current_task->task)
+
+static inline void user_addr_check_start()
+{
+
+	get_current_task()->checking_user_addr = true;
+}
+static inline void user_addr_check_end()
+{
+
+	get_current_task()->checking_user_addr = false;
+}
 
 #endif

@@ -16,16 +16,22 @@ static void print_page_fault_flags(struct page_fault_flags flags)
     printf("%c%c%c%c", user, instruction, present, other);
 }
 
-extern void syscall_handler_page_fault_stub();
+extern void syscall_handler_page_fault_stub(ptr_t sp);
 
 void page_fault(void *addr, void *ip, struct page_fault_flags flags)
 {
     struct task *t = get_current_task();
 
+    ASSERT(!(t->checking_user_addr && flags.user),
+           "checking_user_addr set while task is in userspace, the kernel "
+           "probably didn't call user_addr_check_end() after a "
+           "user_addr_check_start()");
+
     if (t->checking_user_addr)
     {
-        /* syscall_handler_page_fault_stub(); */
-
+        t->checking_user_addr = false;
+        syscall_handler_page_fault_stub((ptr_t)t->user_syscall_start_stack);
+        return;
     }
     if (!flags.user)
     {

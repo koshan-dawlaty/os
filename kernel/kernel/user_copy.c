@@ -1,9 +1,7 @@
-#ifndef USERSPACE_H
-#define USERSPACE_H
-
 #include <err_ptr.h>
 #include <errno.h>
 #include <lib/array.h>
+#include <scheduler.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,8 +14,7 @@
 #error "unknown architecture"
 #endif
 
-/* TODO: this should check if the addr is writable */
-static inline bool user_addr_is_valid(const void *addr, size_t len)
+bool user_addr_is_valid(const void *addr, size_t len)
 {
     return (addr + len) < (void *)USERADDR_END;
 }
@@ -26,27 +23,32 @@ static inline bool user_addr_is_valid(const void *addr, size_t len)
 /*
  * returns number of bytes that couldnt be copied, 0 on success
  */
-static inline size_t copy_to_user(void *user, const void *kernel, size_t n)
+size_t copy_to_user(void *user, const void *kernel, size_t n)
 {
+
     if (!user_addr_is_valid(user, n))
     {
         return 1;
     }
+    user_addr_check_start();
     memcpy(user, kernel, n);
+    user_addr_check_end();
     return 0;
 }
 
-static inline size_t copy_from_user(void *kernel, const void *user, size_t n)
+size_t copy_from_user(void *kernel, const void *user, size_t n)
 {
     if (!user_addr_is_valid(user, n))
     {
         return 1;
     }
+    user_addr_check_start();
     memcpy(kernel, user, n);
+    user_addr_check_end();
     return 0;
 }
 
-static inline int strncpy_from_user(char *kernel, const char *user, size_t n)
+int strncpy_from_user(char *kernel, const char *user, size_t n)
 {
 
     /* we need to read at least the null terminator */
@@ -75,7 +77,7 @@ static inline int strncpy_from_user(char *kernel, const char *user, size_t n)
 /*
  * gets a kernel-usable pathname from a user pathname
  */
-static inline char *get_user_pathname(const char *pathname)
+char *get_user_pathname(const char *pathname)
 {
     char *out = malloc(USER_PATH_MAX);
     int result = strncpy_from_user(out, pathname, USER_PATH_MAX);
@@ -86,5 +88,3 @@ static inline char *get_user_pathname(const char *pathname)
 
     return out;
 }
-
-#endif

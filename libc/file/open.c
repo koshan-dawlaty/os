@@ -9,7 +9,7 @@
 
 #ifdef __is_libk
 #include <err.h>
-#include <kernel/userspace.h>
+#include <kernel/user_copy.h>
 #include <vfs.h>
 #endif
 

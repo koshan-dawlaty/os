@@ -91,6 +91,7 @@ kernel/multiboot.o \
 kernel/socket/socket.o \
 kernel/faults.o \
 kernel/timer.o \
+kernel/user_copy.o \
 lib/binary_tree.o \
 lib/lru.o \
 lib/rc.o \

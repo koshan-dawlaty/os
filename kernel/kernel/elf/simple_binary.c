@@ -1,5 +1,5 @@
-#include "kernel/addr_space.h"
-#include "kernel/userspace.h"
+#include <kernel/addr_space.h>
+#include <kernel/user_copy.h>
 #include <kernel/paging.h>
 #include <kernel/syscall.h>
 #include <lib/log.h>
