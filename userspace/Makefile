@@ -80,17 +80,18 @@ BINARIES=\
 	compiler$(TEST_SUFFIX) \
 	interpreter$(TEST_SUFFIX) \
 	codegen_tests$(TEST_SUFFIX) \
-	ui_lib$(TEST_SUFFIX) \
 	tron$(TEST_SUFFIX) \
 	render_test$(TEST_SUFFIX) \
-	explore$(TEST_SUFFIX) \
 	run$(TEST_SUFFIX) \
 	sokoban$(TEST_SUFFIX) \
 	mkdir$(TEST_SUFFIX) \
 	opener$(TEST_SUFFIX) \
-	paint$(TEST_SUFFIX) \
 	asm$(TEST_SUFFIX) \
 	tests/userspace_tests$(TEST_SUFFIX) \
+
+	# explore$(TEST_SUFFIX) \
+	# paint$(TEST_SUFFIX) \
+# 	ui_lib$(TEST_SUFFIX) \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 

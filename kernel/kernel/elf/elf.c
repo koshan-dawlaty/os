@@ -1,23 +1,22 @@
-#include "err_ptr.h"
-#include "fcntl.h"
-#include "gdt.h"
-#include "kernel/addr_space.h"
-#include "kernel/paging.h"
-#include "kernel/utils.h"
-#include "lib/log.h"
-#include "memory/paging_flags.h"
-#include "panic.h"
-#include "scheduler.h"
-#include "strings.h"
-#include "sys/types.h"
-#include "utils.h"
 #include <elf.h>
+#include <err_ptr.h>
+#include <fcntl.h>
+#include <gdt.h>
+#include <kernel/addr_space.h>
+#include <kernel/paging.h>
+#include <kernel/utils.h>
+#include <lib/log.h>
+#include <memory/paging_flags.h>
+#include <panic.h>
+#include <scheduler.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <unistd.h>
+#include <utils.h>
 
 void free_elf(elf *elf)
 {

@@ -11,7 +11,6 @@
 #include <lib/list.h>
 #include <lib/log.h>
 #include <lib/term.h>
-#include <math.h>
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -15,7 +15,10 @@ export FS_ROOT := fs_root
 export DESTDIR := $(SYSROOT)
 export ARCH := $(shell ./build/default-host.sh)
 
-export CC := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
+# export CC := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
+export CC := gcc --sysroot=$(SYSROOT) -Wno-format-security -fno-pic -ffreestanding \
+-nostdlib -nostartfiles -nostdinc -fno-stack-protector
+
 export AS := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
 
 export CXX := $(shell ./build/compiler-arch.sh $(ARCH))-g++ --sysroot=$(SYSROOT)
@@ -25,7 +28,9 @@ export CXX := $(shell ./build/compiler-arch.sh $(ARCH))-g++ --sysroot=$(SYSROOT)
 export CFLAGS := -DMYOS1234 -Werror -O0 -g3 -g \
 -Wno-format	\
 -fno-optimize-sibling-calls \
--Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits -isystem=/usr/include -nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fno-omit-frame-pointer -Wno-unused-parameter 
+-Wno-unused-but-set-variable -Wno-address-of-packed-member -Wno-unused-function -Wno-unused-parameter -Wno-unused-label -Wno-unused-variable -Wno-error=type-limits  \
+-nostdlib $(shell ./build/arch-flags.sh $(ARCH)) -DCONFIG_$(ARCH) $(CONFIG_FLAGS) -fno-omit-frame-pointer -Wno-unused-parameter  \
+-isystem=/usr/include \
 
 export CXXFLAGS := \
 -Wno-pointer-arith -fpermissive -std=gnu++17 -Wno-pointer-arith -fno-rtti  -Wno-narrowing -Wno-invalid-offsetof -fno-exceptions

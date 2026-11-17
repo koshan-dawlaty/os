@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <sys/syscall.h>
 #include <task_queue.h>
-#include <time.h>
 #include <vfs.h>
 /* TODO: bad */
 #include "../ext2/ext2.h"

@@ -5,7 +5,6 @@
 #include <lib/compiler/ir.h>
 #include <lib/list.h>
 #include <lib/log.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <types.h>

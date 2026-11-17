@@ -74,7 +74,7 @@ dirent/dirent.o \
 init.o \
 errno.o \
 ctype.o \
-cpp_utils.o \
+# cpp_utils.o \
 
 
 HOSTEDOBJS=\

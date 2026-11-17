@@ -1,14 +1,13 @@
-#include "lib/log.h"
-#include "sys/types.h"
+#include <sys/types.h>
 #include <string.h>
 
 void *memset(void *dest, int c, size_t n)
 {
-    u_char *ptr = (u_char *)dest;
+    u8 *ptr = (u8 *)dest;
 
     for (size_t i = 0; i < n; i++)
     {
-        ptr[i] = (u_char)c;
+        ptr[i] = (u8)c;
     }
 
     return ptr;

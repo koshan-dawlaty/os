@@ -1,5 +1,4 @@
 #include <scheduler.h>
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <task_queue.h>
 #ifndef MUTEX_H

@@ -8,7 +8,6 @@
 #include <drivers/character/mouse.h>
 #include <drivers/character/serial.h>
 #include <drivers/character/terminal.h>
-#include <endian.h>
 #include <err_ptr.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -312,8 +311,8 @@ void kmain()
 #else
     /* init_program = "/bin/compiler"; */
     /* init_program = "/bin/codegen_tests"; */
-    init_program = "/bin/userspace_tests";
-    /* init_program = "/bin/wm"; */
+    /* init_program = "/bin/userspace_tests"; */
+    init_program = "/bin/wm";
     /* init_program = "/bin/asm"; */
     /* init_program = "/bin/ls"; */
     /* execv("/bin/wm", (char *[]){"wm", NULL}); */

@@ -6,7 +6,6 @@
 #include <syscall.h>
 
 #ifdef __is_libk
-#include <err.h>
 #include <vfs.h>
 #endif
 

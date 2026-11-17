@@ -1,5 +1,4 @@
-#include "lib/log.h"
-#include <ctype.h>
+#include <lib/log.h>
 #include <lib/array.h>
 #include <lib/assert.h>
 #include <stdlib.h>
@@ -215,7 +214,7 @@ void assemble_program(const char *str, struct asm_code *code)
 
 int main(int argc, char **argv)
 {
-	logd("test");
+    logd("test");
     struct asm_code code = {0};
     if (argc <= 1)
     {

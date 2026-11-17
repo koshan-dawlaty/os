@@ -17,7 +17,6 @@
 #include <memory/get_free_pages.h>
 #include <panic.h>
 #include <scheduler.h>
-#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -297,7 +296,7 @@ struct task *task_alloc(ptr_t ip)
 {
     struct task *out = malloc(sizeof(struct task));
     out->name = NULL;
-	out->checking_user_addr = false;
+    out->checking_user_addr = false;
     out->preempt_count = 0;
 
     out->descriptors = new_fdlist();

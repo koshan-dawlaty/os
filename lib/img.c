@@ -2,7 +2,6 @@
 #include <lib/framebuffer.h>
 #include <lib/img.h>
 #include <lib/log.h>
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <types.h>

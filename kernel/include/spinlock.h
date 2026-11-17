@@ -1,7 +1,6 @@
 #ifndef SPINLOCK_H
 #define SPINLOCK_H
 #include <kernel/preempt.h>
-#include <stdatomic.h>
 
 struct spinlock
 {

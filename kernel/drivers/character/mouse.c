@@ -13,7 +13,6 @@
 #include <lib/utils.h>
 #include <panic.h>
 #include <scheduler.h>
-#include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>

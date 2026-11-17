@@ -7,7 +7,6 @@
 #include <memory/paging_flags.h>
 #include <multiboot.h>
 #include <panic.h>
-#include <stdalign.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

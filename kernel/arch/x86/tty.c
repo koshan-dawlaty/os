@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <threads.h>
 #define TERMINAL_EMPTY_CHAR ' '
 
 struct framebuffer *tty_framebuffer;

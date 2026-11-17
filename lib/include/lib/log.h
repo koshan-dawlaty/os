@@ -6,7 +6,6 @@
 #endif
 
 #include <compiler.h>
-#include <math.h>
 #include <stdarg.h>
 #include <types.h>
 struct log_level

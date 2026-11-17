@@ -7,7 +7,6 @@
 #include <utils.h>
 
 #ifdef __is_libk
-#include <err.h>
 #include <panic.h>
 #include <vfs.h>
 #endif

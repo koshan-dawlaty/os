@@ -1,5 +1,5 @@
-#include "lib/log.h"
-#include "strings.h"
+#include <lib/log.h>
+#include <string.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
