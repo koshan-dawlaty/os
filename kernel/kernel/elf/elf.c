@@ -103,7 +103,7 @@ write_pagedir(t->addr_space.dir, (void *)get_free_phys_page(),
         }
         else
         {
-            panic("unrecognized header type:%d when loading elf file\n",
+            loge("unrecognized program header type:%x when loading elf file",
                   header->type);
         }
     }

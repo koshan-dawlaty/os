@@ -15,9 +15,11 @@ EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=/boot
 INCLUDEDIR?=$(PREFIX)/include
 
-CFLAGS:=-ffreestanding -Wall -Wextra  -Wno-unknown-pragmas -fstack-protector-all -D__is_libk \
+CFLAGS:=-ffreestanding -Wall -Wextra  -Wno-unknown-pragmas -D__is_libk \
 		$(CFLAGS) \
 		-Iacpi/acpica/ # TODO: this is bad 
+# does not work with host gcc
+# -fstack-protector-all 
 CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)  

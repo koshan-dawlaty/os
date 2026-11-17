@@ -80,8 +80,16 @@ extern struct pagedir init_pgdir;
 extern void (*__ctors_start[])(void);
 extern void (*__ctors_end[])(void);
 
+extern void (*__init_array_start[])(void);
+extern void (*__init_array_end[])(void);
+
 void call_constructors(void)
 {
+
+    for (void (**c)(void) = __init_array_start; c < __init_array_end; ++c)
+    {
+        (*c)();
+    }
 
     for (void (**ctor)(void) = __ctors_start; ctor < __ctors_end; ++ctor)
     {

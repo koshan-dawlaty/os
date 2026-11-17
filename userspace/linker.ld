@@ -17,6 +17,14 @@ SECTIONS
         *(.rodata.*)
     }
 
+    .init_array : ALIGN(4)
+    {
+        PROVIDE(__init_array_start = .);
+        KEEP(*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+        KEEP(*(.ctors))
+        PROVIDE(__init_array_end = .);
+    }
+
     .ctors : ALIGN(4)
     {
         PROVIDE(__ctors_start = .);
