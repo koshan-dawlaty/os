@@ -260,6 +260,7 @@ struct test_array
 
 void kmain()
 {
+	mkdir("/dir2", 0);
 
     /* struct dentry *entry = lookup_path("/dir/other-dir",
      * PATHNAME_LOOKUP_FIND); */
@@ -315,7 +316,7 @@ void kmain()
     char *init_program_args[] = {"", NULL};
 
 #ifdef TESTS
-    execv("/bin/codegen_tests.test", (char *[]){"", NULL});
+    /* execv("/bin/codegen_tests.test", (char *[]){"", NULL}); */
 #else
     /* init_program = "/bin/compiler"; */
     /* init_program = "/bin/codegen_tests"; */

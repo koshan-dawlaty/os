@@ -643,7 +643,6 @@ static struct ast_expr *ast_parse_expression_simple(struct ast_parser *parser,
     {
         /* TODO: also have postfix operators */
 
-        logd("parsing expression because there was a unary operator");
         /*
          * this uses the simple version of this function because, in
          * some cases, there can be operators after the unary operator

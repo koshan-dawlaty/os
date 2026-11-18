@@ -15,9 +15,9 @@ export FS_ROOT := fs_root
 export DESTDIR := $(SYSROOT)
 export ARCH := $(shell ./build/default-host.sh)
 
-# export CC := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
-export CC := gcc --sysroot=$(SYSROOT) -Wno-format-security -fno-pic -ffreestanding \
--nostdlib -nostartfiles -nostdinc -fno-stack-protector -mno-tls-direct-seg-refs
+export CC := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
+# export CC := gcc --sysroot=$(SYSROOT) -Wno-format-security -fno-pic -ffreestanding \
+# -nostdlib -nostartfiles -nostdinc -fno-stack-protector -mno-tls-direct-seg-refs
 
 export AS := $(shell ./build/compiler-arch.sh $(ARCH))-gcc --sysroot=$(SYSROOT)
 

@@ -186,14 +186,10 @@ struct interp_value *expr_eval(struct ast_expr *expr,
         int rhs = rhs_val->value;
         if (lhs_val->num_pointers >= 1)
         {
-            logd("multiplying rhs (%d) by:%d because", rhs,
-                 lhs_val->type->size);
             rhs *= lhs_val->type->size;
         }
         if (rhs_val->num_pointers >= 1)
         {
-            logd("multiplying lhs (%d) by:%d because", lhs,
-                 rhs_val->type->size);
             lhs *= rhs_val->type->size;
         }
 
@@ -244,18 +240,14 @@ struct interp_value *expr_eval(struct ast_expr *expr,
             struct interp_value *value =
                 expr_eval(expr->unary_operator.expr, interp);
 
-            logd("name:%s", value->type->name);
             if (value->num_pointers <= 0)
             {
                 PANIC("attempt to dereference not a pointer");
             }
 
-            logd("a pointer with value:%d", value->value);
-            logd("a pointer with size:%d", value->type->size);
             u8 *ptr = interp->memory + value->value;
             struct interp_value *out =
                 interp_value_alloc(value->type, value->num_pointers - 1, 0);
-            logd("%p", ptr);
             memcpy(&out->value, ptr, value->type->size);
 
             /* TODO: type / size should not be int */
@@ -327,7 +319,6 @@ struct interp_value *expr_eval(struct ast_expr *expr,
             NOT_NULL(var, "variable not found:%s", expr->value.varname);
             memcpy(&var->value->value, interp->memory + var->addr,
                    var->value->type->size);
-            logd("var %s has size of %d", var->varname, var->value->type->size);
             return var->value;
         }
     }
@@ -387,7 +378,6 @@ struct interp_value *expr_eval(struct ast_expr *expr,
 
                     struct interp_value *value =
                         expr_eval(passed_arg->expr, interp);
-                    logd("arg:%d", value->value);
                     struct variable var = {.value = value,
                                            .varname = def_arg->name,
                                            .addr = interp->var_offset};
@@ -449,7 +439,6 @@ struct interp_value *statement_eval(struct ast_statement *statement,
         size_t type_size = init_val->type->size;
         memcpy(interp->memory + interp->var_offset, &init_val->value,
                type_size);
-        logd("created variable at:%d", interp->var_offset);
         interp->var_offset += type_size;
 
         NOT_NULL(interp->current_scope, "current scope was null");
@@ -463,11 +452,9 @@ struct interp_value *statement_eval(struct ast_statement *statement,
         break;
     case AST_STATEMENT_IF:;
         value = expr_eval(statement->block_expr, interp);
-        logd("if:%d", value->value);
         /* TODO: add error if it is not an int maybe */
         if (value->value != 0)
         {
-            logd("evaluating");
             struct interp_value *output =
                 statements_eval(&statement->block, interp);
             if (output != NULL)
@@ -493,7 +480,6 @@ struct interp_value *statement_eval(struct ast_statement *statement,
     case AST_STATEMENT_FOR:
         if (statement->for_expr.first_is_statement)
         {
-            logd("evaluating for loop first statement");
             statement_eval(statement->for_expr.statement1, interp);
         }
         else

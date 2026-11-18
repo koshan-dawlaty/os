@@ -123,7 +123,6 @@ void ext2_write_block(uint8_t *buffer, size_t block_number, superblock *sb);
 inode *ext2_iget(ino_t inode_number, superblock *sb);
 
 struct inode *ext2_inode_alloc(struct superblock *sb, u16 type);
-uint32_t ext2_block_alloc(superblock *sb);
 
 void ext2_write_inode(inode *node, const uint8_t *buf, size_t buf_len,
                       ext2_inode_index index, superblock *sb);

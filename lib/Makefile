@@ -57,11 +57,11 @@ OBJS=\
 	tests_lib/tests_lib.o \
 	userspace/input/keyboard.o \
 	tests/interpreter_tests.o \
-	# ui/ui.o \
-	# ui/text_input.o \
-	# ui/text.o \
-	# ui/image.o \
-	# ui/button.o \
+	ui/ui.o \
+	ui/text_input.o \
+	ui/text.o \
+	ui/image.o \
+	ui/button.o \
 
 
 OBJS_BIN_NO_SUFFIX = $(foreach obj,$(OBJS),bin/$(obj))

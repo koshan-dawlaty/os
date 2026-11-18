@@ -88,10 +88,9 @@ BINARIES=\
 	opener$(TEST_SUFFIX) \
 	asm$(TEST_SUFFIX) \
 	tests/userspace_tests$(TEST_SUFFIX) \
-
-	# explore$(TEST_SUFFIX) \
-	# paint$(TEST_SUFFIX) \
-# 	ui_lib$(TEST_SUFFIX) \
+	explore$(TEST_SUFFIX) \
+	paint$(TEST_SUFFIX) \
+ 	ui_lib$(TEST_SUFFIX) \
 
 BINARIES_BIN=$(foreach obj,$(BINARIES),bin/$(obj))
 

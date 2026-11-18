@@ -1,6 +1,5 @@
 #include <cpp/cpp_c_include_start.hpp>
 
-#include <cstddef>
 #include <lib/list.h>
 
 #include <assert.h>
@@ -110,7 +109,7 @@ void get_dir_layout(DIR *d)
                 [=](ButtonElement *) -> void
                 {
                     logi("normal file %s", e->d_name);
-                    char *args[] = {"opener", e->d_name, NULL};
+                    char *args[] = {"opener", e->d_name, (char*)NULL};
                     execv("/bin/opener", args);
                 });
             break;

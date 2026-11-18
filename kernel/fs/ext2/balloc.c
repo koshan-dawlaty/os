@@ -39,7 +39,6 @@ struct inode *ext2_inode_alloc(struct superblock *sb, u16 type)
                 if (type == EXT2_INODE_DIR)
                 {
                     ext2_node->size_low = EXT2_BLOCK_SIZE(sb);
-                    ext2_node->direct_blocks[0] = ext2_block_alloc(sb);
                     size_t dentry_len = 12;
                     u8 *dentry = malloc(dentry_len);
                     ((u32 *)dentry)[0] = node->number;
@@ -70,36 +69,6 @@ struct inode *ext2_inode_alloc(struct superblock *sb, u16 type)
     }
 
     return NULL;
-}
-
-uint32_t ext2_block_alloc(superblock *sb)
-{
-    for (size_t j = 0; j < EXT2_TOTAL_BLOCKS(sb) / EXT2_BLOCKS_PER_GROUP(sb);
-         j++)
-    {
-
-        for (size_t i = 1; i < EXT2_BLOCKS_PER_GROUP(sb); i++)
-        {
-            uint32_t usage_block =
-                EXT2_SB(sb)->group_descriptor_table->block_usage;
-            uint8_t *usage_bitmap = ext2_read_block(usage_block, sb);
-
-            bool block_exists =
-                ((usage_bitmap[(i - 1) / 8]) & (1 << (i - 1) % 8)) != 0;
-
-            if (!block_exists)
-            {
-                usage_bitmap[(i - 1) / 8] |= (1 << (i - 1) % 8);
-                ext2_write_block(usage_bitmap, usage_block, sb);
-                free(usage_bitmap);
-
-                return i;
-            }
-            free(usage_bitmap);
-        }
-    }
-
-    return 0;
 }
 
 /* TODO: this does not update all other refrences to this node in memory */
@@ -133,18 +102,7 @@ void ext2_update_inode(inode *node, superblock *sb)
 static inline uint32_t
 ext2_get_block_from_inode(inode *vfs_node, uint8_t block_index, superblock *sb)
 {
-
-    ext2_inode *node = EXT2_INODE(vfs_node);
-
-    if (node->direct_blocks[block_index] == 0)
-    {
-        uint32_t block = ext2_block_alloc(sb);
-        node->direct_blocks[block_index] = block;
-        ext2_update_inode(vfs_node, sb);
-        return block;
-    }
-
-    return node->direct_blocks[block_index];
+    return EXT2_INODE(vfs_node)->direct_blocks[block_index];
 }
 
 void ext2_write_inode(inode *vfs_node, const uint8_t *buf, size_t buf_len,
