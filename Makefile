@@ -170,6 +170,7 @@ codegen-debug : $(ISO)
 
 test : CFLAGS += -DTESTS
 test : export TEST_SUFFIX=.test
+test : QEMU_FLAGS += -display none
 test : $(ISO) 
 	./build/test.sh
 

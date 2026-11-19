@@ -1,4 +1,5 @@
-#include "unistd.h"
+#include <lib/assert.h>
+#include <unistd.h>
 #include <compiler.h>
 #include <lib/framebuffer.h>
 #include <lib/log.h>
@@ -99,9 +100,12 @@ void framebuffer_resize(size_t old_width, size_t old_height, size_t new_width,
                         size_t new_height, void *old_buffer, void *new_buffer)
 {
 
+
     size_t new_pitch = new_width * 4, old_pitch = old_width * 4;
     size_t copy_size = MIN(new_width, old_width) * 4;
     size_t min_height = MIN(new_height, old_height);
+
+
 
     for (size_t y = 0; y < min_height; y++)
     {
@@ -117,10 +121,11 @@ void framebuffer_resize(size_t old_width, size_t old_height, size_t new_width,
         /* logd("new offset:%d old_offset:%d, copy_size:%d", new_offset,
      old_offset, copy_size); */
 
-        /* for (size_t i = copy_size; i > 0; i--) */
-        /* { */
-        /*     dest[i] = src[i]; */
-        /* } */
-        memcpy(new_buffer + new_offset, old_buffer + old_offset, copy_size);
+        for (size_t i = copy_size; i > 0; i--)
+        {
+            dest[i] = src[i];
+        }
+
+        /* memcpy(new_buffer + new_offset, old_buffer + old_offset, copy_size); */
     }
 }

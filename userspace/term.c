@@ -1,4 +1,6 @@
 #include "lib/assert.h"
+#include "lib/framebuffer.h"
+#include "lib/rect.h"
 #include "userspace/mouse.h"
 #include "wm_lib.h"
 #include <compiler.h>
@@ -23,6 +25,8 @@
 #include <types.h>
 #include <unistd.h>
 #include <userspace/syscall_wrappers.h>
+
+size_t current_width = 600, current_height = 600;
 
 size_t x = 0, y = 0;
 struct PSF_font *font;
@@ -75,6 +79,34 @@ void key_thread()
             /* user_mutex_lock(mutex); */
             /* wm_render(client); */
             /* user_mutex_unlock(mutex); */
+            break;
+        }
+        case WM_MESSAGE_RESIZE:
+        {
+            struct wm_message_resize *resize = message.message_data;
+            if (resize->new_w > current_width)
+            {
+                size_t redraw_w = resize->new_w - current_width;
+                framebuffer_draw_rect(&client.fb, current_width, 0, redraw_w,
+                                      resize->new_h, 0);
+
+                wm_render_partial(
+                    client,
+                    (struct rect){current_width, 0, redraw_w, resize->new_h});
+            }
+            if (resize->new_h > current_height)
+            {
+                size_t redraw_h = abs((int)current_height - (int)resize->new_h);
+                framebuffer_draw_rect(&client.fb, 0, current_height,
+                                      current_width, redraw_h, 0);
+                wm_render_partial(
+                    client,
+                    (struct rect){0, current_height, current_width, redraw_h});
+            }
+
+            current_width = resize->new_w;
+            current_height = resize->new_h;
+            break;
         }
         }
     }
@@ -152,7 +184,7 @@ int main()
 
     /* client = wm_client_connect(175, 600); */
     /* client = wm_client_connect(600, 175); */
-    client = wm_client_connect(600, 600);
+    client = wm_client_connect(current_height, current_width);
     /* client = wm_client_connect(100, 100); */
     /* struct wm_client client = wm_client_connect(175, 220); */
 

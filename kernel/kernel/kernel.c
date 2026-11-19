@@ -196,6 +196,7 @@ void kernel_init()
         register_interrupt_handler(0x80, syscall_handler_asm,
                                    (int_handler_flags){.is_user = true});
     });
+    init_pci();
 
 #ifdef TESTS
     struct test_input input = {
@@ -211,7 +212,6 @@ void kernel_init()
 #else
     symbol_table_parse(); /* seems to break with tests */
 #endif
-    init_pci();
 }
 
 WAIT_QUEUE_DEFINE(poll_wait_queue);
@@ -260,7 +260,7 @@ struct test_array
 
 void kmain()
 {
-	mkdir("/dir2", 0);
+    mkdir("/dir2", 0);
 
     /* struct dentry *entry = lookup_path("/dir/other-dir",
      * PATHNAME_LOOKUP_FIND); */

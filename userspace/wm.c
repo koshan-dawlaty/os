@@ -860,14 +860,17 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     }
     server_send_message(ent->conn, &message);
 
-    framebuffer_resize(win_get_buffer_width(ent->win),
-                       win_get_buffer_height(ent->win), new_buffer_width,
-                       new_buffer_height, ent->conn->buffer, new_addr);
+    if (new_addr != NULL)
+    {
+        framebuffer_resize(win_get_buffer_width(ent->win),
+                           win_get_buffer_height(ent->win), new_buffer_width,
+                           new_buffer_height, ent->conn->buffer, new_addr);
+    }
 
     ent->conn->buffer = new_addr;
     /* ent->win->fb.buffer = new_addr; */
     ent->win->fb.buffer =
-        realloc(ent->win->fb.buffer, new_height * new_width * 4);
+        realloc(ent->win->fb.buffer, new_height * new_width * 4 + 4096);
     ent->win->fb.height = new_height;
     ent->win->fb.width = new_width;
     ent->win->fb.pitch = new_width * 4;
@@ -892,6 +895,8 @@ static int resize_window(struct window_queue_entry *ent, int width_diff,
     /* framebuffer_draw_rect(&ent->win->fb, 0, 0, ent->win->fb.width, */
     /*                       ent->win->fb.height, 0xFF); */
     draw_window_decoration(ent->win, true);
+
+    /* redundant with window_render_from_buffer */
     update_area_up(
         (struct rect){
 

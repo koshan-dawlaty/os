@@ -13,7 +13,6 @@ CFLAGS="${CFLAGS} -DTESTS "
 ISO="build/os.iso"
 
 IMAGE_FILE="build/test.img"
-
 export CFLAGS
 export ISO
 
@@ -64,7 +63,7 @@ FILE_NAME="$SERIAL_PIPE.out"
 while [[ ! -p "$FILE_NAME" ]]; do
     sleep 0.05
 done
-cat "$FILE_NAME" 2>/dev/null | python3 build/tap.py -v
+cat "$FILE_NAME" 2>/dev/null | python3 build/tap.py 
 
 kill $QEMU_PID 2>/dev/null
 

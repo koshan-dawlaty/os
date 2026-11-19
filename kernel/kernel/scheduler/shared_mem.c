@@ -18,14 +18,12 @@ struct shared_memory_entry
     void *creator_addr;
     size_t len;
 
-    size_t resize_len;
-
     struct timer_callback_data callback_data;
 };
 
 /* TODO: make this dynamic */
 #define SHARED_MEMORY_MAX 100
-struct shared_memory_entry shared_memory_list[SHARED_MEMORY_MAX];
+struct shared_memory_entry shared_memory_list[SHARED_MEMORY_MAX] = {0};
 struct spinlock shared_mem_lock = SPINLOCK_INIT();
 size_t shared_memory_list_index = 0;
 
@@ -51,7 +49,7 @@ int shared_mem_alloc(void **addr, size_t len)
     }
 
     shared_memory_list[shared_memory_list_index] =
-        (struct shared_memory_entry){physical, memory, mem_len, 0, {}};
+        (struct shared_memory_entry){physical, memory, mem_len, {}};
     shared_memory_list_index++;
     shared_memory_offset += mem_len;
 
@@ -99,46 +97,36 @@ int shared_mem_resize(int id, size_t new_size, void **new_addr)
 
     struct shared_memory_entry *ent = &shared_memory_list[id];
 
-    size_t old_size = ent->len;
-
-    if (new_size > old_size)
+    if (new_size > ent->len)
     {
 
-        if (new_size > ent->resize_len)
+        void *memory = SHARED_MEMORY_START + shared_memory_offset;
+
+        size_t num_pages = (new_size / PAGE_SIZE) + 3;
+        shared_memory_offset += (num_pages + PAGE_SIZE) * PAGE_SIZE;
+        void *physical = get_free_phys_pages(num_pages);
+
+        for (size_t i = 0; i < num_pages; i++)
         {
-            void *memory = SHARED_MEMORY_START + shared_memory_offset;
-
-            size_t actual_len =
-                (new_size / (PAGE_SIZE * 100) + 1) * (PAGE_SIZE * 100);
-            size_t num_pages = ((actual_len) / PAGE_SIZE) + 3;
-            ent->resize_len = actual_len;
-            shared_memory_offset += (num_pages + PAGE_SIZE) * PAGE_SIZE;
-            void *physical = get_free_phys_pages(num_pages);
-
-            for (size_t i = 0; i < num_pages; i++)
-            {
-                map_page(physical + (PAGE_SIZE * i), memory + (PAGE_SIZE * i),
-                         PAGING_PRESENT | PAGING_USER | PAGING_WRITEABLE);
-            }
-
-            struct timer_event *ev = timer_event_alloc(
-                shared_mem_resize_timeout, &ent->callback_data);
-            timer_event_add(ev, 1000);
-
-            size_t num_old_pages = (old_size / PAGE_SIZE) + 3;
-
-            /* memcpy(memory, ent->creator_addr, old_size); */
-            free_phys_pages(ent->mem, num_old_pages);
-
-            ent->creator_addr = memory;
-            ent->mem = physical;
-
-            *new_addr = memory;
+            map_page(physical + (PAGE_SIZE * i), memory + (PAGE_SIZE * i),
+                     PAGING_PRESENT | PAGING_USER | PAGING_WRITEABLE);
         }
-        else
-        {
-            *new_addr = NULL;
-        }
+
+        /*
+struct timer_event *ev = timer_event_alloc(
+shared_mem_resize_timeout, &ent->callback_data);
+timer_event_add(ev, 1000);
+        */
+
+        size_t num_old_pages = (ent->len / PAGE_SIZE) + 3;
+
+        /* memcpy(memory, ent->creator_addr, old_size); */
+        free_phys_pages(ent->mem, num_old_pages);
+
+        ent->creator_addr = memory;
+        ent->mem = physical;
+
+        *new_addr = memory;
     }
     else
     {
