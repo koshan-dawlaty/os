@@ -23,6 +23,25 @@
 struct wm_client client;
 struct PSF_font *font;
 
+enum editor_mode
+{
+    EDITOR_MODE_INSERT,
+    EDITOR_MODE_NORMAL,
+};
+
+enum editor_mode current_mode = EDITOR_MODE_NORMAL;
+
+static const char *editor_mode_str(enum editor_mode mode)
+{
+    switch (mode)
+    {
+    case EDITOR_MODE_INSERT:
+        return "INSERT";
+    case EDITOR_MODE_NORMAL:
+        return "NORMAL";
+    }
+}
+
 struct editor_row
 {
     struct array characters;
@@ -41,6 +60,7 @@ struct editor_buffer
     struct list rows_head;
     struct editor_row *current_row;
 
+    char *filename;
     FILE *file;
 };
 
@@ -61,6 +81,34 @@ void editor_buffer_scroll_up(struct editor_buffer *buffer)
     }
 }
 
+void editor_draw_status(struct editor_buffer *buffer)
+{
+    framebuffer_draw_rect(&client.fb, 0, client.fb.height - font->header.height,
+                          client.fb.width, font->header.height, 0);
+    const char *filename_str =
+        buffer->filename == NULL ? "no name" : buffer->filename;
+    framebuffer_draw_string(&client.fb, font, filename_str, 0,
+                            client.fb.height - font->header.height);
+
+    framebuffer_draw_string(&client.fb, font, editor_mode_str(current_mode),
+                            (strlen(filename_str) + 1) * font->header.width,
+                            client.fb.height - font->header.height);
+}
+
+void editor_update_status(struct editor_buffer *buffer)
+{
+    wm_render_partial(client,
+                      (struct rect){0, client.fb.height - font->header.height,
+                                    client.fb.width, font->header.height});
+}
+
+void editor_set_mode(struct editor_buffer *buffer, enum editor_mode mode)
+{
+    current_mode = mode;
+    editor_draw_status(buffer);
+    editor_update_status(buffer);
+}
+
 void editor_buffer_set_cursor(struct editor_buffer *buffer, int cursor_x,
                               int cursor_y);
 
@@ -78,7 +126,7 @@ void editor_buffer_redraw(struct editor_buffer *buffer, struct framebuffer *fb,
     size_t i = 0;
     list_for_each(pos, &buffer->rows_head)
     {
-        if (i >= buffer->top_line && i <= buffer->num_lines + buffer->top_line)
+        if (i >= buffer->top_line && i < buffer->num_lines + buffer->top_line)
         {
             struct editor_row *row = containerof(pos, struct editor_row, list);
 
@@ -95,6 +143,7 @@ void editor_buffer_redraw(struct editor_buffer *buffer, struct framebuffer *fb,
 
         i++;
     }
+    editor_draw_status(buffer);
 }
 
 void editor_buffer_delete_cursor(struct editor_buffer *buffer)
@@ -243,7 +292,7 @@ void set_filename(struct editor_buffer *buffer)
     char zero = 0;
     array_add(&filename, &zero, 1);
     char *name = array_free_ptr(filename);
-    logd("got filename:%s", name);
+    buffer->filename = name;
     buffer->file = fopen(name, "c");
 }
 
@@ -289,7 +338,6 @@ void write_to_file(struct editor_buffer *buffer)
         struct editor_row *row = containerof(pos, struct editor_row, list);
         if (row->characters.data != NULL)
         {
-            logd("writing:%s", row->characters.data);
             fwrite(row->characters.data, row->characters.len, 1, buffer->file);
         }
         char newline = '\n';
@@ -316,6 +364,7 @@ void handle_args(int argc, char **argv, struct editor_buffer *buffer)
                     insert_char(buf[i], buffer);
                 }
             } while (bytes_read == read_size);
+            buffer->filename = argv[1];
             wm_render(client);
         free_buffer:
             free(buf);
@@ -346,7 +395,11 @@ int main(int argc, char **argv)
     /*                                .num_lines = */
     /*                                    client.fb.height /
      * font->header.height}; */
-    struct editor_buffer buffer = {0, 0, .top_line = 0, .file = NULL,
+    struct editor_buffer buffer = {0,
+                                   0,
+                                   .top_line = 0,
+                                   .file = NULL,
+                                   .filename = NULL,
                                    .num_lines =
                                        client.fb.height / font->header.height};
 
@@ -362,7 +415,6 @@ int main(int argc, char **argv)
     editor_buffer_redraw(&buffer, &client.fb, 0, 0);
     wm_render(client);
 
-    bool insert_mode = true;
     while (wm_is_alive(&client))
     {
         struct wm_message message;
@@ -387,24 +439,26 @@ int main(int argc, char **argv)
         {
 
             char c = *(char *)message.message_data;
-            if (insert_mode)
+            switch (current_mode)
             {
+            case EDITOR_MODE_INSERT:
                 if (c == 27)
                 {
-                    insert_mode = false;
+                    editor_set_mode(&buffer, EDITOR_MODE_NORMAL);
                 }
                 else
                 {
                     insert_char(c, &buffer);
                     wm_render(client);
                 }
-            }
-            else
-            {
+                break;
+            case EDITOR_MODE_NORMAL:
+
                 switch (c)
                 {
                 case 'i':
-                    insert_mode = true;
+                    editor_set_mode(&buffer, EDITOR_MODE_INSERT);
+
                     break;
                 case 'f':
                     buffer.top_line++;
@@ -437,6 +491,7 @@ int main(int argc, char **argv)
                 editor_buffer_redraw(&buffer, &client.fb, 0, 0);
 
                 wm_render(client);
+                break;
             }
             break;
         }
