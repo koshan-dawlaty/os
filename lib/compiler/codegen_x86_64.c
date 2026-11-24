@@ -167,11 +167,13 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
     }
     else if (dest->type == CODEGEN_VALUE_MEMORY_STACK_REF)
     {
-        generate_mov(code, &stack_stack_temp_reg2,
-                     &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0b100));
-        generate_add(code, &stack_stack_temp_reg2,
-                     &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE,
-                                         dest->memory.stack_offset));
+        struct codegen_value no_ref =
+            CODEGEN_VALUE_INIT(CODEGEN_VALUE_STACK, dest->memory.stack_offset);
+        generate_mov(code, &stack_stack_temp_reg2, &no_ref);
+        /* generate_add(code, &stack_stack_temp_reg2, */
+        /*              &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE, */
+        /*                                  code->stack_offset - */
+        /*                                      dest->memory.stack_offset)); */
         dest = codegen_value_to_memory_refrence(&stack_stack_temp_reg2);
     }
     if (codegen_type_is_memory(src->type) && codegen_type_is_memory(dest->type))

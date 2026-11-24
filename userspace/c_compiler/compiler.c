@@ -54,10 +54,16 @@ void ir_test()
         /* return *ptr; */
 
         int i = 10;
-		int * ptr = &i;
-		*i = 123;
+        int *ptr = &i;
+        *ptr = 123;
 
-        return i;
+		int a = 456;
+
+		ptr = &a;
+
+		*ptr = 789;
+
+        return i + a;
     }
 
     );
