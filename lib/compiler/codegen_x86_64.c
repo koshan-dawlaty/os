@@ -139,6 +139,7 @@ void generate_sib_byte(struct bytecode_array *code,
 struct codegen_value immediate_temp_reg = {CODEGEN_VALUE_REGISTER, 1};
 struct codegen_value immediate_temp_reg2 = {CODEGEN_VALUE_REGISTER, 3};
 struct codegen_value stack_stack_temp_reg = {CODEGEN_VALUE_REGISTER, 0b110};
+struct codegen_value stack_stack_temp_reg2 = {CODEGEN_VALUE_REGISTER, 0b111};
 
 bool codegen_type_is_memory(enum codegen_value_type type)
 {
@@ -148,6 +149,9 @@ bool codegen_type_is_memory(enum codegen_value_type type)
 }
 
 void generate_mov(struct bytecode_array *code, struct codegen_value *dest,
+                  struct codegen_value *src);
+
+void generate_add(struct bytecode_array *code, struct codegen_value *dest,
                   struct codegen_value *src);
 
 void generate_opcode(struct bytecode_array *code, u8 opcode,
@@ -160,6 +164,15 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
             CODEGEN_VALUE_INIT(CODEGEN_VALUE_STACK, src->memory.stack_offset);
         generate_mov(code, &stack_stack_temp_reg, &src_no_ref);
         src = codegen_value_to_memory_refrence(&stack_stack_temp_reg);
+    }
+    else if (dest->type == CODEGEN_VALUE_MEMORY_STACK_REF)
+    {
+        generate_mov(code, &stack_stack_temp_reg2,
+                     &CODEGEN_VALUE_INIT(CODEGEN_VALUE_REGISTER, 0b100));
+        generate_add(code, &stack_stack_temp_reg2,
+                     &CODEGEN_VALUE_INIT(CODEGEN_VALUE_IMMEDIATE,
+                                         dest->memory.stack_offset));
+        dest = codegen_value_to_memory_refrence(&stack_stack_temp_reg2);
     }
     if (codegen_type_is_memory(src->type) && codegen_type_is_memory(dest->type))
     {
