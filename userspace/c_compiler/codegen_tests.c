@@ -249,7 +249,7 @@ TEST_CODEGEN(codegen_test_for_basic2, MACRO_STR(int main() {
     }
 	), 33)
 
-TEST_CODEGEN(codegen_test_stack_addr, MACRO_STR(int main() {
+TEST_CODEGEN(codegen_test_stack_addr_read, MACRO_STR(int main() {
         int x = 123;
         int *ptr = &x;
         int value = *ptr;
@@ -257,6 +257,24 @@ TEST_CODEGEN(codegen_test_stack_addr, MACRO_STR(int main() {
         return value;
     }
 	), 123)
+
+TEST_CODEGEN(codegen_test_stack_addr_write, MACRO_STR(int main() {
+        int x = 456;
+        int *ptr = &x;
+        *ptr = 123;
+
+        return x;
+    }
+	), 123)
+
+TEST_CODEGEN(codegen_test_stack_addr_read_write, MACRO_STR(int main() {
+        int x = 456;
+        int *ptr = &x;
+        *ptr = 123;
+
+        return x + *ptr;
+    }
+	), 123 + 123)
 
 // clang-format on
 //
