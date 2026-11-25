@@ -2,7 +2,6 @@
 #include <init.h>
 #include <lib/array.h>
 #include <lib/assert.h>
-#include <lib/compiler/ast.h>
 #include <lib/compiler/codegen.h>
 #include <lib/compiler/ir.h>
 #include <lib/list.h>
@@ -13,6 +12,24 @@
 #include <unistd.h>
 #include <userspace/mouse.h>
 #include <utils.h>
+
+int run_code(u8 *bytecode, size_t len)
+{
+
+    int retval = ((int (*)())bytecode)();
+    logd("returned:%d", retval);
+    return retval;
+
+    u8 *binary_test = malloc(9 + sizeof(bytecode));
+    binary_test[0] = 'T';
+    binary_test[1] = 'E';
+    binary_test[2] = 'S';
+    binary_test[3] = 'T';
+    binary_test[4] = 0;
+    *(u32 *)(binary_test + 5) = sizeof(bytecode);
+    memcpy(binary_test + 9, bytecode, len);
+    syscall_wrapper_asm(SYS_load_simple_binary, (ptr_t)binary_test, 0, 0, 0, 0);
+}
 
 extern int syscall_wrapper_asm(ptr_t ax, ptr_t bx, ptr_t cx, ptr_t dx, ptr_t si,
                                ptr_t di);
@@ -164,7 +181,6 @@ void generate_opcode(struct bytecode_array *code, u8 opcode,
         rm = dest;
         reg = src;
     }
-
 
     generate_opcode_bytes(code, get_rex(reg, rm), opcode, get_modrm(reg, rm));
 
@@ -478,254 +494,12 @@ struct variable *codegen_variable_lookup(struct bytecode_array *code,
     return NULL;
 }
 
-struct codegen_value *generate_operator(struct bytecode_array *code,
-                                        struct codegen_value *lhs,
-                                        struct codegen_value *rhs,
-                                        enum token_type operator_type)
-{
-
-    struct codegen_value *retval;
-    switch (operator_type)
-    {
-    case TOKEN_PLUS:;
-        struct codegen_value *stack = raise_sp(code);
-        generate_mov(code, stack,
-                     codegen_value_alloc(CODEGEN_VALUE_IMMEDIATE, 0));
-        if (lhs != NULL)
-        {
-            logd("adding:%d", lhs->value);
-            generate_add(code, stack, lhs);
-        }
-
-        if (rhs != NULL)
-        {
-            logd("adding:%d", rhs->value);
-            generate_add(code, stack, rhs);
-        }
-
-        retval = stack;
-        break;
-    case TOKEN_MINUS:;
-        struct codegen_value *temp_reg = &immediate_temp_reg;
-
-        if (lhs->type == CODEGEN_VALUE_IMMEDIATE &&
-            rhs->type == CODEGEN_VALUE_IMMEDIATE)
-        {
-            generate_mov(code, temp_reg, lhs);
-            generate_sub(code, temp_reg, rhs);
-            retval = generate_push(code, temp_reg);
-        }
-        else if (lhs->type == CODEGEN_VALUE_IMMEDIATE)
-        {
-            generate_mov(code, temp_reg, lhs);
-            generate_mov(code, &immediate_temp_reg2, rhs);
-            generate_neg(code, &immediate_temp_reg2);
-            generate_add(code, &immediate_temp_reg, &immediate_temp_reg2);
-            retval = generate_push(code, &immediate_temp_reg);
-        }
-        else
-        {
-            generate_mov(code, temp_reg, lhs);
-            generate_sub(code, temp_reg, rhs);
-            retval = generate_push(code, temp_reg);
-        }
-        break;
-    case TOKEN_STAR:;
-        struct codegen_value *value = generate_mul(code, lhs, rhs);
-        retval = generate_push(code, value);
-        break;
-
-    case TOKEN_ASSIGN:
-        generate_mov(code, lhs, rhs);
-        retval = lhs;
-
-    case TOKEN_EQUALS:;
-        struct codegen_value *out = raise_sp(code);
-        generate_mov(code, out,
-                     &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, 0});
-        logd("lhs:%d, rhs:%d", lhs->type, rhs->type);
-        generate_cmp(code, lhs, rhs);
-        generate_setz(code, out);
-
-        retval = out;
-        break;
-
-    default:
-        PANIC("invalid operator type from ast:%s",
-              token_type_str(operator_type));
-    }
-    /* if (lhs->type == CODEGEN_VALUE_STACK) */
-    /* { */
-    /*     lower_sp(code); */
-    /* } */
-    /* if (rhs->type == CODEGEN_VALUE_STACK) */
-    /* { */
-    /*     lower_sp(code); */
-    /* } */
-    return retval;
-}
-
-struct codegen_value *generate_expr(struct bytecode_array *code,
-                                    struct ast_expr *expr);
-
-struct codegen_value *generate_expr_impl(struct bytecode_array *code,
-                                         struct ast_expr *expr)
-{
-
-    switch (expr->type)
-    {
-    case AST_EXPRESSION_VALUE:
-        if (expr->value.is_var)
-        {
-            struct variable *var =
-                codegen_variable_lookup(code, expr->value.varname);
-            NOT_NULL(var, "variable not found %s", expr->value.varname);
-            return var->value;
-        }
-        else
-        {
-            logd("immediate %d", expr->value.literal.integer);
-            return codegen_value_alloc(CODEGEN_VALUE_IMMEDIATE,
-                                       expr->value.literal.integer);
-        }
-        break;
-    case AST_EXPRESSION_CALL:
-        break;
-    case AST_EXPRESSION_OPERATOR:;
-
-        struct codegen_value *lhs = generate_expr_impl(code, expr->lhs);
-        struct codegen_value *rhs = generate_expr_impl(code, expr->rhs);
-
-        /* if (lhs != NULL && rhs != NULL) */
-        /* { */
-        /*
-         * FIXME: this is kind of weird, it might be a good idea to split
-         * this into multiple functions (similar to parsing expressions for
-         * the ast)
-         */
-        return generate_operator(code, lhs, rhs, expr->operator);
-        /* } */
-
-        break;
-    case AST_EXPRESSION_UNARY_OPERATOR:
-    default:
-        PANIC("unknown expression type %d", expr->type);
-        break;
-    }
-}
-
-struct codegen_value *generate_expr(struct bytecode_array *code,
-                                    struct ast_expr *expr)
-{
-
-    struct codegen_value *result = generate_expr_impl(code, expr);
-
-    /* reset stack offset */
-    /* generate_add(code, &(struct codegen_value){CODEGEN_VALUE_REGISTER,
-     * 0b100}, */
-    /*              &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, */
-    /*                                      code->stack_offset - stack_start});
-     */
-    /* code->stack_offset = stack_start; */
-
-    return result;
-}
-
 void generate_return(struct bytecode_array *code)
 {
     generate_add(
         code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0b100},
         &(struct codegen_value){CODEGEN_VALUE_IMMEDIATE, code->stack_offset});
     array_macro_append_v(code, 0xc3);
-}
-
-void generate_statement(struct bytecode_array *code,
-                        struct ast_statement *statement);
-
-void generate_block(struct bytecode_array *code, struct list *statements_head)
-{
-
-    struct list *pos;
-    list_for_each(pos, statements_head)
-    {
-        struct ast_statement *s = containerof(pos, struct ast_statement, list);
-        generate_statement(code, s);
-    }
-}
-
-void generate_statement(struct bytecode_array *code,
-                        struct ast_statement *statement)
-{
-    switch (statement->type)
-    {
-    case AST_STATEMENT_EXPR:
-        generate_expr(code, statement->expr);
-        break;
-    case AST_STATEMENT_IF:;
-        struct codegen_value *if_value =
-            generate_expr(code, statement->block_expr);
-        generate_mov(code, &immediate_temp_reg, if_value);
-        generate_test(code, &immediate_temp_reg, &immediate_temp_reg);
-        size_t jump_offset_location = generate_jump_if_zero(code);
-        size_t start_size = code->num;
-        generate_block(code, &statement->block);
-        size_t end_size = code->num;
-
-        logd("jumping over block of size:%p", end_size - start_size);
-
-        ASSERT(end_size - start_size < 128, "cant encode displacement > 128");
-        *(code->items + jump_offset_location) = end_size - start_size;
-
-        break;
-    case AST_STATEMENT_WHILE:
-    case AST_STATEMENT_FOR:
-        break;
-    case AST_STATEMENT_DECLARE:;
-        struct variable *var =
-            variable_alloc(statement->varname, raise_sp(code));
-
-        if (statement->init_value != NULL)
-        {
-            struct codegen_value *init_value =
-                generate_expr(code, statement->init_value);
-            generate_mov(code, var->value, init_value);
-        }
-        list_push(&var->list, &code->current_scope_vars);
-
-        break;
-    case AST_STATEMENT_RETURN:;
-        struct codegen_value *result = generate_expr(code, statement->expr);
-        generate_mov(code, &(struct codegen_value){CODEGEN_VALUE_REGISTER, 0},
-                     result);
-
-        generate_return(code);
-        break;
-    }
-}
-
-void generate_function(struct bytecode_array *code,
-                       struct ast_top_statement *function)
-{
-    generate_block(code, &function->function->block);
-    /* generate_return(code); */
-}
-
-int run_code(u8 *bytecode, size_t len)
-{
-
-    int retval = ((int (*)())bytecode)();
-    logd("returned:%d", retval);
-    return retval;
-
-    u8 *binary_test = malloc(9 + sizeof(bytecode));
-    binary_test[0] = 'T';
-    binary_test[1] = 'E';
-    binary_test[2] = 'S';
-    binary_test[3] = 'T';
-    binary_test[4] = 0;
-    *(u32 *)(binary_test + 5) = sizeof(bytecode);
-    memcpy(binary_test + 9, bytecode, len);
-    syscall_wrapper_asm(SYS_load_simple_binary, (ptr_t)binary_test, 0, 0, 0, 0);
 }
 
 struct codegen_value *codegen_convert_ir_value(struct bytecode_array *code,
