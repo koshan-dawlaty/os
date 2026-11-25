@@ -57,13 +57,13 @@ void ir_test()
         int *ptr = &i;
         *ptr = 123;
 
-		int a = 456;
+        /* int a = 456; */
 
-		ptr = &a;
+        /* ptr = &a; */
 
-		*ptr = 789;
+        /* *ptr = 789; */
 
-        return i + a;
+        return *ptr + i;
     }
 
     );
