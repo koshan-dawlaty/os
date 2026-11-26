@@ -318,10 +318,10 @@ void kmain()
 #ifdef TESTS
     /* execv("/bin/codegen_tests.test", (char *[]){"", NULL}); */
 #else
-    init_program = "/bin/compiler";
+    /* init_program = "/bin/compiler"; */
     /* init_program = "/bin/codegen_tests"; */
     /* init_program = "/bin/userspace_tests"; */
-    /* init_program = "/bin/wm"; */
+    init_program = "/bin/wm";
     /* init_program = "/bin/asm"; */
     /* init_program = "/bin/ls"; */
     /* execv("/bin/wm", (char *[]){"wm", NULL}); */

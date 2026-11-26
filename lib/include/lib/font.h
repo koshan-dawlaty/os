@@ -33,4 +33,7 @@ void framebuffer_draw_string(struct framebuffer *fb, struct PSF_font *font,
 void framebuffer_draw_bytes(struct framebuffer *fb, struct PSF_font *font,
                             const char *str, size_t len, size_t x, size_t y);
 
+void framebuffer_draw_num(struct framebuffer *fb, struct PSF_font *font,
+                          intmax_t num, size_t x, size_t y);
+
 #endif

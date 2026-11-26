@@ -1,7 +1,5 @@
-#include "wm_lib.h"
 #include <container_of.h>
 #include <err_ptr.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <init.h>
 #include <lib/array.h>
@@ -12,6 +10,7 @@
 #include <lib/log.h>
 #include <lib/term.h>
 #include <sched.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,6 +18,7 @@
 #include <sys/types.h>
 #include <types.h>
 #include <unistd.h>
+#include <wm_lib.h>
 
 struct wm_client client;
 struct PSF_font *font;
@@ -56,6 +56,9 @@ struct editor_buffer
     /* the number of lines that can be viewed, the height the buffer on the
      * screen */
     size_t num_lines;
+
+    /* number of rows that have been created, length of rows_head */
+    size_t num_rows;
 
     struct list rows_head;
     struct editor_row *current_row;
@@ -112,14 +115,33 @@ void editor_set_mode(struct editor_buffer *buffer, enum editor_mode mode)
 void editor_buffer_set_cursor(struct editor_buffer *buffer, int cursor_x,
                               int cursor_y);
 
+/* maybe make this a util for getting number of digits */
+static size_t num_len(intmax_t num)
+{
+    if (num == 0)
+    {
+        return 1;
+    }
+    size_t i = 0;
+    while (num > 0)
+    {
+        num /= 10;
+        i++;
+    }
+    return i;
+}
+
 void editor_buffer_redraw(struct editor_buffer *buffer, struct framebuffer *fb,
                           size_t x_pos, size_t y_pos)
 {
+    size_t max_line_num_len = num_len(buffer->num_rows);
 
-    framebuffer_draw_rect(fb, buffer->cursor_x * font->header.width,
-                          font->header.height *
-                              (buffer->cursor_y - buffer->top_line),
-                          font->header.width, font->header.height, 0x00FF00);
+    size_t line_num_offset = (max_line_num_len)*font->header.width;
+
+    framebuffer_draw_rect(
+        fb, (buffer->cursor_x + 1) * font->header.width + line_num_offset,
+        font->header.height * (buffer->cursor_y - buffer->top_line),
+        font->header.width, font->header.height, 0x00FF00);
 
     struct list *pos;
     size_t y = 0;
@@ -130,11 +152,18 @@ void editor_buffer_redraw(struct editor_buffer *buffer, struct framebuffer *fb,
         {
             struct editor_row *row = containerof(pos, struct editor_row, list);
 
+            size_t line_len = num_len(i);
+            framebuffer_draw_num(
+                fb, font, i,
+                (line_num_offset - (line_len * font->header.width)),
+                y * font->header.height);
+
             for (size_t x = 0; x < row->characters.len; x++)
             {
                 char c = ((char *)row->characters.data)[x];
 
-                size_t real_x = x_pos + (x * font->header.width);
+                size_t real_x =
+                    line_num_offset + x_pos + ((x + 1) * font->header.width);
                 size_t real_y = y_pos + (y * font->header.height);
                 framebuffer_draw_char(fb, font, c, real_x, real_y);
             }
@@ -155,11 +184,11 @@ void editor_buffer_delete_cursor(struct editor_buffer *buffer)
     }
     else if (buffer->cursor_y != 0)
     {
+        buffer->num_rows--;
         struct editor_row *prev_row = containerof(
             buffer->current_row->list.prev, struct editor_row, list);
         if (buffer->current_row->characters.len != 0)
         {
-
             array_add(&prev_row->characters,
                       buffer->current_row->characters.data,
                       buffer->current_row->characters.len);
@@ -179,6 +208,7 @@ void editor_buffer_delete_cursor(struct editor_buffer *buffer)
 void editor_buffer_insert_newline_cursor(struct editor_buffer *buffer)
 {
     struct editor_row *new_row = editor_row_alloc();
+    buffer->num_rows++;
     list_add_after(&new_row->list, &buffer->current_row->list);
 
     array_push(&new_row->characters,
@@ -458,13 +488,6 @@ int main(int argc, char **argv)
                 {
                 case 'i':
                     editor_set_mode(&buffer, EDITOR_MODE_INSERT);
-
-                    break;
-                case 'f':
-                    buffer.top_line++;
-                    break;
-                case 'd':
-                    buffer.top_line--;
                     break;
                 case 'k':
                     editor_buffer_move_cursor(&buffer, 0, -1);

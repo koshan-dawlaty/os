@@ -51,6 +51,36 @@ void framebuffer_draw_string(struct framebuffer *fb, struct PSF_font *font,
     }
 }
 
+void framebuffer_draw_num(struct framebuffer *fb, struct PSF_font *font,
+                          intmax_t num, size_t x, size_t y)
+{
+    if (num == 0)
+    {
+        framebuffer_draw_char(fb, font, (num % 10) + '0', x, y);
+        return;
+    }
+    if (num < 0)
+    {
+        num *= -1;
+    }
+    intmax_t num_temp = num;
+    size_t len = 0;
+    while (num_temp > 0)
+    {
+        num_temp /= 10;
+        len++;
+    }
+
+    size_t i = 0;
+    while (num > 0)
+    {
+        framebuffer_draw_char(fb, font, (num % 10) + '0',
+                              x + (len - i - 1) * font->header.width, y);
+        num /= 10;
+        i++;
+    }
+}
+
 #define PSF_FONT_MAGIC 0x864ab572
 struct PSF_font *font_parse(u8 *buf)
 {
