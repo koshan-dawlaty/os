@@ -87,7 +87,7 @@ void stacktrace_log()
         loge("0x%p, %s", stk->ip, symbol_get_name(stk->ip));
         stk = stk->bp;
     }
-        loge("\n");
+    loge("\n");
     log_multiline_end(&LOG_ERROR);
 #endif
 }

@@ -142,6 +142,8 @@ void tests_run_input(struct test_input *input)
     test_output_str(tap_header, strlen(tap_header));
     free(tap_header);
 
+    bool any_failed = false;
+
     for (size_t i = 0; i < TESTS_LEN; i++)
     {
         struct test current_test = TESTS_ARRAY[i];
@@ -154,6 +156,10 @@ void tests_run_input(struct test_input *input)
                 (!matched && input->test_input_type == TEST_INPUT_EXCLUDE))
             {
                 test_result *result = test_run(&current_test);
+                if (result->failed)
+                {
+                    any_failed = true;
+                }
 
                 char *tap = tap_format_test_result(&current_test, result, i);
                 test_output_str(tap, strlen(tap));
@@ -163,6 +169,15 @@ void tests_run_input(struct test_input *input)
                 free(tap);
             }
         }
+    }
+
+    if (any_failed)
+    {
+        logi("some tests failed");
+    }
+    else
+    {
+        logi("all tests passed");
     }
 
     /* end of input */

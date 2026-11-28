@@ -200,6 +200,13 @@ struct ir_value *ir_generate_expr_impl(struct ir_program *program,
             ir_add_instruction(
                 program, ir_inst_alloc_op(IR_OP_ADDR_OF, out, value, NULL));
             break;
+
+        case TOKEN_INCREMENT:
+            ir_add_instruction(
+                program,
+                ir_inst_alloc_op(IR_OP_ADD, value,
+                                 value, ir_value_alloc_immediate(program, 1)));
+            break;
         default:
             PANIC("invalid unary operator %s",
                   token_type_str(expr->unary_operator.operator));
@@ -299,41 +306,46 @@ void ir_generate_expr_assign(struct ir_program *program, struct ast_expr *expr)
      * and
      * 1 + printf(...)
      */
-    ASSERT(expr->type == AST_EXPRESSION_OPERATOR &&
-               expr->operator == TOKEN_ASSIGN,
+    logd("type:%d", expr->type);
+    ASSERT((expr->type == AST_EXPRESSION_OPERATOR &&
+            expr->operator == TOKEN_ASSIGN) ||
+               expr->type == AST_EXPRESSION_UNARY_OPERATOR,
            "not implemented for expression statements");
     /* ASSERT(expr->lhs->type == AST_EXPRESSION_VALUE &&
      * expr->lhs->value.is_var, */
     /*        "complex left hand side of assignment not implemented"); */
 
-    struct ir_value *lhs;
-    if (expr->lhs->type == AST_EXPRESSION_VALUE)
+    if (expr->type == AST_EXPRESSION_OPERATOR)
     {
-        lhs = ast_value_convert_ir(program, expr->lhs->value);
+
+        struct ir_value *lhs;
+        if (expr->lhs->type == AST_EXPRESSION_VALUE)
+        {
+            lhs = ast_value_convert_ir(program, expr->lhs->value);
+        }
+        else if (expr->lhs->type == AST_EXPRESSION_UNARY_OPERATOR &&
+                 expr->lhs->unary_operator.operator == TOKEN_STAR)
+        {
+            lhs =
+                ir_generate_expr_impl(program, expr->lhs->unary_operator.expr);
+            struct ir_value *rhs = ir_value_alloc_reg(program);
+            ir_generate_expr(program, rhs, expr->rhs);
+
+            ir_add_instruction(program,
+                               ir_inst_alloc_op(IR_OP_STORE, lhs, rhs, NULL));
+
+            return;
+        }
+        else
+        {
+            PANIC("expression not assignable");
+        }
+        ir_generate_expr(program, lhs, expr->rhs);
     }
-    else if (expr->lhs->type == AST_EXPRESSION_UNARY_OPERATOR &&
-             expr->lhs->unary_operator.operator == TOKEN_STAR)
+    else if (expr->type == AST_EXPRESSION_UNARY_OPERATOR)
     {
-        /* lhs = ir_value_alloc_reg(program); */
-        /* ir_generate_expr(program, lhs, expr->lhs->unary_operator.expr); */
-        lhs = ir_generate_expr_impl(program, expr->lhs->unary_operator.expr);
-        struct ir_value *rhs = ir_value_alloc_reg(program);
-        ir_generate_expr(program, rhs, expr->rhs);
-
-        ir_add_instruction(program,
-                           ir_inst_alloc_op(IR_OP_STORE, lhs, rhs, NULL));
-
-        return;
+        ir_generate_expr_impl(program, expr);
     }
-    else
-    {
-        PANIC("expression not assignable");
-    }
-
-    /* struct ir_variable *var = */
-    /*     ir_variable_lookup(program, expr->lhs->value.varname); */
-
-    struct ir_value *result = ir_generate_expr(program, lhs, expr->rhs);
 
     /* struct ir_instruction *result_op = IR_PROGRAM_CURRENT_INS(program); */
     /* struct ir_variable_version version = (struct ir_variable_version){ */

@@ -53,9 +53,13 @@ void ir_test()
 
         /* return *ptr; */
 
-        int i = 10;
-        int *ptr = &i;
-        *ptr = 123;
+        int i = 0;
+        int c = 123;
+        while (i <= 10)
+        {
+            c = c * 3 + 4;
+            i++;
+        }
 
         /* int a = 456; */
 
@@ -63,7 +67,7 @@ void ir_test()
 
         /* *ptr = 789; */
 
-        return *ptr + i;
+        return i;
     }
 
     );

@@ -83,6 +83,13 @@ TEST_CODEGEN(codegen_test_vars_assign2, MACRO_STR(int main() {
              }),
              80)
 
+TEST_CODEGEN(codegen_test_increment, MACRO_STR(int main() {
+                 int x = 10;
+				 x++;
+                 return x;
+             }),
+             11)
+
 TEST_CODEGEN(codegen_test_if_basic_true, MACRO_STR(int main() {
                  int x = 10;
                  if (x)
@@ -247,6 +254,18 @@ TEST_CODEGEN(codegen_test_for_basic2, MACRO_STR(int main() {
 
         return j;
     }
+	), 33)
+
+TEST_CODEGEN(codegen_test_for_plus_plus, MACRO_STR(int main() {
+        int i = 0;
+        int j = 0;
+        for (i = 0; i <= 10; i++)
+        {
+            j = j + 3;
+        }
+
+        return j;
+	}
 	), 33)
 
 TEST_CODEGEN(codegen_test_stack_addr_read, MACRO_STR(int main() {
